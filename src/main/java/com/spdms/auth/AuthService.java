@@ -5,8 +5,11 @@ import com.spdms.dto.AuthResponse;
 import com.spdms.dto.LoginRequest;
 import com.spdms.dto.StudentLoginRequest;
 import com.spdms.entity.Student;
+import com.spdms.entity.User;
 import com.spdms.repository.StudentRepository;
+import com.spdms.repository.UserRepository;
 import com.spdms.security.JwtUtil;
+import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,17 +39,20 @@ public class AuthService {
     private final AuthenticationManager authenticationManager; // Verifies hashed passwords automatically
     private final UserDetailsService userDetailsService;       // Fetches Users from database
     private final StudentRepository studentRepository;         // Fetches Students from database
+    private final UserRepository userRepository;
     private final JwtUtil jwtUtil;                           // Generates Secure JWT Tokens
     private final PasswordEncoder passwordEncoder;             // Used to check raw password vs hashed password
 
     public AuthService(AuthenticationManager authenticationManager,
                        UserDetailsService userDetailsService,
                        StudentRepository studentRepository,
+                       UserRepository userRepository,
                        JwtUtil jwtUtil,
                        PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.studentRepository = studentRepository;
+        this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
     }
@@ -81,15 +87,30 @@ public class AuthService {
             .map(authority -> authority.getAuthority())
             .collect(Collectors.toList());
 
+        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        List<String> subRolesList = new ArrayList<>(user.getSubRoles());
+
+        String userType = "USER";
+        if (roles.contains("ROLE_ADMIN")) {
+            userType = "ADMIN";
+        } else if (roles.contains("ROLE_TEACHER")) {
+            userType = "TEACHER";
+        } else if (roles.contains("ROLE_TRANSPORT")) {
+            userType = "TRANSPORT";
+        }
+
         // STEP 5: Build a clean response object to send to the frontend
         AuthResponse response = AuthResponse.builder()
             .token(token)
             .type("Bearer")
             .username(userDetails.getUsername())
-            .fullName(userDetails.getUsername())
-            .email("")            // Email omitted for brevity, can be added
+            .fullName(user.getFullName())
+            .email(user.getEmail())
             .roles(roles)         // Contains ROLE_TEACHER or ROLE_ADMIN
-            .userType("USER")     // Helps frontend know this is a staff member
+            .subRoles(subRolesList)
+            .userType(userType)   // Helps frontend know this is a staff member
+            .section(user.getSection())
+            .year(user.getYear())
             .build();
 
         log.info("Teacher/Admin logged in successfully: {}", request.getUsername());
@@ -138,9 +159,66 @@ public class AuthService {
             .email(student.getEmail())
             .roles(List.of("ROLE_STUDENT")) // Students inherently get the STUDENT role
             .userType("STUDENT")            // Helps frontend route to student dashboard
+            .section(student.getSection())
+            .year(student.getYear())
             .build();
 
         log.info("Student logged in successfully: {}", student.getStudentId());
         return ApiResponse.ok("Student login successful", response);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<AuthResponse> getUserProfile(String username) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user != null) {
+            List<String> rolesList = user.getRoles().stream()
+                    .map(com.spdms.entity.Role::getName)
+                    .collect(java.util.stream.Collectors.toList());
+
+            String userType = "USER";
+            if (rolesList.contains("ROLE_ADMIN")) {
+                userType = "ADMIN";
+            } else if (rolesList.contains("ROLE_TEACHER")) {
+                userType = "TEACHER";
+            } else if (rolesList.contains("ROLE_TRANSPORT")) {
+                userType = "TRANSPORT";
+            }
+
+            AuthResponse response = AuthResponse.builder()
+                    .token(null)
+                    .type("Bearer")
+                    .username(user.getUsername())
+                    .fullName(user.getFullName())
+                    .email(user.getEmail())
+                    .roles(rolesList)
+                    .subRoles(new ArrayList<>(user.getSubRoles()))
+                    .userType(userType)
+                    .section(user.getSection())
+                    .year(user.getYear())
+                    .build();
+            return ApiResponse.ok("Profile loaded", response);
+        }
+
+        Student student = studentRepository.findByStudentId(username).orElse(null);
+        if (student == null) {
+            student = studentRepository.findByEmail(username).orElse(null);
+        }
+        if (student != null) {
+            AuthResponse response = AuthResponse.builder()
+                    .token(null)
+                    .type("Bearer")
+                    .username(student.getStudentId())
+                    .fullName(student.getFullName())
+                    .email(student.getEmail())
+                    .roles(List.of("ROLE_STUDENT"))
+                    .subRoles(new ArrayList<>())
+                    .userType("STUDENT")
+                    .section(student.getSection())
+                    .year(student.getYear())
+                    .build();
+            return ApiResponse.ok("Profile loaded", response);
+        }
+
+        return ApiResponse.error("User not found");
     }
 }

@@ -9,7 +9,10 @@ public class AuthResponse {
     private String fullName;
     private String email;
     private List<String> roles;
+    private List<String> subRoles;
     private String userType;
+    private String section;
+    private String year;
 
     public AuthResponse() {}
 
@@ -25,8 +28,14 @@ public class AuthResponse {
     public void setEmail(String email) { this.email = email; }
     public List<String> getRoles() { return roles; }
     public void setRoles(List<String> roles) { this.roles = roles; }
+    public List<String> getSubRoles() { return subRoles; }
+    public void setSubRoles(List<String> subRoles) { this.subRoles = subRoles; }
     public String getUserType() { return userType; }
     public void setUserType(String userType) { this.userType = userType; }
+    public String getSection() { return section; }
+    public void setSection(String section) { this.section = section; }
+    public String getYear() { return year; }
+    public void setYear(String year) { this.year = year; }
 
     public static Builder builder() { return new Builder(); }
     public static class Builder {
@@ -37,7 +46,10 @@ public class AuthResponse {
         public Builder fullName(String v) { r.fullName = v; return this; }
         public Builder email(String v) { r.email = v; return this; }
         public Builder roles(List<String> v) { r.roles = v; return this; }
+        public Builder subRoles(List<String> v) { r.subRoles = v; return this; }
         public Builder userType(String v) { r.userType = v; return this; }
+        public Builder section(String v) { r.section = v; return this; }
+        public Builder year(String v) { r.year = v; return this; }
         public AuthResponse build() { return r; }
     }
 }

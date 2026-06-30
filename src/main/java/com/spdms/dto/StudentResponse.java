@@ -15,8 +15,14 @@ public class StudentResponse {
     private String departmentName;
     private String semester;
     private String academicYear;
+    private String year;
+    private String section;
     private boolean active;
     private LocalDateTime createdAt;
+    private String sprNo;
+    private int score;
+    private Long groupId;
+    private String groupName;
 
     public StudentResponse() {}
 
@@ -42,10 +48,22 @@ public class StudentResponse {
     public void setSemester(String semester) { this.semester = semester; }
     public String getAcademicYear() { return academicYear; }
     public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
+    public String getYear() { return year; }
+    public void setYear(String year) { this.year = year; }
+    public String getSection() { return section; }
+    public void setSection(String section) { this.section = section; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getSprNo() { return sprNo; }
+    public void setSprNo(String sprNo) { this.sprNo = sprNo; }
+    public int getScore() { return score; }
+    public void setScore(int score) { this.score = score; }
+    public Long getGroupId() { return groupId; }
+    public void setGroupId(Long groupId) { this.groupId = groupId; }
+    public String getGroupName() { return groupName; }
+    public void setGroupName(String groupName) { this.groupName = groupName; }
 
     public static Builder builder() { return new Builder(); }
     public static class Builder {
@@ -61,8 +79,14 @@ public class StudentResponse {
         public Builder departmentName(String v) { r.departmentName = v; return this; }
         public Builder semester(String v) { r.semester = v; return this; }
         public Builder academicYear(String v) { r.academicYear = v; return this; }
+        public Builder year(String v) { r.year = v; return this; }
+        public Builder section(String v) { r.section = v; return this; }
         public Builder active(boolean v) { r.active = v; return this; }
         public Builder createdAt(LocalDateTime v) { r.createdAt = v; return this; }
+        public Builder sprNo(String v) { r.sprNo = v; return this; }
+        public Builder score(int v) { r.score = v; return this; }
+        public Builder groupId(Long v) { r.groupId = v; return this; }
+        public Builder groupName(String v) { r.groupName = v; return this; }
         public StudentResponse build() { return r; }
     }
 }

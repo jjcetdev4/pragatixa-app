@@ -48,8 +48,24 @@ public class Student {
     @Column(length = 20)
     private String academicYear;
 
+    @Column(name = "year", length = 10)
+    private String year;
+
+    @Column(name = "section", length = 50)
+    private String section;
+
+    @Column(length = 50)
+    private String sprNo;
+
     @Column(nullable = false)
     private boolean active = true;
+
+    @Column(nullable = false)
+    private int score = 100;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group group;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -101,8 +117,23 @@ public class Student {
     public String getAcademicYear() { return academicYear; }
     public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
 
+    public String getYear() { return year; }
+    public void setYear(String year) { this.year = year; }
+
+    public String getSection() { return section; }
+    public void setSection(String section) { this.section = section; }
+
+    public String getSprNo() { return sprNo; }
+    public void setSprNo(String sprNo) { this.sprNo = sprNo; }
+
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    public int getScore() { return score; }
+    public void setScore(int score) { this.score = score; }
+
+    public Group getGroup() { return group; }
+    public void setGroup(Group group) { this.group = group; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
@@ -123,7 +154,12 @@ public class Student {
         public Builder department(Department v) { s.department = v; return this; }
         public Builder semester(String v) { s.semester = v; return this; }
         public Builder academicYear(String v) { s.academicYear = v; return this; }
+        public Builder year(String v) { s.year = v; return this; }
+        public Builder section(String v) { s.section = v; return this; }
+        public Builder sprNo(String v) { s.sprNo = v; return this; }
         public Builder active(boolean v) { s.active = v; return this; }
+        public Builder score(int v) { s.score = v; return this; }
+        public Builder group(Group v) { s.group = v; return this; }
         public Student build() { return s; }
     }
 }

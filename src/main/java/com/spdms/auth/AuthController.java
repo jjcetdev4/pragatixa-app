@@ -16,16 +16,19 @@ import org.springframework.web.bind.annotation.*;
  * This class handles all incoming HTTP requests for login.
  * It is separated from business logic (which lives in AuthService) to follow the Single Responsibility Principle.
  */
+import com.spdms.repository.UserRepository;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication", description = "Login endpoints for teachers, admins, and students")
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
 
-    // Dependency Injection: Spring automatically provides the AuthService
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserRepository userRepository) {
         this.authService = authService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -70,5 +73,30 @@ public class AuthController {
         } else {
             return ResponseEntity.status(401).body(response);
         }
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get Current User Profile", description = "Returns profile details of the logged in user based on the JWT token.")
+    public ResponseEntity<ApiResponse<AuthResponse>> getProfile() {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        ApiResponse<AuthResponse> response = authService.getUserProfile(username);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(401).body(response);
+        }
+    }
+
+    @GetMapping("/test-users")
+    public ResponseEntity<?> testUsers() {
+        return ResponseEntity.ok(userRepository.findAll().stream().map(u -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("username", u.getUsername());
+            map.put("fullName", u.getFullName());
+            map.put("roles", u.getRoles().stream().map(com.spdms.entity.Role::getName).collect(java.util.stream.Collectors.toList()));
+            map.put("subRoles", u.getSubRoles());
+            map.put("section", u.getSection());
+            return map;
+        }).collect(java.util.stream.Collectors.toList()));
     }
 }

@@ -1,13 +1,11 @@
 package com.spdms.dto;
 
-import jakarta.validation.constraints.*;
-import java.time.LocalDate;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
-public class CreateStudentRequest {
-    @NotBlank(message = "Student ID is required")
-    @Size(max = 50)
-    private String studentId;
-
+public class UpdateStudentRequest {
     @NotBlank(message = "Full name is required")
     @Size(max = 100)
     private String fullName;
@@ -16,23 +14,11 @@ public class CreateStudentRequest {
     @Email(message = "Email must be valid")
     private String email;
 
-    private String password;
-
     @Size(max = 20)
     private String phone;
 
-    @Size(max = 50)
-    private String sprNo;
-
-    private String departmentName;
-
     @Pattern(regexp = "MALE|FEMALE|OTHER", message = "Gender must be MALE, FEMALE, or OTHER")
     private String gender;
-
-    private LocalDate dateOfBirth;
-
-    @Size(max = 255)
-    private String address;
 
     private Long departmentId;
 
@@ -41,39 +27,37 @@ public class CreateStudentRequest {
 
     @Size(max = 20)
     private String academicYear;
-    private String year;
-    private String section;
 
-    public CreateStudentRequest() {}
+    private boolean active;
 
-    public String getStudentId() { return studentId; }
-    public void setStudentId(String studentId) { this.studentId = studentId; }
+    @Size(max = 50)
+    private String sprNo;
+
+    public UpdateStudentRequest() {}
+
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+
     public String getGender() { return gender; }
     public void setGender(String gender) { this.gender = gender; }
-    public LocalDate getDateOfBirth() { return dateOfBirth; }
-    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+
     public Long getDepartmentId() { return departmentId; }
     public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
+
     public String getSemester() { return semester; }
     public void setSemester(String semester) { this.semester = semester; }
+
     public String getAcademicYear() { return academicYear; }
     public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
-    public String getSection() { return section; }
-    public void setSection(String section) { this.section = section; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
     public String getSprNo() { return sprNo; }
     public void setSprNo(String sprNo) { this.sprNo = sprNo; }
-    public String getDepartmentName() { return departmentName; }
-    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
 }
