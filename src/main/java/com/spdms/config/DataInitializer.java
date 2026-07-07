@@ -8,10 +8,11 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 /**
- * Seeds default roles, departments, and a superadmin user on first startup.
+ * Seeds default roles, departments, academic years, sections, users, and students on startup.
  */
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -23,26 +24,43 @@ public class DataInitializer implements CommandLineRunner {
     private final DepartmentRepository departmentRepository;
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AcademicYearRepository academicYearRepository;
+    private final YearRepository yearRepository;
+    private final SemesterRepository semesterRepository;
+    private final GenderRepository genderRepository;
+    private final SectionRepository sectionRepository;
+    private final SubRoleRepository subRoleRepository;
 
     public DataInitializer(RoleRepository roleRepository,
                            UserRepository userRepository,
                            DepartmentRepository departmentRepository,
                            StudentRepository studentRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           AcademicYearRepository academicYearRepository,
+                           YearRepository yearRepository,
+                           SemesterRepository semesterRepository,
+                           GenderRepository genderRepository,
+                           SectionRepository sectionRepository,
+                           SubRoleRepository subRoleRepository) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
         this.studentRepository = studentRepository;
         this.passwordEncoder = passwordEncoder;
+        this.academicYearRepository = academicYearRepository;
+        this.yearRepository = yearRepository;
+        this.semesterRepository = semesterRepository;
+        this.genderRepository = genderRepository;
+        this.sectionRepository = sectionRepository;
+        this.subRoleRepository = subRoleRepository;
     }
 
     @Override
     public void run(String... args) {
         seedRoles();
-        seedDepartments();
+        seedAcademicYears();
         seedAdminUser();
-        seedTeacherUser();
-        seedStudentUser();
+        migrateStudentPasswords();
     }
 
     private void seedRoles() {
@@ -63,10 +81,39 @@ public class DataInitializer implements CommandLineRunner {
             {"Business Administration", "MBA"}
         };
         for (String[] d : depts) {
-            if (departmentRepository.findByCode(d[1]).isEmpty()) {
-                departmentRepository.save(Department.builder().name(d[0]).code(d[1]).build());
+            if (departmentRepository.findByDeptCode(d[1]).isEmpty()) {
+                departmentRepository.save(Department.builder()
+                    .deptCode(d[1])
+                    .deptName(d[0])
+                    .code(d[1])
+                    .name(d[0])
+                    .description(null)
+                    .build());
                 log.info("Seeded department: {}", d[1]);
             }
+        }
+    }
+
+    private void seedAcademicYears() {
+        if (academicYearRepository.findByAcademicYear("2024-2025").isEmpty()) {
+            academicYearRepository.save(AcademicYear.builder()
+                .academicYear("2024-2025")
+                .startDate(LocalDate.of(2024, 6, 1))
+                .endDate(LocalDate.of(2025, 5, 31))
+                .status(AcademicYear.Status.ACTIVE)
+                .build());
+            log.info("Seeded academic year: 2024-2025");
+        }
+    }
+
+    private void seedSections() {
+        Department cseDept = departmentRepository.findByDeptCode("CSE").orElse(null);
+        if (cseDept != null && sectionRepository.findByDepartmentAndSectionName(cseDept, "A").isEmpty()) {
+            sectionRepository.save(Section.builder()
+                .department(cseDept)
+                .sectionName("A")
+                .build());
+            log.info("Seeded section: A for CSE");
         }
     }
 
@@ -94,36 +141,136 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedTeacherUser() {
-        if (!userRepository.existsByUsername("teacher1")) {
-            Role teacherRole = roleRepository.findByName("ROLE_TEACHER").orElseThrow();
-            User teacher = User.builder()
-                .username("teacher1")
-                .password(passwordEncoder.encode("Teacher@123"))
-                .fullName("Sample Teacher")
-                .email("teacher1@spdms.com")
+        Role teacherRole = roleRepository.findByName("ROLE_TEACHER").orElseThrow();
+        
+        SubRole ccSubrole = subRoleRepository.findByName("CC").orElseGet(() -> 
+            subRoleRepository.save(SubRole.builder().name("CC").role(teacherRole).build())
+        );
+        SubRole hodSubrole = subRoleRepository.findByName("HOD").orElseGet(() -> 
+            subRoleRepository.save(SubRole.builder().name("HOD").role(teacherRole).build())
+        );
+
+        if (!userRepository.existsByUsername("jaga")) {
+            User ccTeacher = User.builder()
+                .username("jaga")
+                .password(passwordEncoder.encode("1234"))
+                .fullName("Jaga CC")
+                .email("jaga@spdms.com")
                 .roles(Set.of(teacherRole))
+                .subRoles(Set.of(ccSubrole))
                 .active(true)
                 .build();
-            userRepository.save(teacher);
-            log.info("Default teacher created: username=teacher1 | password=Teacher@123");
+            userRepository.save(ccTeacher);
+            log.info("CC Teacher created: username=jaga | password=1234");
+        }
+
+        if (!userRepository.existsByUsername("sharu")) {
+            User hodTeacher = User.builder()
+                .username("sharu")
+                .password(passwordEncoder.encode("1234"))
+                .fullName("Sharu HOD")
+                .email("sharu@spdms.com")
+                .roles(Set.of(teacherRole))
+                .subRoles(Set.of(hodSubrole))
+                .active(true)
+                .build();
+            userRepository.save(hodTeacher);
+            log.info("HOD Teacher created: username=sharu | password=1234");
         }
     }
 
     private void seedStudentUser() {
         if (!studentRepository.existsByStudentId("sharugesh")) {
-            Department cseDept = departmentRepository.findByCode("CSE").orElse(null);
+            Role studentRole = roleRepository.findByName("ROLE_STUDENT").orElseThrow();
+            
+            // 1. Seed or resolve Student User account
+            User studentUser = userRepository.findByUsername("sharugesh").orElseGet(() -> {
+                User u = User.builder()
+                    .username("sharugesh")
+                    .password(passwordEncoder.encode("1234"))
+                    .fullName("Sharugesh")
+                    .email("sharugesh@spdms.com")
+                    .roles(Set.of(studentRole))
+                    .active(true)
+                    .build();
+                return userRepository.save(u);
+            });
+
+            // 2. Fetch lookup entities
+            Department cseDept = departmentRepository.findByDeptCode("CSE").orElseThrow();
+            Section secA = sectionRepository.findByDepartmentAndSectionName(cseDept, "A").orElseThrow();
+            Gender male = genderRepository.findByGenderName("Male").orElseThrow();
+            AcademicYear ay = academicYearRepository.findByAcademicYear("2024-2025").orElseThrow();
+            Year y1 = yearRepository.findByYearNo((byte) 1).orElseThrow();
+            Semester s1 = semesterRepository.findBySemesterNo((byte) 1).orElseThrow();
+
+            // 3. Seed Student
             Student student = Student.builder()
                 .studentId("sharugesh")
                 .fullName("Sharugesh")
                 .email("sharugesh@spdms.com")
                 .password(passwordEncoder.encode("1234"))
                 .department(cseDept)
-                .semester("1")
+                .sectionRef(secA)
+                .user(studentUser)
+                .genderRef(male)
+                .phoneNo("1234567890")
+                .academicYearRef(ay)
+                .yearRef(y1)
+                .semesterRef(s1)
                 .academicYear("2024-2025")
+                .semester("1")
+                .year("1")
+                .section("A")
+                .gender("Male")
                 .active(true)
+                .score(100)
                 .build();
+            
             studentRepository.save(student);
             log.info("Default student created: studentId=sharugesh | password=1234");
+        }
+    }
+
+    private void migrateStudentPasswords() {
+        log.info("Starting student password migration check...");
+        java.util.List<Student> students = studentRepository.findAll();
+        int count = 0;
+        for (Student s : students) {
+            LocalDate dob = s.getDateOfBirth();
+            if (dob != null) {
+                String rawPassword = dob.format(java.time.format.DateTimeFormatter.ofPattern("ddMMyyyy"));
+                String currentPassword = s.getPassword();
+                if (currentPassword == null || 
+                    currentPassword.trim().isEmpty() || 
+                    !currentPassword.startsWith("$2a$") || 
+                    !passwordEncoder.matches(rawPassword, currentPassword)) {
+                    
+                    s.setPassword(passwordEncoder.encode(rawPassword));
+                    studentRepository.save(s);
+                    count++;
+                }
+            } else {
+                // If DOB is null but password is not valid, fallback to student ID
+                String rawPassword = s.getStudentId();
+                if (rawPassword != null && !rawPassword.trim().isEmpty()) {
+                    String currentPassword = s.getPassword();
+                    if (currentPassword == null || 
+                        currentPassword.trim().isEmpty() || 
+                        !currentPassword.startsWith("$2a$") || 
+                        !passwordEncoder.matches(rawPassword, currentPassword)) {
+                        
+                        s.setPassword(passwordEncoder.encode(rawPassword));
+                        studentRepository.save(s);
+                        count++;
+                    }
+                }
+            }
+        }
+        if (count > 0) {
+            log.info("Completed student password migration. Updated {} student passwords.", count);
+        } else {
+            log.info("All student passwords are up to date.");
         }
     }
 }

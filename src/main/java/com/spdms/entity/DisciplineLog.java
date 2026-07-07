@@ -3,9 +3,6 @@ package com.spdms.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-/**
- * Logs points added or deducted for discipline tracking
- */
 @Entity
 @Table(name = "discipline_logs")
 public class DisciplineLog {
@@ -15,8 +12,16 @@ public class DisciplineLog {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id")
     private Student student;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "activity_id")
+    private Activity activity;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "recorded_by")
+    private Faculty recordedByFaculty;
 
     @Column(nullable = false)
     private int points;
@@ -24,99 +29,77 @@ public class DisciplineLog {
     @Column(nullable = false, length = 255)
     private String reason;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "subgroup_id")
-    private ActivitySubgroup subgroup;
+    @Column(columnDefinition = "TEXT")
+    private String remarks;
+
+    @Column(name = "incident_date", nullable = false)
+    private LocalDateTime incidentDate;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "recorded_by_id", nullable = false)
     private User recordedBy;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "subgroup_id")
+    private ActivitySubgroup subgroup;
 
     public DisciplineLog() {}
 
-    public DisciplineLog(Student student, int points, String reason, ActivitySubgroup subgroup, User recordedBy) {
-        this.student = student;
-        this.points = points;
-        this.reason = reason;
-        this.subgroup = subgroup;
-        this.recordedBy = recordedBy;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public Student getStudent() { return student; }
+    public void setStudent(Student student) { this.student = student; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Activity getActivity() { return activity; }
+    public void setActivity(Activity activity) { this.activity = activity; }
 
-    public Student getStudent() {
-        return student;
-    }
+    public Faculty getRecordedByFaculty() { return recordedByFaculty; }
+    public void setRecordedByFaculty(Faculty recordedByFaculty) { this.recordedByFaculty = recordedByFaculty; }
 
-    public void setStudent(Student student) {
-        this.student = student;
-    }
+    public int getPoints() { return points; }
+    public void setPoints(int points) { this.points = points; }
 
-    public int getPoints() {
-        return points;
-    }
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
 
-    public void setPoints(int points) {
-        this.points = points;
-    }
+    public String getRemarks() { return remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
 
-    public String getReason() {
-        return reason;
-    }
+    public LocalDateTime getIncidentDate() { return incidentDate; }
+    public void setIncidentDate(LocalDateTime incidentDate) { this.incidentDate = incidentDate; }
 
-    public void setReason(String reason) {
-        this.reason = reason;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public ActivitySubgroup getSubgroup() {
-        return subgroup;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setSubgroup(ActivitySubgroup subgroup) {
-        this.subgroup = subgroup;
-    }
+    public User getRecordedBy() { return recordedBy; }
+    public void setRecordedBy(User recordedBy) { this.recordedBy = recordedBy; }
 
-    public User getRecordedBy() {
-        return recordedBy;
-    }
+    public ActivitySubgroup getSubgroup() { return subgroup; }
+    public void setSubgroup(ActivitySubgroup subgroup) { this.subgroup = subgroup; }
 
-    public void setRecordedBy(User recordedBy) {
-        this.recordedBy = recordedBy;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static Builder builder() { return new Builder(); }
 
     public static class Builder {
         private final DisciplineLog log = new DisciplineLog();
         public Builder student(Student v) { log.student = v; return this; }
+        public Builder activity(Activity v) { log.activity = v; return this; }
+        public Builder recordedByFaculty(Faculty v) { log.recordedByFaculty = v; return this; }
         public Builder points(int v) { log.points = v; return this; }
         public Builder reason(String v) { log.reason = v; return this; }
-        public Builder subgroup(ActivitySubgroup v) { log.subgroup = v; return this; }
+        public Builder remarks(String v) { log.remarks = v; return this; }
+        public Builder incidentDate(LocalDateTime v) { log.incidentDate = v; return this; }
         public Builder recordedBy(User v) { log.recordedBy = v; return this; }
+        public Builder subgroup(ActivitySubgroup v) { log.subgroup = v; return this; }
         public DisciplineLog build() { return log; }
     }
 }

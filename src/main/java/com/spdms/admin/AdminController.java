@@ -18,6 +18,20 @@ import com.spdms.repository.UserRepository;
 import com.spdms.repository.ActivityStageRepository;
 import com.spdms.repository.ActivitySubgroupRepository;
 import com.spdms.repository.SubjectRepository;
+import com.spdms.entity.SubRole;
+import com.spdms.repository.SubRoleRepository;
+import com.spdms.repository.SectionRepository;
+import com.spdms.repository.FacultyRepository;
+import com.spdms.repository.StudentGroupRepository;
+import com.spdms.repository.AcademicYearRepository;
+import com.spdms.repository.YearRepository;
+import com.spdms.repository.SemesterRepository;
+import com.spdms.repository.GenderRepository;
+import com.spdms.entity.AcademicYear;
+import com.spdms.entity.Year;
+import com.spdms.entity.Semester;
+import com.spdms.entity.Gender;
+import com.spdms.entity.Section;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,7 +68,15 @@ public class AdminController {
     private final ActivityStageRepository activityStageRepository;
     private final ActivitySubgroupRepository activitySubgroupRepository;
     private final SubjectRepository subjectRepository;
-
+    private final SubRoleRepository subRoleRepository;
+    private final SectionRepository sectionRepository;
+    private final FacultyRepository facultyRepository;
+    private final StudentGroupRepository studentGroupRepository;
+    private final AcademicYearRepository academicYearRepository;
+    private final YearRepository yearRepository;
+    private final SemesterRepository semesterRepository;
+    private final GenderRepository genderRepository;
+ 
     public AdminController(StudentRepository studentRepository,
                            UserRepository userRepository,
                            DepartmentRepository departmentRepository,
@@ -62,7 +84,15 @@ public class AdminController {
                            PasswordEncoder passwordEncoder,
                            ActivityStageRepository activityStageRepository,
                            ActivitySubgroupRepository activitySubgroupRepository,
-                           SubjectRepository subjectRepository) {
+                           SubjectRepository subjectRepository,
+                           SubRoleRepository subRoleRepository,
+                           SectionRepository sectionRepository,
+                           FacultyRepository facultyRepository,
+                           StudentGroupRepository studentGroupRepository,
+                           AcademicYearRepository academicYearRepository,
+                           YearRepository yearRepository,
+                           SemesterRepository semesterRepository,
+                           GenderRepository genderRepository) {
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
@@ -71,6 +101,14 @@ public class AdminController {
         this.activityStageRepository = activityStageRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.subjectRepository = subjectRepository;
+        this.subRoleRepository = subRoleRepository;
+        this.sectionRepository = sectionRepository;
+        this.facultyRepository = facultyRepository;
+        this.studentGroupRepository = studentGroupRepository;
+        this.academicYearRepository = academicYearRepository;
+        this.yearRepository = yearRepository;
+        this.semesterRepository = semesterRepository;
+        this.genderRepository = genderRepository;
     }
 
     @GetMapping("/stats")
@@ -144,7 +182,7 @@ public class AdminController {
             .email(request.getEmail())
             .department(department)
             .roles(roles)
-            .subRoles(request.getSubRoles() != null ? request.getSubRoles() : new HashSet<>())
+            .subRoles(resolveSubRoles(request.getSubRoles(), roles))
             .section(request.getSection())
             .year(request.getYear())
             .active(true)
@@ -205,7 +243,7 @@ public class AdminController {
         
         user.getSubRoles().clear();
         if (request.getSubRoles() != null) {
-            user.getSubRoles().addAll(request.getSubRoles());
+            user.getSubRoles().addAll(resolveSubRoles(request.getSubRoles(), roles));
         }
         
         user.setActive(request.isActive());
@@ -244,12 +282,17 @@ public class AdminController {
     @Transactional
     @Operation(summary = "Create Department")
     public ResponseEntity<ApiResponse<Department>> createDepartment(@Valid @RequestBody CreateDepartmentRequest request) {
-        if (departmentRepository.findByCode(request.getCode()).isPresent()) {
+        if (departmentRepository.findByCode(request.getCode()).isPresent() || departmentRepository.findByDeptCode(request.getCode()).isPresent()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Department code already exists"));
         }
+        if (departmentRepository.findByName(request.getName()).isPresent()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Department name already exists"));
+        }
         Department dept = Department.builder()
-            .name(request.getName())
+            .deptCode(request.getCode())
+            .deptName(request.getName())
             .code(request.getCode())
+            .name(request.getName())
             .description(request.getDescription())
             .build();
         Department saved = departmentRepository.save(dept);
@@ -268,14 +311,18 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Department not found"));
         }
 
-        departmentRepository.findByCode(request.getCode()).ifPresent(existing -> {
-            if (!existing.getId().equals(id)) {
-                throw new RuntimeException("Department code already registered by another department");
-            }
-        });
+        if (departmentRepository.findByCode(request.getCode()).stream().anyMatch(existing -> !existing.getId().equals(id)) ||
+            departmentRepository.findByDeptCode(request.getCode()).stream().anyMatch(existing -> !existing.getId().equals(id))) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Department code already registered by another department"));
+        }
+        if (departmentRepository.findByName(request.getName()).stream().anyMatch(existing -> !existing.getId().equals(id))) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Department name already registered by another department"));
+        }
 
         dept.setName(request.getName());
         dept.setCode(request.getCode());
+        dept.setDeptCode(request.getCode());
+        dept.setDeptName(request.getName());
         dept.setDescription(request.getDescription());
 
         Department saved = departmentRepository.save(dept);
@@ -291,6 +338,29 @@ public class AdminController {
         if (!departmentRepository.existsById(id)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Department not found"));
         }
+
+        long sections = sectionRepository.countByDepartmentId(id);
+        long students = studentRepository.countByDepartmentId(id);
+        long faculty = facultyRepository.countByDepartmentId(id);
+        long subjects = subjectRepository.countByDepartmentId(id);
+        long subgroups = activitySubgroupRepository.countByAssignedDepartmentId(id);
+        long users = userRepository.countByDepartmentId(id);
+        long groups = studentGroupRepository.countByDepartmentId(id);
+
+        java.util.List<String> deps = new java.util.ArrayList<>();
+        if (sections > 0) deps.add(sections + " Section(s)");
+        if (students > 0) deps.add(students + " Student(s)");
+        if (faculty > 0) deps.add(faculty + " Faculty Member(s)");
+        if (subjects > 0) deps.add(subjects + " Subject(s)");
+        if (subgroups > 0) deps.add(subgroups + " Activity Subgroup(s)");
+        if (users > 0) deps.add(users + " User(s)");
+        if (groups > 0) deps.add(groups + " Student Group(s)");
+
+        if (!deps.isEmpty()) {
+            String msg = "Cannot delete Department because it contains: " + String.join(", ", deps) + ". Remove or reassign them first.";
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(msg));
+        }
+
         departmentRepository.deleteById(id);
         log.info("Admin deleted department with ID: {}", id);
         return ResponseEntity.ok(ApiResponse.ok("Department deleted successfully", null));
@@ -308,6 +378,41 @@ public class AdminController {
             .filter(r -> r.getName().equals("ROLE_TEACHER") || r.getName().equals("ROLE_TRANSPORT"))
             .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.ok(roles));
+    }
+
+    @GetMapping("/academic-years")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "List Academic Years")
+    public ResponseEntity<ApiResponse<List<AcademicYear>>> getAllAcademicYears() {
+        return ResponseEntity.ok(ApiResponse.ok("Academic years fetched successfully", academicYearRepository.findAll()));
+    }
+
+    @GetMapping("/years")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "List Years")
+    public ResponseEntity<ApiResponse<List<Year>>> getAllYears() {
+        return ResponseEntity.ok(ApiResponse.ok("Years fetched successfully", yearRepository.findAll()));
+    }
+
+    @GetMapping("/semesters")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "List Semesters")
+    public ResponseEntity<ApiResponse<List<Semester>>> getAllSemesters() {
+        return ResponseEntity.ok(ApiResponse.ok("Semesters fetched successfully", semesterRepository.findAll()));
+    }
+
+    @GetMapping("/genders")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "List Genders")
+    public ResponseEntity<ApiResponse<List<Gender>>> getAllGenders() {
+        return ResponseEntity.ok(ApiResponse.ok("Genders fetched successfully", genderRepository.findAll()));
+    }
+
+    @GetMapping("/sections")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "List Sections")
+    public ResponseEntity<ApiResponse<List<Section>>> getAllSections() {
+        return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully", sectionRepository.findAll()));
     }
 
     @PostMapping("/roles")
@@ -471,6 +576,20 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok("Subgroup deleted successfully", null));
     }
 
+    private Set<SubRole> resolveSubRoles(Set<String> subRoleNames, Set<Role> roles) {
+        if (subRoleNames == null) return new HashSet<>();
+        Role defaultRole = roles != null && !roles.isEmpty() ? roles.iterator().next() : null;
+        Set<SubRole> subRoles = new HashSet<>();
+        for (String name : subRoleNames) {
+            SubRole sr = subRoleRepository.findByName(name)
+                .orElseGet(() -> subRoleRepository.save(
+                    SubRole.builder().name(name).role(defaultRole).build()
+                ));
+            subRoles.add(sr);
+        }
+        return subRoles;
+    }
+
     private UserResponse toResponse(User user) {
         Set<String> roleNames = user.getRoles().stream()
             .map(Role::getName)
@@ -486,7 +605,7 @@ public class AdminController {
             .email(user.getEmail())
             .active(user.isActive())
             .roles(roleNames)
-            .subRoles(user.getSubRoles())
+            .subRoles(user.getSubRoles().stream().map(SubRole::getName).collect(Collectors.toSet()))
             .departmentId(deptId)
             .departmentName(deptName)
             .section(user.getSection())

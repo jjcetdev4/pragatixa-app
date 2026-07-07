@@ -2,6 +2,7 @@ package com.spdms.security;
 
 import com.spdms.entity.User;
 import com.spdms.repository.UserRepository;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
  * Loads User (teacher/admin) details from the database for Spring Security.
  */
 @Service
+@Primary
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;

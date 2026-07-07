@@ -16,17 +16,20 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(unique = true, length = 100)
     private String username;
 
     @Column(nullable = false, length = 150)
     private String password;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(unique = true, length = 150)
     private String email;
+
+    @Column(name = "phone", length = 15)
+    private String phone;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -36,10 +39,13 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_sub_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "sub_role")
-    private Set<String> subRoles = new HashSet<>();
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_sub_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "sub_role_id")
+    )
+    private Set<SubRole> subRoles = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
@@ -54,9 +60,10 @@ public class User {
     @Column(name = "year", length = 10)
     private String year;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -65,10 +72,8 @@ public class User {
     @PreUpdate
     protected void onUpdate() { this.updatedAt = LocalDateTime.now(); }
 
-    // ── Constructors ────────────────────────────────
     public User() {}
 
-    // ── Getters & Setters ───────────────────────────
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -84,11 +89,14 @@ public class User {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
 
-    public Set<String> getSubRoles() { return subRoles; }
-    public void setSubRoles(Set<String> subRoles) { this.subRoles = subRoles; }
+    public Set<SubRole> getSubRoles() { return subRoles; }
+    public void setSubRoles(Set<SubRole> subRoles) { this.subRoles = subRoles; }
 
     public Department getDepartment() { return department; }
     public void setDepartment(Department department) { this.department = department; }
@@ -105,7 +113,6 @@ public class User {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
-    // ── Builder ─────────────────────────────────────
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -114,8 +121,9 @@ public class User {
         public Builder password(String v) { user.password = v; return this; }
         public Builder fullName(String v) { user.fullName = v; return this; }
         public Builder email(String v) { user.email = v; return this; }
+        public Builder phone(String v) { user.phone = v; return this; }
         public Builder roles(Set<Role> v) { user.roles = v; return this; }
-        public Builder subRoles(Set<String> v) { user.subRoles = v; return this; }
+        public Builder subRoles(Set<SubRole> v) { user.subRoles = v; return this; }
         public Builder department(Department v) { user.department = v; return this; }
         public Builder active(boolean v) { user.active = v; return this; }
         public Builder section(String v) { user.section = v; return this; }

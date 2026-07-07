@@ -27,10 +27,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final StudentDetailsService studentDetailsService;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
+    public JwtAuthFilter(JwtUtil jwtUtil, 
+                         CustomUserDetailsService userDetailsService,
+                         StudentDetailsService studentDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.studentDetailsService = studentDetailsService;
     }
 
     @Override
@@ -64,11 +68,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authToken);
                     }
                 } else if ("STUDENT".equals(tokenType)) {
-                    var studentAuth = new UsernamePasswordAuthenticationToken(
-                            username, null,
-                            List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_STUDENT")));
-                    studentAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(studentAuth);
+                    UserDetails userDetails = studentDetailsService.loadUserByUsername(username);
+                    if (jwtUtil.isTokenValid(jwt, userDetails)) {
+                        var authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
             }
         } catch (Exception e) {

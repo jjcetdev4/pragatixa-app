@@ -6,6 +6,7 @@ import com.spdms.dto.LoginRequest;
 import com.spdms.dto.StudentLoginRequest;
 import com.spdms.entity.Student;
 import com.spdms.entity.User;
+import com.spdms.entity.SubRole;
 import com.spdms.repository.StudentRepository;
 import com.spdms.repository.UserRepository;
 import com.spdms.security.JwtUtil;
@@ -88,7 +89,9 @@ public class AuthService {
             .collect(Collectors.toList());
 
         User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        List<String> subRolesList = new ArrayList<>(user.getSubRoles());
+        List<String> subRolesList = user.getSubRoles().stream()
+            .map(SubRole::getName)
+            .collect(Collectors.toList());
 
         String userType = "USER";
         if (roles.contains("ROLE_ADMIN")) {
@@ -123,47 +126,70 @@ public class AuthService {
     
     @Transactional(readOnly = true)
     public ApiResponse<AuthResponse> loginStudent(StudentLoginRequest request) {
+        String identity = request.getIdentity() != null ? request.getIdentity().trim() : "";
+        log.info("[Student Login] Incoming authentication request. Identifier: {}", identity);
         
-        // STEP 1: Find the student in the database using their Student ID or Email
-        Student student = studentRepository.findByStudentId(request.getIdentity())
-            .or(() -> studentRepository.findByEmail(request.getIdentity()))
-            .orElse(null);
-
-        // Fail if student does not exist
-        if (student == null) {
-            log.warn("Student not found: {}", request.getIdentity());
-            return ApiResponse.error("Invalid student ID or email");
+        // Identify matching type / Search ONLY in students table
+        java.util.Optional<Student> studentOpt = studentRepository.findByStudentId(identity);
+        String detectedType = "Student ID";
+        
+        if (studentOpt.isEmpty()) {
+            studentOpt = studentRepository.findByEmail(identity);
+            detectedType = "Email";
+        }
+        if (studentOpt.isEmpty()) {
+            studentOpt = studentRepository.findBySprNo(identity);
+            detectedType = "SPR Number";
+        }
+        if (studentOpt.isEmpty()) {
+            try {
+                Long regNo = Long.parseLong(identity);
+                studentOpt = studentRepository.findByRegNo(regNo);
+                detectedType = "Register Number";
+            } catch (NumberFormatException ex) {
+                // Ignore
+            }
         }
 
-        // Fail if student account is inactive
+        if (studentOpt.isEmpty()) {
+            log.warn("[Student Login] Authentication failed: Student not found with identifier: {}", identity);
+            return ApiResponse.error("Invalid student ID, email, register number, or SPR number");
+        }
+
+        Student student = studentOpt.get();
+        log.info("[Student Login] Student found using {}. Student ID: {}, active={}", 
+            detectedType, student.getStudentId(), student.isActive());
+
         if (!student.isActive()) {
+            log.warn("[Student Login] Authentication failed: Student {} is inactive", student.getStudentId());
             return ApiResponse.error("Student account is inactive. Please contact admin.");
         }
 
-        // STEP 2: Compare Passwords securely
-        // We use BCrypt encoder to compare raw password against the encrypted hash in DB
-        if (!passwordEncoder.matches(request.getPassword(), student.getPassword())) {
-            log.warn("Wrong password for student: {}", request.getIdentity());
+        // Compare Passwords securely
+        log.info("[Student Login] Performing BCrypt password comparison for student: {}", student.getStudentId());
+        boolean passwordMatches = passwordEncoder.matches(request.getPassword(), student.getPassword());
+        if (!passwordMatches) {
+            log.warn("[Student Login] Authentication failed: Password mismatch for student: {}", student.getStudentId());
             return ApiResponse.error("Invalid password");
         }
 
-        // STEP 3: Generate a lightweight Student JWT Token
+        log.info("[Student Login] Password matched successfully. Generating JWT...");
         String token = jwtUtil.generateStudentToken(student.getStudentId(), student.getEmail());
+        log.info("[Student Login] JWT successfully generated for student: {}", student.getStudentId());
 
-        // STEP 4: Build response for frontend
         AuthResponse response = AuthResponse.builder()
             .token(token)
             .type("Bearer")
             .username(student.getStudentId())
             .fullName(student.getFullName())
             .email(student.getEmail())
-            .roles(List.of("ROLE_STUDENT")) // Students inherently get the STUDENT role
-            .userType("STUDENT")            // Helps frontend route to student dashboard
+            .roles(List.of("ROLE_STUDENT"))
+            .userType("STUDENT")
             .section(student.getSection())
             .year(student.getYear())
             .build();
 
-        log.info("Student logged in successfully: {}", student.getStudentId());
+        log.info("[Student Login] Authentication SUCCESS. Student: {} logged in.", student.getStudentId());
         return ApiResponse.ok("Student login successful", response);
     }
 
@@ -191,7 +217,9 @@ public class AuthService {
                     .fullName(user.getFullName())
                     .email(user.getEmail())
                     .roles(rolesList)
-                    .subRoles(new ArrayList<>(user.getSubRoles()))
+                    .subRoles(user.getSubRoles().stream()
+                        .map(SubRole::getName)
+                        .collect(Collectors.toList()))
                     .userType(userType)
                     .section(user.getSection())
                     .year(user.getYear())

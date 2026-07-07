@@ -34,6 +34,13 @@ public class GlobalExceptionHandler {
         return ApiResponse.error("Access denied: You do not have permission to perform this action");
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiResponse<Void> handleDataIntegrityViolationException(org.springframework.dao.DataIntegrityViolationException ex) {
+        log.error("Data integrity violation: {}", ex.getMessage(), ex);
+        return ApiResponse.error("Operation failed due to database constraint violation. Please verify that referencing records are removed first.");
+    }
+
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse<Void> handleRuntimeException(RuntimeException ex) {

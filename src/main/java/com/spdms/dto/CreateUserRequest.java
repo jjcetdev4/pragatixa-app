@@ -13,11 +13,12 @@ public class CreateUserRequest {
     private String password;
 
     @NotBlank(message = "Full name is required")
-    @Size(max = 100)
+    @Size(max = 255)
     private String fullName;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
+    @Size(max = 255)
     private String email;
 
     private Long departmentId;

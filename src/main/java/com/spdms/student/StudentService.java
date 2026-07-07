@@ -35,19 +35,40 @@ public class StudentService {
     private final UserRepository userRepository;
     private final ActivitySubgroupRepository activitySubgroupRepository;
     private final DisciplineLogRepository disciplineLogRepository;
+    private final AcademicYearRepository academicYearRepository;
+    private final YearRepository yearRepository;
+    private final SemesterRepository semesterRepository;
+    private final GenderRepository genderRepository;
+    private final SectionRepository sectionRepository;
+    private final RoleRepository roleRepository;
+    private final GroupRepository groupRepository;
 
     public StudentService(StudentRepository studentRepository,
                           DepartmentRepository departmentRepository,
                           PasswordEncoder passwordEncoder,
                           UserRepository userRepository,
                           ActivitySubgroupRepository activitySubgroupRepository,
-                          DisciplineLogRepository disciplineLogRepository) {
+                          DisciplineLogRepository disciplineLogRepository,
+                          AcademicYearRepository academicYearRepository,
+                          YearRepository yearRepository,
+                          SemesterRepository semesterRepository,
+                          GenderRepository genderRepository,
+                          SectionRepository sectionRepository,
+                          RoleRepository roleRepository,
+                          GroupRepository groupRepository) {
         this.studentRepository = studentRepository;
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.disciplineLogRepository = disciplineLogRepository;
+        this.academicYearRepository = academicYearRepository;
+        this.yearRepository = yearRepository;
+        this.semesterRepository = semesterRepository;
+        this.genderRepository = genderRepository;
+        this.sectionRepository = sectionRepository;
+        this.roleRepository = roleRepository;
+        this.groupRepository = groupRepository;
     }
 
     // ── Create ───────────────────────────────────────
@@ -56,7 +77,7 @@ public class StudentService {
     public ApiResponse<StudentResponse> createStudent(CreateStudentRequest request, String username) {
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isCcOrAdmin = creator != null && (creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
-                || creator.getSubRoles().stream().anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
+                || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
         if (!isCcOrAdmin) {
             return ApiResponse.error("Access Denied: Only Class Coordinators (CC) can add students.");
         }
@@ -71,49 +92,80 @@ public class StudentService {
         Department department = null;
         if (request.getDepartmentId() != null) {
             department = departmentRepository.findById(request.getDepartmentId()).orElse(null);
-            if (department == null) {
-                return ApiResponse.error("Department not found with ID: " + request.getDepartmentId());
-            }
+        }
+        if (department == null) {
+            return ApiResponse.error("Department is required");
         }
 
-        // Set default password to DOB (yyyy-MM-dd) if not specified
+        AcademicYear academicYear = null;
+        if (request.getAcademicYearId() != null) {
+            academicYear = academicYearRepository.findById(request.getAcademicYearId()).orElse(null);
+        }
+        if (academicYear == null) {
+            return ApiResponse.error("Academic Year is required");
+        }
+
+        Year year = null;
+        if (request.getYearId() != null) {
+            year = yearRepository.findById(request.getYearId()).orElse(null);
+        }
+        if (year == null) {
+            return ApiResponse.error("Year is required");
+        }
+
+        Semester semester = null;
+        if (request.getSemesterId() != null) {
+            semester = semesterRepository.findById(request.getSemesterId()).orElse(null);
+        }
+        if (semester == null) {
+            return ApiResponse.error("Semester is required");
+        }
+
+        Gender gender = null;
+        if (request.getGenderId() != null) {
+            gender = genderRepository.findById(request.getGenderId()).orElse(null);
+        }
+        if (gender == null) {
+            return ApiResponse.error("Gender is required");
+        }
+
+        Section section = request.getSectionId() != null ? sectionRepository.findById(request.getSectionId()).orElse(null) : null;
+        Group group = request.getGroupId() != null ? groupRepository.findById(request.getGroupId()).orElse(null) : null;
+
+        // Set default password to DOB (ddMMyyyy) if not specified
         String rawPassword = request.getPassword();
         if (rawPassword == null || rawPassword.trim().isEmpty()) {
             if (request.getDateOfBirth() != null) {
-                rawPassword = request.getDateOfBirth().toString();
+                rawPassword = request.getDateOfBirth().format(DateTimeFormatter.ofPattern("ddMMyyyy"));
             } else {
                 rawPassword = "123456";
             }
         }
 
-        String finalYear = request.getYear();
-        String finalSection = request.getSection();
-        boolean isCc = creator != null && creator.getSubRoles().stream().anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
-        if (isCc) {
-            if (creator.getYear() != null && !creator.getYear().trim().isEmpty()) {
-                finalYear = creator.getYear();
-            }
-            if (creator.getSection() != null && !creator.getSection().trim().isEmpty()) {
-                finalSection = creator.getSection();
-            }
-        }
-
         Student student = Student.builder()
-            .studentId(request.getStudentId())
-            .fullName(request.getFullName())
-            .email(request.getEmail())
+            .studentId(request.getStudentId().trim())
+            .fullName(request.getFullName().trim())
+            .email(request.getEmail().trim())
             .password(passwordEncoder.encode(rawPassword))
-            .phone(request.getPhone())
-            .gender(request.getGender())
+            .phone(request.getPhone() != null ? request.getPhone().trim() : null)
+            .phoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000")
             .dateOfBirth(request.getDateOfBirth())
             .address(request.getAddress())
             .department(department)
-            .semester(request.getSemester())
-            .academicYear(request.getAcademicYear())
-            .year(finalYear)
-            .section(finalSection)
-            .sprNo(request.getSprNo())
+            .academicYearRef(academicYear)
+            .academicYear(academicYear.getAcademicYear())
+            .yearRef(year)
+            .year(String.valueOf(year.getYearNo()))
+            .semesterRef(semester)
+            .semester(String.valueOf(semester.getSemesterNo()))
+            .genderRef(gender)
+            .gender(gender.getGenderName())
+            .sectionRef(section)
+            .section(section != null ? section.getSectionName() : null)
+            .group(group)
+            .sprNo(request.getSprNo() != null ? request.getSprNo().trim() : null)
             .active(true)
+            .score(100)
             .build();
 
         Student saved = studentRepository.save(student);
@@ -127,7 +179,7 @@ public class StudentService {
     public ApiResponse<List<CreateStudentRequest>> bulkParse(MultipartFile file, String username) {
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isCcOrAdmin = creator != null && (creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
-                || creator.getSubRoles().stream().anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
+                || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
         if (!isCcOrAdmin) {
             return ApiResponse.error("Access Denied: Only Class Coordinators (CC) can parse student import files.");
         }
@@ -140,7 +192,9 @@ public class StudentService {
                 Row row = sheet.getRow(r);
                 if (row == null) continue;
 
-                // Columns layout: 1: Name, 2: Department, 3: SPR_No, 4: Reg_No, 5: DOB, 6: Phone_No, 7: Email
+                // Columns layout: 
+                // 1: Name, 2: Department, 3: SPR_No, 4: Reg_No, 5: DOB, 6: Phone_No, 7: Email,
+                // 8: Gender, 9: Academic Year, 10: Year, 11: Semester, 12: Section, 13: Group Name, 14: Address
                 String name = getCellValueAsString(row.getCell(1));
                 String deptName = getCellValueAsString(row.getCell(2));
                 String sprNo = getCellValueAsString(row.getCell(3));
@@ -148,6 +202,13 @@ public class StudentService {
                 LocalDate dob = parseLocalDate(row.getCell(5));
                 String phoneNo = getCellValueAsString(row.getCell(6));
                 String email = getCellValueAsString(row.getCell(7));
+                String gender = getCellValueAsString(row.getCell(8));
+                String academicYear = getCellValueAsString(row.getCell(9));
+                String year = getCellValueAsString(row.getCell(10));
+                String semester = getCellValueAsString(row.getCell(11));
+                String section = getCellValueAsString(row.getCell(12));
+                String groupName = getCellValueAsString(row.getCell(13));
+                String address = getCellValueAsString(row.getCell(14));
 
                 if (regNo.isEmpty() || email.isEmpty() || name.isEmpty()) {
                     continue; // Skip invalid rows
@@ -161,6 +222,91 @@ public class StudentService {
                 req.setDateOfBirth(dob);
                 req.setPhone(phoneNo);
                 req.setEmail(email);
+                req.setGender(gender);
+                req.setAcademicYear(academicYear);
+                req.setYear(year);
+                req.setSemester(semester);
+                req.setSection(section);
+                req.setAddress(address);
+                req.setActive(true);
+
+                // Auto-resolve Department
+                if (!deptName.isEmpty()) {
+                    departmentRepository.findByDeptCode(deptName.toUpperCase().trim())
+                        .or(() -> departmentRepository.findByCode(deptName.toUpperCase().trim()))
+                        .or(() -> departmentRepository.findByName(deptName))
+                        .ifPresent(d -> {
+                            req.setDepartmentId(d.getId());
+                            req.setDepartmentName(d.getName());
+                        });
+                }
+                
+                // Auto-resolve Gender
+                if (!gender.isEmpty()) {
+                    genderRepository.findByGenderName(gender.trim())
+                        .ifPresent(g -> req.setGenderId(g.getId()));
+                } else {
+                    genderRepository.findAll().stream()
+                        .filter(g -> g.getGenderName().equalsIgnoreCase("Male"))
+                        .findFirst()
+                        .ifPresent(g -> req.setGenderId(g.getId()));
+                }
+
+                // Auto-resolve Academic Year
+                if (!academicYear.isEmpty()) {
+                    academicYearRepository.findByAcademicYear(academicYear.trim())
+                        .ifPresent(ay -> req.setAcademicYearId(ay.getId()));
+                }
+
+                // Auto-resolve Year
+                if (!year.isEmpty()) {
+                    try {
+                        byte yNo = Byte.parseByte(year.trim());
+                        yearRepository.findByYearNo(yNo)
+                            .ifPresent(y -> req.setYearId(y.getId()));
+                    } catch (Exception e) {
+                        if (year.toLowerCase().contains("1") || year.toLowerCase().contains("first")) {
+                            yearRepository.findByYearNo((byte) 1).ifPresent(y -> req.setYearId(y.getId()));
+                        } else if (year.toLowerCase().contains("2") || year.toLowerCase().contains("second")) {
+                            yearRepository.findByYearNo((byte) 2).ifPresent(y -> req.setYearId(y.getId()));
+                        } else if (year.toLowerCase().contains("3") || year.toLowerCase().contains("third")) {
+                            yearRepository.findByYearNo((byte) 3).ifPresent(y -> req.setYearId(y.getId()));
+                        } else if (year.toLowerCase().contains("4") || year.toLowerCase().contains("fourth")) {
+                            yearRepository.findByYearNo((byte) 4).ifPresent(y -> req.setYearId(y.getId()));
+                        }
+                    }
+                }
+
+                // Auto-resolve Semester
+                if (!semester.isEmpty()) {
+                    try {
+                        byte sNo = Byte.parseByte(semester.trim());
+                        semesterRepository.findBySemesterNo(sNo)
+                            .ifPresent(s -> req.setSemesterId(s.getId()));
+                    } catch (Exception e) {
+                        for (byte i = 1; i <= 8; i++) {
+                            if (semester.contains(String.valueOf(i))) {
+                                final byte currentI = i;
+                                semesterRepository.findBySemesterNo(currentI).ifPresent(s -> req.setSemesterId(s.getId()));
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Auto-resolve Section
+                if (!section.isEmpty() && req.getDepartmentId() != null) {
+                    departmentRepository.findById(req.getDepartmentId()).ifPresent(d -> {
+                        sectionRepository.findByDepartmentAndSectionName(d, section.trim())
+                            .ifPresent(sec -> req.setSectionId(sec.getId()));
+                    });
+                }
+
+                // Auto-resolve Group
+                if (!groupName.isEmpty()) {
+                    groupRepository.findByName(groupName.trim())
+                        .ifPresent(g -> req.setGroupId(g.getId()));
+                }
 
                 parsedList.add(req);
             }
@@ -176,19 +322,11 @@ public class StudentService {
     public ApiResponse<String> bulkImport(List<CreateStudentRequest> requests, String username) {
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isCcOrAdmin = creator != null && (creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
-                || creator.getSubRoles().stream().anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
+                || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
         if (!isCcOrAdmin) {
             return ApiResponse.error("Access Denied: Only Class Coordinators (CC) can import students.");
         }
         try {
-            boolean isCc = creator != null && creator.getSubRoles().stream().anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
-            String defaultYear = null;
-            String defaultSection = null;
-            if (isCc) {
-                defaultYear = creator.getYear();
-                defaultSection = creator.getSection();
-            }
-
             int successCount = 0;
             int updateCount = 0;
 
@@ -201,30 +339,23 @@ public class StudentService {
                 String regNo = request.getStudentId().trim();
                 String email = request.getEmail().trim();
 
-                // Resolve Department
-                Department department = null;
-                String deptNameOrCode = request.getDepartmentName();
-                if (deptNameOrCode != null && !deptNameOrCode.trim().isEmpty()) {
-                    String cleanCode = deptNameOrCode.toUpperCase().trim();
-                    if (cleanCode.length() > 10) {
-                        cleanCode = generateShortCode(deptNameOrCode);
-                    }
-                    final String finalCleanCode = cleanCode;
-                    department = departmentRepository.findByCode(finalCleanCode)
-                        .orElseGet(() -> departmentRepository.findByName(deptNameOrCode)
-                        .orElseGet(() -> {
-                            Department newDept = Department.builder()
-                                .code(finalCleanCode)
-                                .name(deptNameOrCode)
-                                .description("Created automatically during bulk student import")
-                                .build();
-                            return departmentRepository.save(newDept);
-                        }));
-                }
+                // Load required lookup entities
+                Department department = departmentRepository.findById(request.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Department is required and must be valid for student: " + regNo));
+                Section section = request.getSectionId() != null ? sectionRepository.findById(request.getSectionId()).orElse(null) : null;
+                Gender gender = genderRepository.findById(request.getGenderId())
+                    .orElseThrow(() -> new RuntimeException("Gender is required and must be valid for student: " + regNo));
+                AcademicYear academicYear = academicYearRepository.findById(request.getAcademicYearId())
+                    .orElseThrow(() -> new RuntimeException("Academic Year is required and must be valid for student: " + regNo));
+                Year year = yearRepository.findById(request.getYearId())
+                    .orElseThrow(() -> new RuntimeException("Year is required and must be valid for student: " + regNo));
+                Semester semester = semesterRepository.findById(request.getSemesterId())
+                    .orElseThrow(() -> new RuntimeException("Semester is required and must be valid for student: " + regNo));
+                Group group = request.getGroupId() != null ? groupRepository.findById(request.getGroupId()).orElse(null) : null;
 
-                // Default password to DOB (yyyy-MM-dd) or regNo if dob is null
+                // Default password to DOB (ddMMyyyy) or regNo if dob is null
                 LocalDate dob = request.getDateOfBirth();
-                String rawPassword = dob != null ? dob.toString() : regNo;
+                String rawPassword = dob != null ? dob.format(DateTimeFormatter.ofPattern("ddMMyyyy")) : regNo;
                 String encodedPassword = passwordEncoder.encode(rawPassword);
 
                 Student student = studentRepository.findByStudentId(regNo)
@@ -234,41 +365,42 @@ public class StudentService {
                 if (student != null) {
                     student.setFullName(request.getFullName().trim());
                     student.setDepartment(department);
+                    student.setSectionRef(section);
+                    student.setGenderRef(gender);
+                    student.setAcademicYearRef(academicYear);
+                    student.setYearRef(year);
+                    student.setSemesterRef(semester);
+                    student.setGroup(group);
                     student.setSprNo(request.getSprNo() != null ? request.getSprNo().trim() : null);
                     student.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
+                    student.setPhoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000");
                     student.setDateOfBirth(dob);
                     student.setEmail(email);
                     student.setPassword(encodedPassword);
-                    if (isCc) {
-                        if (defaultYear != null) student.setYear(defaultYear);
-                        if (defaultSection != null) student.setSection(defaultSection);
-                    } else {
-                        if (request.getYear() != null) student.setYear(request.getYear());
-                        if (request.getSection() != null) student.setSection(request.getSection());
-                    }
+                    student.setAddress(request.getAddress());
+                    student.setActive(request.getActive() != null ? request.getActive() : true);
+                    
                     studentRepository.save(student);
                     updateCount++;
                 } else {
-                    String finalYear = request.getYear();
-                    String finalSection = request.getSection();
-                    if (isCc) {
-                        if (defaultYear != null) finalYear = defaultYear;
-                        if (defaultSection != null) finalSection = defaultSection;
-                    }
-
                     student = Student.builder()
                         .studentId(regNo)
                         .fullName(request.getFullName().trim())
                         .email(email)
                         .password(encodedPassword)
                         .phone(request.getPhone() != null ? request.getPhone().trim() : null)
-                        .gender("MALE")
+                        .phoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000")
+                        .genderRef(gender)
                         .dateOfBirth(dob)
                         .department(department)
-                        .year(finalYear)
-                        .section(finalSection)
+                        .sectionRef(section)
+                        .academicYearRef(academicYear)
+                        .yearRef(year)
+                        .semesterRef(semester)
+                        .group(group)
                         .sprNo(request.getSprNo() != null ? request.getSprNo().trim() : null)
-                        .active(true)
+                        .address(request.getAddress())
+                        .active(request.getActive() != null ? request.getActive() : true)
                         .build();
                     studentRepository.save(student);
                     successCount++;
@@ -393,20 +525,73 @@ public class StudentService {
         Department department = null;
         if (request.getDepartmentId() != null) {
             department = departmentRepository.findById(request.getDepartmentId()).orElse(null);
-            if (department == null) {
-                return ApiResponse.error("Department not found with ID: " + request.getDepartmentId());
-            }
+        }
+        if (department == null) {
+            return ApiResponse.error("Department is required");
         }
 
-        student.setFullName(request.getFullName());
-        student.setEmail(request.getEmail());
-        student.setPhone(request.getPhone());
-        student.setGender(request.getGender());
+        AcademicYear academicYear = null;
+        if (request.getAcademicYearId() != null) {
+            academicYear = academicYearRepository.findById(request.getAcademicYearId()).orElse(null);
+        }
+        if (academicYear == null) {
+            return ApiResponse.error("Academic Year is required");
+        }
+
+        Year year = null;
+        if (request.getYearId() != null) {
+            year = yearRepository.findById(request.getYearId()).orElse(null);
+        }
+        if (year == null) {
+            return ApiResponse.error("Year is required");
+        }
+
+        Semester semester = null;
+        if (request.getSemesterId() != null) {
+            semester = semesterRepository.findById(request.getSemesterId()).orElse(null);
+        }
+        if (semester == null) {
+            return ApiResponse.error("Semester is required");
+        }
+
+        Gender gender = null;
+        if (request.getGenderId() != null) {
+            gender = genderRepository.findById(request.getGenderId()).orElse(null);
+        }
+        if (gender == null) {
+            return ApiResponse.error("Gender is required");
+        }
+
+        Section section = request.getSectionId() != null ? sectionRepository.findById(request.getSectionId()).orElse(null) : null;
+        Group group = request.getGroupId() != null ? groupRepository.findById(request.getGroupId()).orElse(null) : null;
+
+        student.setFullName(request.getFullName().trim());
+        student.setEmail(request.getEmail().trim());
+        student.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
+        student.setPhoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000");
+        student.setAddress(request.getAddress());
+        if (request.getDob() != null) {
+            student.setDateOfBirth(request.getDob());
+        }
+        
         student.setDepartment(department);
-        student.setSemester(request.getSemester());
-        student.setAcademicYear(request.getAcademicYear());
+        student.setAcademicYearRef(academicYear);
+        student.setAcademicYear(academicYear.getAcademicYear());
+        student.setYearRef(year);
+        student.setYear(String.valueOf(year.getYearNo()));
+        student.setSemesterRef(semester);
+        student.setSemester(String.valueOf(semester.getSemesterNo()));
+        student.setGenderRef(gender);
+        student.setGender(gender.getGenderName());
+        student.setSectionRef(section);
+        student.setSection(section != null ? section.getSectionName() : null);
+        student.setGroup(group);
+        student.setSprNo(request.getSprNo() != null ? request.getSprNo().trim() : null);
         student.setActive(request.isActive());
-        student.setSprNo(request.getSprNo());
+
+        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+            student.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
 
         Student saved = studentRepository.save(student);
         log.info("Updated student: {} ({})", saved.getFullName(), saved.getStudentId());
@@ -508,7 +693,7 @@ public class StudentService {
         }
 
         boolean isHodOrAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
-                || creator.getSubRoles().stream().anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
+                || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
 
         if (!isHodOrAdmin) {
             return ApiResponse.error("Access Denied: Only Head of Department (HOD) can see department performance.");

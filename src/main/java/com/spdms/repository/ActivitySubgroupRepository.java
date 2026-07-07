@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface ActivitySubgroupRepository extends JpaRepository<ActivitySubgroup, Long> {
     List<ActivitySubgroup> findByStageId(Long stageId);
+    long countByAssignedDepartmentId(Long departmentId);
 }

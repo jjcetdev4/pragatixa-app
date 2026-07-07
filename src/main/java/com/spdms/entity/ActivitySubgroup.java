@@ -10,6 +10,9 @@ public class ActivitySubgroup {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 50)
+    private String category;
+
     @Column(nullable = false, length = 100)
     private String name;
 
@@ -24,18 +27,17 @@ public class ActivitySubgroup {
     @JoinColumn(name = "assigned_faculty_id")
     private User assignedFaculty;
 
-    public ActivitySubgroup() {}
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "assigned_department_id")
+    private Department assignedDepartment;
 
-    public ActivitySubgroup(Long id, String name, int threshold, ActivityStage stage, User assignedFaculty) {
-        this.id = id;
-        this.name = name;
-        this.threshold = threshold;
-        this.stage = stage;
-        this.assignedFaculty = assignedFaculty;
-    }
+    public ActivitySubgroup() {}
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -49,14 +51,19 @@ public class ActivitySubgroup {
     public User getAssignedFaculty() { return assignedFaculty; }
     public void setAssignedFaculty(User assignedFaculty) { this.assignedFaculty = assignedFaculty; }
 
+    public Department getAssignedDepartment() { return assignedDepartment; }
+    public void setAssignedDepartment(Department assignedDepartment) { this.assignedDepartment = assignedDepartment; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
         private final ActivitySubgroup subgroup = new ActivitySubgroup();
+        public Builder category(String v) { subgroup.category = v; return this; }
         public Builder name(String v) { subgroup.name = v; return this; }
         public Builder threshold(int v) { subgroup.threshold = v; return this; }
         public Builder stage(ActivityStage v) { subgroup.stage = v; return this; }
         public Builder assignedFaculty(User v) { subgroup.assignedFaculty = v; return this; }
+        public Builder assignedDepartment(Department v) { subgroup.assignedDepartment = v; return this; }
         public ActivitySubgroup build() { return subgroup; }
     }
 }

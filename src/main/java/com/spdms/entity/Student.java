@@ -15,83 +15,156 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String studentId;
+    @Column(name = "reg_no", unique = true)
+    private Long regNo;
 
-    @Column(nullable = false, length = 100)
-    private String fullName;
+    @Column(name = "spr_no", unique = true, length = 50)
+    private String sprNo;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "section_id", nullable = true)
+    private Section sectionRef;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = true)
+    private User user;
+
+    @Column(name = "DOB")
+    private LocalDate dobField;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "gender_id", nullable = false)
+    private Gender genderRef;
+
+    @Column(name = "phone_no", nullable = false, length = 15)
+    private String phoneNo;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "academic_year_id", nullable = false)
+    private AcademicYear academicYearRef;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "year_id", nullable = false)
+    private Year yearRef;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "semester_id", nullable = false)
+    private Semester semesterRef;
+
+    @Column(name = "academic_year", length = 20)
+    private String academicYear;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(length = 255)
+    private String address;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
 
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "full_name", nullable = false, length = 100)
+    private String fullName;
+
+    @Column(length = 10)
+    private String gender;
+
+    @Column(nullable = false, length = 255)
     private String password;
 
     @Column(length = 20)
     private String phone;
 
-    @Column(length = 10)
-    private String gender;
+    @Column(nullable = false)
+    private int score = 100;
 
-    private LocalDate dateOfBirth;
-
-    @Column(length = 255)
-    private String address;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "department_id")
-    private Department department;
+    @Column(length = 50)
+    private String section;
 
     @Column(length = 20)
     private String semester;
 
-    @Column(length = 20)
-    private String academicYear;
+    @Column(name = "student_id", nullable = false, unique = true, length = 50)
+    private String studentId;
 
-    @Column(name = "year", length = 10)
+    @Column(length = 10)
     private String year;
-
-    @Column(name = "section", length = 50)
-    private String section;
-
-    @Column(length = 50)
-    private String sprNo;
-
-    @Column(nullable = false)
-    private boolean active = true;
-
-    @Column(nullable = false)
-    private int score = 100;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     private Group group;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() { this.createdAt = LocalDateTime.now(); }
-
-    @PreUpdate
-    protected void onUpdate() { this.updatedAt = LocalDateTime.now(); }
 
     public Student() {}
 
-    // ── Getters & Setters ───────────────────────────
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getStudentId() { return studentId; }
-    public void setStudentId(String studentId) { this.studentId = studentId; }
+    public Long getRegNo() { return regNo; }
+    public void setRegNo(Long regNo) { this.regNo = regNo; }
+
+    public String getSprNo() { return sprNo; }
+    public void setSprNo(String sprNo) { this.sprNo = sprNo; }
+
+    public Department getDepartment() { return department; }
+    public void setDepartment(Department department) { this.department = department; }
+
+    public Section getSectionRef() { return sectionRef; }
+    public void setSectionRef(Section sectionRef) { this.sectionRef = sectionRef; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public LocalDate getDobField() { return dobField; }
+    public void setDobField(LocalDate dobField) { this.dobField = dobField; }
+
+    public Gender getGenderRef() { return genderRef; }
+    public void setGenderRef(Gender genderRef) { this.genderRef = genderRef; }
+
+    public String getPhoneNo() { return phoneNo; }
+    public void setPhoneNo(String phoneNo) { this.phoneNo = phoneNo; }
+
+    public AcademicYear getAcademicYearRef() { return academicYearRef; }
+    public void setAcademicYearRef(AcademicYear academicYearRef) { this.academicYearRef = academicYearRef; }
+
+    public Year getYearRef() { return yearRef; }
+    public void setYearRef(Year yearRef) { this.yearRef = yearRef; }
+
+    public Semester getSemesterRef() { return semesterRef; }
+    public void setSemesterRef(Semester semesterRef) { this.semesterRef = semesterRef; }
+
+    public String getAcademicYear() { return academicYear; }
+    public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
@@ -99,38 +172,20 @@ public class Student {
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
-
-    public LocalDate getDateOfBirth() { return dateOfBirth; }
-    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
-
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
-
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
-
-    public String getSemester() { return semester; }
-    public void setSemester(String semester) { this.semester = semester; }
-
-    public String getAcademicYear() { return academicYear; }
-    public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
-
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public int getScore() { return score; }
+    public void setScore(int score) { this.score = score; }
 
     public String getSection() { return section; }
     public void setSection(String section) { this.section = section; }
 
-    public String getSprNo() { return sprNo; }
-    public void setSprNo(String sprNo) { this.sprNo = sprNo; }
+    public String getSemester() { return semester; }
+    public void setSemester(String semester) { this.semester = semester; }
 
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    public String getStudentId() { return studentId; }
+    public void setStudentId(String studentId) { this.studentId = studentId; }
 
-    public int getScore() { return score; }
-    public void setScore(int score) { this.score = score; }
+    public String getYear() { return year; }
+    public void setYear(String year) { this.year = year; }
 
     public Group getGroup() { return group; }
     public void setGroup(Group group) { this.group = group; }
@@ -138,27 +193,35 @@ public class Student {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
-    // ── Builder ─────────────────────────────────────
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
         private final Student s = new Student();
-        public Builder studentId(String v) { s.studentId = v; return this; }
-        public Builder fullName(String v) { s.fullName = v; return this; }
+        public Builder regNo(Long v) { s.regNo = v; return this; }
+        public Builder sprNo(String v) { s.sprNo = v; return this; }
+        public Builder department(Department v) { s.department = v; return this; }
+        public Builder sectionRef(Section v) { s.sectionRef = v; return this; }
+        public Builder user(User v) { s.user = v; return this; }
+        public Builder dobField(LocalDate v) { s.dobField = v; return this; }
+        public Builder genderRef(Gender v) { s.genderRef = v; return this; }
+        public Builder phoneNo(String v) { s.phoneNo = v; return this; }
+        public Builder academicYearRef(AcademicYear v) { s.academicYearRef = v; return this; }
+        public Builder yearRef(Year v) { s.yearRef = v; return this; }
+        public Builder semesterRef(Semester v) { s.semesterRef = v; return this; }
+        public Builder academicYear(String v) { s.academicYear = v; return this; }
+        public Builder active(boolean v) { s.active = v; return this; }
+        public Builder address(String v) { s.address = v; return this; }
+        public Builder dateOfBirth(LocalDate v) { s.dateOfBirth = v; return this; }
         public Builder email(String v) { s.email = v; return this; }
+        public Builder fullName(String v) { s.fullName = v; return this; }
+        public Builder gender(String v) { s.gender = v; return this; }
         public Builder password(String v) { s.password = v; return this; }
         public Builder phone(String v) { s.phone = v; return this; }
-        public Builder gender(String v) { s.gender = v; return this; }
-        public Builder dateOfBirth(LocalDate v) { s.dateOfBirth = v; return this; }
-        public Builder address(String v) { s.address = v; return this; }
-        public Builder department(Department v) { s.department = v; return this; }
-        public Builder semester(String v) { s.semester = v; return this; }
-        public Builder academicYear(String v) { s.academicYear = v; return this; }
-        public Builder year(String v) { s.year = v; return this; }
-        public Builder section(String v) { s.section = v; return this; }
-        public Builder sprNo(String v) { s.sprNo = v; return this; }
-        public Builder active(boolean v) { s.active = v; return this; }
         public Builder score(int v) { s.score = v; return this; }
+        public Builder section(String v) { s.section = v; return this; }
+        public Builder semester(String v) { s.semester = v; return this; }
+        public Builder studentId(String v) { s.studentId = v; return this; }
+        public Builder year(String v) { s.year = v; return this; }
         public Builder group(Group v) { s.group = v; return this; }
         public Student build() { return s; }
     }

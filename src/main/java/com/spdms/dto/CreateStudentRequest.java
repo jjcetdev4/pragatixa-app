@@ -5,23 +5,24 @@ import java.time.LocalDate;
 
 public class CreateStudentRequest {
     @NotBlank(message = "Student ID is required")
-    @Size(max = 50)
+    @Size(max = 100)
     private String studentId;
 
     @NotBlank(message = "Full name is required")
-    @Size(max = 100)
+    @Size(max = 255)
     private String fullName;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
+    @Size(max = 255)
     private String email;
 
     private String password;
 
-    @Size(max = 20)
+    @Size(max = 50)
     private String phone;
 
-    @Size(max = 50)
+    @Size(max = 100)
     private String sprNo;
 
     private String departmentName;
@@ -39,7 +40,7 @@ public class CreateStudentRequest {
     @Size(max = 20)
     private String semester;
 
-    @Size(max = 20)
+    @Size(max = 50)
     private String academicYear;
     private String year;
     private String section;
@@ -76,4 +77,27 @@ public class CreateStudentRequest {
     public void setSprNo(String sprNo) { this.sprNo = sprNo; }
     public String getDepartmentName() { return departmentName; }
     public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+
+    private Long academicYearId;
+    private Long yearId;
+    private Long semesterId;
+    private Long sectionId;
+    private Long genderId;
+    private Long groupId;
+    private Boolean active;
+
+    public Long getAcademicYearId() { return academicYearId; }
+    public void setAcademicYearId(Long academicYearId) { this.academicYearId = academicYearId; }
+    public Long getYearId() { return yearId; }
+    public void setYearId(Long yearId) { this.yearId = yearId; }
+    public Long getSemesterId() { return semesterId; }
+    public void setSemesterId(Long semesterId) { this.semesterId = semesterId; }
+    public Long getSectionId() { return sectionId; }
+    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+    public Long getGenderId() { return genderId; }
+    public void setGenderId(Long genderId) { this.genderId = genderId; }
+    public Long getGroupId() { return groupId; }
+    public void setGroupId(Long groupId) { this.groupId = groupId; }
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 }

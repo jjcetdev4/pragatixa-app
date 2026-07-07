@@ -2,36 +2,42 @@ package com.spdms.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 
 public class UpdateStudentRequest {
     @NotBlank(message = "Full name is required")
-    @Size(max = 100)
+    @Size(max = 255)
     private String fullName;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
+    @Size(max = 255)
     private String email;
 
-    @Size(max = 20)
+    @Size(max = 50)
     private String phone;
 
-    @Pattern(regexp = "MALE|FEMALE|OTHER", message = "Gender must be MALE, FEMALE, or OTHER")
     private String gender;
-
     private Long departmentId;
-
-    @Size(max = 20)
     private String semester;
-
-    @Size(max = 20)
     private String academicYear;
-
+    private String year;
+    private String section;
     private boolean active;
 
-    @Size(max = 50)
+    @Size(max = 100)
     private String sprNo;
+
+    private LocalDate dob;
+    private String address;
+    private Long academicYearId;
+    private Long yearId;
+    private Long semesterId;
+    private Long sectionId;
+    private Long genderId;
+    private Long groupId;
+    private String password;
 
     public UpdateStudentRequest() {}
 
@@ -56,8 +62,42 @@ public class UpdateStudentRequest {
     public String getAcademicYear() { return academicYear; }
     public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
 
+    public String getYear() { return year; }
+    public void setYear(String year) { this.year = year; }
+
+    public String getSection() { return section; }
+    public void setSection(String section) { this.section = section; }
+
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
     public String getSprNo() { return sprNo; }
     public void setSprNo(String sprNo) { this.sprNo = sprNo; }
+
+    public LocalDate getDob() { return dob; }
+    public void setDob(LocalDate dob) { this.dob = dob; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public Long getAcademicYearId() { return academicYearId; }
+    public void setAcademicYearId(Long academicYearId) { this.academicYearId = academicYearId; }
+
+    public Long getYearId() { return yearId; }
+    public void setYearId(Long yearId) { this.yearId = yearId; }
+
+    public Long getSemesterId() { return semesterId; }
+    public void setSemesterId(Long semesterId) { this.semesterId = semesterId; }
+
+    public Long getSectionId() { return sectionId; }
+    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+
+    public Long getGenderId() { return genderId; }
+    public void setGenderId(Long genderId) { this.genderId = genderId; }
+
+    public Long getGroupId() { return groupId; }
+    public void setGroupId(Long groupId) { this.groupId = groupId; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }

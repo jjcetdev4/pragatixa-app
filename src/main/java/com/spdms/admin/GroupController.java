@@ -50,7 +50,7 @@ public class GroupController {
         }
 
         boolean isCcOrAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
-                || creator.getSubRoles().stream().anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+                || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
 
         if (!isCcOrAdmin) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: Only Class Coordinators (CC) can create groups."));

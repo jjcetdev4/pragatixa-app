@@ -6,33 +6,31 @@ spring:
     name: spdms-backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/spdms_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3307/spdms_lab?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: sharu
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
-  # Disable default Security auto-config password log
   security:
     user:
       name: admin
       password: admin
 
-# JWT Configuration
 jwt:
   secret: spdms_super_secret_key_must_be_at_least_256_bits_long_for_hs256_algorithm
-  expiration: 86400000       # 24 hours in milliseconds
-  student-expiration: 43200000  # 12 hours in milliseconds
+  expiration: 86400000
+  student-expiration: 43200000
 
-# Swagger / OpenAPI
 springdoc:
   api-docs:
     path: /api-docs
@@ -44,3 +42,4 @@ logging:
   level:
     com.spdms: DEBUG
     org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
