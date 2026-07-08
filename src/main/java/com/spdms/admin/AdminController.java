@@ -482,6 +482,7 @@ public class AdminController {
             return ResponseEntity.badRequest().body(ApiResponse.error("Stage already exists"));
         }
         ActivityStage stage = ActivityStage.builder()
+            .stageName(name.trim())
             .name(name.trim())
             .description(body.get("description"))
             .build();

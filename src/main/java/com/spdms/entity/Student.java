@@ -97,6 +97,15 @@ public class Student {
     @Column(length = 10)
     private String year;
 
+    @Column(name = "total_xp", nullable = false)
+    private int totalXp = 0;
+
+    @Column(name = "stage", nullable = false)
+    private int stage = 1;
+
+    @Column(name = "current_stage", nullable = false)
+    private int currentStage = 1;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     private Group group;
@@ -190,6 +199,21 @@ public class Student {
     public Group getGroup() { return group; }
     public void setGroup(Group group) { this.group = group; }
 
+    public int getTotalXp() { return totalXp; }
+    public void setTotalXp(int totalXp) { this.totalXp = totalXp; }
+
+    public int getStage() { return stage; }
+    public void setStage(int stage) { 
+        this.stage = stage; 
+        this.currentStage = stage;
+    }
+
+    public int getCurrentStage() { return currentStage; }
+    public void setCurrentStage(int currentStage) { 
+        this.currentStage = currentStage;
+        this.stage = currentStage;
+    }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
@@ -223,6 +247,17 @@ public class Student {
         public Builder studentId(String v) { s.studentId = v; return this; }
         public Builder year(String v) { s.year = v; return this; }
         public Builder group(Group v) { s.group = v; return this; }
+        public Builder totalXp(int v) { s.totalXp = v; return this; }
+        public Builder stage(int v) { 
+            s.stage = v; 
+            s.currentStage = v;
+            return this; 
+        }
+        public Builder currentStage(int v) { 
+            s.currentStage = v; 
+            s.stage = v;
+            return this; 
+        }
         public Student build() { return s; }
     }
 }

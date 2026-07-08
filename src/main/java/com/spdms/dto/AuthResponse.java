@@ -1,5 +1,6 @@
 package com.spdms.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class AuthResponse {
@@ -13,6 +14,15 @@ public class AuthResponse {
     private String userType;
     private String section;
     private String year;
+    private String department;
+    private String phone;
+    private String semester;
+    private String sprNo;
+    private int score;
+    private int totalXp;
+    private int stage;
+    @JsonProperty("isCaptain")
+    private boolean isCaptain;
 
     public AuthResponse() {}
 
@@ -36,6 +46,22 @@ public class AuthResponse {
     public void setSection(String section) { this.section = section; }
     public String getYear() { return year; }
     public void setYear(String year) { this.year = year; }
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getSemester() { return semester; }
+    public void setSemester(String semester) { this.semester = semester; }
+    public String getSprNo() { return sprNo; }
+    public void setSprNo(String sprNo) { this.sprNo = sprNo; }
+    public int getScore() { return score; }
+    public void setScore(int score) { this.score = score; }
+    public int getTotalXp() { return totalXp; }
+    public void setTotalXp(int totalXp) { this.totalXp = totalXp; }
+    public int getStage() { return stage; }
+    public void setStage(int stage) { this.stage = stage; }
+    public boolean isCaptain() { return isCaptain; }
+    public void setCaptain(boolean captain) { isCaptain = captain; }
 
     public static Builder builder() { return new Builder(); }
     public static class Builder {
@@ -50,6 +76,14 @@ public class AuthResponse {
         public Builder userType(String v) { r.userType = v; return this; }
         public Builder section(String v) { r.section = v; return this; }
         public Builder year(String v) { r.year = v; return this; }
+        public Builder department(String v) { r.department = v; return this; }
+        public Builder phone(String v) { r.phone = v; return this; }
+        public Builder semester(String v) { r.semester = v; return this; }
+        public Builder sprNo(String v) { r.sprNo = v; return this; }
+        public Builder score(int v) { r.score = v; return this; }
+        public Builder totalXp(int v) { r.totalXp = v; return this; }
+        public Builder stage(int v) { r.stage = v; return this; }
+        public Builder isCaptain(boolean v) { r.isCaptain = v; return this; }
         public AuthResponse build() { return r; }
     }
 }

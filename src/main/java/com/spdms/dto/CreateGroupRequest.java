@@ -13,7 +13,6 @@ public class CreateGroupRequest {
     @Min(value = 1, message = "Group size must be at least 1")
     private int size;
 
-    @NotBlank(message = "Captain Student ID is required")
     private String captainStudentId;
 
     private List<String> memberStudentIds; // other member student IDs

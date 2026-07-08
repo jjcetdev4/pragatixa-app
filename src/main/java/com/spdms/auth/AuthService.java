@@ -177,6 +177,7 @@ public class AuthService {
         String token = jwtUtil.generateStudentToken(student.getStudentId(), student.getEmail());
         log.info("[Student Login] JWT successfully generated for student: {}", student.getStudentId());
 
+        boolean isCap = student.getGroup() != null && student.getGroup().getCaptain() != null && student.getGroup().getCaptain().getId().equals(student.getId());
         AuthResponse response = AuthResponse.builder()
             .token(token)
             .type("Bearer")
@@ -184,9 +185,18 @@ public class AuthService {
             .fullName(student.getFullName())
             .email(student.getEmail())
             .roles(List.of("ROLE_STUDENT"))
-            .userType("STUDENT")
+            .subRoles(isCap ? List.of("CAPTAIN") : new ArrayList<>())
+            .userType(isCap ? "CAPTAIN" : "STUDENT")
             .section(student.getSection())
             .year(student.getYear())
+            .department(student.getDepartment() != null ? student.getDepartment().getDeptName() : "")
+            .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
+            .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName() : student.getSemester())
+            .sprNo(student.getSprNo())
+            .score(student.getScore())
+            .totalXp(student.getTotalXp())
+            .stage(student.getStage())
+            .isCaptain(isCap)
             .build();
 
         log.info("[Student Login] Authentication SUCCESS. Student: {} logged in.", student.getStudentId());
@@ -223,6 +233,7 @@ public class AuthService {
                     .userType(userType)
                     .section(user.getSection())
                     .year(user.getYear())
+                    .department("")
                     .build();
             return ApiResponse.ok("Profile loaded", response);
         }
@@ -232,6 +243,7 @@ public class AuthService {
             student = studentRepository.findByEmail(username).orElse(null);
         }
         if (student != null) {
+            boolean isCap = student.getGroup() != null && student.getGroup().getCaptain() != null && student.getGroup().getCaptain().getId().equals(student.getId());
             AuthResponse response = AuthResponse.builder()
                     .token(null)
                     .type("Bearer")
@@ -239,10 +251,18 @@ public class AuthService {
                     .fullName(student.getFullName())
                     .email(student.getEmail())
                     .roles(List.of("ROLE_STUDENT"))
-                    .subRoles(new ArrayList<>())
-                    .userType("STUDENT")
+                    .subRoles(isCap ? List.of("CAPTAIN") : new ArrayList<>())
+                    .userType(isCap ? "CAPTAIN" : "STUDENT")
                     .section(student.getSection())
                     .year(student.getYear())
+                    .department(student.getDepartment() != null ? student.getDepartment().getDeptName() : "")
+                    .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
+                    .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName() : student.getSemester())
+                    .sprNo(student.getSprNo())
+                    .score(student.getScore())
+                    .totalXp(student.getTotalXp())
+                    .stage(student.getStage())
+                    .isCaptain(isCap)
                     .build();
             return ApiResponse.ok("Profile loaded", response);
         }

@@ -23,8 +23,12 @@ public class StudentResponse {
     private int score;
     private Long groupId;
     private String groupName;
+    private boolean isCaptain;
 
     public StudentResponse() {}
+
+    public boolean isCaptain() { return isCaptain; }
+    public void setCaptain(boolean isCaptain) { this.isCaptain = isCaptain; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -87,6 +91,7 @@ public class StudentResponse {
         public Builder score(int v) { r.score = v; return this; }
         public Builder groupId(Long v) { r.groupId = v; return this; }
         public Builder groupName(String v) { r.groupName = v; return this; }
+        public Builder isCaptain(boolean v) { r.isCaptain = v; return this; }
         public StudentResponse build() { return r; }
     }
 }

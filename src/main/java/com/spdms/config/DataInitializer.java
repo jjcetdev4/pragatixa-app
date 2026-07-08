@@ -78,7 +78,8 @@ public class DataInitializer implements CommandLineRunner {
             {"Electronics and Communication", "ECE"},
             {"Mechanical Engineering", "MECH"},
             {"Civil Engineering", "CIVIL"},
-            {"Business Administration", "MBA"}
+            {"Business Administration", "MBA"},
+            {"Information Technology", "IT"}
         };
         for (String[] d : depts) {
             if (departmentRepository.findByDeptCode(d[1]).isEmpty()) {

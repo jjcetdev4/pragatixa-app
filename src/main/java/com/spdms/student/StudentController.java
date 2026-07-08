@@ -46,7 +46,7 @@ public class StudentController {
 
     /** GET /api/v1/students – List all students */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "Get All Students", description = "Returns paginated list of all students.")
     public ResponseEntity<ApiResponse<Page<StudentResponse>>> getAllStudents(
             @RequestParam(defaultValue = "0") int page,
@@ -157,5 +157,27 @@ public class StudentController {
         return response.isSuccess()
             ? ResponseEntity.ok(response)
             : ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    /** POST /api/v1/students/{id}/make-captain – Promote student to Group Captain */
+    @PostMapping("/{id}/make-captain")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Promote Student to Group Captain", description = "Sets the student as the Captain of their assigned group.")
+    public ResponseEntity<ApiResponse<Void>> promoteToCaptain(@PathVariable Long id) {
+        ApiResponse<Void> response = studentService.promoteToCaptain(id);
+        return response.isSuccess()
+            ? ResponseEntity.ok(response)
+            : ResponseEntity.badRequest().body(response);
+    }
+
+    /** POST /api/v1/students/{id}/remove-captain – Remove student from Group Captain status */
+    @PostMapping("/{id}/remove-captain")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Remove Student from Group Captain status", description = "Removes the student as the Captain of their assigned group.")
+    public ResponseEntity<ApiResponse<Void>> removeCaptain(@PathVariable Long id) {
+        ApiResponse<Void> response = studentService.removeCaptain(id);
+        return response.isSuccess()
+            ? ResponseEntity.ok(response)
+            : ResponseEntity.badRequest().body(response);
     }
 }

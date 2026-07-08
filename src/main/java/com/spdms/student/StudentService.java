@@ -13,12 +13,14 @@ import org.springframework.web.multipart.MultipartFile;
 import org.apache.poi.ss.usermodel.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -175,7 +177,7 @@ public class StudentService {
 
     // ── Bulk Parse & Import ─────────────────────────
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ApiResponse<List<CreateStudentRequest>> bulkParse(MultipartFile file, String username) {
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isCcOrAdmin = creator != null && (creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
@@ -230,82 +232,137 @@ public class StudentService {
                 req.setAddress(address);
                 req.setActive(true);
 
-                // Auto-resolve Department
+                // Auto-resolve/Auto-create Department
                 if (!deptName.isEmpty()) {
-                    departmentRepository.findByDeptCode(deptName.toUpperCase().trim())
-                        .or(() -> departmentRepository.findByCode(deptName.toUpperCase().trim()))
-                        .or(() -> departmentRepository.findByName(deptName))
-                        .ifPresent(d -> {
-                            req.setDepartmentId(d.getId());
-                            req.setDepartmentName(d.getName());
+                    String trimmedDept = deptName.trim();
+                    String code = trimmedDept.length() > 6 ? trimmedDept.substring(0, 4).toUpperCase() : trimmedDept.toUpperCase();
+                    
+                    Department d = departmentRepository.findByDeptCode(code)
+                        .or(() -> departmentRepository.findByCode(code))
+                        .or(() -> departmentRepository.findByName(trimmedDept))
+                        .orElseGet(() -> {
+                            Department newDept = Department.builder()
+                                .deptCode(code)
+                                .deptName(trimmedDept)
+                                .code(code)
+                                .name(trimmedDept)
+                                .description("Auto-created during bulk import")
+                                .build();
+                            return departmentRepository.save(newDept);
                         });
+                    req.setDepartmentId(d.getId());
+                    req.setDepartmentName(d.getName());
                 }
                 
-                // Auto-resolve Gender
+                // Auto-resolve/Auto-create Gender
                 if (!gender.isEmpty()) {
-                    genderRepository.findByGenderName(gender.trim())
-                        .ifPresent(g -> req.setGenderId(g.getId()));
+                    String genderTrim = gender.trim();
+                    Gender g = genderRepository.findByGenderName(genderTrim)
+                        .orElseGet(() -> genderRepository.save(
+                            Gender.builder().genderName(genderTrim).build()
+                        ));
+                    req.setGenderId(g.getId());
                 } else {
                     genderRepository.findAll().stream()
                         .filter(g -> g.getGenderName().equalsIgnoreCase("Male"))
                         .findFirst()
-                        .ifPresent(g -> req.setGenderId(g.getId()));
+                        .ifPresentOrElse(
+                            g -> req.setGenderId(g.getId()),
+                            () -> {
+                                Gender defaultMale = genderRepository.save(
+                                    Gender.builder().genderName("Male").build()
+                                );
+                                req.setGenderId(defaultMale.getId());
+                            }
+                        );
                 }
 
-                // Auto-resolve Academic Year
+                // Auto-resolve/Auto-create Academic Year
                 if (!academicYear.isEmpty()) {
-                    academicYearRepository.findByAcademicYear(academicYear.trim())
-                        .ifPresent(ay -> req.setAcademicYearId(ay.getId()));
+                    String ayTrim = normalizeAcademicYear(academicYear);
+                    AcademicYear ay = academicYearRepository.findByAcademicYear(ayTrim)
+                        .orElseGet(() -> academicYearRepository.save(
+                            AcademicYear.builder()
+                                .academicYear(ayTrim)
+                                .startDate(LocalDate.now())
+                                .endDate(LocalDate.now().plusYears(1))
+                                .status(AcademicYear.Status.ACTIVE)
+                                .build()
+                        ));
+                    req.setAcademicYearId(ay.getId());
                 }
 
-                // Auto-resolve Year
+                // Auto-resolve/Auto-create Year
                 if (!year.isEmpty()) {
                     try {
                         byte yNo = Byte.parseByte(year.trim());
-                        yearRepository.findByYearNo(yNo)
-                            .ifPresent(y -> req.setYearId(y.getId()));
+                        Year y = yearRepository.findByYearNo(yNo)
+                            .orElseGet(() -> yearRepository.save(
+                                Year.builder().yearNo(yNo).yearName(yNo + " Year").build()
+                            ));
+                        req.setYearId(y.getId());
                     } catch (Exception e) {
-                        if (year.toLowerCase().contains("1") || year.toLowerCase().contains("first")) {
-                            yearRepository.findByYearNo((byte) 1).ifPresent(y -> req.setYearId(y.getId()));
-                        } else if (year.toLowerCase().contains("2") || year.toLowerCase().contains("second")) {
-                            yearRepository.findByYearNo((byte) 2).ifPresent(y -> req.setYearId(y.getId()));
-                        } else if (year.toLowerCase().contains("3") || year.toLowerCase().contains("third")) {
-                            yearRepository.findByYearNo((byte) 3).ifPresent(y -> req.setYearId(y.getId()));
-                        } else if (year.toLowerCase().contains("4") || year.toLowerCase().contains("fourth")) {
-                            yearRepository.findByYearNo((byte) 4).ifPresent(y -> req.setYearId(y.getId()));
-                        }
+                        byte fallbackVal = 1;
+                        if (year.toLowerCase().contains("2") || year.toLowerCase().contains("second")) fallbackVal = 2;
+                        else if (year.toLowerCase().contains("3") || year.toLowerCase().contains("third")) fallbackVal = 3;
+                        else if (year.toLowerCase().contains("4") || year.toLowerCase().contains("fourth")) fallbackVal = 4;
+                        
+                        final byte finalFallback = fallbackVal;
+                        Year y = yearRepository.findByYearNo(finalFallback)
+                            .orElseGet(() -> yearRepository.save(
+                                Year.builder().yearNo(finalFallback).yearName(finalFallback + " Year").build()
+                            ));
+                        req.setYearId(y.getId());
                     }
                 }
 
-                // Auto-resolve Semester
+                // Auto-resolve/Auto-create Semester
                 if (!semester.isEmpty()) {
                     try {
                         byte sNo = Byte.parseByte(semester.trim());
-                        semesterRepository.findBySemesterNo(sNo)
-                            .ifPresent(s -> req.setSemesterId(s.getId()));
+                        Semester s = semesterRepository.findBySemesterNo(sNo)
+                            .orElseGet(() -> semesterRepository.save(
+                                Semester.builder().semesterNo(sNo).semesterName("Semester " + sNo).build()
+                            ));
+                        req.setSemesterId(s.getId());
                     } catch (Exception e) {
+                        byte fallbackSem = 1;
                         for (byte i = 1; i <= 8; i++) {
                             if (semester.contains(String.valueOf(i))) {
-                                final byte currentI = i;
-                                semesterRepository.findBySemesterNo(currentI).ifPresent(s -> req.setSemesterId(s.getId()));
+                                fallbackSem = i;
                                 break;
                             }
                         }
+                        final byte finalFallbackSem = fallbackSem;
+                        Semester s = semesterRepository.findBySemesterNo(finalFallbackSem)
+                            .orElseGet(() -> semesterRepository.save(
+                                Semester.builder().semesterNo(finalFallbackSem).semesterName("Semester " + finalFallbackSem).build()
+                            ));
+                        req.setSemesterId(s.getId());
                     }
                 }
 
-                // Auto-resolve Section
+                // Auto-resolve/Auto-create Section
                 if (!section.isEmpty() && req.getDepartmentId() != null) {
-                    departmentRepository.findById(req.getDepartmentId()).ifPresent(d -> {
-                        sectionRepository.findByDepartmentAndSectionName(d, section.trim())
-                            .ifPresent(sec -> req.setSectionId(sec.getId()));
-                    });
+                    Department d = departmentRepository.findById(req.getDepartmentId()).orElse(null);
+                    if (d != null) {
+                        String secTrim = section.trim();
+                        Section sec = sectionRepository.findByDepartmentAndSectionName(d, secTrim)
+                            .orElseGet(() -> sectionRepository.save(
+                                Section.builder().department(d).sectionName(secTrim).build()
+                            ));
+                        req.setSectionId(sec.getId());
+                    }
                 }
 
-                // Auto-resolve Group
+                // Auto-resolve/Auto-create Group
                 if (!groupName.isEmpty()) {
-                    groupRepository.findByName(groupName.trim())
-                        .ifPresent(g -> req.setGroupId(g.getId()));
+                    String gTrim = groupName.trim();
+                    Group g = groupRepository.findByName(gTrim)
+                        .orElseGet(() -> groupRepository.save(
+                            Group.builder().name(gTrim).build()
+                        ));
+                    req.setGroupId(g.getId());
                 }
 
                 parsedList.add(req);
@@ -318,7 +375,6 @@ public class StudentService {
         }
     }
 
-    @Transactional
     public ApiResponse<String> bulkImport(List<CreateStudentRequest> requests, String username) {
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isCcOrAdmin = creator != null && (creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
@@ -329,6 +385,9 @@ public class StudentService {
         try {
             int successCount = 0;
             int updateCount = 0;
+            java.util.Set<String> processedStudentIds = new java.util.HashSet<>();
+            java.util.Set<String> processedEmails = new java.util.HashSet<>();
+            java.util.Set<String> processedSprs = new java.util.HashSet<>();
 
             for (CreateStudentRequest request : requests) {
                 if (request.getStudentId() == null || request.getStudentId().trim().isEmpty() ||
@@ -339,18 +398,200 @@ public class StudentService {
                 String regNo = request.getStudentId().trim();
                 String email = request.getEmail().trim();
 
+                if (processedStudentIds.contains(regNo)) {
+                    return ApiResponse.error("Duplicate Register No '" + regNo + "' found in the uploaded batch.");
+                }
+                if (processedEmails.contains(email)) {
+                    return ApiResponse.error("Duplicate Email '" + email + "' found in the uploaded batch.");
+                }
+                if (request.getSprNo() != null && !request.getSprNo().trim().isEmpty()) {
+                    String cleanSpr = request.getSprNo().trim();
+                    if (processedSprs.contains(cleanSpr)) {
+                        return ApiResponse.error("Duplicate SPR Number '" + cleanSpr + "' found in the uploaded batch.");
+                    }
+                    processedSprs.add(cleanSpr);
+                }
+                processedStudentIds.add(regNo);
+                processedEmails.add(email);
+
+                // 1. Auto-resolve missing Department ID
+                if (request.getDepartmentId() == null && request.getDepartmentName() != null && !request.getDepartmentName().trim().isEmpty()) {
+                    String deptName = request.getDepartmentName().trim();
+                    String code = deptName.length() > 6 ? deptName.substring(0, 4).toUpperCase() : deptName.toUpperCase();
+                    Department d = departmentRepository.findByDeptCode(code)
+                        .or(() -> departmentRepository.findByCode(code))
+                        .or(() -> departmentRepository.findByName(deptName))
+                        .orElseGet(() -> departmentRepository.save(
+                            Department.builder().deptCode(code).deptName(deptName).code(code).name(deptName).description("Auto-created during bulk import").build()
+                        ));
+                    request.setDepartmentId(d.getId());
+                }
+
+                // 2. Auto-resolve missing Gender ID
+                if (request.getGenderId() == null && request.getGender() != null && !request.getGender().trim().isEmpty()) {
+                    String genderTrim = request.getGender().trim();
+                    Gender g = genderRepository.findByGenderName(genderTrim)
+                        .orElseGet(() -> genderRepository.save(
+                            Gender.builder().genderName(genderTrim).build()
+                        ));
+                    request.setGenderId(g.getId());
+                }
+
+                // 3. Auto-resolve missing Academic Year ID
+                if (request.getAcademicYearId() == null && request.getAcademicYear() != null && !request.getAcademicYear().trim().isEmpty()) {
+                    String ayTrim = normalizeAcademicYear(request.getAcademicYear());
+                    AcademicYear ay = academicYearRepository.findByAcademicYear(ayTrim)
+                        .orElseGet(() -> academicYearRepository.save(
+                            AcademicYear.builder().academicYear(ayTrim).startDate(LocalDate.now()).endDate(LocalDate.now().plusYears(1)).status(AcademicYear.Status.ACTIVE).build()
+                        ));
+                    request.setAcademicYearId(ay.getId());
+                }
+
+                // 4. Auto-resolve missing Year ID
+                if (request.getYearId() == null && request.getYear() != null && !request.getYear().trim().isEmpty()) {
+                    try {
+                        byte yNo = Byte.parseByte(request.getYear().trim());
+                        Year y = yearRepository.findByYearNo(yNo)
+                            .orElseGet(() -> yearRepository.save(
+                                Year.builder().yearNo(yNo).yearName(yNo + " Year").build()
+                            ));
+                        request.setYearId(y.getId());
+                    } catch (Exception e) {
+                        byte fallbackVal = 1;
+                        String yrLower = request.getYear().toLowerCase();
+                        if (yrLower.contains("2") || yrLower.contains("second")) fallbackVal = 2;
+                        else if (yrLower.contains("3") || yrLower.contains("third")) fallbackVal = 3;
+                        else if (yrLower.contains("4") || yrLower.contains("fourth")) fallbackVal = 4;
+                        final byte finalFallback = fallbackVal;
+                        Year y = yearRepository.findByYearNo(finalFallback)
+                            .orElseGet(() -> yearRepository.save(
+                                Year.builder().yearNo(finalFallback).yearName(finalFallback + " Year").build()
+                            ));
+                        request.setYearId(y.getId());
+                    }
+                }
+
+                // 5. Auto-resolve missing Semester ID
+                if (request.getSemesterId() == null && request.getSemester() != null && !request.getSemester().trim().isEmpty()) {
+                    try {
+                        byte sNo = Byte.parseByte(request.getSemester().trim());
+                        Semester s = semesterRepository.findBySemesterNo(sNo)
+                            .orElseGet(() -> semesterRepository.save(
+                                Semester.builder().semesterNo(sNo).semesterName("Semester " + sNo).build()
+                            ));
+                        request.setSemesterId(s.getId());
+                    } catch (Exception e) {
+                        byte fallbackSem = 1;
+                        for (byte i = 1; i <= 8; i++) {
+                            if (request.getSemester().contains(String.valueOf(i))) {
+                                fallbackSem = i;
+                                break;
+                            }
+                        }
+                        final byte finalFallbackSem = fallbackSem;
+                        Semester s = semesterRepository.findBySemesterNo(finalFallbackSem)
+                            .orElseGet(() -> semesterRepository.save(
+                                Semester.builder().semesterNo(finalFallbackSem).semesterName("Semester " + finalFallbackSem).build()
+                            ));
+                        request.setSemesterId(s.getId());
+                    }
+                }
+
+                // 6. Auto-resolve missing Section ID
+                if (request.getSectionId() == null && request.getSection() != null && !request.getSection().trim().isEmpty() && request.getDepartmentId() != null) {
+                    Department d = departmentRepository.findById(request.getDepartmentId()).orElse(null);
+                    if (d != null) {
+                        String secTrim = request.getSection().trim();
+                        Section sec = sectionRepository.findByDepartmentAndSectionName(d, secTrim)
+                            .orElseGet(() -> sectionRepository.save(
+                                Section.builder().department(d).sectionName(secTrim).build()
+                            ));
+                        request.setSectionId(sec.getId());
+                    }
+                }
+
+
+
+                // Fallbacks for missing Year
+                if (request.getYearId() == null) {
+                    byte fallbackNo = 1;
+                    Year firstYear = yearRepository.findByYearNo(fallbackNo)
+                        .orElseGet(() -> yearRepository.save(
+                            Year.builder().yearNo(fallbackNo).yearName("1 Year").build()
+                        ));
+                    request.setYearId(firstYear.getId());
+                    request.setYear("1");
+                }
+
+                // Fallbacks for missing Semester
+                if (request.getSemesterId() == null) {
+                    byte fallbackNo = 1;
+                    Semester firstSemester = semesterRepository.findBySemesterNo(fallbackNo)
+                        .orElseGet(() -> semesterRepository.save(
+                            Semester.builder().semesterNo(fallbackNo).semesterName("Semester 1").build()
+                        ));
+                    request.setSemesterId(firstSemester.getId());
+                    request.setSemester("1");
+                }
+
+                // Fallbacks for missing Gender
+                if (request.getGenderId() == null) {
+                    Gender g = genderRepository.findAll().stream()
+                        .filter(gen -> gen.getGenderName().equalsIgnoreCase("Male"))
+                        .findFirst()
+                        .orElseGet(() -> genderRepository.save(
+                            Gender.builder().genderName("Male").build()
+                        ));
+                    request.setGenderId(g.getId());
+                    request.setGender(g.getGenderName());
+                }
+
+                // Validation checks to prevent throwing RuntimeExceptions in Transaction boundary
+                if (request.getDepartmentId() == null) {
+                    return ApiResponse.error("Department is missing or not registered for student: " + request.getFullName());
+                }
+                if (request.getGenderId() == null) {
+                    return ApiResponse.error("Gender is missing or not registered for student: " + request.getFullName());
+                }
+                if (request.getAcademicYearId() == null) {
+                    return ApiResponse.error("Academic Year is missing or not registered for student: " + request.getFullName());
+                }
+                if (request.getYearId() == null) {
+                    return ApiResponse.error("Year is missing or not registered for student: " + request.getFullName());
+                }
+                if (request.getSemesterId() == null) {
+                    return ApiResponse.error("Semester is missing or not registered for student: " + request.getFullName());
+                }
+
                 // Load required lookup entities
                 Department department = departmentRepository.findById(request.getDepartmentId())
-                    .orElseThrow(() -> new RuntimeException("Department is required and must be valid for student: " + regNo));
+                    .orElse(null);
+                if (department == null) {
+                    return ApiResponse.error("Invalid Department ID for student: " + request.getFullName());
+                }
+
                 Section section = request.getSectionId() != null ? sectionRepository.findById(request.getSectionId()).orElse(null) : null;
-                Gender gender = genderRepository.findById(request.getGenderId())
-                    .orElseThrow(() -> new RuntimeException("Gender is required and must be valid for student: " + regNo));
-                AcademicYear academicYear = academicYearRepository.findById(request.getAcademicYearId())
-                    .orElseThrow(() -> new RuntimeException("Academic Year is required and must be valid for student: " + regNo));
-                Year year = yearRepository.findById(request.getYearId())
-                    .orElseThrow(() -> new RuntimeException("Year is required and must be valid for student: " + regNo));
-                Semester semester = semesterRepository.findById(request.getSemesterId())
-                    .orElseThrow(() -> new RuntimeException("Semester is required and must be valid for student: " + regNo));
+                
+                Gender gender = genderRepository.findById(request.getGenderId()).orElse(null);
+                if (gender == null) {
+                    return ApiResponse.error("Invalid Gender ID for student: " + request.getFullName());
+                }
+
+                AcademicYear academicYear = academicYearRepository.findById(request.getAcademicYearId()).orElse(null);
+                if (academicYear == null) {
+                    return ApiResponse.error("Invalid Academic Year ID for student: " + request.getFullName());
+                }
+
+                Year year = yearRepository.findById(request.getYearId()).orElse(null);
+                if (year == null) {
+                    return ApiResponse.error("Invalid Year ID for student: " + request.getFullName());
+                }
+
+                Semester semester = semesterRepository.findById(request.getSemesterId()).orElse(null);
+                if (semester == null) {
+                    return ApiResponse.error("Invalid Semester ID for student: " + request.getFullName());
+                }
+
                 Group group = request.getGroupId() != null ? groupRepository.findById(request.getGroupId()).orElse(null) : null;
 
                 // Default password to DOB (ddMMyyyy) or regNo if dob is null
@@ -363,6 +604,19 @@ public class StudentService {
                     .orElse(null);
 
                 if (student != null) {
+                    // Check database for duplicates before modifying
+                    if (request.getSprNo() != null && !request.getSprNo().trim().isEmpty()) {
+                        String cleanSpr = request.getSprNo().trim();
+                        java.util.Optional<Student> duplicateSpr = studentRepository.findBySprNo(cleanSpr);
+                        if (duplicateSpr.isPresent() && !duplicateSpr.get().getId().equals(student.getId())) {
+                            return ApiResponse.error("SPR Number '" + cleanSpr + "' is already assigned to student: " + duplicateSpr.get().getFullName());
+                        }
+                    }
+                    java.util.Optional<Student> duplicateEmail = studentRepository.findByEmail(email);
+                    if (duplicateEmail.isPresent() && !duplicateEmail.get().getId().equals(student.getId())) {
+                        return ApiResponse.error("Email '" + email + "' is already assigned to student: " + duplicateEmail.get().getFullName());
+                    }
+
                     student.setFullName(request.getFullName().trim());
                     student.setDepartment(department);
                     student.setSectionRef(section);
@@ -371,25 +625,45 @@ public class StudentService {
                     student.setYearRef(year);
                     student.setSemesterRef(semester);
                     student.setGroup(group);
-                    student.setSprNo(request.getSprNo() != null ? request.getSprNo().trim() : null);
-                    student.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
-                    student.setPhoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000");
+                    student.setSprNo(request.getSprNo() != null && !request.getSprNo().trim().isEmpty() ? request.getSprNo().trim() : null);
+                    student.setPhone(request.getPhone() != null && !request.getPhone().trim().isEmpty() ? request.getPhone().trim() : null);
+                    student.setPhoneNo(request.getPhone() != null && !request.getPhone().trim().isEmpty() ? request.getPhone().trim() : "0000000000");
                     student.setDateOfBirth(dob);
                     student.setEmail(email);
                     student.setPassword(encodedPassword);
                     student.setAddress(request.getAddress());
                     student.setActive(request.getActive() != null ? request.getActive() : true);
+                    // Set String properties
+                    student.setAcademicYear(academicYear.getAcademicYear());
+                    student.setYear(String.valueOf(year.getYearNo()));
+                    student.setSemester(String.valueOf(semester.getSemesterNo()));
+                    student.setGender(gender.getGenderName());
+                    student.setSection(section != null ? section.getSectionName() : null);
                     
-                    studentRepository.save(student);
+                    studentRepository.saveAndFlush(student);
                     updateCount++;
                 } else {
+                    // Check database for duplicates before inserting
+                    if (studentRepository.existsByStudentId(regNo)) {
+                        return ApiResponse.error("Student Register No '" + regNo + "' already exists.");
+                    }
+                    if (studentRepository.existsByEmail(email)) {
+                        return ApiResponse.error("Email '" + email + "' already exists.");
+                    }
+                    if (request.getSprNo() != null && !request.getSprNo().trim().isEmpty()) {
+                        String cleanSpr = request.getSprNo().trim();
+                        if (studentRepository.findBySprNo(cleanSpr).isPresent()) {
+                            return ApiResponse.error("SPR Number '" + cleanSpr + "' already exists.");
+                        }
+                    }
+
                     student = Student.builder()
                         .studentId(regNo)
                         .fullName(request.getFullName().trim())
                         .email(email)
                         .password(encodedPassword)
-                        .phone(request.getPhone() != null ? request.getPhone().trim() : null)
-                        .phoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000")
+                        .phone(request.getPhone() != null && !request.getPhone().trim().isEmpty() ? request.getPhone().trim() : null)
+                        .phoneNo(request.getPhone() != null && !request.getPhone().trim().isEmpty() ? request.getPhone().trim() : "0000000000")
                         .genderRef(gender)
                         .dateOfBirth(dob)
                         .department(department)
@@ -397,19 +671,36 @@ public class StudentService {
                         .academicYearRef(academicYear)
                         .yearRef(year)
                         .semesterRef(semester)
+                        // String properties
+                        .academicYear(academicYear.getAcademicYear())
+                        .year(String.valueOf(year.getYearNo()))
+                        .semester(String.valueOf(semester.getSemesterNo()))
+                        .gender(gender.getGenderName())
+                        .section(section != null ? section.getSectionName() : null)
+                        .score(100)
                         .group(group)
-                        .sprNo(request.getSprNo() != null ? request.getSprNo().trim() : null)
+                        .sprNo(request.getSprNo() != null && !request.getSprNo().trim().isEmpty() ? request.getSprNo().trim() : null)
                         .address(request.getAddress())
                         .active(request.getActive() != null ? request.getActive() : true)
                         .build();
-                    studentRepository.save(student);
+                    studentRepository.saveAndFlush(student);
                     successCount++;
                 }
             }
             return ApiResponse.ok("Bulk import processed: " + successCount + " students created, " + updateCount + " updated.", null);
         } catch (Exception e) {
             log.error("Bulk import failed", e);
-            return ApiResponse.error("Bulk import failed: " + e.getMessage());
+            try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter("import_error.log"))) {
+                e.printStackTrace(pw);
+            } catch (Exception ex) {
+                // ignore
+            }
+            // Dig out the root cause SQL message if possible
+            Throwable root = e;
+            while (root.getCause() != null) {
+                root = root.getCause();
+            }
+            return ApiResponse.error("Bulk import failed: " + root.getMessage());
         }
     }
 
@@ -603,6 +894,7 @@ public class StudentService {
     private StudentResponse toResponse(Student student) {
         Long groupId = student.getGroup() != null ? student.getGroup().getId() : null;
         String groupName = student.getGroup() != null ? student.getGroup().getName() : null;
+        boolean isCap = student.getGroup() != null && student.getGroup().getCaptain() != null && student.getGroup().getCaptain().getId().equals(student.getId());
 
         return StudentResponse.builder()
             .id(student.getId())
@@ -624,6 +916,7 @@ public class StudentService {
             .score(student.getScore())
             .groupId(groupId)
             .groupName(groupName)
+            .isCaptain(isCap)
             .build();
     }
 
@@ -669,6 +962,7 @@ public class StudentService {
                 .reason(request.getReason())
                 .subgroup(subgroup)
                 .recordedBy(creator)
+                .incidentDate(LocalDateTime.now())
                 .build();
         disciplineLogRepository.save(logEntry);
 
@@ -727,5 +1021,72 @@ public class StudentService {
         );
 
         return ApiResponse.ok("Department performance metrics loaded", response);
+    }
+
+    @Transactional
+    public ApiResponse<Void> promoteToCaptain(Long studentId) {
+        Optional<Student> studentOpt = studentRepository.findById(studentId);
+        if (studentOpt.isEmpty()) {
+            return ApiResponse.error("Student not found");
+        }
+        Student student = studentOpt.get();
+        Group group = student.getGroup();
+        if (group == null) {
+            String defaultGroupName = student.getFullName().trim() + "'s Group";
+            if (groupRepository.existsByName(defaultGroupName)) {
+                defaultGroupName = student.getFullName().trim() + " (" + student.getStudentId().trim() + ")'s Group";
+            }
+            if (groupRepository.existsByName(defaultGroupName)) {
+                defaultGroupName = student.getFullName().trim() + " Group " + System.currentTimeMillis();
+            }
+            
+            group = Group.builder()
+                    .name(defaultGroupName)
+                    .size(10) // Default max size of 10
+                    .captain(student)
+                    .build();
+            group = groupRepository.save(group);
+            student.setGroup(group);
+            studentRepository.save(student);
+        } else {
+            group.setCaptain(student);
+            groupRepository.save(group);
+        }
+
+        return ApiResponse.ok("Student promoted to Captain of group: " + group.getName(), null);
+    }
+
+    @Transactional
+    public ApiResponse<Void> removeCaptain(Long studentId) {
+        Optional<Student> studentOpt = studentRepository.findById(studentId);
+        if (studentOpt.isEmpty()) {
+            return ApiResponse.error("Student not found");
+        }
+        Student student = studentOpt.get();
+        Group group = student.getGroup();
+        if (group == null) {
+            return ApiResponse.error("Student is not assigned to any group");
+        }
+
+        if (group.getCaptain() == null || !group.getCaptain().getId().equals(student.getId())) {
+            return ApiResponse.error("Student is not the Captain of their group");
+        }
+
+        group.setCaptain(null);
+        groupRepository.save(group);
+
+        return ApiResponse.ok("Student removed from Captain of group: " + group.getName(), null);
+    }
+
+    private String normalizeAcademicYear(String input) {
+        if (input == null) return "";
+        String cleaned = input.replaceAll("\\s+", ""); // Remove all spaces
+        if (cleaned.matches("\\d{4}-\\d{2}")) { // e.g. "2024-25"
+            String start = cleaned.substring(0, 4);
+            String endPrefix = cleaned.substring(0, 2);
+            String endSuffix = cleaned.substring(5, 7);
+            return start + "-" + endPrefix + endSuffix; // becomes "2024-2025"
+        }
+        return cleaned;
     }
 }
