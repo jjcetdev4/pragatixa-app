@@ -91,47 +91,22 @@ public class StudentService {
             return ApiResponse.error("Email '" + request.getEmail() + "' is already registered");
         }
 
-        Department department = null;
-        if (request.getDepartmentId() != null) {
-            department = departmentRepository.findById(request.getDepartmentId()).orElse(null);
+        Department department;
+        AcademicYear academicYear;
+        Year year;
+        Semester semester;
+        Gender gender;
+        Section section;
+        try {
+            department = resolveDepartment(request.getDepartmentId(), request.getDepartmentName());
+            academicYear = resolveAcademicYear(request.getAcademicYearId(), request.getAcademicYear());
+            year = resolveYear(request.getYearId(), request.getYear());
+            semester = resolveSemester(request.getSemesterId(), request.getSemester());
+            gender = resolveGender(request.getGenderId(), request.getGender());
+            section = resolveSection(request.getSectionId(), request.getSection(), department);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
         }
-        if (department == null) {
-            return ApiResponse.error("Department is required");
-        }
-
-        AcademicYear academicYear = null;
-        if (request.getAcademicYearId() != null) {
-            academicYear = academicYearRepository.findById(request.getAcademicYearId()).orElse(null);
-        }
-        if (academicYear == null) {
-            return ApiResponse.error("Academic Year is required");
-        }
-
-        Year year = null;
-        if (request.getYearId() != null) {
-            year = yearRepository.findById(request.getYearId()).orElse(null);
-        }
-        if (year == null) {
-            return ApiResponse.error("Year is required");
-        }
-
-        Semester semester = null;
-        if (request.getSemesterId() != null) {
-            semester = semesterRepository.findById(request.getSemesterId()).orElse(null);
-        }
-        if (semester == null) {
-            return ApiResponse.error("Semester is required");
-        }
-
-        Gender gender = null;
-        if (request.getGenderId() != null) {
-            gender = genderRepository.findById(request.getGenderId()).orElse(null);
-        }
-        if (gender == null) {
-            return ApiResponse.error("Gender is required");
-        }
-
-        Section section = request.getSectionId() != null ? sectionRepository.findById(request.getSectionId()).orElse(null) : null;
         Group group = request.getGroupId() != null ? groupRepository.findById(request.getGroupId()).orElse(null) : null;
 
         // Set default password to DOB (ddMMyyyy) if not specified
@@ -813,47 +788,22 @@ public class StudentService {
             }
         });
 
-        Department department = null;
-        if (request.getDepartmentId() != null) {
-            department = departmentRepository.findById(request.getDepartmentId()).orElse(null);
+        Department department;
+        AcademicYear academicYear;
+        Year year;
+        Semester semester;
+        Gender gender;
+        Section section;
+        try {
+            department = resolveDepartment(request.getDepartmentId(), null);
+            academicYear = resolveAcademicYear(request.getAcademicYearId(), request.getAcademicYear());
+            year = resolveYear(request.getYearId(), request.getYear());
+            semester = resolveSemester(request.getSemesterId(), request.getSemester());
+            gender = resolveGender(request.getGenderId(), request.getGender());
+            section = resolveSection(request.getSectionId(), request.getSection(), department);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
         }
-        if (department == null) {
-            return ApiResponse.error("Department is required");
-        }
-
-        AcademicYear academicYear = null;
-        if (request.getAcademicYearId() != null) {
-            academicYear = academicYearRepository.findById(request.getAcademicYearId()).orElse(null);
-        }
-        if (academicYear == null) {
-            return ApiResponse.error("Academic Year is required");
-        }
-
-        Year year = null;
-        if (request.getYearId() != null) {
-            year = yearRepository.findById(request.getYearId()).orElse(null);
-        }
-        if (year == null) {
-            return ApiResponse.error("Year is required");
-        }
-
-        Semester semester = null;
-        if (request.getSemesterId() != null) {
-            semester = semesterRepository.findById(request.getSemesterId()).orElse(null);
-        }
-        if (semester == null) {
-            return ApiResponse.error("Semester is required");
-        }
-
-        Gender gender = null;
-        if (request.getGenderId() != null) {
-            gender = genderRepository.findById(request.getGenderId()).orElse(null);
-        }
-        if (gender == null) {
-            return ApiResponse.error("Gender is required");
-        }
-
-        Section section = request.getSectionId() != null ? sectionRepository.findById(request.getSectionId()).orElse(null) : null;
         Group group = request.getGroupId() != null ? groupRepository.findById(request.getGroupId()).orElse(null) : null;
 
         student.setFullName(request.getFullName().trim());
@@ -1088,5 +1038,119 @@ public class StudentService {
             return start + "-" + endPrefix + endSuffix; // becomes "2024-2025"
         }
         return cleaned;
+    }
+
+    private Department resolveDepartment(Long id, String name) {
+        if (id != null) {
+            return departmentRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Department not found"));
+        } else if (name != null && !name.trim().isEmpty()) {
+            String trimmedName = name.trim();
+            return departmentRepository.findByName(trimmedName)
+                    .or(() -> departmentRepository.findByDeptCode(trimmedName))
+                    .or(() -> departmentRepository.findByCode(trimmedName))
+                    .orElseThrow(() -> new IllegalArgumentException("Department not found"));
+        } else {
+            throw new IllegalArgumentException("Department is required");
+        }
+    }
+
+    private AcademicYear resolveAcademicYear(Long id, String name) {
+        if (id != null) {
+            return academicYearRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Academic Year not found"));
+        } else if (name != null && !name.trim().isEmpty()) {
+            return academicYearRepository.findByAcademicYear(name.trim())
+                    .orElseThrow(() -> new IllegalArgumentException("Academic Year not found"));
+        } else {
+            throw new IllegalArgumentException("Academic Year is required");
+        }
+    }
+
+    private Year resolveYear(Long id, String name) {
+        if (id != null) {
+            return yearRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Year not found"));
+        } else if (name != null && !name.trim().isEmpty()) {
+            String trimmed = name.trim();
+            Byte yearNo = null;
+            try {
+                yearNo = Byte.parseByte(trimmed);
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+            if (yearNo != null) {
+                return yearRepository.findByYearNo(yearNo)
+                        .orElseThrow(() -> new IllegalArgumentException("Year not found"));
+            }
+            String lower = trimmed.toLowerCase();
+            byte matchNo = 0;
+            if (lower.contains("first") || lower.contains("1")) matchNo = 1;
+            else if (lower.contains("second") || lower.contains("2")) matchNo = 2;
+            else if (lower.contains("third") || lower.contains("3")) matchNo = 3;
+            else if (lower.contains("fourth") || lower.contains("4")) matchNo = 4;
+            
+            if (matchNo > 0) {
+                return yearRepository.findByYearNo(matchNo)
+                        .orElseThrow(() -> new IllegalArgumentException("Year not found"));
+            }
+            
+            return yearRepository.findByYearName(trimmed)
+                    .orElseThrow(() -> new IllegalArgumentException("Year not found"));
+        } else {
+            throw new IllegalArgumentException("Year is required");
+        }
+    }
+
+    private Semester resolveSemester(Long id, String name) {
+        if (id != null) {
+            return semesterRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Semester not found"));
+        } else if (name != null && !name.trim().isEmpty()) {
+            String trimmed = name.trim();
+            Byte semesterNo = null;
+            try {
+                semesterNo = Byte.parseByte(trimmed);
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+            if (semesterNo != null) {
+                return semesterRepository.findBySemesterNo(semesterNo)
+                        .orElseThrow(() -> new IllegalArgumentException("Semester not found"));
+            }
+            for (byte i = 1; i <= 8; i++) {
+                if (trimmed.contains(String.valueOf(i))) {
+                    return semesterRepository.findBySemesterNo(i)
+                            .orElseThrow(() -> new IllegalArgumentException("Semester not found"));
+                }
+            }
+            return semesterRepository.findBySemesterName(trimmed)
+                    .orElseThrow(() -> new IllegalArgumentException("Semester not found"));
+        } else {
+            throw new IllegalArgumentException("Semester is required");
+        }
+    }
+
+    private Gender resolveGender(Long id, String name) {
+        if (id != null) {
+            return genderRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Gender not found"));
+        } else if (name != null && !name.trim().isEmpty()) {
+            return genderRepository.findByGenderName(name.trim())
+                    .orElseThrow(() -> new IllegalArgumentException("Gender not found"));
+        } else {
+            throw new IllegalArgumentException("Gender is required");
+        }
+    }
+
+    private Section resolveSection(Long id, String name, Department department) {
+        if (id != null) {
+            return sectionRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Section not found"));
+        } else if (name != null && !name.trim().isEmpty() && department != null) {
+            return sectionRepository.findByDepartmentAndSectionName(department, name.trim())
+                    .orElseThrow(() -> new IllegalArgumentException("Section not found"));
+        }
+        return null;
     }
 }
