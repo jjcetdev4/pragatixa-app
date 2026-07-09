@@ -2,6 +2,8 @@ package com.spdms.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "activities", uniqueConstraints = {
@@ -85,7 +87,25 @@ public class Activity {
     @JoinColumn(name = "subgroup_id", nullable = false)
     private ActivitySubgroup subgroup;
 
+    @Transient
+    private String departmentId;
+
+    @Transient
+    private String teacherId;
+
+    @Transient
+    private List<Map<String, Object>> assignmentSummary;
+
     public Activity() {}
+
+    public String getDepartmentId() { return departmentId; }
+    public void setDepartmentId(String departmentId) { this.departmentId = departmentId; }
+
+    public String getTeacherId() { return teacherId; }
+    public void setTeacherId(String teacherId) { this.teacherId = teacherId; }
+
+    public List<Map<String, Object>> getAssignmentSummary() { return assignmentSummary; }
+    public void setAssignmentSummary(List<Map<String, Object>> assignmentSummary) { this.assignmentSummary = assignmentSummary; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

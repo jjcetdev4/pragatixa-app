@@ -10,6 +10,7 @@ import com.spdms.entity.Role;
 import com.spdms.entity.User;
 import com.spdms.entity.ActivityStage;
 import com.spdms.entity.ActivitySubgroup;
+import com.spdms.entity.Activity;
 import com.spdms.entity.Subject;
 import com.spdms.repository.DepartmentRepository;
 import com.spdms.repository.RoleRepository;
@@ -18,6 +19,11 @@ import com.spdms.repository.UserRepository;
 import com.spdms.repository.ActivityStageRepository;
 import com.spdms.repository.ActivitySubgroupRepository;
 import com.spdms.repository.SubjectRepository;
+import com.spdms.repository.ActivityRepository;
+import com.spdms.repository.DisciplineLogRepository;
+import com.spdms.repository.ActivityAssignmentRepository;
+import com.spdms.entity.ActivityAssignment;
+import java.util.ArrayList;
 import com.spdms.entity.SubRole;
 import com.spdms.repository.SubRoleRepository;
 import com.spdms.repository.SectionRepository;
@@ -45,6 +51,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -76,6 +83,9 @@ public class AdminController {
     private final YearRepository yearRepository;
     private final SemesterRepository semesterRepository;
     private final GenderRepository genderRepository;
+    private final ActivityRepository activityRepository;
+    private final DisciplineLogRepository disciplineLogRepository;
+    private final ActivityAssignmentRepository activityAssignmentRepository;
  
     public AdminController(StudentRepository studentRepository,
                            UserRepository userRepository,
@@ -92,7 +102,10 @@ public class AdminController {
                            AcademicYearRepository academicYearRepository,
                            YearRepository yearRepository,
                            SemesterRepository semesterRepository,
-                           GenderRepository genderRepository) {
+                           GenderRepository genderRepository,
+                           ActivityRepository activityRepository,
+                           DisciplineLogRepository disciplineLogRepository,
+                           ActivityAssignmentRepository activityAssignmentRepository) {
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
@@ -109,6 +122,9 @@ public class AdminController {
         this.yearRepository = yearRepository;
         this.semesterRepository = semesterRepository;
         this.genderRepository = genderRepository;
+        this.activityRepository = activityRepository;
+        this.disciplineLogRepository = disciplineLogRepository;
+        this.activityAssignmentRepository = activityAssignmentRepository;
     }
 
     @GetMapping("/stats")
@@ -555,12 +571,29 @@ public class AdminController {
         if (!activityStageRepository.existsById(id)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Stage not found"));
         }
-        // Cascade delete subgroups manually
+        
         List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(id);
+        
+        // 1. Nullify references in DisciplineLog for each subgroup and activity of this stage
+        for (ActivitySubgroup sub : subgroups) {
+            disciplineLogRepository.nullifySubgroupReferences(sub.getId());
+        }
+        
+        List<Activity> activities = activityRepository.findByStageId(id);
+        for (Activity act : activities) {
+            disciplineLogRepository.nullifyActivityReferences(act.getId());
+        }
+        
+        // 2. Delete all Activity records referencing this stage
+        activityRepository.deleteAll(activities);
+        
+        // 3. Delete subgroups
         activitySubgroupRepository.deleteAll(subgroups);
         
+        // 4. Delete the stage itself
         activityStageRepository.deleteById(id);
-        log.info("Admin deleted stage and its subgroups: {}", id);
+        
+        log.info("Admin deleted stage and its subgroups and activities: {}", id);
         return ResponseEntity.ok(ApiResponse.ok("Stage deleted successfully", null));
     }
 
@@ -572,7 +605,21 @@ public class AdminController {
         if (!activitySubgroupRepository.existsById(id)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Subgroup not found"));
         }
+
+        // 1. Nullify references in DisciplineLog
+        disciplineLogRepository.nullifySubgroupReferences(id);
+        
+        List<Activity> activities = activityRepository.findBySubgroupId(id);
+        for (Activity act : activities) {
+            disciplineLogRepository.nullifyActivityReferences(act.getId());
+        }
+
+        // 2. Delete activities
+        activityRepository.deleteAll(activities);
+
+        // 3. Delete subgroup
         activitySubgroupRepository.deleteById(id);
+        
         log.info("Admin deleted subgroup with ID: {}", id);
         return ResponseEntity.ok(ApiResponse.ok("Subgroup deleted successfully", null));
     }
@@ -688,5 +735,264 @@ public class AdminController {
         ActivitySubgroup saved = activitySubgroupRepository.save(subgroup);
         log.info("Admin assigned faculty {} to subgroup {}", faculty != null ? faculty.getUsername() : "null", subgroup.getName());
         return ResponseEntity.ok(ApiResponse.ok("Faculty assigned successfully", saved));
+     }
+
+    private void populateActivityTransientFields(Activity activity) {
+        if (activity.getOwnerDepartment() != null && !activity.getOwnerDepartment().trim().isEmpty()) {
+            departmentRepository.findByName(activity.getOwnerDepartment())
+                .ifPresent(dept -> activity.setDepartmentId(dept.getId().toString()));
+        }
+        if (activity.getOwnerSubrole() != null && !activity.getOwnerSubrole().trim().isEmpty()) {
+            userRepository.findByUsername(activity.getOwnerSubrole())
+                .ifPresent(user -> activity.setTeacherId(user.getId().toString()));
+        }
+        
+        // Populate assignmentSummary
+        List<ActivityAssignment> assignments = activityAssignmentRepository.findByActivityId(activity.getId());
+        List<Map<String, Object>> summary = new ArrayList<>();
+        for (ActivityAssignment aa : assignments) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("department", aa.getDepartment().getName());
+            if (aa.getSection() != null) {
+                map.put("section", aa.getSection().getSectionName());
+                map.put("sectionId", aa.getSection().getId());
+            }
+            map.put("teacher", aa.getTeacher().getFullName());
+            map.put("teacherId", aa.getTeacher().getId());
+            summary.add(map);
+        }
+        activity.setAssignmentSummary(summary);
+    }
+
+    // ==========================================
+    // ACTIVITY ENDPOINTS
+    // ==========================================
+
+    @GetMapping("/subgroups/{subgroupId}/activities")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Get all activities of a subgroup")
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(@PathVariable Long subgroupId) {
+        if (!activitySubgroupRepository.existsById(subgroupId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Subgroup not found"));
+        }
+        
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        boolean isAdmin = currentUser != null && currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        
+        List<Activity> activities = activityRepository.findBySubgroupId(subgroupId);
+        
+        // Filter by Coordinator's department
+        if (!isAdmin && currentUser != null && currentUser.getDepartment() != null) {
+            final String deptName = currentUser.getDepartment().getName();
+            activities = activities.stream()
+                .filter(a -> a.getOwnerDepartment() != null && a.getOwnerDepartment().equalsIgnoreCase(deptName))
+                .collect(Collectors.toList());
+        }
+        
+        for (Activity activity : activities) {
+            populateActivityTransientFields(activity);
+        }
+        return ResponseEntity.ok(ApiResponse.ok(activities));
+    }
+
+    @PostMapping("/subgroups/{subgroupId}/activities")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Operation(summary = "Create a new activity under a subgroup")
+    public ResponseEntity<ApiResponse<Activity>> createActivity(
+            @PathVariable Long subgroupId,
+            @RequestBody Map<String, Object> body) {
+        
+        ActivitySubgroup subgroup = activitySubgroupRepository.findById(subgroupId)
+                .orElse(null);
+        if (subgroup == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Subgroup not found"));
+        }
+
+        Activity activity = new Activity();
+        activity.setSubgroup(subgroup);
+        activity.setStage(subgroup.getStage());
+        
+        String name = (String) body.get("name");
+        activity.setName(name);
+        activity.setActivityName(name);
+        
+        String desc = (String) body.get("description");
+        activity.setDescription(desc);
+        activity.setActivityDescription(desc);
+        
+        activity.setFrequency((String) body.get("frequency"));
+        activity.setOwnerDepartment((String) body.get("ownerDepartment"));
+        activity.setOwnerSubrole(""); // teacher assignment removed from Admin creation
+
+        Object evidenceObj = body.get("evidence");
+        if (evidenceObj instanceof List) {
+            List<?> evList = (List<?>) evidenceObj;
+            activity.setEvidence(evList.stream().map(Object::toString).collect(Collectors.joining(", ")));
+        } else if (evidenceObj instanceof String) {
+            activity.setEvidence((String) evidenceObj);
+        }
+        
+        activity.setXp((String) body.get("xp"));
+        activity.setCap((String) body.get("cap"));
+        activity.setType((String) body.get("type"));
+        activity.setModeType(body.get("type") != null ? (String) body.get("type") : "Individual");
+        activity.setJustification((String) body.get("justification"));
+        
+        // Default fields
+        activity.setMaxPoints(100);
+        activity.setMandatory(true);
+        activity.setEvidenceRequired(true);
+
+        Activity saved = activityRepository.save(activity);
+        populateActivityTransientFields(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Activity created successfully", saved));
+    }
+
+    @PutMapping("/activities/{activityId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Operation(summary = "Update an activity")
+    public ResponseEntity<ApiResponse<Activity>> updateActivity(
+            @PathVariable Long activityId,
+            @RequestBody Map<String, Object> body) {
+        
+        Activity activity = activityRepository.findById(activityId).orElse(null);
+        if (activity == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Activity not found"));
+        }
+        
+        if (body.containsKey("name")) {
+            String name = (String) body.get("name");
+            activity.setName(name);
+            activity.setActivityName(name);
+        }
+        if (body.containsKey("description")) {
+            String desc = (String) body.get("description");
+            activity.setDescription(desc);
+            activity.setActivityDescription(desc);
+        }
+        if (body.containsKey("frequency")) {
+            activity.setFrequency((String) body.get("frequency"));
+        }
+        if (body.containsKey("ownerDepartment")) {
+            activity.setOwnerDepartment((String) body.get("ownerDepartment"));
+        }
+        if (body.containsKey("evidence")) {
+            Object evidenceObj = body.get("evidence");
+            if (evidenceObj instanceof List) {
+                List<?> evList = (List<?>) evidenceObj;
+                activity.setEvidence(evList.stream().map(Object::toString).collect(Collectors.joining(", ")));
+            } else if (evidenceObj instanceof String) {
+                activity.setEvidence((String) evidenceObj);
+            }
+        }
+        if (body.containsKey("xp")) {
+            activity.setXp((String) body.get("xp"));
+        }
+        if (body.containsKey("cap")) {
+            activity.setCap((String) body.get("cap"));
+        }
+        if (body.containsKey("type")) {
+            String type = (String) body.get("type");
+            activity.setType(type);
+            activity.setModeType(type);
+        }
+        if (body.containsKey("justification")) {
+            activity.setJustification((String) body.get("justification"));
+        }
+
+        Activity saved = activityRepository.save(activity);
+        populateActivityTransientFields(saved);
+        return ResponseEntity.ok(ApiResponse.ok("Activity updated successfully", saved));
+    }
+
+    @PostMapping(value = {"/activities/{id}/assign", "/activity/{id}/assign"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Transactional
+    @Operation(summary = "Assign a teacher to an activity")
+    public ResponseEntity<ApiResponse<ActivityAssignment>> assignActivity(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
+        
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        boolean isAdmin = currentUser != null && currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        boolean isCc = currentUser != null && currentUser.getSubRoles().stream().map(com.spdms.entity.SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+        
+        if (!isAdmin && !isCc) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("Access Denied: Only Admins or Class Coordinators can assign activities."));
+        }
+
+        Activity activity = activityRepository.findById(id).orElse(null);
+        if (activity == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Activity not found"));
+        }
+
+        String ownerDeptName = activity.getOwnerDepartment();
+        if (ownerDeptName == null || ownerDeptName.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Activity has no department defined"));
+        }
+        Department department = departmentRepository.findByName(ownerDeptName)
+            .orElseGet(() -> departmentRepository.findByCode(ownerDeptName)
+                .orElseThrow(() -> new RuntimeException("Department not found: " + ownerDeptName)));
+
+        if (!isAdmin && currentUser.getDepartment() != null) {
+            if (!currentUser.getDepartment().getId().equals(department.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access Denied: You can only assign activities for your own department."));
+            }
+        }
+
+        if (body.get("teacherId") == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("teacherId is required"));
+        }
+        Long teacherId = Long.valueOf(body.get("teacherId").toString());
+        User teacher = userRepository.findById(teacherId)
+            .orElseThrow(() -> new RuntimeException("Teacher not found"));
+
+        Long sectionId = null;
+        Section section = null;
+        if (body.get("sectionId") != null && !body.get("sectionId").toString().isEmpty() && !body.get("sectionId").toString().equals("null")) {
+            sectionId = Long.valueOf(body.get("sectionId").toString());
+            section = sectionRepository.findById(sectionId)
+                .orElseThrow(() -> new RuntimeException("Section not found"));
+        }
+
+        ActivityAssignment assignment;
+        if (sectionId != null) {
+            assignment = activityAssignmentRepository.findByActivityIdAndSectionId(id, sectionId)
+                .orElse(new ActivityAssignment());
+            assignment.setSection(section);
+        } else {
+            assignment = activityAssignmentRepository.findByActivityIdAndSectionIsNull(id)
+                .orElse(new ActivityAssignment());
+            assignment.setSection(null);
+        }
+
+        assignment.setActivity(activity);
+        assignment.setDepartment(department);
+        assignment.setTeacher(teacher);
+        assignment.setAssignedBy(currentUser);
+        assignment.setAssignedAt(LocalDateTime.now());
+
+        ActivityAssignment saved = activityAssignmentRepository.save(assignment);
+        return ResponseEntity.ok(ApiResponse.ok("Teacher assigned successfully", saved));
+    }
+
+    @DeleteMapping("/activities/{activityId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Operation(summary = "Delete an activity")
+    public ResponseEntity<ApiResponse<Void>> deleteActivity(@PathVariable Long activityId) {
+        if (!activityRepository.existsById(activityId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Activity not found"));
+        }
+        disciplineLogRepository.nullifyActivityReferences(activityId);
+        activityRepository.deleteById(activityId);
+        log.info("Admin deleted activity with ID: {}", activityId);
+        return ResponseEntity.ok(ApiResponse.ok("Activity deleted successfully", null));
     }
 }

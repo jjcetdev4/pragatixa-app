@@ -2,6 +2,9 @@ package com.spdms.repository;
 
 import com.spdms.entity.DisciplineLog;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -9,4 +12,12 @@ import java.util.List;
 @Repository
 public interface DisciplineLogRepository extends JpaRepository<DisciplineLog, Long> {
     List<DisciplineLog> findByStudentIdOrderByCreatedAtDesc(Long studentId);
+
+    @Modifying
+    @Query("UPDATE DisciplineLog dl SET dl.subgroup = null WHERE dl.subgroup.id = :subgroupId")
+    void nullifySubgroupReferences(@Param("subgroupId") Long subgroupId);
+
+    @Modifying
+    @Query("UPDATE DisciplineLog dl SET dl.activity = null WHERE dl.activity.id = :activityId")
+    void nullifyActivityReferences(@Param("activityId") Long activityId);
 }
