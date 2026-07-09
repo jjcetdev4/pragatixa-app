@@ -30,13 +30,16 @@ public class TeamController {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
     public TeamController(TeamRepository teamRepository,
                           UserRepository userRepository,
-                          StudentRepository studentRepository) {
+                          StudentRepository studentRepository,
+                          TeamMemberRepository teamMemberRepository) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
+        this.teamMemberRepository = teamMemberRepository;
     }
 
     @PostMapping
@@ -309,14 +312,15 @@ public class TeamController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
         }
 
-        if (team.getCaptain() != null) {
-            team.getCaptain().setTeam(null);
-            studentRepository.save(team.getCaptain());
-        }
+        log.info("Deleting Team ID = {}", id);
+        long memberCount = teamMemberRepository.countByTeamId(id);
+        log.info("Member Count = {}", memberCount);
+        log.info("Captain = {}", team.getCaptain() != null ? team.getCaptain().getStudentId() : "null");
+        log.info("Repository Result = {}", memberCount);
 
-        for (Student m : team.getMembers()) {
-            m.setTeam(null);
-            studentRepository.save(m);
+        if (memberCount > 0) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiResponse.error("Cannot delete team because it still contains members."));
         }
 
         teamRepository.delete(team);
