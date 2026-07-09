@@ -177,7 +177,7 @@ public class AuthService {
         String token = jwtUtil.generateStudentToken(student.getStudentId(), student.getEmail());
         log.info("[Student Login] JWT successfully generated for student: {}", student.getStudentId());
 
-        boolean isCap = student.getGroup() != null && student.getGroup().getCaptain() != null && student.getGroup().getCaptain().getId().equals(student.getId());
+        boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
         AuthResponse response = AuthResponse.builder()
             .token(token)
             .type("Bearer")
@@ -243,7 +243,7 @@ public class AuthService {
             student = studentRepository.findByEmail(username).orElse(null);
         }
         if (student != null) {
-            boolean isCap = student.getGroup() != null && student.getGroup().getCaptain() != null && student.getGroup().getCaptain().getId().equals(student.getId());
+            boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
             AuthResponse response = AuthResponse.builder()
                     .token(null)
                     .type("Bearer")

@@ -6,12 +6,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents a student group created by a Class Coordinator (CC)
+ * Represents a student team created by a Class Coordinator (CC)
  */
 @Entity
-@Table(name = "`groups`")
+@Table(name = "teams")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Group {
+public class Team {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,13 +27,13 @@ public class Group {
     @JoinColumn(name = "captain_id")
     private Student captain;
 
-    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("group")
+    @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("team")
     private Set<Student> members = new HashSet<>();
 
-    public Group() {}
+    public Team() {}
 
-    public Group(Long id, String name, int size, Student captain) {
+    public Team(Long id, String name, int size, Student captain) {
         this.id = id;
         this.name = name;
         this.size = size;
@@ -85,10 +85,10 @@ public class Group {
     }
 
     public static class Builder {
-        private final Group group = new Group();
-        public Builder name(String v) { group.name = v; return this; }
-        public Builder size(int v) { group.size = v; return this; }
-        public Builder captain(Student v) { group.captain = v; return this; }
-        public Group build() { return group; }
+        private final Team team = new Team();
+        public Builder name(String v) { team.name = v; return this; }
+        public Builder size(int v) { team.size = v; return this; }
+        public Builder captain(Student v) { team.captain = v; return this; }
+        public Team build() { return team; }
     }
 }

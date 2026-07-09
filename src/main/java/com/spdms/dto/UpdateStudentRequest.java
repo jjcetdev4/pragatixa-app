@@ -36,7 +36,7 @@ public class UpdateStudentRequest {
     private Long semesterId;
     private Long sectionId;
     private Long genderId;
-    private Long groupId;
+    private Long teamId;
     private String password;
 
     public UpdateStudentRequest() {}
@@ -95,8 +95,8 @@ public class UpdateStudentRequest {
     public Long getGenderId() { return genderId; }
     public void setGenderId(Long genderId) { this.genderId = genderId; }
 
-    public Long getGroupId() { return groupId; }
-    public void setGroupId(Long groupId) { this.groupId = groupId; }
+    public Long getTeamId() { return teamId; }
+    public void setTeamId(Long teamId) { this.teamId = teamId; }
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }

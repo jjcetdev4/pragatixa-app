@@ -107,8 +107,8 @@ public class Student {
     private int currentStage = 1;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
-    private Group group;
+    @JoinColumn(name = "team_id")
+    private Team team;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -196,8 +196,8 @@ public class Student {
     public String getYear() { return year; }
     public void setYear(String year) { this.year = year; }
 
-    public Group getGroup() { return group; }
-    public void setGroup(Group group) { this.group = group; }
+    public Team getTeam() { return team; }
+    public void setTeam(Team team) { this.team = team; }
 
     public int getTotalXp() { return totalXp; }
     public void setTotalXp(int totalXp) { this.totalXp = totalXp; }
@@ -246,7 +246,7 @@ public class Student {
         public Builder semester(String v) { s.semester = v; return this; }
         public Builder studentId(String v) { s.studentId = v; return this; }
         public Builder year(String v) { s.year = v; return this; }
-        public Builder group(Group v) { s.group = v; return this; }
+        public Builder team(Team v) { s.team = v; return this; }
         public Builder totalXp(int v) { s.totalXp = v; return this; }
         public Builder stage(int v) { 
             s.stage = v; 

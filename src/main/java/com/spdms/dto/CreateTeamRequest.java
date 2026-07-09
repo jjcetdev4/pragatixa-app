@@ -2,22 +2,21 @@ package com.spdms.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
-public class CreateGroupRequest {
+public class CreateTeamRequest {
 
-    @NotBlank(message = "Group name is required")
+    @NotBlank(message = "Team name is required")
     private String name;
 
-    @Min(value = 1, message = "Group size must be at least 1")
+    @Min(value = 1, message = "Team size must be at least 1")
     private int size;
 
     private String captainStudentId;
 
     private List<String> memberStudentIds; // other member student IDs
 
-    public CreateGroupRequest() {}
+    public CreateTeamRequest() {}
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

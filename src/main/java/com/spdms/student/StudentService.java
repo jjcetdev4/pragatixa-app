@@ -43,7 +43,7 @@ public class StudentService {
     private final GenderRepository genderRepository;
     private final SectionRepository sectionRepository;
     private final RoleRepository roleRepository;
-    private final GroupRepository groupRepository;
+    private final TeamRepository teamRepository;
 
     public StudentService(StudentRepository studentRepository,
                           DepartmentRepository departmentRepository,
@@ -57,7 +57,7 @@ public class StudentService {
                           GenderRepository genderRepository,
                           SectionRepository sectionRepository,
                           RoleRepository roleRepository,
-                          GroupRepository groupRepository) {
+                          TeamRepository teamRepository) {
         this.studentRepository = studentRepository;
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
@@ -70,7 +70,7 @@ public class StudentService {
         this.genderRepository = genderRepository;
         this.sectionRepository = sectionRepository;
         this.roleRepository = roleRepository;
-        this.groupRepository = groupRepository;
+        this.teamRepository = teamRepository;
     }
 
     // ── Create ───────────────────────────────────────
@@ -107,7 +107,7 @@ public class StudentService {
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
         }
-        Group group = request.getGroupId() != null ? groupRepository.findById(request.getGroupId()).orElse(null) : null;
+        Team team = request.getTeamId() != null ? teamRepository.findById(request.getTeamId()).orElse(null) : null;
 
         // Set default password to DOB (ddMMyyyy) if not specified
         String rawPassword = request.getPassword();
@@ -139,7 +139,7 @@ public class StudentService {
             .gender(gender.getGenderName())
             .sectionRef(section)
             .section(section != null ? section.getSectionName() : null)
-            .group(group)
+            .team(team)
             .sprNo(request.getSprNo() != null ? request.getSprNo().trim() : null)
             .active(true)
             .score(100)
@@ -171,7 +171,7 @@ public class StudentService {
 
                 // Columns layout: 
                 // 1: Name, 2: Department, 3: SPR_No, 4: Reg_No, 5: DOB, 6: Phone_No, 7: Email,
-                // 8: Gender, 9: Academic Year, 10: Year, 11: Semester, 12: Section, 13: Group Name, 14: Address
+                // 8: Gender, 9: Academic Year, 10: Year, 11: Semester, 12: Section, 13: Team Name, 14: Address
                 String name = getCellValueAsString(row.getCell(1));
                 String deptName = getCellValueAsString(row.getCell(2));
                 String sprNo = getCellValueAsString(row.getCell(3));
@@ -184,7 +184,7 @@ public class StudentService {
                 String year = getCellValueAsString(row.getCell(10));
                 String semester = getCellValueAsString(row.getCell(11));
                 String section = getCellValueAsString(row.getCell(12));
-                String groupName = getCellValueAsString(row.getCell(13));
+                String teamName = getCellValueAsString(row.getCell(13));
                 String address = getCellValueAsString(row.getCell(14));
 
                 if (regNo.isEmpty() || email.isEmpty() || name.isEmpty()) {
@@ -330,14 +330,14 @@ public class StudentService {
                     }
                 }
 
-                // Auto-resolve/Auto-create Group
-                if (!groupName.isEmpty()) {
-                    String gTrim = groupName.trim();
-                    Group g = groupRepository.findByName(gTrim)
-                        .orElseGet(() -> groupRepository.save(
-                            Group.builder().name(gTrim).build()
+                // Auto-resolve/Auto-create Team
+                if (!teamName.isEmpty()) {
+                    String gTrim = teamName.trim();
+                    Team g = teamRepository.findByName(gTrim)
+                        .orElseGet(() -> teamRepository.save(
+                            Team.builder().name(gTrim).build()
                         ));
-                    req.setGroupId(g.getId());
+                    req.setTeamId(g.getId());
                 }
 
                 parsedList.add(req);
@@ -567,7 +567,7 @@ public class StudentService {
                     return ApiResponse.error("Invalid Semester ID for student: " + request.getFullName());
                 }
 
-                Group group = request.getGroupId() != null ? groupRepository.findById(request.getGroupId()).orElse(null) : null;
+                Team team = request.getTeamId() != null ? teamRepository.findById(request.getTeamId()).orElse(null) : null;
 
                 // Default password to DOB (ddMMyyyy) or regNo if dob is null
                 LocalDate dob = request.getDateOfBirth();
@@ -599,7 +599,7 @@ public class StudentService {
                     student.setAcademicYearRef(academicYear);
                     student.setYearRef(year);
                     student.setSemesterRef(semester);
-                    student.setGroup(group);
+                    student.setTeam(team);
                     student.setSprNo(request.getSprNo() != null && !request.getSprNo().trim().isEmpty() ? request.getSprNo().trim() : null);
                     student.setPhone(request.getPhone() != null && !request.getPhone().trim().isEmpty() ? request.getPhone().trim() : null);
                     student.setPhoneNo(request.getPhone() != null && !request.getPhone().trim().isEmpty() ? request.getPhone().trim() : "0000000000");
@@ -653,7 +653,7 @@ public class StudentService {
                         .gender(gender.getGenderName())
                         .section(section != null ? section.getSectionName() : null)
                         .score(100)
-                        .group(group)
+                        .team(team)
                         .sprNo(request.getSprNo() != null && !request.getSprNo().trim().isEmpty() ? request.getSprNo().trim() : null)
                         .address(request.getAddress())
                         .active(request.getActive() != null ? request.getActive() : true)
@@ -804,7 +804,7 @@ public class StudentService {
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
         }
-        Group group = request.getGroupId() != null ? groupRepository.findById(request.getGroupId()).orElse(null) : null;
+        Team team = request.getTeamId() != null ? teamRepository.findById(request.getTeamId()).orElse(null) : null;
 
         student.setFullName(request.getFullName().trim());
         student.setEmail(request.getEmail().trim());
@@ -826,7 +826,7 @@ public class StudentService {
         student.setGender(gender.getGenderName());
         student.setSectionRef(section);
         student.setSection(section != null ? section.getSectionName() : null);
-        student.setGroup(group);
+        student.setTeam(team);
         student.setSprNo(request.getSprNo() != null ? request.getSprNo().trim() : null);
         student.setActive(request.isActive());
 
@@ -842,9 +842,9 @@ public class StudentService {
     // ── Mapper ───────────────────────────────────────
 
     private StudentResponse toResponse(Student student) {
-        Long groupId = student.getGroup() != null ? student.getGroup().getId() : null;
-        String groupName = student.getGroup() != null ? student.getGroup().getName() : null;
-        boolean isCap = student.getGroup() != null && student.getGroup().getCaptain() != null && student.getGroup().getCaptain().getId().equals(student.getId());
+        Long teamId = student.getTeam() != null ? student.getTeam().getId() : null;
+        String teamName = student.getTeam() != null ? student.getTeam().getName() : null;
+        boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
 
         return StudentResponse.builder()
             .id(student.getId())
@@ -864,8 +864,8 @@ public class StudentService {
             .createdAt(student.getCreatedAt())
             .sprNo(student.getSprNo())
             .score(student.getScore())
-            .groupId(groupId)
-            .groupName(groupName)
+            .teamId(teamId)
+            .teamName(teamName)
             .isCaptain(isCap)
             .build();
     }
@@ -974,58 +974,58 @@ public class StudentService {
     }
 
     @Transactional
-    public ApiResponse<Void> promoteToCaptain(Long studentId) {
+    public ApiResponse<Void> promoteToTeamCaptain(Long studentId) {
         Optional<Student> studentOpt = studentRepository.findById(studentId);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
         }
         Student student = studentOpt.get();
-        Group group = student.getGroup();
-        if (group == null) {
-            String defaultGroupName = student.getFullName().trim() + "'s Group";
-            if (groupRepository.existsByName(defaultGroupName)) {
-                defaultGroupName = student.getFullName().trim() + " (" + student.getStudentId().trim() + ")'s Group";
+        Team team = student.getTeam();
+        if (team == null) {
+            String defaultTeamName = student.getFullName().trim() + "'s Team";
+            if (teamRepository.existsByName(defaultTeamName)) {
+                defaultTeamName = student.getFullName().trim() + " (" + student.getStudentId().trim() + ")'s Team";
             }
-            if (groupRepository.existsByName(defaultGroupName)) {
-                defaultGroupName = student.getFullName().trim() + " Group " + System.currentTimeMillis();
+            if (teamRepository.existsByName(defaultTeamName)) {
+                defaultTeamName = student.getFullName().trim() + " Team " + System.currentTimeMillis();
             }
             
-            group = Group.builder()
-                    .name(defaultGroupName)
+            team = Team.builder()
+                    .name(defaultTeamName)
                     .size(10) // Default max size of 10
                     .captain(student)
                     .build();
-            group = groupRepository.save(group);
-            student.setGroup(group);
+            team = teamRepository.save(team);
+            student.setTeam(team);
             studentRepository.save(student);
         } else {
-            group.setCaptain(student);
-            groupRepository.save(group);
+            team.setCaptain(student);
+            teamRepository.save(team);
         }
 
-        return ApiResponse.ok("Student promoted to Captain of group: " + group.getName(), null);
+        return ApiResponse.ok("Student promoted to Captain of team: " + team.getName(), null);
     }
 
     @Transactional
-    public ApiResponse<Void> removeCaptain(Long studentId) {
+    public ApiResponse<Void> removeTeamCaptain(Long studentId) {
         Optional<Student> studentOpt = studentRepository.findById(studentId);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
         }
         Student student = studentOpt.get();
-        Group group = student.getGroup();
-        if (group == null) {
-            return ApiResponse.error("Student is not assigned to any group");
+        Team team = student.getTeam();
+        if (team == null) {
+            return ApiResponse.error("Student is not assigned to any team");
         }
 
-        if (group.getCaptain() == null || !group.getCaptain().getId().equals(student.getId())) {
-            return ApiResponse.error("Student is not the Captain of their group");
+        if (team.getCaptain() == null || !team.getCaptain().getId().equals(student.getId())) {
+            return ApiResponse.error("Student is not the Captain of their team");
         }
 
-        group.setCaptain(null);
-        groupRepository.save(group);
+        team.setCaptain(null);
+        teamRepository.save(team);
 
-        return ApiResponse.ok("Student removed from Captain of group: " + group.getName(), null);
+        return ApiResponse.ok("Student removed from Captain of team: " + team.getName(), null);
     }
 
     private String normalizeAcademicYear(String input) {

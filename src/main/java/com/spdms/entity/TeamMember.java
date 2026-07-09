@@ -3,10 +3,10 @@ package com.spdms.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "group_members", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_group_student", columnNames = {"group_id", "student_id"})
+@Table(name = "team_members", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_team_student", columnNames = {"team_id", "student_id"})
 })
-public class GroupMember {
+public class TeamMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,10 +20,10 @@ public class GroupMember {
     private boolean isCaptain;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "group_id", nullable = false)
-    private StudentGroup studentGroup;
+    @JoinColumn(name = "team_id", nullable = false)
+    private Team team;
 
-    public GroupMember() {}
+    public TeamMember() {}
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -34,16 +34,16 @@ public class GroupMember {
     public boolean isCaptain() { return isCaptain; }
     public void setCaptain(boolean captain) { isCaptain = captain; }
 
-    public StudentGroup getStudentGroup() { return studentGroup; }
-    public void setStudentGroup(StudentGroup studentGroup) { this.studentGroup = studentGroup; }
+    public Team getTeam() { return team; }
+    public void setTeam(Team team) { this.team = team; }
 
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
-        private final GroupMember gm = new GroupMember();
-        public Builder student(Student v) { gm.student = v; return this; }
-        public Builder isCaptain(boolean v) { gm.isCaptain = v; return this; }
-        public Builder studentGroup(StudentGroup v) { gm.studentGroup = v; return this; }
-        public GroupMember build() { return gm; }
+        private final TeamMember tm = new TeamMember();
+        public Builder student(Student v) { tm.student = v; return this; }
+        public Builder isCaptain(boolean v) { tm.isCaptain = v; return this; }
+        public Builder team(Team v) { tm.team = v; return this; }
+        public TeamMember build() { return tm; }
     }
 }

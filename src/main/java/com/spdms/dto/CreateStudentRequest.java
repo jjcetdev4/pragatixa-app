@@ -83,7 +83,7 @@ public class CreateStudentRequest {
     private Long semesterId;
     private Long sectionId;
     private Long genderId;
-    private Long groupId;
+    private Long teamId;
     private Boolean active;
 
     public Long getAcademicYearId() { return academicYearId; }
@@ -96,8 +96,8 @@ public class CreateStudentRequest {
     public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
     public Long getGenderId() { return genderId; }
     public void setGenderId(Long genderId) { this.genderId = genderId; }
-    public Long getGroupId() { return groupId; }
-    public void setGroupId(Long groupId) { this.groupId = groupId; }
+    public Long getTeamId() { return teamId; }
+    public void setTeamId(Long teamId) { this.teamId = teamId; }
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
 }

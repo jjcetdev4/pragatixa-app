@@ -21,8 +21,8 @@ public class StudentResponse {
     private LocalDateTime createdAt;
     private String sprNo;
     private int score;
-    private Long groupId;
-    private String groupName;
+    private Long teamId;
+    private String teamName;
     private boolean isCaptain;
 
     public StudentResponse() {}
@@ -64,10 +64,10 @@ public class StudentResponse {
     public void setSprNo(String sprNo) { this.sprNo = sprNo; }
     public int getScore() { return score; }
     public void setScore(int score) { this.score = score; }
-    public Long getGroupId() { return groupId; }
-    public void setGroupId(Long groupId) { this.groupId = groupId; }
-    public String getGroupName() { return groupName; }
-    public void setGroupName(String groupName) { this.groupName = groupName; }
+    public Long getTeamId() { return teamId; }
+    public void setTeamId(Long teamId) { this.teamId = teamId; }
+    public String getTeamName() { return teamName; }
+    public void setTeamName(String teamName) { this.teamName = teamName; }
 
     public static Builder builder() { return new Builder(); }
     public static class Builder {
@@ -89,8 +89,8 @@ public class StudentResponse {
         public Builder createdAt(LocalDateTime v) { r.createdAt = v; return this; }
         public Builder sprNo(String v) { r.sprNo = v; return this; }
         public Builder score(int v) { r.score = v; return this; }
-        public Builder groupId(Long v) { r.groupId = v; return this; }
-        public Builder groupName(String v) { r.groupName = v; return this; }
+        public Builder teamId(Long v) { r.teamId = v; return this; }
+        public Builder teamName(String v) { r.teamName = v; return this; }
         public Builder isCaptain(boolean v) { r.isCaptain = v; return this; }
         public StudentResponse build() { return r; }
     }

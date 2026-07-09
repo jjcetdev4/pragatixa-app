@@ -159,23 +159,23 @@ public class StudentController {
             : ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    /** POST /api/v1/students/{id}/make-captain – Promote student to Group Captain */
+    /** POST /api/v1/students/{id}/make-captain – Promote student to Team Captain */
     @PostMapping("/{id}/make-captain")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    @Operation(summary = "Promote Student to Group Captain", description = "Sets the student as the Captain of their assigned group.")
-    public ResponseEntity<ApiResponse<Void>> promoteToCaptain(@PathVariable Long id) {
-        ApiResponse<Void> response = studentService.promoteToCaptain(id);
+    @Operation(summary = "Promote Student to Team Captain", description = "Sets the student as the Captain of their assigned team.")
+    public ResponseEntity<ApiResponse<Void>> promoteToTeamCaptain(@PathVariable Long id) {
+        ApiResponse<Void> response = studentService.promoteToTeamCaptain(id);
         return response.isSuccess()
             ? ResponseEntity.ok(response)
             : ResponseEntity.badRequest().body(response);
     }
 
-    /** POST /api/v1/students/{id}/remove-captain – Remove student from Group Captain status */
+    /** POST /api/v1/students/{id}/remove-captain – Remove student from Team Captain status */
     @PostMapping("/{id}/remove-captain")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    @Operation(summary = "Remove Student from Group Captain status", description = "Removes the student as the Captain of their assigned group.")
-    public ResponseEntity<ApiResponse<Void>> removeCaptain(@PathVariable Long id) {
-        ApiResponse<Void> response = studentService.removeCaptain(id);
+    @Operation(summary = "Remove Student from Team Captain status", description = "Removes the student as the Captain of their assigned team.")
+    public ResponseEntity<ApiResponse<Void>> removeTeamCaptain(@PathVariable Long id) {
+        ApiResponse<Void> response = studentService.removeTeamCaptain(id);
         return response.isSuccess()
             ? ResponseEntity.ok(response)
             : ResponseEntity.badRequest().body(response);
