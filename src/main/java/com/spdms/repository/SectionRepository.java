@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface SectionRepository extends JpaRepository<Section, Long> {
     Optional<Section> findByDepartmentAndSectionName(Department department, String sectionName);
     long countByDepartmentId(Long departmentId);
+    java.util.List<Section> findByDepartmentId(Long departmentId);
 }

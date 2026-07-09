@@ -60,6 +60,17 @@ public class DataInitializer implements CommandLineRunner {
         seedRoles();
         seedAcademicYears();
         seedAdminUser();
+
+        // Ensure default student has password "1234"
+        studentRepository.findByStudentId("sharugesh").ifPresent(s -> {
+            String current = s.getPassword();
+            if (current == null || !passwordEncoder.matches("1234", current)) {
+                s.setPassword(passwordEncoder.encode("1234"));
+                studentRepository.save(s);
+                log.info("Reset default student sharugesh password to 1234");
+            }
+        });
+
         migrateStudentPasswords();
     }
 
@@ -238,33 +249,16 @@ public class DataInitializer implements CommandLineRunner {
         java.util.List<Student> students = studentRepository.findAll();
         int count = 0;
         for (Student s : students) {
-            LocalDate dob = s.getDateOfBirth();
-            if (dob != null) {
-                String rawPassword = dob.format(java.time.format.DateTimeFormatter.ofPattern("ddMMyyyy"));
-                String currentPassword = s.getPassword();
-                if (currentPassword == null || 
-                    currentPassword.trim().isEmpty() || 
-                    !currentPassword.startsWith("$2a$") || 
-                    !passwordEncoder.matches(rawPassword, currentPassword)) {
-                    
+            String currentPassword = s.getPassword();
+            if (currentPassword == null || currentPassword.trim().isEmpty() || !currentPassword.startsWith("$2a$")) {
+                LocalDate dob = s.getDateOfBirth();
+                String rawPassword = (dob != null)
+                    ? dob.format(java.time.format.DateTimeFormatter.ofPattern("ddMMyyyy"))
+                    : s.getStudentId();
+                if (rawPassword != null && !rawPassword.trim().isEmpty()) {
                     s.setPassword(passwordEncoder.encode(rawPassword));
                     studentRepository.save(s);
                     count++;
-                }
-            } else {
-                // If DOB is null but password is not valid, fallback to student ID
-                String rawPassword = s.getStudentId();
-                if (rawPassword != null && !rawPassword.trim().isEmpty()) {
-                    String currentPassword = s.getPassword();
-                    if (currentPassword == null || 
-                        currentPassword.trim().isEmpty() || 
-                        !currentPassword.startsWith("$2a$") || 
-                        !passwordEncoder.matches(rawPassword, currentPassword)) {
-                        
-                        s.setPassword(passwordEncoder.encode(rawPassword));
-                        studentRepository.save(s);
-                        count++;
-                    }
                 }
             }
         }

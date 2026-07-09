@@ -12,4 +12,6 @@ public interface ActivityAssignmentRepository extends JpaRepository<ActivityAssi
     List<ActivityAssignment> findByActivityId(Long activityId);
     Optional<ActivityAssignment> findByActivityIdAndSectionId(Long activityId, Long sectionId);
     Optional<ActivityAssignment> findByActivityIdAndSectionIsNull(Long activityId);
+    List<ActivityAssignment> findByTeacherId(Long teacherId);
+    List<ActivityAssignment> findByActivityIdAndTeacherId(Long activityId, Long teacherId);
 }

@@ -10,12 +10,24 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
+
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Student s SET s.totalXp = :totalXp, s.score = :score WHERE s.id = :studentId")
+    void updateStudentXpAndScore(@Param("studentId") Long studentId, @Param("totalXp") int totalXp, @Param("score") int score);
 
     Optional<Student> findByEmail(String email);
 
     List<Student> findByDepartmentId(Long departmentId);
+    
+    @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.sectionRef.id = :sectionId")
+    List<Student> findByDepartmentIdAndSectionId(@Param("deptId") Long deptId, @Param("sectionId") Long sectionId);
+    
     long countByDepartmentId(Long departmentId);
 
     Optional<Student> findByStudentId(String studentId);
