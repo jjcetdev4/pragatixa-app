@@ -31,15 +31,18 @@ public class TeamController {
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final TeamRemovalRequestRepository teamRemovalRequestRepository;
 
     public TeamController(TeamRepository teamRepository,
                           UserRepository userRepository,
                           StudentRepository studentRepository,
-                          TeamMemberRepository teamMemberRepository) {
+                          TeamMemberRepository teamMemberRepository,
+                          TeamRemovalRequestRepository teamRemovalRequestRepository) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.teamMemberRepository = teamMemberRepository;
+        this.teamRemovalRequestRepository = teamRemovalRequestRepository;
     }
 
     @PostMapping
@@ -459,11 +462,74 @@ public class TeamController {
         return ResponseEntity.ok(ApiResponse.ok("Member added successfully", null));
     }
 
-    @PostMapping("/my-team/remove-member")
+    @PostMapping("/{id}/add-member")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @Transactional
+    @Operation(summary = "Add Team Member (CC)", description = "Adds a student to a specific team (CC/Admin only).")
+    public ResponseEntity<ApiResponse<Void>> addMemberByCC(@PathVariable Long id, @RequestParam String studentId) {
+        Team team = teamRepository.findById(id).orElse(null);
+        if (team == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
+        }
+
+        Student member = studentRepository.findByStudentId(studentId).orElse(null);
+        if (member == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + studentId));
+        }
+
+        if (member.getTeam() != null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Student " + member.getFullName() + " is already in team: " + member.getTeam().getName()));
+        }
+
+        long currentMembersCount = team.getMembers().size();
+        boolean captainInMembers = team.getCaptain() != null && team.getMembers().stream().anyMatch(m -> m.getId().equals(team.getCaptain().getId()));
+        long totalSize = currentMembersCount + (captainInMembers ? 0 : 1) + 1;
+        if (totalSize > team.getSize()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot add member. Team size limit of " + team.getSize() + " exceeded."));
+        }
+
+        member.setTeam(team);
+        studentRepository.save(member);
+        log.info("CC added student {} to Team {}", member.getFullName(), team.getName());
+
+        return ResponseEntity.ok(ApiResponse.ok("Member added successfully", null));
+    }
+
+    @PostMapping("/{id}/remove-member")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @Transactional
+    @Operation(summary = "Remove Team Member (CC)", description = "Removes a student from a specific team (CC/Admin only).")
+    public ResponseEntity<ApiResponse<Void>> removeMemberByCC(@PathVariable Long id, @RequestParam String studentId) {
+        Team team = teamRepository.findById(id).orElse(null);
+        if (team == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
+        }
+
+        Student member = studentRepository.findByStudentId(studentId).orElse(null);
+        if (member == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + studentId));
+        }
+
+        if (member.getTeam() == null || !member.getTeam().getId().equals(team.getId())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Student is not a member of this team"));
+        }
+
+        if (team.getCaptain() != null && member.getId().equals(team.getCaptain().getId())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot directly remove the captain. Reassign captaincy first."));
+        }
+
+        member.setTeam(null);
+        studentRepository.save(member);
+        log.info("CC removed student {} from Team {}", member.getFullName(), team.getName());
+
+        return ResponseEntity.ok(ApiResponse.ok("Member removed successfully", null));
+    }
+
+    @PostMapping("/my-team/remove-request")
     @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     @Transactional
-    @Operation(summary = "Remove Team Member", description = "Removes a student from the captain's team.")
-    public ResponseEntity<ApiResponse<Void>> removeMember(@RequestParam String studentId) {
+    @Operation(summary = "Request Team Member Removal", description = "Creates a request to remove a student from the captain's team.")
+    public ResponseEntity<ApiResponse<Void>> requestRemoveMember(@RequestParam String studentId, @RequestParam(required = false, defaultValue = "Requested by Captain") String reason) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Student captain = studentRepository.findByStudentId(username).orElse(null);
         if (captain == null) {
@@ -487,30 +553,98 @@ public class TeamController {
             return ResponseEntity.badRequest().body(ApiResponse.error("You cannot remove yourself from the team"));
         }
 
-        member.setTeam(null);
-        studentRepository.save(member);
-        log.info("Removed student {} from Team {}", member.getFullName(), team.getName());
+        if (teamRemovalRequestRepository.existsByTeamIdAndStudentStudentIdAndStatus(team.getId(), studentId, "PENDING")) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("A pending removal request already exists for this student"));
+        }
 
-        return ResponseEntity.ok(ApiResponse.ok("Member removed successfully", null));
+        TeamRemovalRequest request = new TeamRemovalRequest(team, member, captain, reason, "PENDING");
+        teamRemovalRequestRepository.save(request);
+        log.info("Created removal request for student {} from Team {} by {}", member.getFullName(), team.getName(), captain.getFullName());
+
+        return ResponseEntity.ok(ApiResponse.ok("Removal request sent to CC successfully", null));
     }
 
-    @PutMapping("/my-team/limit")
-    @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
+    @GetMapping("/removal-requests/pending")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Get Pending Removal Requests", description = "Gets all pending team member removal requests.")
+    public ResponseEntity<ApiResponse<List<TeamRemovalRequestDto>>> getPendingRemovalRequests() {
+        List<TeamRemovalRequest> requests = teamRemovalRequestRepository.findByStatus("PENDING");
+        List<TeamRemovalRequestDto> dtos = requests.stream().map(req -> new TeamRemovalRequestDto(
+                req.getId(),
+                req.getTeam().getId(),
+                req.getTeam().getName(),
+                req.getStudent().getStudentId(),
+                req.getStudent().getFullName(),
+                req.getCaptain().getStudentId(),
+                req.getCaptain().getFullName(),
+                req.getReason(),
+                req.getStatus(),
+                req.getCreatedAt()
+        )).collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok("Pending requests retrieved", dtos));
+    }
+
+    @PutMapping("/removal-requests/{id}/approve")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Transactional
-    @Operation(summary = "Update Team Limit", description = "Updates the maximum size limit of the team.")
-    public ResponseEntity<ApiResponse<Void>> updateTeamLimit(@RequestParam int size) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Student captain = studentRepository.findByStudentId(username).orElse(null);
-        if (captain == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Captain student not found"));
+    @Operation(summary = "Approve Removal Request", description = "Approves a removal request and removes the student from the team.")
+    public ResponseEntity<ApiResponse<Void>> approveRemovalRequest(@PathVariable Long id) {
+        TeamRemovalRequest request = teamRemovalRequestRepository.findById(id).orElse(null);
+        if (request == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Request not found"));
         }
-        Team team = captain.getTeam();
-        if (team == null || team.getCaptain() == null || !team.getCaptain().getId().equals(captain.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("You are not the captain of any team"));
+        if (!"PENDING".equals(request.getStatus())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Request is not pending"));
+        }
+
+        Student member = request.getStudent();
+        Team team = request.getTeam();
+
+        if (member.getTeam() != null && member.getTeam().getId().equals(team.getId())) {
+            member.setTeam(null);
+            studentRepository.save(member);
+        }
+
+        request.setStatus("APPROVED");
+        teamRemovalRequestRepository.save(request);
+
+        log.info("Approved removal request {}. Removed student {} from Team {}", id, member.getFullName(), team.getName());
+        return ResponseEntity.ok(ApiResponse.ok("Request approved and student removed", null));
+    }
+
+    @PutMapping("/removal-requests/{id}/reject")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Transactional
+    @Operation(summary = "Reject Removal Request", description = "Rejects a removal request.")
+    public ResponseEntity<ApiResponse<Void>> rejectRemovalRequest(@PathVariable Long id) {
+        TeamRemovalRequest request = teamRemovalRequestRepository.findById(id).orElse(null);
+        if (request == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Request not found"));
+        }
+        if (!"PENDING".equals(request.getStatus())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Request is not pending"));
+        }
+
+        request.setStatus("REJECTED");
+        teamRemovalRequestRepository.save(request);
+
+        log.info("Rejected removal request {}", id);
+        return ResponseEntity.ok(ApiResponse.ok("Request rejected", null));
+    }
+
+    @PutMapping("/{id}/limit")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @Transactional
+    @Operation(summary = "Update Team Limit", description = "Updates the maximum size limit of the team (CC/Admin only).")
+    public ResponseEntity<ApiResponse<Void>> updateTeamLimit(@PathVariable Long id, @RequestParam int size) {
+        Team team = teamRepository.findById(id).orElse(null);
+        if (team == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
         }
 
         long currentMembersCount = team.getMembers().size();
-        boolean captainInMembers = team.getMembers().stream().anyMatch(m -> m.getId().equals(team.getCaptain().getId()));
+        boolean captainInMembers = team.getCaptain() != null && team.getMembers().stream().anyMatch(m -> m.getId().equals(team.getCaptain().getId()));
         long totalSize = currentMembersCount + (captainInMembers ? 0 : 1);
         if (size < totalSize) {
             return ResponseEntity.badRequest().body(ApiResponse.error("New limit cannot be less than the current number of members (" + totalSize + ")"));
@@ -518,7 +652,7 @@ public class TeamController {
 
         team.setSize(size);
         teamRepository.save(team);
-        log.info("Updated Team limit to: {}", size);
+        log.info("Updated Team {} limit to: {}", team.getName(), size);
 
         return ResponseEntity.ok(ApiResponse.ok("Team limit updated successfully", null));
     }
