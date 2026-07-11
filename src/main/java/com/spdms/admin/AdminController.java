@@ -5,6 +5,9 @@ import com.spdms.dto.CreateUserRequest;
 import com.spdms.dto.UpdateUserRequest;
 import com.spdms.dto.CreateDepartmentRequest;
 import com.spdms.dto.UserResponse;
+import com.spdms.dto.ActivityStageRequest;
+import com.spdms.dto.ActivityStageResponse;
+import com.spdms.admin.ActivityStageService;
 import com.spdms.entity.Department;
 import com.spdms.entity.Role;
 import com.spdms.entity.User;
@@ -88,6 +91,7 @@ public class AdminController {
     private final ActivityRepository activityRepository;
     private final DisciplineLogRepository disciplineLogRepository;
     private final ActivityAssignmentRepository activityAssignmentRepository;
+    private final ActivityStageService activityStageService;
  
     public AdminController(StudentRepository studentRepository,
                            UserRepository userRepository,
@@ -107,7 +111,8 @@ public class AdminController {
                            GenderRepository genderRepository,
                            ActivityRepository activityRepository,
                            DisciplineLogRepository disciplineLogRepository,
-                           ActivityAssignmentRepository activityAssignmentRepository) {
+                           ActivityAssignmentRepository activityAssignmentRepository,
+                           ActivityStageService activityStageService) {
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
@@ -127,6 +132,7 @@ public class AdminController {
         this.activityRepository = activityRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
+        this.activityStageService = activityStageService;
     }
 
     @GetMapping("/stats")
@@ -460,53 +466,38 @@ public class AdminController {
     // ==========================================
 
     @GetMapping("/stages")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "Get all activity stages with subgroups")
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllStages() {
-        List<ActivityStage> stages = activityStageRepository.findAll();
-        List<Map<String, Object>> responseList = stages.stream().map(stage -> {
-            Map<String, Object> stageMap = new HashMap<>();
-            stageMap.put("id", stage.getId());
-            stageMap.put("name", stage.getName());
-            stageMap.put("description", stage.getDescription());
-            
-            List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
-            List<Map<String, Object>> subMaps = subgroups.stream().map(sub -> {
-                Map<String, Object> subMap = new HashMap<>();
-                subMap.put("id", sub.getId());
-                subMap.put("name", sub.getName());
-                subMap.put("threshold", sub.getThreshold());
-                subMap.put("assignedFacultyId", sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getId() : null);
-                subMap.put("assignedFacultyName", sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getFullName() : null);
-                return subMap;
-            }).collect(Collectors.toList());
-            
-            stageMap.put("subgroups", subMaps);
-            return stageMap;
-        }).collect(Collectors.toList());
-
-        return ResponseEntity.ok(ApiResponse.ok(responseList));
+    public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages() {
+        List<ActivityStageResponse> stages = activityStageService.getAllStages();
+        return ResponseEntity.ok(ApiResponse.ok(stages));
     }
 
     @PostMapping("/stages")
     @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
     @Operation(summary = "Create a new stage")
-    public ResponseEntity<ApiResponse<ActivityStage>> createStage(@RequestBody Map<String, String> body) {
-        String name = body.get("name");
-        if (name == null || name.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Stage name is required"));
-        }
-        if (activityStageRepository.existsByName(name)) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Stage already exists"));
-        }
-        ActivityStage stage = ActivityStage.builder()
-            .stageName(name.trim())
-            .name(name.trim())
-            .description(body.get("description"))
-            .build();
-        ActivityStage saved = activityStageRepository.save(stage);
+    public ResponseEntity<ApiResponse<ActivityStageResponse>> createStage(@Valid @RequestBody ActivityStageRequest request) {
+        ActivityStageResponse saved = activityStageService.createStage(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Stage created successfully", saved));
+    }
+
+    @GetMapping("/stages/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @Operation(summary = "Get activity stage by ID")
+    public ResponseEntity<ApiResponse<ActivityStageResponse>> getStage(@PathVariable Long id) {
+        return activityStageService.getStageById(id)
+                .map(stage -> ResponseEntity.ok(ApiResponse.ok(stage)))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Stage not found")));
+    }
+
+    @PutMapping("/stages/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update an existing stage")
+    public ResponseEntity<ApiResponse<ActivityStageResponse>> editStage(
+            @PathVariable Long id,
+            @Valid @RequestBody ActivityStageRequest request) {
+        ActivityStageResponse updated = activityStageService.updateStage(id, request);
+        return ResponseEntity.ok(ApiResponse.ok("Stage updated successfully", updated));
     }
 
     @PostMapping("/stages/{stageId}/subgroups")
@@ -568,35 +559,9 @@ public class AdminController {
 
     @DeleteMapping("/stages/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
     @Operation(summary = "Delete a stage and its subgroups")
     public ResponseEntity<ApiResponse<Void>> deleteStage(@PathVariable Long id) {
-        if (!activityStageRepository.existsById(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Stage not found"));
-        }
-        
-        List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(id);
-        
-        // 1. Nullify references in DisciplineLog for each subgroup and activity of this stage
-        for (ActivitySubgroup sub : subgroups) {
-            disciplineLogRepository.nullifySubgroupReferences(sub.getId());
-        }
-        
-        List<Activity> activities = activityRepository.findByStageId(id);
-        for (Activity act : activities) {
-            disciplineLogRepository.nullifyActivityReferences(act.getId());
-        }
-        
-        // 2. Delete all Activity records referencing this stage
-        activityRepository.deleteAll(activities);
-        
-        // 3. Delete subgroups
-        activitySubgroupRepository.deleteAll(subgroups);
-        
-        // 4. Delete the stage itself
-        activityStageRepository.deleteById(id);
-        
-        log.info("Admin deleted stage and its subgroups and activities: {}", id);
+        activityStageService.deleteStage(id);
         return ResponseEntity.ok(ApiResponse.ok("Stage deleted successfully", null));
     }
 
@@ -850,10 +815,9 @@ public class AdminController {
                 .activityId(act.getId())
                 .name(act.getName())
                 .description(act.getDescription())
-                .frequency(act.getFrequency())
+                .frequency(act.getAwardFrequency())
                 .evidence(evidenceList)
                 .xp(act.getXp())
-                .cap(act.getCap())
                 .type(act.getType())
                 .justification(act.getJustification())
                 .departmentId(aa.getDepartment() != null ? aa.getDepartment().getId() : null)
@@ -862,6 +826,13 @@ public class AdminController {
                 .sectionName(aa.getSection() != null ? aa.getSection().getSectionName() : null)
                 .assignedBy(aa.getAssignedBy() != null ? aa.getAssignedBy().getFullName() : "")
                 .assignedAt(aa.getAssignedAt())
+                .xpCategory(act.getXpCategory())
+                .awardXp(act.getAwardXp())
+                .awardType(act.getAwardType())
+                .repeatAllowed(act.isRepeatAllowed())
+                .cap(act.getCap())
+                .awardFrequency(act.getAwardFrequency())
+                .awardDays(act.getAwardDays())
                 .build());
         }
 
@@ -873,7 +844,7 @@ public class AdminController {
     // ==========================================
 
     @GetMapping("/subgroups/{subgroupId}/activities")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Transactional(readOnly = true)
     @Operation(summary = "Get all activities of a subgroup")
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(@PathVariable Long subgroupId) {
@@ -881,19 +852,8 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Subgroup not found"));
         }
         
-        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByUsername(username).orElse(null);
-        boolean isAdmin = currentUser != null && currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-        
         List<Activity> activities = activityRepository.findBySubgroupId(subgroupId);
-        
-        // Filter by Coordinator's department
-        if (!isAdmin && currentUser != null && currentUser.getDepartment() != null) {
-            final String deptName = currentUser.getDepartment().getName();
-            activities = activities.stream()
-                .filter(a -> a.getOwnerDepartment() != null && a.getOwnerDepartment().equalsIgnoreCase(deptName))
-                .collect(Collectors.toList());
-        }
+        // Events are now global – all activities are visible to all users regardless of department.
         
         for (Activity activity : activities) {
             populateActivityTransientFields(activity);
@@ -928,7 +888,7 @@ public class AdminController {
         activity.setActivityDescription(desc);
         
         activity.setFrequency((String) body.get("frequency"));
-        activity.setOwnerDepartment((String) body.get("ownerDepartment"));
+        activity.setOwnerDepartment(""); // Department removed: events are global for all departments
         activity.setOwnerSubrole(""); // teacher assignment removed from Admin creation
 
         Object evidenceObj = body.get("evidence");
@@ -940,15 +900,150 @@ public class AdminController {
         }
         
         activity.setXp((String) body.get("xp"));
-        activity.setCap((String) body.get("cap"));
+        activity.setCap(body.get("cap"));
         activity.setType((String) body.get("type"));
         activity.setModeType(body.get("type") != null ? (String) body.get("type") : "Individual");
         activity.setJustification((String) body.get("justification"));
         
-        // Default fields
+        String xpCategory = (String) body.get("xpCategory");
+        if (xpCategory == null || xpCategory.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("XP Category is required"));
+        }
+        List<String> allowedCategories = List.of(
+            "Academic", "Skill", "Communication", "Leadership", "Discipline",
+            "Placement", "Innovation", "Community", "Sports", "Cultural"
+        );
+        boolean isAllowed = allowedCategories.stream().anyMatch(cat -> cat.equalsIgnoreCase(xpCategory.trim()));
+        if (!isAllowed) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid XP Category: " + xpCategory));
+        }
+        String matchedCategory = allowedCategories.stream()
+            .filter(cat -> cat.equalsIgnoreCase(xpCategory.trim()))
+            .findFirst()
+            .orElse(xpCategory);
+        activity.setXpCategory(matchedCategory);
+        
+        // Parse & Validate Award XP
+        Integer awardXp = 0;
+        if (body.containsKey("awardXp")) {
+            Object xpVal = body.get("awardXp");
+            if (xpVal instanceof Number) {
+                awardXp = ((Number) xpVal).intValue();
+            } else if (xpVal instanceof String) {
+                try {
+                    awardXp = Integer.parseInt((String) xpVal);
+                } catch (Exception ignored) {}
+            }
+        } else if (body.containsKey("xp")) {
+            try {
+                awardXp = Integer.parseInt(body.get("xp").toString());
+            } catch (Exception ignored) {}
+        }
+        if (awardXp <= 0) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Award XP must be greater than zero"));
+        }
+        activity.setAwardXp(awardXp);
+
+        // Parse Award Type
+        String awardType = "Fixed XP";
+        if (body.containsKey("awardType") && body.get("awardType") != null) {
+            awardType = body.get("awardType").toString();
+        }
+        activity.setAwardType(awardType);
+
+        // ── Award Frequency ───────────────────────────────────────────────────────
+        List<String> validFrequencies = List.of("One Time", "Daily", "Weekly", "Monthly", "Manual");
+        String awardFrequency = "One Time";
+        if (body.containsKey("awardFrequency") && body.get("awardFrequency") != null) {
+            awardFrequency = body.get("awardFrequency").toString().trim();
+        } else if (body.containsKey("resetPeriod") && body.get("resetPeriod") != null) {
+            // backward compat
+            awardFrequency = body.get("resetPeriod").toString().trim();
+        }
+        final String awardFrequencyFinal = awardFrequency;
+        boolean freqValid = validFrequencies.stream().anyMatch(f -> f.equalsIgnoreCase(awardFrequencyFinal));
+        if (!freqValid) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(
+                "Invalid Award Frequency. Must be one of: One Time, Daily, Weekly, Monthly, Manual"));
+        }
+        String matchedFrequency = validFrequencies.stream()
+            .filter(f -> f.equalsIgnoreCase(awardFrequencyFinal)).findFirst().orElse("One Time");
+        activity.setAwardFrequency(matchedFrequency);
+        // Keep resetPeriod in sync for backward compat
+        activity.setResetPeriod(matchedFrequency);
+        activity.setRepeatAllowed(!matchedFrequency.equalsIgnoreCase("One Time"));
+
+        // ── Cap ───────────────────────────────────────────────────────────────────
+        Integer cap = 1;
+        if (body.containsKey("cap") && body.get("cap") != null) {
+            Object capVal = body.get("cap");
+            if (capVal instanceof Number) cap = ((Number) capVal).intValue();
+            else { try { cap = Integer.parseInt(capVal.toString()); } catch (Exception ignored) {} }
+        } else if (body.containsKey("maximumAwards") && body.get("maximumAwards") != null) {
+            Object maxA = body.get("maximumAwards");
+            if (maxA instanceof Number) cap = ((Number) maxA).intValue();
+            else { try { cap = Integer.parseInt(maxA.toString()); } catch (Exception ignored) {} }
+        }
+        if (matchedFrequency.equalsIgnoreCase("One Time") || matchedFrequency.equalsIgnoreCase("Manual")) {
+            cap = 1;
+        }
+        if (cap <= 0) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Cap must be greater than zero"));
+        }
+        activity.setMaximumAwards(cap);
+
+        // ── Award Days (Weekly only) ───────────────────────────────────────────
+        String awardDays = null;
+        if (matchedFrequency.equalsIgnoreCase("Weekly")) {
+            if (body.containsKey("awardDays") && body.get("awardDays") != null) {
+                Object daysVal = body.get("awardDays");
+                if (daysVal instanceof List) {
+                    awardDays = ((List<?>) daysVal).stream().map(Object::toString).collect(Collectors.joining(","));
+                } else {
+                    awardDays = daysVal.toString().trim();
+                }
+            }
+            if (awardDays == null || awardDays.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(
+                    "Award Days are required when Award Frequency is Weekly"));
+            }
+        }
+        activity.setAwardDays(awardDays);
+
+        int displayOrder = 0;
+        if (body.containsKey("displayOrder")) {
+            Object dispO = body.get("displayOrder");
+            if (dispO instanceof Number) {
+                displayOrder = ((Number) dispO).intValue();
+            } else if (dispO instanceof String) {
+                try {
+                    displayOrder = Integer.parseInt((String) dispO);
+                } catch (Exception ignored) {}
+            }
+        }
+        activity.setDisplayOrder(displayOrder);
+
+        String status = "ACTIVE";
+        if (body.containsKey("status") && body.get("status") != null) {
+            status = (String) body.get("status");
+        }
+        activity.setStatus(status);
+
+        boolean evidenceRequired = true;
+        if (body.containsKey("evidenceRequired") && body.get("evidenceRequired") != null) {
+            evidenceRequired = Boolean.parseBoolean(body.get("evidenceRequired").toString());
+        }
+        activity.setEvidenceRequired(evidenceRequired);
+
+        boolean isMandatory = true;
+        if (body.containsKey("mandatory") && body.get("mandatory") != null) {
+            isMandatory = Boolean.parseBoolean(body.get("mandatory").toString());
+        } else if (body.containsKey("isMandatory") && body.get("isMandatory") != null) {
+            isMandatory = Boolean.parseBoolean(body.get("isMandatory").toString());
+        }
+        activity.setMandatory(isMandatory);
+
         activity.setMaxPoints(100);
-        activity.setMandatory(true);
-        activity.setEvidenceRequired(true);
 
         Activity saved = activityRepository.save(activity);
         populateActivityTransientFields(saved);
@@ -981,9 +1076,7 @@ public class AdminController {
         if (body.containsKey("frequency")) {
             activity.setFrequency((String) body.get("frequency"));
         }
-        if (body.containsKey("ownerDepartment")) {
-            activity.setOwnerDepartment((String) body.get("ownerDepartment"));
-        }
+        // ownerDepartment field removed: events are global for all departments
         if (body.containsKey("evidence")) {
             Object evidenceObj = body.get("evidence");
             if (evidenceObj instanceof List) {
@@ -997,7 +1090,7 @@ public class AdminController {
             activity.setXp((String) body.get("xp"));
         }
         if (body.containsKey("cap")) {
-            activity.setCap((String) body.get("cap"));
+            activity.setCap(body.get("cap"));
         }
         if (body.containsKey("type")) {
             String type = (String) body.get("type");
@@ -1006,6 +1099,117 @@ public class AdminController {
         }
         if (body.containsKey("justification")) {
             activity.setJustification((String) body.get("justification"));
+        }
+        if (body.containsKey("xpCategory")) {
+            String xpCategory = (String) body.get("xpCategory");
+            if (xpCategory == null || xpCategory.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("XP Category is required"));
+            }
+            List<String> allowedCategories = List.of(
+                "Academic", "Skill", "Communication", "Leadership", "Discipline",
+                "Placement", "Innovation", "Community", "Sports", "Cultural"
+            );
+            boolean isAllowed = allowedCategories.stream().anyMatch(cat -> cat.equalsIgnoreCase(xpCategory.trim()));
+            if (!isAllowed) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Invalid XP Category: " + xpCategory));
+            }
+            String matchedCategory = allowedCategories.stream()
+                .filter(cat -> cat.equalsIgnoreCase(xpCategory.trim()))
+                .findFirst()
+                .orElse(xpCategory);
+            activity.setXpCategory(matchedCategory);
+        }
+
+        if (body.containsKey("awardXp")) {
+            Integer awardXp = 0;
+            Object xpVal = body.get("awardXp");
+            if (xpVal instanceof Number) {
+                awardXp = ((Number) xpVal).intValue();
+            } else if (xpVal instanceof String) {
+                try {
+                    awardXp = Integer.parseInt((String) xpVal);
+                } catch (Exception ignored) {}
+            }
+            if (awardXp <= 0) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Award XP must be greater than zero"));
+            }
+            activity.setAwardXp(awardXp);
+        }
+
+        if (body.containsKey("awardType") && body.get("awardType") != null) {
+            activity.setAwardType(body.get("awardType").toString());
+        }
+
+        // ── Award Frequency ───────────────────────────────────────────────────────
+        List<String> validFrequencies2 = List.of("One Time", "Daily", "Weekly", "Monthly", "Manual");
+        if (body.containsKey("awardFrequency") && body.get("awardFrequency") != null) {
+            String af = body.get("awardFrequency").toString().trim();
+            boolean afValid = validFrequencies2.stream().anyMatch(f -> f.equalsIgnoreCase(af));
+            if (!afValid) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(
+                    "Invalid Award Frequency. Must be one of: One Time, Daily, Weekly, Monthly, Manual"));
+            }
+            String matchedAf = validFrequencies2.stream()
+                .filter(f -> f.equalsIgnoreCase(af)).findFirst().orElse("One Time");
+            activity.setAwardFrequency(matchedAf);
+            activity.setResetPeriod(matchedAf);
+            activity.setRepeatAllowed(!matchedAf.equalsIgnoreCase("One Time"));
+        }
+
+        // ── Cap ───────────────────────────────────────────────────────────────────
+        String currentFreq = activity.getAwardFrequency();
+        boolean isOneTimeOrManual = currentFreq.equalsIgnoreCase("One Time") || currentFreq.equalsIgnoreCase("Manual");
+        if (body.containsKey("cap") && body.get("cap") != null && !isOneTimeOrManual) {
+            Object capVal = body.get("cap");
+            Integer newCap = null;
+            if (capVal instanceof Number) newCap = ((Number) capVal).intValue();
+            else { try { newCap = Integer.parseInt(capVal.toString()); } catch (Exception ignored) {} }
+            if (newCap != null && newCap > 0) activity.setMaximumAwards(newCap);
+        } else if (body.containsKey("maximumAwards") && body.get("maximumAwards") != null && !isOneTimeOrManual) {
+            Object maxA = body.get("maximumAwards");
+            Integer newMax = null;
+            if (maxA instanceof Number) newMax = ((Number) maxA).intValue();
+            else { try { newMax = Integer.parseInt(maxA.toString()); } catch (Exception ignored) {} }
+            if (newMax != null && newMax > 0) activity.setMaximumAwards(newMax);
+        }
+        if (isOneTimeOrManual) activity.setMaximumAwards(1);
+
+        // ── Award Days ────────────────────────────────────────────────────────────
+        if (body.containsKey("awardDays")) {
+            Object daysVal = body.get("awardDays");
+            if (daysVal == null) {
+                activity.setAwardDays(null);
+            } else if (daysVal instanceof List) {
+                activity.setAwardDays(((List<?>) daysVal).stream().map(Object::toString).collect(Collectors.joining(",")));
+            } else {
+                activity.setAwardDays(daysVal.toString().trim().isEmpty() ? null : daysVal.toString().trim());
+            }
+        }
+        if (activity.getAwardFrequency().equalsIgnoreCase("Weekly") &&
+            (activity.getAwardDays() == null || activity.getAwardDays().trim().isEmpty())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(
+                "Award Days are required when Award Frequency is Weekly"));
+        }
+        if (body.containsKey("displayOrder")) {
+            Object dispO = body.get("displayOrder");
+            if (dispO instanceof Number) {
+                activity.setDisplayOrder(((Number) dispO).intValue());
+            } else if (dispO instanceof String) {
+                try {
+                    activity.setDisplayOrder(Integer.parseInt((String) dispO));
+                } catch (Exception ignored) {}
+            }
+        }
+        if (body.containsKey("status") && body.get("status") != null) {
+            activity.setStatus((String) body.get("status"));
+        }
+        if (body.containsKey("evidenceRequired") && body.get("evidenceRequired") != null) {
+            activity.setEvidenceRequired(Boolean.parseBoolean(body.get("evidenceRequired").toString()));
+        }
+        if (body.containsKey("mandatory") && body.get("mandatory") != null) {
+            activity.setMandatory(Boolean.parseBoolean(body.get("mandatory").toString()));
+        } else if (body.containsKey("isMandatory") && body.get("isMandatory") != null) {
+            activity.setMandatory(Boolean.parseBoolean(body.get("isMandatory").toString()));
         }
 
         Activity saved = activityRepository.save(activity);
@@ -1040,14 +1244,23 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Activity not found"));
         }
 
+        // Events are now global – ownerDepartment may be empty.
+        // Resolve department from ownerDepartment if set, otherwise fall back to the requesting user's department.
         String ownerDeptName = activity.getOwnerDepartment();
-        if (ownerDeptName == null || ownerDeptName.trim().isEmpty()) {
-            log.warn("Activity {} has no department defined", id);
-            return ResponseEntity.badRequest().body(ApiResponse.error("Activity has no department defined"));
+        Department department = null;
+        if (ownerDeptName != null && !ownerDeptName.trim().isEmpty()) {
+            department = departmentRepository.findByName(ownerDeptName)
+                .orElseGet(() -> departmentRepository.findByCode(ownerDeptName).orElse(null));
         }
-        Department department = departmentRepository.findByName(ownerDeptName)
-            .orElseGet(() -> departmentRepository.findByCode(ownerDeptName)
-                .orElseThrow(() -> new RuntimeException("Department not found: " + ownerDeptName)));
+        if (department == null && currentUser != null && currentUser.getDepartment() != null) {
+            // Fall back to the requesting user's department (applicable for CC users on global events)
+            department = currentUser.getDepartment();
+            log.info("Activity {} has no owner department; using requesting user's department: {}", id, department.getName());
+        }
+        if (department == null) {
+            log.warn("Could not resolve a department for activity {} assignment", id);
+            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot resolve department for assignment. Ensure the user has a department assigned."));
+        }
 
         if (!isAdmin && currentUser.getDepartment() != null) {
             if (!currentUser.getDepartment().getId().equals(department.getId())) {

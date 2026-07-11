@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 /**
@@ -39,6 +40,18 @@ public class GlobalExceptionHandler {
     public ApiResponse<Void> handleDataIntegrityViolationException(org.springframework.dao.DataIntegrityViolationException ex) {
         log.error("Data integrity violation: {}", ex.getMessage(), ex);
         return ApiResponse.error("Operation failed due to database constraint violation. Please verify that referencing records are removed first.");
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse<Void> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ApiResponse.error(ex.getMessage());
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiResponse<Void> handleNoSuchElementException(NoSuchElementException ex) {
+        return ApiResponse.error(ex.getMessage());
     }
 
     @ExceptionHandler(RuntimeException.class)

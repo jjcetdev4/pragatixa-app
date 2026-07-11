@@ -32,17 +32,20 @@ public class Activity {
     @Column(name = "mode_type", nullable = false, length = 50)
     private String modeType;
 
-    @Column(length = 100)
-    private String frequency;
-
     @Column(name = "max_points", nullable = false)
     private int maxPoints;
 
-    @Column(length = 100)
-    private String xp;
+    @Column(name = "award_xp", nullable = false)
+    private Integer awardXp = 0;
 
-    @Column(length = 100)
-    private String cap;
+    @Column(name = "award_type", nullable = false, length = 50)
+    private String awardType = "Fixed XP";
+
+    @Column(name = "repeat_allowed", nullable = false)
+    private boolean repeatAllowed = false;
+
+    @Column(name = "reset_period", length = 50)
+    private String resetPeriod = "Once";
 
     @Column(name = "is_mandatory", nullable = false)
     private boolean isMandatory;
@@ -82,6 +85,21 @@ public class Activity {
 
     @Column(name = "xp_category", length = 100)
     private String xpCategory;
+
+    @Column(name = "maximum_awards")
+    private Integer maximumAwards = 1;
+
+    @Column(name = "award_frequency", length = 50)
+    private String awardFrequency = "One Time";
+
+    @Column(name = "award_days", length = 200)
+    private String awardDays;
+
+    @Column(name = "display_order", nullable = false)
+    private int displayOrder = 0;
+
+    @Column(name = "status", nullable = false, length = 50)
+    private String status = "ACTIVE";
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "subgroup_id", nullable = false)
@@ -125,17 +143,37 @@ public class Activity {
     public String getModeType() { return modeType; }
     public void setModeType(String modeType) { this.modeType = modeType; }
 
-    public String getFrequency() { return frequency; }
-    public void setFrequency(String frequency) { this.frequency = frequency; }
+    public String getFrequency() { return resetPeriod != null ? resetPeriod : "Once"; }
+    public void setFrequency(String frequency) { this.resetPeriod = frequency; }
 
     public int getMaxPoints() { return maxPoints; }
     public void setMaxPoints(int maxPoints) { this.maxPoints = maxPoints; }
 
-    public String getXp() { return xp; }
-    public void setXp(String xp) { this.xp = xp; }
+    public String getXp() { return awardXp != null ? awardXp.toString() : "0"; }
+    public void setXp(String xp) {
+        try {
+            this.awardXp = Integer.parseInt(xp);
+        } catch (Exception ignored) {}
+    }
 
-    public String getCap() { return cap; }
-    public void setCap(String cap) { this.cap = cap; }
+    public Integer getCap() { return maximumAwards != null ? maximumAwards : 1; }
+    public void setCap(Object cap) {
+        if (cap == null) { this.maximumAwards = 1; return; }
+        try { this.maximumAwards = cap instanceof Number ? ((Number) cap).intValue() : Integer.parseInt(cap.toString()); }
+        catch (Exception ignored) { this.maximumAwards = 1; }
+    }
+
+    public Integer getAwardXp() { return awardXp; }
+    public void setAwardXp(Integer awardXp) { this.awardXp = awardXp; }
+
+    public String getAwardType() { return awardType; }
+    public void setAwardType(String awardType) { this.awardType = awardType; }
+
+    public boolean isRepeatAllowed() { return repeatAllowed; }
+    public void setRepeatAllowed(boolean repeatAllowed) { this.repeatAllowed = repeatAllowed; }
+
+    public String getResetPeriod() { return resetPeriod; }
+    public void setResetPeriod(String resetPeriod) { this.resetPeriod = resetPeriod; }
 
     public boolean isMandatory() { return isMandatory; }
     public void setMandatory(boolean mandatory) { isMandatory = mandatory; }
@@ -176,6 +214,21 @@ public class Activity {
     public ActivitySubgroup getSubgroup() { return subgroup; }
     public void setSubgroup(ActivitySubgroup subgroup) { this.subgroup = subgroup; }
 
+    public Integer getMaximumAwards() { return maximumAwards; }
+    public void setMaximumAwards(Integer maximumAwards) { this.maximumAwards = maximumAwards; }
+
+    public String getAwardFrequency() { return awardFrequency != null ? awardFrequency : "One Time"; }
+    public void setAwardFrequency(String awardFrequency) { this.awardFrequency = awardFrequency; }
+
+    public String getAwardDays() { return awardDays; }
+    public void setAwardDays(String awardDays) { this.awardDays = awardDays; }
+
+    public int getDisplayOrder() { return displayOrder; }
+    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -185,10 +238,14 @@ public class Activity {
         public Builder activityName(String v) { a.activityName = v; return this; }
         public Builder activityDescription(String v) { a.activityDescription = v; return this; }
         public Builder modeType(String v) { a.modeType = v; return this; }
-        public Builder frequency(String v) { a.frequency = v; return this; }
+        public Builder frequency(String v) { a.setFrequency(v); return this; }
         public Builder maxPoints(int v) { a.maxPoints = v; return this; }
-        public Builder xp(String v) { a.xp = v; return this; }
-        public Builder cap(String v) { a.cap = v; return this; }
+        public Builder xp(String v) { a.setXp(v); return this; }
+        public Builder cap(String v) { a.setCap(v); return this; }
+        public Builder awardXp(Integer v) { a.awardXp = v; return this; }
+        public Builder awardType(String v) { a.awardType = v; return this; }
+        public Builder repeatAllowed(boolean v) { a.repeatAllowed = v; return this; }
+        public Builder resetPeriod(String v) { a.resetPeriod = v; return this; }
         public Builder isMandatory(boolean v) { a.isMandatory = v; return this; }
         public Builder evidenceRequired(boolean v) { a.evidenceRequired = v; return this; }
         public Builder category(String v) { a.category = v; return this; }
@@ -201,6 +258,11 @@ public class Activity {
         public Builder type(String v) { a.type = v; return this; }
         public Builder xpCategory(String v) { a.xpCategory = v; return this; }
         public Builder subgroup(ActivitySubgroup v) { a.subgroup = v; return this; }
+        public Builder maximumAwards(Integer v) { a.maximumAwards = v; return this; }
+        public Builder awardFrequency(String v) { a.awardFrequency = v; return this; }
+        public Builder awardDays(String v) { a.awardDays = v; return this; }
+        public Builder displayOrder(int v) { a.displayOrder = v; return this; }
+        public Builder status(String v) { a.status = v; return this; }
         public Activity build() { return a; }
     }
 }

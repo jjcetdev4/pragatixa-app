@@ -1,7 +1,10 @@
 package com.spdms.dto;
 
+import java.util.List;
+
 public class AwardXpRequest {
     private Long studentId;
+    private List<Long> studentIds;
     private Long activityId;
     private Long assignmentId;
     private int xp;
@@ -9,8 +12,9 @@ public class AwardXpRequest {
 
     public AwardXpRequest() {}
 
-    public AwardXpRequest(Long studentId, Long activityId, Long assignmentId, int xp, String remarks) {
+    public AwardXpRequest(Long studentId, List<Long> studentIds, Long activityId, Long assignmentId, int xp, String remarks) {
         this.studentId = studentId;
+        this.studentIds = studentIds;
         this.activityId = activityId;
         this.assignmentId = assignmentId;
         this.xp = xp;
@@ -19,6 +23,9 @@ public class AwardXpRequest {
 
     public Long getStudentId() { return studentId; }
     public void setStudentId(Long studentId) { this.studentId = studentId; }
+
+    public List<Long> getStudentIds() { return studentIds; }
+    public void setStudentIds(List<Long> studentIds) { this.studentIds = studentIds; }
 
     public Long getActivityId() { return activityId; }
     public void setActivityId(Long activityId) { this.activityId = activityId; }

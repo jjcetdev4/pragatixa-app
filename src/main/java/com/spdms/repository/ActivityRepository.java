@@ -10,4 +10,5 @@ import java.util.List;
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
     List<Activity> findByStageId(Long stageId);
     List<Activity> findBySubgroupId(Long subgroupId);
+    List<Activity> findByActivityName(String activityName);
 }

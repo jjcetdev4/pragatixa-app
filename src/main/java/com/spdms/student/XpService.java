@@ -4,6 +4,8 @@ import com.spdms.dto.ApiResponse;
 import com.spdms.entity.Student;
 import com.spdms.entity.XpTransaction;
 import com.spdms.entity.Streak;
+import com.spdms.entity.Activity;
+import com.spdms.repository.ActivityRepository;
 import com.spdms.repository.StudentRepository;
 import com.spdms.repository.XpTransactionRepository;
 import com.spdms.repository.StreakRepository;
@@ -25,13 +27,16 @@ public class XpService {
     private final XpTransactionRepository xpTransactionRepository;
     private final StreakRepository streakRepository;
     private final StudentRepository studentRepository;
+    private final ActivityRepository activityRepository;
 
     public XpService(XpTransactionRepository xpTransactionRepository,
                      StreakRepository streakRepository,
-                     StudentRepository studentRepository) {
+                     StudentRepository studentRepository,
+                     ActivityRepository activityRepository) {
         this.xpTransactionRepository = xpTransactionRepository;
         this.streakRepository = streakRepository;
         this.studentRepository = studentRepository;
+        this.activityRepository = activityRepository;
     }
 
     /**
@@ -42,11 +47,14 @@ public class XpService {
         Map<String, Integer> summary = new HashMap<>();
         summary.put("ACADEMIC", 0);
         summary.put("SKILL", 0);
+        summary.put("COMMUNICATION", 0);
         summary.put("LEADERSHIP", 0);
-        summary.put("CAREER", 0);
         summary.put("INNOVATION", 0);
-        summary.put("COMMUNITY", 0);
+        summary.put("PLACEMENT", 0);
         summary.put("DISCIPLINE", 0);
+        summary.put("COMMUNITY", 0);
+        summary.put("SPORTS", 0);
+        summary.put("CULTURAL", 0);
 
         for (XpTransaction tx : txs) {
             if ("APPROVED".equalsIgnoreCase(tx.getStatus())) {
@@ -87,9 +95,18 @@ public class XpService {
         int allowedPoints = applyCapsAndLimits(student, activityName, xpPoints);
         boolean capApplied = allowedPoints < xpPoints;
 
+        // Resolve XP Category from the Activity if possible
+        String resolvedCategory = category;
+        if (activityName != null) {
+            List<Activity> activityList = activityRepository.findByActivityName(activityName);
+            if (!activityList.isEmpty() && activityList.get(0).getXpCategory() != null) {
+                resolvedCategory = activityList.get(0).getXpCategory();
+            }
+        }
+
         XpTransaction claim = XpTransaction.builder()
                 .student(student)
-                .category(category.toUpperCase())
+                .category(resolvedCategory.toUpperCase())
                 .activityName(activityName)
                 .xpPoints(allowedPoints)
                 .evidenceUrl(evidenceUrl)
