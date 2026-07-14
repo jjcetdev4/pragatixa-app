@@ -16,7 +16,7 @@ public class ActivityAssignment {
     private Activity activity;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "department_id", nullable = false)
+    @JoinColumn(name = "department_id", nullable = true)
     private Department department;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -24,8 +24,15 @@ public class ActivityAssignment {
     private Section section;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "teacher_id", nullable = false)
+    @JoinColumn(name = "teacher_id", nullable = true)
     private User teacher;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "assignment_scope", nullable = false)
+    private AssignmentScope assignmentScope;
+
+    @Column(name = "year", length = 50, nullable = true)
+    private String year;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "assigned_by_id", nullable = false)
@@ -39,6 +46,9 @@ public class ActivityAssignment {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
+    public String getYear() { return year; }
+    public void setYear(String year) { this.year = year; }
+
     public Activity getActivity() { return activity; }
     public void setActivity(Activity activity) { this.activity = activity; }
 
@@ -50,6 +60,9 @@ public class ActivityAssignment {
 
     public User getTeacher() { return teacher; }
     public void setTeacher(User teacher) { this.teacher = teacher; }
+
+    public AssignmentScope getAssignmentScope() { return assignmentScope; }
+    public void setAssignmentScope(AssignmentScope assignmentScope) { this.assignmentScope = assignmentScope; }
 
     public User getAssignedBy() { return assignedBy; }
     public void setAssignedBy(User assignedBy) { this.assignedBy = assignedBy; }

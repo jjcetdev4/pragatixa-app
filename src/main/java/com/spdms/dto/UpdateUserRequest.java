@@ -21,7 +21,7 @@ public class UpdateUserRequest {
 
     private Set<String> subRoles;
 
-    private String section;
+    private Long sectionId;
     private String year;
 
     private boolean active;
@@ -43,8 +43,8 @@ public class UpdateUserRequest {
     public Set<String> getSubRoles() { return subRoles; }
     public void setSubRoles(Set<String> subRoles) { this.subRoles = subRoles; }
 
-    public String getSection() { return section; }
-    public void setSection(String section) { this.section = section; }
+    public Long getSectionId() { return sectionId; }
+    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
 
     public String getYear() { return year; }
     public void setYear(String year) { this.year = year; }

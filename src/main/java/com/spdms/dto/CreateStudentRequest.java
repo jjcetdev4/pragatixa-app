@@ -47,6 +47,9 @@ public class CreateStudentRequest {
 
     public CreateStudentRequest() {}
 
+    public String getSection() { return section; }
+    public void setSection(String section) { this.section = section; }
+
     public String getStudentId() { return studentId; }
     public void setStudentId(String studentId) { this.studentId = studentId; }
     public String getFullName() { return fullName; }
@@ -71,8 +74,6 @@ public class CreateStudentRequest {
     public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
     public String getYear() { return year; }
     public void setYear(String year) { this.year = year; }
-    public String getSection() { return section; }
-    public void setSection(String section) { this.section = section; }
     public String getSprNo() { return sprNo; }
     public void setSprNo(String sprNo) { this.sprNo = sprNo; }
     public String getDepartmentName() { return departmentName; }

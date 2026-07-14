@@ -10,4 +10,5 @@ public interface TeamRemovalRequestRepository extends JpaRepository<TeamRemovalR
     List<TeamRemovalRequest> findByStatus(String status);
     List<TeamRemovalRequest> findByTeamIdAndStatus(Long teamId, String status);
     boolean existsByTeamIdAndStudentStudentIdAndStatus(Long teamId, String studentId, String status);
+    List<TeamRemovalRequest> findByTeamId(Long teamId);
 }

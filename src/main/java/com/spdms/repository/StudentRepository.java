@@ -25,7 +25,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     List<Student> findByDepartmentId(Long departmentId);
     
-    @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.sectionRef.id = :sectionId")
+    @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.section.id = :sectionId")
     List<Student> findByDepartmentIdAndSectionId(@Param("deptId") Long deptId, @Param("sectionId") Long sectionId);
     
     long countByDepartmentId(Long departmentId);
@@ -37,6 +37,26 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     boolean existsByEmail(String email);
 
     boolean existsByStudentId(String studentId);
+
+    @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.yearRef.id = :yearId AND s.section.id = :sectionId")
+    Page<Student> findByDepartmentAndYearAndSection(
+        @Param("deptId") Long deptId,
+        @Param("yearId") Long yearId,
+        @Param("sectionId") Long sectionId,
+        Pageable pageable
+    );
+
+    @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.yearRef.id = :yearId AND s.section.id = :sectionId AND (" +
+           "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(s.studentId) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Student> searchStudentsByCC(
+        @Param("keyword") String keyword,
+        @Param("deptId") Long deptId,
+        @Param("yearId") Long yearId,
+        @Param("sectionId") Long sectionId,
+        Pageable pageable
+    );
 
     @Query("SELECT s FROM Student s WHERE " +
            "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +

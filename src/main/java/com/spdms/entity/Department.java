@@ -2,6 +2,8 @@ package com.spdms.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Represents a school/college department
@@ -29,6 +31,14 @@ public class Department {
     @Column(length = 255)
     private String description;
 
+    @JsonIgnore
+    @OneToMany(
+        mappedBy="department",
+        cascade=CascadeType.ALL,
+        orphanRemoval=true
+    )
+    private List<Section> sections;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -54,6 +64,9 @@ public class Department {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public List<Section> getSections() { return sections; }
+    public void setSections(List<Section> sections) { this.sections = sections; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

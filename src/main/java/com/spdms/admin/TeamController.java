@@ -32,63 +32,83 @@ public class TeamController {
     private final StudentRepository studentRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final TeamRemovalRequestRepository teamRemovalRequestRepository;
+    private final ActivityAssignmentRepository activityAssignmentRepository;
+    private final StudentActivityXpRepository studentActivityXpRepository;
+    private final GroupDeletionAuditLogRepository auditLogRepository;
+    private final com.spdms.service.AssignmentSecurityService assignmentSecurityService;
 
     public TeamController(TeamRepository teamRepository,
                           UserRepository userRepository,
                           StudentRepository studentRepository,
                           TeamMemberRepository teamMemberRepository,
-                          TeamRemovalRequestRepository teamRemovalRequestRepository) {
+                          TeamRemovalRequestRepository teamRemovalRequestRepository,
+                          ActivityAssignmentRepository activityAssignmentRepository,
+                          StudentActivityXpRepository studentActivityXpRepository,
+                          GroupDeletionAuditLogRepository auditLogRepository,
+                          com.spdms.service.AssignmentSecurityService assignmentSecurityService) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.teamRemovalRequestRepository = teamRemovalRequestRepository;
+        this.activityAssignmentRepository = activityAssignmentRepository;
+        this.studentActivityXpRepository = studentActivityXpRepository;
+        this.auditLogRepository = auditLogRepository;
+        this.assignmentSecurityService = assignmentSecurityService;
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @Transactional
-    @Operation(summary = "Create Team", description = "Creates a student team. Capable of being called by a student (who becomes captain) or an Admin/CC.")
+    @Operation(summary = "Create Team", description = "Creates a student team. Capable of being called by an Assigned Faculty, CC, or Admin.")
     public ResponseEntity<ApiResponse<TeamResponse>> createTeam(@Valid @RequestBody CreateTeamRequest request) {
         log.info("Creating Team with name: {}", request.getName());
-        // 1. Get logged-in username and determine if student or CC
+        // 1. Get logged-in username
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Student captain = studentRepository.findByStudentId(username).orElse(null);
-        if (captain != null) {
-            // Logged in as student - they are the captain of the team they create
-            if (captain.getTeam() != null) {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("You are already assigned to team: " + captain.getTeam().getName()));
-            }
-        } else {
-            // Logged in as Staff/Admin - verify CC or Admin role
-            User creator = userRepository.findByUsername(username).orElse(null);
-            if (creator == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
-            }
-            boolean isCcOrAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
-                    || creator.getSubRoles().stream().map(SubRole::getName)
-                            .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+        // 2. Prevent students from creating teams
+        Student studentAttempt = studentRepository.findByStudentId(username).orElse(null);
+        if (studentAttempt != null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access Denied: Students are not allowed to create groups."));
+        }
 
-            if (!isCcOrAdmin) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse
-                        .error("Access Denied: Only Class Coordinators (CC) or students can create teams."));
-            }
+        // 3. Verify Admin, CC, or Assigned Faculty
+        User creator = userRepository.findByUsername(username).orElse(null);
+        if (creator == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+        }
 
-            if (request.getCaptainStudentId() == null || request.getCaptainStudentId().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(ApiResponse.error("Captain Student ID is required."));
-            }
+        ActivityAssignment assignment = null;
+        if (request.getAssignmentId() != null) {
+            assignment = activityAssignmentRepository.findById(request.getAssignmentId()).orElse(null);
+        }
 
-            captain = studentRepository.findByStudentId(request.getCaptainStudentId()).orElse(null);
-            if (captain == null) {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Captain student not found with ID: " + request.getCaptainStudentId()));
-            }
-            if (captain.getTeam() != null) {
-                return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName()
-                        + " is already assigned to team: " + captain.getTeam().getName()));
-            }
+        boolean isAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        boolean isCc = creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+        boolean isAssignedFaculty = false;
+
+        if (assignment != null && assignment.getTeacher() != null) {
+            isAssignedFaculty = assignment.getTeacher().getUsername().equals(creator.getUsername());
+        }
+
+        if (!isAdmin && !isCc && !isAssignedFaculty) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse
+                    .error("Access Denied: Only Assigned Faculty, Class Coordinators (CC), or Admins can create teams."));
+        }
+
+        if (request.getCaptainStudentId() == null || request.getCaptainStudentId().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Captain Student ID is required."));
+        }
+
+        Student captain = studentRepository.findByStudentId(request.getCaptainStudentId()).orElse(null);
+        if (captain == null) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Captain student not found with ID: " + request.getCaptainStudentId()));
+        }
+        if (captain.getTeam() != null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName()
+                    + " is already assigned to team: " + captain.getTeam().getName()));
         }
 
         // 2. Validate team name duplication
@@ -130,6 +150,7 @@ public class TeamController {
                 .name(request.getName())
                 .size(request.getSize())
                 .captain(captain)
+                .assignment(assignment)
                 .build();
 
         Team savedTeam = teamRepository.save(team);
@@ -305,32 +326,6 @@ public class TeamController {
         return ResponseEntity.ok(ApiResponse.ok("Team updated successfully", null));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    @Transactional
-    @Operation(summary = "Delete Team")
-    public ResponseEntity<ApiResponse<Void>> deleteTeam(@PathVariable Long id) {
-        Team team = teamRepository.findById(id).orElse(null);
-        if (team == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
-        }
-
-        log.info("Deleting Team ID = {}", id);
-        long memberCount = teamMemberRepository.countByTeamId(id);
-        log.info("Member Count = {}", memberCount);
-        log.info("Captain = {}", team.getCaptain() != null ? team.getCaptain().getStudentId() : "null");
-        log.info("Repository Result = {}", memberCount);
-
-        if (memberCount > 0) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiResponse.error("Cannot delete team because it still contains members."));
-        }
-
-        teamRepository.delete(team);
-        log.info("Deleted Team: {}", team.getName());
-
-        return ResponseEntity.ok(ApiResponse.ok("Team deleted successfully", null));
-    }
 
     @PostMapping("/{id}/members")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
@@ -422,6 +417,41 @@ public class TeamController {
         log.info("Assigned student {} as Captain of Team {}", captain.getFullName(), team.getName());
 
         return ResponseEntity.ok(ApiResponse.ok("Student assigned as Team Captain successfully", null));
+    }
+
+    @GetMapping("/my-classmates")
+    @PreAuthorize("hasRole('STUDENT')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Get My Classmates", description = "Returns a list of students in the same department and section as the logged-in student.")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getMyClassmates() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Student currentStudent = studentRepository.findByStudentId(username).orElse(null);
+        if (currentStudent == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Student profile not found"));
+        }
+
+        if (currentStudent.getDepartment() == null || currentStudent.getSection() == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Student is not assigned to a department and section."));
+        }
+
+        List<Student> classmates = studentRepository.findByDepartmentIdAndSectionId(
+                currentStudent.getDepartment().getId(),
+                currentStudent.getSection().getId()
+        );
+
+        List<Map<String, Object>> response = classmates.stream()
+                .filter(s -> !s.getId().equals(currentStudent.getId())) // Exclude self
+                .map(s -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("studentId", s.getStudentId());
+                    map.put("fullName", s.getFullName());
+                    map.put("regNo", s.getRegNo());
+                    map.put("sprNo", s.getSprNo());
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.ok("Classmates retrieved successfully", response));
     }
 
     @PostMapping("/my-team/add-member")
@@ -561,7 +591,7 @@ public class TeamController {
         teamRemovalRequestRepository.save(request);
         log.info("Created removal request for student {} from Team {} by {}", member.getFullName(), team.getName(), captain.getFullName());
 
-        return ResponseEntity.ok(ApiResponse.ok("Removal request sent to CC successfully", null));
+        return ResponseEntity.ok(ApiResponse.ok("Removal request sent to Assigned Faculty successfully", null));
     }
 
     @GetMapping("/removal-requests/pending")
@@ -569,7 +599,17 @@ public class TeamController {
     @Transactional(readOnly = true)
     @Operation(summary = "Get Pending Removal Requests", description = "Gets all pending team member removal requests.")
     public ResponseEntity<ApiResponse<List<TeamRemovalRequestDto>>> getPendingRemovalRequests() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+
         List<TeamRemovalRequest> requests = teamRemovalRequestRepository.findByStatus("PENDING");
+        
+        if (currentUser != null) {
+            requests = requests.stream()
+                    .filter(req -> assignmentSecurityService.isUserAssignedFaculty(req.getTeam().getAssignment(), currentUser))
+                    .collect(Collectors.toList());
+        }
+
         List<TeamRemovalRequestDto> dtos = requests.stream().map(req -> new TeamRemovalRequestDto(
                 req.getId(),
                 req.getTeam().getId(),
@@ -598,6 +638,12 @@ public class TeamController {
             return ResponseEntity.badRequest().body(ApiResponse.error("Request is not pending"));
         }
 
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser != null && !assignmentSecurityService.isUserAssignedFaculty(request.getTeam().getAssignment(), currentUser)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not authorized to approve this request."));
+        }
+
         Student member = request.getStudent();
         Team team = request.getTeam();
 
@@ -624,6 +670,12 @@ public class TeamController {
         }
         if (!"PENDING".equals(request.getStatus())) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Request is not pending"));
+        }
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser != null && !assignmentSecurityService.isUserAssignedFaculty(request.getTeam().getAssignment(), currentUser)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not authorized to reject this request."));
         }
 
         request.setStatus("REJECTED");
@@ -683,5 +735,96 @@ public class TeamController {
                 .teamName(teamName)
                 .isCaptain(isCap)
                 .build();
+    }
+
+    @DeleteMapping("/{teamId}")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @Transactional
+    @Operation(summary = "Delete Team", description = "Deletes a team if no XP has been awarded. Authorized for Admin, Assigned Faculty, or matching CC.")
+    public ResponseEntity<ApiResponse<Void>> deleteTeam(@PathVariable Long teamId) {
+        Team team = teamRepository.findById(teamId).orElse(null);
+        if (team == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
+        }
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+        }
+
+        ActivityAssignment assignment = team.getAssignment();
+        if (assignment == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Team is missing assignment context"));
+        }
+
+        // Authorization check
+        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        boolean isCc = currentUser.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+        boolean isAssignedFaculty = assignment.getTeacher() != null && assignment.getTeacher().getUsername().equals(username);
+        
+        boolean matchesDeptAndSection = false;
+        if (isCc && assignment.getDepartment() != null && currentUser.getDepartment() != null) {
+            if (assignment.getDepartment().getId().equals(currentUser.getDepartment().getId())) {
+                if (assignment.getSection() == null || (currentUser.getSection() != null && assignment.getSection().getId().equals(currentUser.getSection().getId()))) {
+                    matchesDeptAndSection = true;
+                }
+            }
+        }
+        
+        if (!isAdmin && !isAssignedFaculty && !matchesDeptAndSection) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: Only Admin, Assigned Faculty, or Class Coordinators of the section can delete this team."));
+        }
+
+        // Check if awarded XP
+        List<Student> allMembers = new ArrayList<>(team.getMembers());
+        if (team.getCaptain() != null && !allMembers.contains(team.getCaptain())) {
+            allMembers.add(team.getCaptain());
+        }
+
+        if (!allMembers.isEmpty() && studentActivityXpRepository.existsByAssignmentAndStudentIn(assignment, allMembers)) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("This group already contains awarded activity records. Please archive or complete administrative cleanup before deletion."));
+        }
+
+        // Perform Cleanup
+        // Nullify captain's team reference
+        if (team.getCaptain() != null) {
+            Student captain = team.getCaptain();
+            captain.setTeam(null);
+            studentRepository.save(captain);
+        }
+
+        // Nullify members' team reference
+        for (Student member : team.getMembers()) {
+            member.setTeam(null);
+            studentRepository.save(member);
+        }
+        
+        // Clear mapping from team side
+        team.getMembers().clear();
+        team.setCaptain(null);
+
+        // Delete any pending removal requests for this team
+        teamRemovalRequestRepository.deleteAll(teamRemovalRequestRepository.findByTeamId(teamId));
+
+        String teamName = team.getName();
+
+        // Delete Team
+        teamRepository.delete(team);
+
+        // Audit Logging
+        String roleStr = isAdmin ? "ADMIN" : (isAssignedFaculty ? "ASSIGNED_FACULTY" : "CC");
+        GroupDeletionAuditLog auditLog = new GroupDeletionAuditLog(
+                teamId,
+                teamName,
+                username,
+                roleStr,
+                "User initiated deletion",
+                java.time.LocalDateTime.now()
+        );
+        auditLogRepository.save(auditLog);
+
+        log.info("Team {} deleted successfully by {}", teamId, username);
+        return ResponseEntity.ok(ApiResponse.ok("Group deleted successfully", null));
     }
 }

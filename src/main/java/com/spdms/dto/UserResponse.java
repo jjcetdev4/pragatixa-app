@@ -12,12 +12,14 @@ public class UserResponse {
     private Set<String> subRoles;
     private Long departmentId;
     private String departmentName;
+    private Long sectionId;
+    private String sectionName;
     private String section;
     private String year;
 
     public UserResponse() {}
 
-    public UserResponse(Long id, String username, String fullName, String email, boolean active, Set<String> roles, Set<String> subRoles, Long departmentId, String departmentName, String section, String year) {
+    public UserResponse(Long id, String username, String fullName, String email, boolean active, Set<String> roles, Set<String> subRoles, Long departmentId, String departmentName, Long sectionId, String sectionName, String section, String year) {
         this.id = id;
         this.username = username;
         this.fullName = fullName;
@@ -27,6 +29,8 @@ public class UserResponse {
         this.subRoles = subRoles;
         this.departmentId = departmentId;
         this.departmentName = departmentName;
+        this.sectionId = sectionId;
+        this.sectionName = sectionName;
         this.section = section;
         this.year = year;
     }
@@ -58,6 +62,12 @@ public class UserResponse {
     public String getDepartmentName() { return departmentName; }
     public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
 
+    public Long getSectionId() { return sectionId; }
+    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+
+    public String getSectionName() { return sectionName; }
+    public void setSectionName(String sectionName) { this.sectionName = sectionName; }
+
     public String getSection() { return section; }
     public void setSection(String section) { this.section = section; }
 
@@ -76,6 +86,8 @@ public class UserResponse {
         private Set<String> subRoles;
         private Long departmentId;
         private String departmentName;
+        private Long sectionId;
+        private String sectionName;
         private String section;
         private String year;
 
@@ -88,11 +100,13 @@ public class UserResponse {
         public Builder subRoles(Set<String> v) { this.subRoles = v; return this; }
         public Builder departmentId(Long v) { this.departmentId = v; return this; }
         public Builder departmentName(String v) { this.departmentName = v; return this; }
+        public Builder sectionId(Long v) { this.sectionId = v; return this; }
+        public Builder sectionName(String v) { this.sectionName = v; return this; }
         public Builder section(String v) { this.section = v; return this; }
         public Builder year(String v) { this.year = v; return this; }
 
         public UserResponse build() {
-            return new UserResponse(id, username, fullName, email, active, roles, subRoles, departmentId, departmentName, section, year);
+            return new UserResponse(id, username, fullName, email, active, roles, subRoles, departmentId, departmentName, sectionId, sectionName, section, year);
         }
     }
 }

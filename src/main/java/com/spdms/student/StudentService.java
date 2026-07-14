@@ -31,6 +31,9 @@ public class StudentService {
 
     private static final Logger log = LoggerFactory.getLogger(StudentService.class);
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     private final StudentRepository studentRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
@@ -103,7 +106,7 @@ public class StudentService {
             year = resolveYear(request.getYearId(), request.getYear());
             semester = resolveSemester(request.getSemesterId(), request.getSemester());
             gender = resolveGender(request.getGenderId(), request.getGender());
-            section = resolveSection(request.getSectionId(), request.getSection(), department);
+            section = resolveSection(request.getSectionId(), null, department);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
         }
@@ -137,8 +140,7 @@ public class StudentService {
             .semester(String.valueOf(semester.getSemesterNo()))
             .genderRef(gender)
             .gender(gender.getGenderName())
-            .sectionRef(section)
-            .section(section != null ? section.getSectionName() : null)
+            .section(section)
             .team(team)
             .sprNo(request.getSprNo() != null ? request.getSprNo().trim() : null)
             .active(true)
@@ -594,7 +596,7 @@ public class StudentService {
 
                     student.setFullName(request.getFullName().trim());
                     student.setDepartment(department);
-                    student.setSectionRef(section);
+                    student.setSection(section);
                     student.setGenderRef(gender);
                     student.setAcademicYearRef(academicYear);
                     student.setYearRef(year);
@@ -613,7 +615,6 @@ public class StudentService {
                     student.setYear(String.valueOf(year.getYearNo()));
                     student.setSemester(String.valueOf(semester.getSemesterNo()));
                     student.setGender(gender.getGenderName());
-                    student.setSection(section != null ? section.getSectionName() : null);
                     
                     studentRepository.saveAndFlush(student);
                     updateCount++;
@@ -642,7 +643,7 @@ public class StudentService {
                         .genderRef(gender)
                         .dateOfBirth(dob)
                         .department(department)
-                        .sectionRef(section)
+                        .section(section)
                         .academicYearRef(academicYear)
                         .yearRef(year)
                         .semesterRef(semester)
@@ -651,7 +652,6 @@ public class StudentService {
                         .year(String.valueOf(year.getYearNo()))
                         .semester(String.valueOf(semester.getSemesterNo()))
                         .gender(gender.getGenderName())
-                        .section(section != null ? section.getSectionName() : null)
                         .score(100)
                         .team(team)
                         .sprNo(request.getSprNo() != null && !request.getSprNo().trim().isEmpty() ? request.getSprNo().trim() : null)
@@ -750,6 +750,51 @@ public class StudentService {
     @Transactional(readOnly = true)
     public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
+        
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        
+        boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
+                .map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+                
+        if (isCc && currentUser != null) {
+            String userYearStr = currentUser.getYear();
+            Byte yearNo = null;
+            if (userYearStr != null) {
+                String yTrim = userYearStr.trim().toUpperCase();
+                if (yTrim.equals("I") || yTrim.equals("1")) yearNo = 1;
+                else if (yTrim.equals("II") || yTrim.equals("2")) yearNo = 2;
+                else if (yTrim.equals("III") || yTrim.equals("3")) yearNo = 3;
+                else if (yTrim.equals("IV") || yTrim.equals("4")) yearNo = 4;
+            }
+            Year yearRef = null;
+            if (yearNo != null) {
+                yearRef = yearRepository.findByYearNo(yearNo).orElse(null);
+            }
+            Section userSection = currentUser.getSection();
+            
+            log.info("CC getAllStudents: Logged-in user: {}, Dept ID: {}, Year String: {}, Resolved Year ID: {}, Section ID: {}", 
+                     username, 
+                     currentUser.getDepartment() != null ? currentUser.getDepartment().getId() : null,
+                     userYearStr,
+                     yearRef != null ? yearRef.getId() : null,
+                     userSection != null ? userSection.getId() : null);
+                     
+            if (currentUser.getDepartment() != null && yearRef != null && userSection != null) {
+                Page<StudentResponse> result = studentRepository.findByDepartmentAndYearAndSection(
+                    currentUser.getDepartment().getId(),
+                    yearRef.getId(),
+                    userSection.getId(),
+                    pageable
+                ).map(this::toResponse);
+                log.info("CC getAllStudents: Matching students count: {}", result.getTotalElements());
+                return ApiResponse.ok(result);
+            } else {
+                log.warn("CC user metadata incomplete: department, year, or section is missing");
+                return ApiResponse.ok(Page.empty(pageable));
+            }
+        }
+        
         Page<StudentResponse> result = studentRepository.findAll(pageable).map(this::toResponse);
         return ApiResponse.ok(result);
     }
@@ -759,6 +804,52 @@ public class StudentService {
     @Transactional(readOnly = true)
     public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
+        
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        
+        boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
+                .map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+                
+        if (isCc && currentUser != null) {
+            String userYearStr = currentUser.getYear();
+            Byte yearNo = null;
+            if (userYearStr != null) {
+                String yTrim = userYearStr.trim().toUpperCase();
+                if (yTrim.equals("I") || yTrim.equals("1")) yearNo = 1;
+                else if (yTrim.equals("II") || yTrim.equals("2")) yearNo = 2;
+                else if (yTrim.equals("III") || yTrim.equals("3")) yearNo = 3;
+                else if (yTrim.equals("IV") || yTrim.equals("4")) yearNo = 4;
+            }
+            Year yearRef = null;
+            if (yearNo != null) {
+                yearRef = yearRepository.findByYearNo(yearNo).orElse(null);
+            }
+            Section userSection = currentUser.getSection();
+            
+            log.info("CC searchStudents: Logged-in user: {}, Dept ID: {}, Year String: {}, Resolved Year ID: {}, Section ID: {}", 
+                     username, 
+                     currentUser.getDepartment() != null ? currentUser.getDepartment().getId() : null,
+                     userYearStr,
+                     yearRef != null ? yearRef.getId() : null,
+                     userSection != null ? userSection.getId() : null);
+                     
+            if (currentUser.getDepartment() != null && yearRef != null && userSection != null) {
+                Page<StudentResponse> result = studentRepository.searchStudentsByCC(
+                    keyword,
+                    currentUser.getDepartment().getId(),
+                    yearRef.getId(),
+                    userSection.getId(),
+                    pageable
+                ).map(this::toResponse);
+                log.info("CC searchStudents: Matching students count: {}", result.getTotalElements());
+                return ApiResponse.ok(result);
+            } else {
+                log.warn("CC user metadata incomplete for search");
+                return ApiResponse.ok(Page.empty(pageable));
+            }
+        }
+        
         Page<StudentResponse> result = studentRepository.searchStudents(keyword, pageable).map(this::toResponse);
         return ApiResponse.ok(result);
     }
@@ -767,11 +858,34 @@ public class StudentService {
 
     @Transactional
     public ApiResponse<Void> deleteStudent(Long id) {
-        if (!studentRepository.existsById(id)) {
+        Student student = studentRepository.findById(id).orElse(null);
+        if (student == null) {
             return ApiResponse.error("Student not found with ID: " + id);
         }
-        studentRepository.deleteById(id);
-        log.info("Deleted student with ID: {}", id);
+
+        // Delete referencing table rows using EntityManager native queries to avoid FK constraint errors
+        entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM discipline_logs WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM team_removal_requests WHERE student_id = :sid OR captain_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM team_members WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM student_badges WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM streaks WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("UPDATE teams SET captain_id = NULL WHERE captain_id = :sid").setParameter("sid", id).executeUpdate();
+
+        User user = student.getUser();
+
+        // Delete student first
+        studentRepository.delete(student);
+
+        // Delete associated User if exists
+        if (user != null) {
+            entityManager.createNativeQuery("DELETE FROM user_roles WHERE user_id = :uid").setParameter("uid", user.getId()).executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM user_sub_roles WHERE user_id = :uid").setParameter("uid", user.getId()).executeUpdate();
+            userRepository.delete(user);
+        }
+
+        log.info("Successfully deleted student with ID: {} and their associated records", id);
         return ApiResponse.ok("Student deleted successfully", null);
     }
 
@@ -800,7 +914,7 @@ public class StudentService {
             year = resolveYear(request.getYearId(), request.getYear());
             semester = resolveSemester(request.getSemesterId(), request.getSemester());
             gender = resolveGender(request.getGenderId(), request.getGender());
-            section = resolveSection(request.getSectionId(), request.getSection(), department);
+            section = resolveSection(request.getSectionId(), null, department);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
         }
@@ -824,8 +938,7 @@ public class StudentService {
         student.setSemester(String.valueOf(semester.getSemesterNo()));
         student.setGenderRef(gender);
         student.setGender(gender.getGenderName());
-        student.setSectionRef(section);
-        student.setSection(section != null ? section.getSectionName() : null);
+        student.setSection(section);
         student.setTeam(team);
         student.setSprNo(request.getSprNo() != null ? request.getSprNo().trim() : null);
         student.setActive(request.isActive());
@@ -853,13 +966,20 @@ public class StudentService {
             .email(student.getEmail())
             .phone(student.getPhone())
             .gender(student.getGender())
+            .genderId(student.getGenderRef() != null ? student.getGenderRef().getId() : null)
             .dateOfBirth(student.getDateOfBirth())
             .address(student.getAddress())
+            .departmentId(student.getDepartment() != null ? student.getDepartment().getId() : null)
             .departmentName(student.getDepartment() != null ? student.getDepartment().getName() : null)
             .semester(student.getSemester())
+            .semesterId(student.getSemesterRef() != null ? student.getSemesterRef().getId() : null)
             .academicYear(student.getAcademicYear())
+            .academicYearId(student.getAcademicYearRef() != null ? student.getAcademicYearRef().getId() : null)
             .year(student.getYear())
-            .section(student.getSection())
+            .yearId(student.getYearRef() != null ? student.getYearRef().getId() : null)
+            .section(student.getSection() != null ? student.getSection().getSectionName() : null)
+            .sectionId(student.getSection() != null ? student.getSection().getId() : null)
+            .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
             .active(student.isActive())
             .createdAt(student.getCreatedAt())
             .sprNo(student.getSprNo())

@@ -9,16 +9,18 @@ public class AwardXpRequest {
     private Long assignmentId;
     private int xp;
     private String remarks;
+    private String result; // "PASS" or "FAIL"
 
     public AwardXpRequest() {}
 
-    public AwardXpRequest(Long studentId, List<Long> studentIds, Long activityId, Long assignmentId, int xp, String remarks) {
+    public AwardXpRequest(Long studentId, List<Long> studentIds, Long activityId, Long assignmentId, int xp, String remarks, String result) {
         this.studentId = studentId;
         this.studentIds = studentIds;
         this.activityId = activityId;
         this.assignmentId = assignmentId;
         this.xp = xp;
         this.remarks = remarks;
+        this.result = result;
     }
 
     public Long getStudentId() { return studentId; }
@@ -38,4 +40,7 @@ public class AwardXpRequest {
 
     public String getRemarks() { return remarks; }
     public void setRemarks(String remarks) { this.remarks = remarks; }
+
+    public String getResult() { return result != null ? result : "PASS"; }
+    public void setResult(String result) { this.result = result; }
 }

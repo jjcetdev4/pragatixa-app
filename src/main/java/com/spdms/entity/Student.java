@@ -27,7 +27,7 @@ public class Student {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "section_id", nullable = true)
-    private Section sectionRef;
+    private Section section;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = true)
@@ -85,8 +85,7 @@ public class Student {
     @Column(nullable = false)
     private int score = 100;
 
-    @Column(length = 50)
-    private String section;
+
 
     @Column(length = 20)
     private String semester;
@@ -130,8 +129,8 @@ public class Student {
     public Department getDepartment() { return department; }
     public void setDepartment(Department department) { this.department = department; }
 
-    public Section getSectionRef() { return sectionRef; }
-    public void setSectionRef(Section sectionRef) { this.sectionRef = sectionRef; }
+    public Section getSection() { return section; }
+    public void setSection(Section section) { this.section = section; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
@@ -184,8 +183,7 @@ public class Student {
     public int getScore() { return score; }
     public void setScore(int score) { this.score = score; }
 
-    public String getSection() { return section; }
-    public void setSection(String section) { this.section = section; }
+
 
     public String getSemester() { return semester; }
     public void setSemester(String semester) { this.semester = semester; }
@@ -224,7 +222,7 @@ public class Student {
         public Builder regNo(Long v) { s.regNo = v; return this; }
         public Builder sprNo(String v) { s.sprNo = v; return this; }
         public Builder department(Department v) { s.department = v; return this; }
-        public Builder sectionRef(Section v) { s.sectionRef = v; return this; }
+        public Builder section(Section v) { s.section = v; return this; }
         public Builder user(User v) { s.user = v; return this; }
         public Builder dobField(LocalDate v) { s.dobField = v; return this; }
         public Builder genderRef(Gender v) { s.genderRef = v; return this; }
@@ -242,7 +240,7 @@ public class Student {
         public Builder password(String v) { s.password = v; return this; }
         public Builder phone(String v) { s.phone = v; return this; }
         public Builder score(int v) { s.score = v; return this; }
-        public Builder section(String v) { s.section = v; return this; }
+
         public Builder semester(String v) { s.semester = v; return this; }
         public Builder studentId(String v) { s.studentId = v; return this; }
         public Builder year(String v) { s.year = v; return this; }

@@ -30,73 +30,277 @@ public class StudentXpController {
     private final StudentRepository studentRepository;
     private final StudentActivityXpRepository studentActivityXpRepository;
     private final XpTransactionRepository xpTransactionRepository;
+    private final SectionRepository sectionRepository;
+    private final com.spdms.service.AssignmentSecurityService assignmentSecurityService;
 
     public StudentXpController(UserRepository userRepository,
                                ActivityRepository activityRepository,
                                ActivityAssignmentRepository activityAssignmentRepository,
                                StudentRepository studentRepository,
                                StudentActivityXpRepository studentActivityXpRepository,
-                               XpTransactionRepository xpTransactionRepository) {
+                               XpTransactionRepository xpTransactionRepository,
+                               SectionRepository sectionRepository,
+                               com.spdms.service.AssignmentSecurityService assignmentSecurityService) {
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.studentRepository = studentRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
         this.xpTransactionRepository = xpTransactionRepository;
+        this.sectionRepository = sectionRepository;
+        this.assignmentSecurityService = assignmentSecurityService;
+    }
+
+    private String normalizeYearToRoman(String yr) {
+        if (yr == null)
+            return null;
+        String t = yr.trim().toUpperCase();
+        if (t.equals("1") || t.equals("I"))
+            return "I";
+        if (t.equals("2") || t.equals("II"))
+            return "II";
+        if (t.equals("3") || t.equals("III"))
+            return "III";
+        if (t.equals("4") || t.equals("IV"))
+            return "IV";
+        return yr;
+    }
+
+    private ActivityAssignment getPriorityAssignment(List<ActivityAssignment> matches) {
+        if (matches.isEmpty()) return null;
+        for (ActivityAssignment a : matches) {
+            if (a.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY) return a;
+        }
+        for (ActivityAssignment a : matches) {
+            if (a.getAssignmentScope() == AssignmentScope.SECTION) return a;
+        }
+        for (ActivityAssignment a : matches) {
+            if (a.getAssignmentScope() == AssignmentScope.DEPARTMENT) return a;
+        }
+        for (ActivityAssignment a : matches) {
+            if (a.getAssignmentScope() == AssignmentScope.GLOBAL) return a;
+        }
+        return matches.get(0);
+    }
+
+    private ActivityAssignment findMatchingAssignmentForStudent(List<ActivityAssignment> matching, Student student) {
+        if (student == null) return null;
+        for (ActivityAssignment a : matching) {
+            if (a.getAssignmentScope() == AssignmentScope.GLOBAL) {
+                return a;
+            }
+            if (student.getDepartment() != null && a.getDepartment() != null 
+                    && student.getDepartment().getId().equals(a.getDepartment().getId())) {
+                if (a.getAssignmentScope() == AssignmentScope.DEPARTMENT) {
+                    return a;
+                }
+                if (student.getSection() != null && a.getSection() != null 
+                        && student.getSection().getId().equals(a.getSection().getId())) {
+                    return a;
+                }
+            }
+        }
+        return null;
+    }
+
+    @GetMapping("/my-activities/{activityId}/years")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Get distinct years assigned to the activity that the teacher has permission to view")
+    public ResponseEntity<ApiResponse<List<String>>> getYearsForActivity(@PathVariable Long activityId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("User profile not found"));
+        }
+
+        List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
+        List<ActivityAssignment> matching = allAssignments.stream()
+            .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
+            .collect(Collectors.toList());
+
+        List<String> years = matching.stream()
+            .map(ActivityAssignment::getYear)
+            .filter(Objects::nonNull)
+            .filter(y -> !y.trim().isEmpty())
+            .distinct()
+            .sorted()
+            .collect(Collectors.toList());
+
+        if (years.isEmpty()) {
+            years.add("1");
+        }
+
+        return ResponseEntity.ok(ApiResponse.ok("Years retrieved successfully", years));
+    }
+
+    @GetMapping("/my-activities/{activityId}/departments")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Get distinct departments assigned to the activity/year that the teacher has permission to view")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDepartmentsForActivity(
+            @PathVariable Long activityId,
+            @RequestParam(required = false) String year) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("User profile not found"));
+        }
+
+        String targetYear = (year == null || year.trim().isEmpty()) ? "1" : year;
+
+        List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
+        List<ActivityAssignment> matching = allAssignments.stream()
+            .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
+            .filter(a -> isYearMatching(targetYear, a.getYear()))
+            .collect(Collectors.toList());
+
+        List<Map<String, Object>> depts = matching.stream()
+            .map(ActivityAssignment::getDepartment)
+            .filter(Objects::nonNull)
+            .distinct()
+            .map(d -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", d.getId());
+                map.put("name", d.getName());
+                return map;
+            })
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.ok("Departments retrieved successfully", depts));
+    }
+
+    @GetMapping("/my-activities/{activityId}/sections")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Get distinct sections assigned to the activity/year/department that the teacher has permission to view")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getSectionsForActivity(
+            @PathVariable Long activityId,
+            @RequestParam(required = false) String year,
+            @RequestParam Long departmentId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("User profile not found"));
+        }
+
+        String targetYear = (year == null || year.trim().isEmpty()) ? "1" : year;
+
+        List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
+        List<ActivityAssignment> matching = allAssignments.stream()
+            .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
+            .filter(a -> isYearMatching(targetYear, a.getYear()))
+            .filter(a -> a.getDepartment() == null || a.getDepartment().getId().equals(departmentId))
+            .collect(Collectors.toList());
+
+        if (matching.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not assigned to this activity."));
+        }
+
+        // Load all sections belonging to the selected department directly from Section repository
+        boolean hasDepartmentLevelOrGlobalAssignment = matching.stream()
+            .anyMatch(a -> a.getSection() == null);
+
+        List<com.spdms.entity.Section> allSections = sectionRepository.findByDepartment_Id(departmentId);
+        List<Map<String, Object>> sections = allSections.stream()
+            .filter(s -> hasDepartmentLevelOrGlobalAssignment || 
+                         matching.stream().anyMatch(a -> a.getSection() != null && a.getSection().getId().equals(s.getId())))
+            .map(s -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", s.getId());
+                map.put("sectionName", s.getSectionName());
+                return map;
+            })
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.ok("Sections retrieved successfully", sections));
     }
 
     @GetMapping("/my-activities/{activityId}/students")
     @PreAuthorize("hasRole('TEACHER')")
     @Transactional(readOnly = true)
     @Operation(summary = "Get list of students eligible for the given assigned activity")
-    public ResponseEntity<ApiResponse<MyActivityStudentsResponse>> getStudentsForActivity(@PathVariable Long activityId) {
+    public ResponseEntity<ApiResponse<MyActivityStudentsResponse>> getStudentsForActivity(
+            @PathVariable Long activityId,
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long sectionId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User teacher = userRepository.findByUsername(username).orElse(null);
         if (teacher == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Teacher profile not found"));
         }
 
-        List<ActivityAssignment> assignments = activityAssignmentRepository.findByActivityIdAndTeacherId(activityId, teacher.getId());
-        if (assignments.isEmpty()) {
+        List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
+        List<ActivityAssignment> matching = allAssignments.stream()
+            .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, teacher))
+            .filter(a -> year == null || isYearMatching(year, a.getYear()))
+            .filter(a -> departmentId == null || a.getDepartment() == null || a.getDepartment().getId().equals(departmentId))
+            .filter(a -> sectionId == null || a.getSection() == null || a.getSection().getId().equals(sectionId))
+            .collect(Collectors.toList());
+
+        if (matching.isEmpty()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not assigned to this activity."));
         }
 
-        Activity activity = assignments.get(0).getActivity();
+        ActivityAssignment priorityAssignment = getPriorityAssignment(matching);
+        Activity activity = priorityAssignment.getActivity();
         
-        // Resolve eligible students
-        Map<Long, Student> uniqueStudents = new LinkedHashMap<>();
-        for (ActivityAssignment assignment : assignments) {
-            List<Student> list;
-            if (assignment.getSection() != null) {
-                list = studentRepository.findByDepartmentIdAndSectionId(
-                    assignment.getDepartment().getId(), 
-                    assignment.getSection().getId()
-                );
+        String targetYear = (year == null || year.trim().isEmpty()) ? "1" : year;
+        
+        List<Student> rawStudents;
+        if (departmentId != null) {
+            if (sectionId != null) {
+                rawStudents = studentRepository.findByDepartmentIdAndSectionId(departmentId, sectionId);
             } else {
-                list = studentRepository.findByDepartmentId(assignment.getDepartment().getId());
+                rawStudents = studentRepository.findByDepartmentId(departmentId);
             }
-            if (list != null) {
-                for (Student s : list) {
-                    if (s.isActive()) {
-                        uniqueStudents.put(s.getId(), s);
+        } else {
+            rawStudents = studentRepository.findAll();
+        }
+
+        Set<Student> uniqueStudents = new java.util.HashSet<>();
+        if (rawStudents != null) {
+            for (Student s : rawStudents) {
+                if (s.isActive()) {
+                    if (departmentId != null && (s.getDepartment() == null || !s.getDepartment().getId().equals(departmentId))) {
+                        continue;
                     }
+                    if (!isYearMatching(targetYear, s.getYear())) {
+                        continue;
+                    }
+                    if (sectionId != null) {
+                        if (s.getSection() == null || !s.getSection().getId().equals(sectionId)) {
+                            continue;
+                        }
+                    }
+                    uniqueStudents.add(s);
                 }
             }
         }
 
-        // Map Students
-        List<MyActivityStudentsResponse.StudentDetail> studentDetails = uniqueStudents.values().stream()
-            .map(s -> new MyActivityStudentsResponse.StudentDetail(
+        List<Student> studentList = new ArrayList<>(uniqueStudents);
+        studentList.sort((s1, s2) -> {
+            Long r1 = s1.getRegNo() != null ? s1.getRegNo() : 0L;
+            Long r2 = s2.getRegNo() != null ? s2.getRegNo() : 0L;
+            return r1.compareTo(r2);
+        });
+
+        List<MyActivityStudentsResponse.StudentDetail> studentDetails = new ArrayList<>();
+        for (Student s : studentList) {
+            String secName = s.getSection() != null ? s.getSection().getSectionName() : "";
+            studentDetails.add(new MyActivityStudentsResponse.StudentDetail(
                 s.getId(),
                 s.getFullName(),
                 s.getStudentId(),
                 s.getRegNo(),
                 s.getDepartment() != null ? s.getDepartment().getName() : "",
-                s.getSectionRef() != null ? s.getSectionRef().getSectionName() : (s.getSection() != null ? s.getSection() : ""),
+                secName,
+                s.getYear() != null ? s.getYear() : "",
                 s.getTotalXp(),
                 s.getScore()
-            ))
-            .collect(Collectors.toList());
+            ));
+        }
 
         // Parse evidence list
         List<String> evidenceList = new ArrayList<>();
@@ -113,14 +317,40 @@ public class StudentXpController {
             activity.getOwnerDepartment(),
             evidenceList,
             activity.getFrequency(),
-            activity.getType()
+            activity.getType(),
+            activity.getXpCategory(),
+            activity.getAwardEnabled(),
+            activity.getAwardXp(),
+            activity.getPenaltyEnabled(),
+            activity.getPenaltyXp(),
+            activity.getCap()
         );
 
-        ActivityAssignment firstAssign = assignments.get(0);
+        String assignedFacultyName = "Any Faculty";
+        String assignmentMode = "Global";
+        if (priorityAssignment.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY) {
+            assignedFacultyName = priorityAssignment.getTeacher() != null ? priorityAssignment.getTeacher().getFullName() : "Any Faculty";
+            assignmentMode = "Specific Faculty";
+        } else if (priorityAssignment.getAssignmentScope() == AssignmentScope.SECTION || priorityAssignment.getAssignmentScope() == AssignmentScope.DEPARTMENT) {
+            assignmentMode = "Class Coordinator (Auto Assigned)";
+            assignedFacultyName = "Class Coordinator (Auto Assigned)";
+            if (priorityAssignment.getDepartment() != null && priorityAssignment.getSection() != null) {
+                List<User> ccs = userRepository.findClassCoordinatorsByDepartmentAndSection(
+                    priorityAssignment.getDepartment().getId(),
+                    priorityAssignment.getSection().getId()
+                );
+                if (!ccs.isEmpty()) {
+                    assignedFacultyName = ccs.get(0).getFullName();
+                }
+            }
+        }
+
         MyActivityStudentsResponse.AssignmentDetail assignDetail = new MyActivityStudentsResponse.AssignmentDetail(
-            firstAssign.getId(),
-            firstAssign.getAssignedBy() != null ? firstAssign.getAssignedBy().getFullName() : "",
-            firstAssign.getAssignedAt() != null ? firstAssign.getAssignedAt().toString() : ""
+            priorityAssignment.getId(),
+            priorityAssignment.getAssignedBy() != null ? priorityAssignment.getAssignedBy().getFullName() : "",
+            priorityAssignment.getAssignedAt() != null ? priorityAssignment.getAssignedAt().toString() : "",
+            assignedFacultyName,
+            assignmentMode
         );
 
         int xpLimit = 0;
@@ -153,20 +383,40 @@ public class StudentXpController {
             return ResponseEntity.badRequest().body(ApiResponse.error("Activity not found"));
         }
 
-        ActivityAssignment assignment = activityAssignmentRepository.findById(request.getAssignmentId()).orElse(null);
+        List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activity.getId());
+        List<ActivityAssignment> matching = allAssignments.stream()
+            .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, teacher))
+            .collect(Collectors.toList());
+
+        ActivityAssignment assignment = findMatchingAssignmentForStudent(matching, student);
         if (assignment == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Activity assignment not found"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not authorized to award XP to this student for this activity."));
         }
 
-        // Security check: teacher can only award for activities assigned to them
-        if (!assignment.getTeacher().getId().equals(teacher.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not authorized to award XP for this assignment."));
+        // Dynamic calculation of XP based on PASS/FAIL result
+        String resultStr = request.getResult();
+        int xpToAward = 0;
+        Boolean isAward = activity.getAwardEnabled();
+        Boolean isPenalty = activity.getPenaltyEnabled();
+        if (isAward == null && isPenalty == null) {
+            int legacyXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+            if ("Penalty".equalsIgnoreCase(activity.getXpType())) {
+                isAward = false;
+                isPenalty = true;
+            } else {
+                isAward = true;
+                isPenalty = false;
+            }
         }
-
-        // Validate XP points limits (strict Admin-configured XP value used)
-        int xpToAward = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
-        if (xpToAward <= 0) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Activity XP value is not configured correctly"));
+        if ("FAIL".equalsIgnoreCase(resultStr)) {
+            if (Boolean.TRUE.equals(isPenalty)) {
+                int px = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : activity.getAwardXp();
+                xpToAward = -Math.abs(px);
+            }
+        } else {
+            if (Boolean.TRUE.equals(isAward)) {
+                xpToAward = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+            }
         }
 
         // Validate Award Rules and check limits
@@ -183,6 +433,7 @@ public class StudentXpController {
             assignment,
             xpToAward,
             request.getRemarks() != null ? request.getRemarks() : "",
+            resultStr,
             LocalDateTime.now()
         );
         studentActivityXpRepository.save(record);
@@ -198,12 +449,12 @@ public class StudentXpController {
         XpTransaction tx = XpTransaction.builder()
             .student(student)
             .category(activity.getXpCategory() != null ? activity.getXpCategory().toUpperCase() : "SKILL")
-            .activityName(activity.getName() + " (Awarded by " + teacher.getFullName() + ")")
+            .activityName(activity.getName() + " (" + resultStr + " - Awarded by " + teacher.getFullName() + ")")
             .xpPoints(xpToAward)
             .submittedAt(LocalDateTime.now())
             .status("APPROVED")
             .approvedBy(teacher.getFullName())
-            .isPenalty(false)
+            .isPenalty(xpToAward < 0)
             .capApplied(false)
             .build();
         xpTransactionRepository.save(tx);
@@ -227,20 +478,35 @@ public class StudentXpController {
             return ResponseEntity.badRequest().body(ApiResponse.error("Activity not found"));
         }
 
-        ActivityAssignment assignment = activityAssignmentRepository.findById(request.getAssignmentId()).orElse(null);
-        if (assignment == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Activity assignment not found"));
-        }
+        List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activity.getId());
+        List<ActivityAssignment> matching = allAssignments.stream()
+            .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, teacher))
+            .collect(Collectors.toList());
 
-        // Security check: teacher can only award for activities assigned to them
-        if (!assignment.getTeacher().getId().equals(teacher.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not authorized to award XP for this assignment."));
+        // Dynamic calculation of XP based on PASS/FAIL result
+        String resultStr = request.getResult();
+        int xpToAward = 0;
+        Boolean isAward = activity.getAwardEnabled();
+        Boolean isPenalty = activity.getPenaltyEnabled();
+        if (isAward == null && isPenalty == null) {
+            int legacyXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+            if ("Penalty".equalsIgnoreCase(activity.getXpType())) {
+                isAward = false;
+                isPenalty = true;
+            } else {
+                isAward = true;
+                isPenalty = false;
+            }
         }
-
-        // Configured XP points limits
-        int xpToAward = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
-        if (xpToAward <= 0) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Activity XP value is not configured correctly"));
+        if ("FAIL".equalsIgnoreCase(resultStr)) {
+            if (Boolean.TRUE.equals(isPenalty)) {
+                int px = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : activity.getAwardXp();
+                xpToAward = -Math.abs(px);
+            }
+        } else {
+            if (Boolean.TRUE.equals(isAward)) {
+                xpToAward = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+            }
         }
 
         List<Long> studentIds = request.getStudentIds();
@@ -262,6 +528,12 @@ public class StudentXpController {
                 continue;
             }
 
+            ActivityAssignment assignment = findMatchingAssignmentForStudent(matching, student);
+            if (assignment == null) {
+                errors.add("Access Denied: You are not authorized to award XP to student " + student.getFullName());
+                continue;
+            }
+
             // Validate Award Rules and check limits
             String limitError = checkAwardLimit(student, activity);
             if (limitError != null) {
@@ -277,6 +549,7 @@ public class StudentXpController {
                 assignment,
                 xpToAward,
                 request.getRemarks() != null ? request.getRemarks() : "",
+                resultStr,
                 LocalDateTime.now()
             );
             studentActivityXpRepository.save(record);
@@ -292,12 +565,12 @@ public class StudentXpController {
             XpTransaction tx = XpTransaction.builder()
                 .student(student)
                 .category(activity.getXpCategory() != null ? activity.getXpCategory().toUpperCase() : "SKILL")
-                .activityName(activity.getName() + " (Awarded by " + teacher.getFullName() + ")")
+                .activityName(activity.getName() + " (" + resultStr + " - Awarded by " + teacher.getFullName() + ")")
                 .xpPoints(xpToAward)
                 .submittedAt(LocalDateTime.now())
                 .status("APPROVED")
                 .approvedBy(teacher.getFullName())
-                .isPenalty(false)
+                .isPenalty(xpToAward < 0)
                 .capApplied(false)
                 .build();
             xpTransactionRepository.save(tx);
@@ -365,6 +638,10 @@ public class StudentXpController {
         if ("Daily".equalsIgnoreCase(awardFrequency)) {
             windowStart = now.atStartOfDay();
             windowLabel = "today";
+        } else if ("Every Period".equalsIgnoreCase(awardFrequency)) {
+            windowStart = now.atStartOfDay();
+            windowLabel = "today";
+            cap = 8;
         } else if ("Weekly".equalsIgnoreCase(awardFrequency)) {
             windowStart = now.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).atStartOfDay();
             windowLabel = "this week";
@@ -372,11 +649,17 @@ public class StudentXpController {
             windowStart = now.withDayOfMonth(1).atStartOfDay();
             windowLabel = "this month";
         } else {
-            // Unknown frequency — treat as one-time
-            if (!history.isEmpty()) {
-                return "Student " + student.getFullName() + " has already been awarded XP for this activity.";
+            // Custom frequency — treat as lifetime cap
+            if (cap == null || cap <= 0) {
+                // Unlimited cap
+                return null;
+            } else {
+                // Manual cap
+                if (history.size() >= cap) {
+                    return "Student " + student.getFullName() + " has reached the maximum cap (" + cap + ") for this activity.";
+                }
+                return null;
             }
-            return null;
         }
 
         final LocalDateTime limitStart = windowStart;
@@ -390,5 +673,26 @@ public class StudentXpController {
         }
 
         return null;
+    }
+
+    private boolean isYearMatching(String yr1, String yr2) {
+        String y1 = (yr1 == null || yr1.trim().isEmpty()) ? "1" : yr1.trim().toLowerCase();
+        String y2 = (yr2 == null || yr2.trim().isEmpty()) ? "1" : yr2.trim().toLowerCase();
+        if (y1.equals(y2)) return true;
+
+        int n1 = getYearNumber(y1);
+        int n2 = getYearNumber(y2);
+        if (n1 != -1 && n2 != -1) {
+            return n1 == n2;
+        }
+        return false;
+    }
+
+    private int getYearNumber(String y) {
+        if (y.contains("1") || y.equals("i") || y.contains("first")) return 1;
+        if (y.contains("2") || y.equals("ii") || y.contains("second")) return 2;
+        if (y.contains("3") || y.equals("iii") || y.contains("third")) return 3;
+        if (y.contains("4") || y.equals("iv") || y.contains("fourth")) return 4;
+        return -1;
     }
 }

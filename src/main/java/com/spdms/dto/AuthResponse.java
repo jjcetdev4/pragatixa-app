@@ -13,6 +13,8 @@ public class AuthResponse {
     private List<String> subRoles;
     private String userType;
     private String section;
+    private Long sectionId;
+    private String sectionName;
     private String year;
     private String department;
     private String phone;
@@ -44,6 +46,10 @@ public class AuthResponse {
     public void setUserType(String userType) { this.userType = userType; }
     public String getSection() { return section; }
     public void setSection(String section) { this.section = section; }
+    public Long getSectionId() { return sectionId; }
+    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+    public String getSectionName() { return sectionName; }
+    public void setSectionName(String sectionName) { this.sectionName = sectionName; }
     public String getYear() { return year; }
     public void setYear(String year) { this.year = year; }
     public String getDepartment() { return department; }
@@ -75,6 +81,8 @@ public class AuthResponse {
         public Builder subRoles(List<String> v) { r.subRoles = v; return this; }
         public Builder userType(String v) { r.userType = v; return this; }
         public Builder section(String v) { r.section = v; return this; }
+        public Builder sectionId(Long v) { r.sectionId = v; return this; }
+        public Builder sectionName(String v) { r.sectionName = v; return this; }
         public Builder year(String v) { r.year = v; return this; }
         public Builder department(String v) { r.department = v; return this; }
         public Builder phone(String v) { r.phone = v; return this; }

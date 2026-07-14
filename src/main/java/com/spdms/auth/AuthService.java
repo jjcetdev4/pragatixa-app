@@ -112,7 +112,9 @@ public class AuthService {
             .roles(roles)         // Contains ROLE_TEACHER or ROLE_ADMIN
             .subRoles(subRolesList)
             .userType(userType)   // Helps frontend know this is a staff member
-            .section(user.getSection())
+            .section(user.getSection() != null ? user.getSection().getSectionName() : null)
+            .sectionId(user.getSection() != null ? user.getSection().getId() : null)
+            .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
             .year(user.getYear())
             .build();
 
@@ -188,7 +190,9 @@ public class AuthService {
             .roles(List.of("ROLE_STUDENT"))
             .subRoles(isCap ? List.of("CAPTAIN") : new ArrayList<>())
             .userType(isCap ? "CAPTAIN" : "STUDENT")
-            .section(student.getSection())
+            .section(student.getSection() != null ? student.getSection().getSectionName() : null)
+            .sectionId(student.getSection() != null ? student.getSection().getId() : null)
+            .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
             .year(student.getYear())
             .department(student.getDepartment() != null ? student.getDepartment().getDeptName() : "")
             .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
@@ -232,9 +236,11 @@ public class AuthService {
                         .map(SubRole::getName)
                         .collect(Collectors.toList()))
                     .userType(userType)
-                    .section(user.getSection())
+                    .section(user.getSection() != null ? user.getSection().getSectionName() : null)
+                    .sectionId(user.getSection() != null ? user.getSection().getId() : null)
+                    .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
                     .year(user.getYear())
-                    .department("")
+                    .department(user.getDepartment() != null ? user.getDepartment().getName() : "")
                     .build();
             return ApiResponse.ok("Profile loaded", response);
         }
@@ -254,7 +260,9 @@ public class AuthService {
                     .roles(List.of("ROLE_STUDENT"))
                     .subRoles(isCap ? List.of("CAPTAIN") : new ArrayList<>())
                     .userType(isCap ? "CAPTAIN" : "STUDENT")
-                    .section(student.getSection())
+                    .section(student.getSection() != null ? student.getSection().getSectionName() : null)
+                    .sectionId(student.getSection() != null ? student.getSection().getId() : null)
+                    .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
                     .year(student.getYear())
                     .department(student.getDepartment() != null ? student.getDepartment().getDeptName() : "")
                     .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())

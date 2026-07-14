@@ -54,8 +54,9 @@ public class User {
     @Column(nullable = false)
     private boolean active = true;
 
-    @Column(name = "section", length = 50)
-    private String section;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "section_id")
+    private Section section;
 
     @Column(name = "year", length = 10)
     private String year;
@@ -104,8 +105,8 @@ public class User {
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 
-    public String getSection() { return section; }
-    public void setSection(String section) { this.section = section; }
+    public Section getSection() { return section; }
+    public void setSection(Section section) { this.section = section; }
 
     public String getYear() { return year; }
     public void setYear(String year) { this.year = year; }
@@ -126,7 +127,7 @@ public class User {
         public Builder subRoles(Set<SubRole> v) { user.subRoles = v; return this; }
         public Builder department(Department v) { user.department = v; return this; }
         public Builder active(boolean v) { user.active = v; return this; }
-        public Builder section(String v) { user.section = v; return this; }
+        public Builder section(Section v) { user.section = v; return this; }
         public Builder year(String v) { user.year = v; return this; }
         public User build() { return user; }
     }

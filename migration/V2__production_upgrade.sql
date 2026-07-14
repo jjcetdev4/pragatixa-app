@@ -254,7 +254,7 @@ CREATE TABLE IF NOT EXISTS `activity_subgroups` (
 -- Create activities table
 CREATE TABLE IF NOT EXISTS `activities` (
   `id` BIGINT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(150) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
   `description` TEXT DEFAULT NULL,
   `frequency` VARCHAR(100) DEFAULT NULL,
   `owner_department` VARCHAR(100) DEFAULT NULL,

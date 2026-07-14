@@ -37,10 +37,17 @@ public class MyActivityStudentsResponse {
         private List<String> evidence;
         private String frequency;
         private String type;
+        private String xpCategory;
+        private Boolean awardEnabled;
+        private Integer awardXp;
+        private Boolean penaltyEnabled;
+        private Integer penaltyXp;
+        private Integer cap;
 
         public ActivityDetail() {}
 
-        public ActivityDetail(Long id, String name, String description, String department, List<String> evidence, String frequency, String type) {
+        public ActivityDetail(Long id, String name, String description, String department, List<String> evidence, String frequency, String type,
+                              String xpCategory, Boolean awardEnabled, Integer awardXp, Boolean penaltyEnabled, Integer penaltyXp, Integer cap) {
             this.id = id;
             this.name = name;
             this.description = description;
@@ -48,6 +55,12 @@ public class MyActivityStudentsResponse {
             this.evidence = evidence;
             this.frequency = frequency;
             this.type = type;
+            this.xpCategory = xpCategory;
+            this.awardEnabled = awardEnabled;
+            this.awardXp = awardXp;
+            this.penaltyEnabled = penaltyEnabled;
+            this.penaltyXp = penaltyXp;
+            this.cap = cap;
         }
 
         public Long getId() { return id; }
@@ -70,6 +83,24 @@ public class MyActivityStudentsResponse {
 
         public String getType() { return type; }
         public void setType(String type) { this.type = type; }
+
+        public String getXpCategory() { return xpCategory; }
+        public void setXpCategory(String xpCategory) { this.xpCategory = xpCategory; }
+
+        public Boolean getAwardEnabled() { return awardEnabled; }
+        public void setAwardEnabled(Boolean awardEnabled) { this.awardEnabled = awardEnabled; }
+
+        public Integer getAwardXp() { return awardXp; }
+        public void setAwardXp(Integer awardXp) { this.awardXp = awardXp; }
+
+        public Boolean getPenaltyEnabled() { return penaltyEnabled; }
+        public void setPenaltyEnabled(Boolean penaltyEnabled) { this.penaltyEnabled = penaltyEnabled; }
+
+        public Integer getPenaltyXp() { return penaltyXp; }
+        public void setPenaltyXp(Integer penaltyXp) { this.penaltyXp = penaltyXp; }
+
+        public Integer getCap() { return cap; }
+        public void setCap(Integer cap) { this.cap = cap; }
     }
 
     public static class StudentDetail {
@@ -79,18 +110,20 @@ public class MyActivityStudentsResponse {
         private Long regNo;
         private String departmentName;
         private String sectionName;
+        private String year;
         private int totalXp;
         private int score;
 
         public StudentDetail() {}
 
-        public StudentDetail(Long id, String fullName, String studentId, Long regNo, String departmentName, String sectionName, int totalXp, int score) {
+        public StudentDetail(Long id, String fullName, String studentId, Long regNo, String departmentName, String sectionName, String year, int totalXp, int score) {
             this.id = id;
             this.fullName = fullName;
             this.studentId = studentId;
             this.regNo = regNo;
             this.departmentName = departmentName;
             this.sectionName = sectionName;
+            this.year = year;
             this.totalXp = totalXp;
             this.score = score;
         }
@@ -113,6 +146,9 @@ public class MyActivityStudentsResponse {
         public String getSectionName() { return sectionName; }
         public void setSectionName(String sectionName) { this.sectionName = sectionName; }
 
+        public String getYear() { return year; }
+        public void setYear(String year) { this.year = year; }
+
         public int getTotalXp() { return totalXp; }
         public void setTotalXp(int totalXp) { this.totalXp = totalXp; }
 
@@ -124,13 +160,17 @@ public class MyActivityStudentsResponse {
         private Long id;
         private String assignedBy;
         private String assignedAt;
+        private String assignedFacultyName;
+        private String assignmentMode;
 
         public AssignmentDetail() {}
 
-        public AssignmentDetail(Long id, String assignedBy, String assignedAt) {
+        public AssignmentDetail(Long id, String assignedBy, String assignedAt, String assignedFacultyName, String assignmentMode) {
             this.id = id;
             this.assignedBy = assignedBy;
             this.assignedAt = assignedAt;
+            this.assignedFacultyName = assignedFacultyName;
+            this.assignmentMode = assignmentMode;
         }
 
         public Long getId() { return id; }
@@ -141,5 +181,11 @@ public class MyActivityStudentsResponse {
 
         public String getAssignedAt() { return assignedAt; }
         public void setAssignedAt(String assignedAt) { this.assignedAt = assignedAt; }
+
+        public String getAssignedFacultyName() { return assignedFacultyName; }
+        public void setAssignedFacultyName(String assignedFacultyName) { this.assignedFacultyName = assignedFacultyName; }
+
+        public String getAssignmentMode() { return assignmentMode; }
+        public void setAssignmentMode(String assignmentMode) { this.assignmentMode = assignmentMode; }
     }
 }

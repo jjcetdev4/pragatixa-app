@@ -6,10 +6,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents a student team created by a Class Coordinator (CC)
+ * Represents a student team created by a Class Coordinator (CC) or for a Group Activity
  */
 @Entity
-@Table(name = "teams")
+@Table(name = "teams", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_team_name_assignment", columnNames = {"name", "assignment_id"})
+})
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Team {
 
@@ -17,7 +19,7 @@ public class Team {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable = false, length = 255)
     private String name;
 
     @Column(nullable = false)
@@ -27,8 +29,12 @@ public class Team {
     @JoinColumn(name = "captain_id")
     private Student captain;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "assignment_id")
+    private ActivityAssignment assignment;
+
     @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("team")
+    @JsonIgnoreProperties({"team", "teams"})
     private Set<Student> members = new HashSet<>();
 
     public Team() {}
@@ -80,6 +86,14 @@ public class Team {
         this.members = members;
     }
 
+    public ActivityAssignment getAssignment() {
+        return assignment;
+    }
+
+    public void setAssignment(ActivityAssignment assignment) {
+        this.assignment = assignment;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -89,6 +103,7 @@ public class Team {
         public Builder name(String v) { team.name = v; return this; }
         public Builder size(int v) { team.size = v; return this; }
         public Builder captain(Student v) { team.captain = v; return this; }
+        public Builder assignment(ActivityAssignment v) { team.assignment = v; return this; }
         public Team build() { return team; }
     }
 }

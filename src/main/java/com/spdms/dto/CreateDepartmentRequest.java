@@ -2,6 +2,7 @@ package com.spdms.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 public class CreateDepartmentRequest {
     @NotBlank(message = "Department name is required")
@@ -14,6 +15,8 @@ public class CreateDepartmentRequest {
 
     private String description;
 
+    private List<String> sections;
+
     public CreateDepartmentRequest() {}
 
     public String getName() { return name; }
@@ -24,4 +27,7 @@ public class CreateDepartmentRequest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public List<String> getSections() { return sections; }
+    public void setSections(List<String> sections) { this.sections = sections; }
 }

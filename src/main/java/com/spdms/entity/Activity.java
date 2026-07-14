@@ -38,6 +38,15 @@ public class Activity {
     @Column(name = "award_xp", nullable = false)
     private Integer awardXp = 0;
 
+    @Column(name = "award_enabled", nullable = false)
+    private Boolean awardEnabled = true;
+
+    @Column(name = "penalty_enabled", nullable = false)
+    private Boolean penaltyEnabled = false;
+
+    @Column(name = "penalty_xp", nullable = false)
+    private Integer penaltyXp = 0;
+
     @Column(name = "award_type", nullable = false, length = 50)
     private String awardType = "Fixed XP";
 
@@ -71,7 +80,7 @@ public class Activity {
     @Column(columnDefinition = "TEXT")
     private String justification;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, length = 255)
     private String name;
 
     @Column(name = "owner_department", length = 100)
@@ -85,6 +94,9 @@ public class Activity {
 
     @Column(name = "xp_category", length = 100)
     private String xpCategory;
+
+    @Column(name = "xp_type", length = 50)
+    private String xpType = "Reward";
 
     @Column(name = "maximum_awards")
     private Integer maximumAwards = 1;
@@ -100,6 +112,9 @@ public class Activity {
 
     @Column(name = "status", nullable = false, length = 50)
     private String status = "ACTIVE";
+
+    @Column(name = "assignment_mode", length = 50)
+    private String assignmentMode = "MANUAL";
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "subgroup_id", nullable = false)
@@ -166,6 +181,15 @@ public class Activity {
     public Integer getAwardXp() { return awardXp; }
     public void setAwardXp(Integer awardXp) { this.awardXp = awardXp; }
 
+    public Boolean getAwardEnabled() { return awardEnabled != null ? awardEnabled : false; }
+    public void setAwardEnabled(Boolean awardEnabled) { this.awardEnabled = awardEnabled; }
+
+    public Boolean getPenaltyEnabled() { return penaltyEnabled != null ? penaltyEnabled : false; }
+    public void setPenaltyEnabled(Boolean penaltyEnabled) { this.penaltyEnabled = penaltyEnabled; }
+
+    public Integer getPenaltyXp() { return penaltyXp != null ? penaltyXp : 0; }
+    public void setPenaltyXp(Integer penaltyXp) { this.penaltyXp = penaltyXp; }
+
     public String getAwardType() { return awardType; }
     public void setAwardType(String awardType) { this.awardType = awardType; }
 
@@ -211,6 +235,9 @@ public class Activity {
     public String getXpCategory() { return xpCategory; }
     public void setXpCategory(String xpCategory) { this.xpCategory = xpCategory; }
 
+    public String getXpType() { return xpType != null ? xpType : "Reward"; }
+    public void setXpType(String xpType) { this.xpType = xpType; }
+
     public ActivitySubgroup getSubgroup() { return subgroup; }
     public void setSubgroup(ActivitySubgroup subgroup) { this.subgroup = subgroup; }
 
@@ -229,6 +256,9 @@ public class Activity {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    public String getAssignmentMode() { return assignmentMode != null ? assignmentMode : "MANUAL"; }
+    public void setAssignmentMode(String assignmentMode) { this.assignmentMode = assignmentMode; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -243,6 +273,9 @@ public class Activity {
         public Builder xp(String v) { a.setXp(v); return this; }
         public Builder cap(String v) { a.setCap(v); return this; }
         public Builder awardXp(Integer v) { a.awardXp = v; return this; }
+        public Builder awardEnabled(Boolean v) { a.awardEnabled = v; return this; }
+        public Builder penaltyEnabled(Boolean v) { a.penaltyEnabled = v; return this; }
+        public Builder penaltyXp(Integer v) { a.penaltyXp = v; return this; }
         public Builder awardType(String v) { a.awardType = v; return this; }
         public Builder repeatAllowed(boolean v) { a.repeatAllowed = v; return this; }
         public Builder resetPeriod(String v) { a.resetPeriod = v; return this; }
@@ -257,12 +290,14 @@ public class Activity {
         public Builder ownerSubrole(String v) { a.ownerSubrole = v; return this; }
         public Builder type(String v) { a.type = v; return this; }
         public Builder xpCategory(String v) { a.xpCategory = v; return this; }
+        public Builder xpType(String v) { a.xpType = v; return this; }
         public Builder subgroup(ActivitySubgroup v) { a.subgroup = v; return this; }
         public Builder maximumAwards(Integer v) { a.maximumAwards = v; return this; }
         public Builder awardFrequency(String v) { a.awardFrequency = v; return this; }
         public Builder awardDays(String v) { a.awardDays = v; return this; }
         public Builder displayOrder(int v) { a.displayOrder = v; return this; }
         public Builder status(String v) { a.status = v; return this; }
+        public Builder assignmentMode(String v) { a.assignmentMode = v; return this; }
         public Activity build() { return a; }
     }
 }

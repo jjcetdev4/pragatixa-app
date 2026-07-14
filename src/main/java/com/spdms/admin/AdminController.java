@@ -25,7 +25,9 @@ import com.spdms.repository.SubjectRepository;
 import com.spdms.repository.ActivityRepository;
 import com.spdms.repository.DisciplineLogRepository;
 import com.spdms.repository.ActivityAssignmentRepository;
+import com.spdms.repository.StudentActivityXpRepository;
 import com.spdms.entity.ActivityAssignment;
+import com.spdms.entity.AssignmentScope;
 import com.spdms.dto.ActivityAssignmentResponse;
 import com.spdms.dto.MyActivityResponse;
 import java.util.ArrayList;
@@ -91,28 +93,32 @@ public class AdminController {
     private final ActivityRepository activityRepository;
     private final DisciplineLogRepository disciplineLogRepository;
     private final ActivityAssignmentRepository activityAssignmentRepository;
+    private final StudentActivityXpRepository studentActivityXpRepository;
     private final ActivityStageService activityStageService;
- 
+    private final com.spdms.repository.CustomFrequencyRepository customFrequencyRepository;
+
     public AdminController(StudentRepository studentRepository,
-                           UserRepository userRepository,
-                           DepartmentRepository departmentRepository,
-                           RoleRepository roleRepository,
-                           PasswordEncoder passwordEncoder,
-                           ActivityStageRepository activityStageRepository,
-                           ActivitySubgroupRepository activitySubgroupRepository,
-                           SubjectRepository subjectRepository,
-                           SubRoleRepository subRoleRepository,
-                           SectionRepository sectionRepository,
-                           FacultyRepository facultyRepository,
-                           StudentGroupRepository studentGroupRepository,
-                           AcademicYearRepository academicYearRepository,
-                           YearRepository yearRepository,
-                           SemesterRepository semesterRepository,
-                           GenderRepository genderRepository,
-                           ActivityRepository activityRepository,
-                           DisciplineLogRepository disciplineLogRepository,
-                           ActivityAssignmentRepository activityAssignmentRepository,
-                           ActivityStageService activityStageService) {
+            UserRepository userRepository,
+            DepartmentRepository departmentRepository,
+            RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder,
+            ActivityStageRepository activityStageRepository,
+            ActivitySubgroupRepository activitySubgroupRepository,
+            SubjectRepository subjectRepository,
+            SubRoleRepository subRoleRepository,
+            SectionRepository sectionRepository,
+            FacultyRepository facultyRepository,
+            StudentGroupRepository studentGroupRepository,
+            AcademicYearRepository academicYearRepository,
+            YearRepository yearRepository,
+            SemesterRepository semesterRepository,
+            GenderRepository genderRepository,
+            ActivityRepository activityRepository,
+            DisciplineLogRepository disciplineLogRepository,
+            ActivityAssignmentRepository activityAssignmentRepository,
+            StudentActivityXpRepository studentActivityXpRepository,
+            ActivityStageService activityStageService,
+            com.spdms.repository.CustomFrequencyRepository customFrequencyRepository) {
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
@@ -132,7 +138,9 @@ public class AdminController {
         this.activityRepository = activityRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
+        this.studentActivityXpRepository = studentActivityXpRepository;
         this.activityStageService = activityStageService;
+        this.customFrequencyRepository = customFrequencyRepository;
     }
 
     @GetMapping("/stats")
@@ -162,8 +170,8 @@ public class AdminController {
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
         List<User> users = userRepository.findAll();
         List<UserResponse> responses = users.stream()
-            .map(this::toResponse)
-            .collect(Collectors.toList());
+                .map(this::toResponse)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.ok(responses));
     }
 
@@ -191,31 +199,37 @@ public class AdminController {
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
             for (String rName : request.getRoles()) {
                 Role role = roleRepository.findByName(rName)
-                    .orElseThrow(() -> new RuntimeException("Role not found: " + rName));
+                        .orElseThrow(() -> new RuntimeException("Role not found: " + rName));
                 roles.add(role);
             }
         } else {
             Role teacherRole = roleRepository.findByName("ROLE_TEACHER")
-                .orElseThrow(() -> new RuntimeException("Role ROLE_TEACHER not found"));
+                    .orElseThrow(() -> new RuntimeException("Role ROLE_TEACHER not found"));
             roles.add(teacherRole);
         }
 
+        Section section = null;
+        if (request.getSectionId() != null) {
+            section = sectionRepository.findById(request.getSectionId()).orElse(null);
+        }
+
         User user = User.builder()
-            .username(request.getUsername())
-            .password(passwordEncoder.encode(request.getPassword()))
-            .fullName(request.getFullName())
-            .email(request.getEmail())
-            .department(department)
-            .roles(roles)
-            .subRoles(resolveSubRoles(request.getSubRoles(), roles))
-            .section(request.getSection())
-            .year(request.getYear())
-            .active(true)
-            .build();
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .email(request.getEmail())
+                .department(department)
+                .roles(roles)
+                .subRoles(resolveSubRoles(request.getSubRoles(), roles))
+                .section(section)
+                .year(request.getYear())
+                .active(true)
+                .build();
 
         User saved = userRepository.save(user);
         log.info("Admin created new user: {}", saved.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("User created successfully", toResponse(saved)));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("User created successfully", toResponse(saved)));
     }
 
     @PutMapping("/users/{id}")
@@ -225,11 +239,11 @@ public class AdminController {
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserRequest request) {
-        
+
         User user = userRepository.findById(id).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("User not found with ID: " + id));
+                    .body(ApiResponse.error("User not found with ID: " + id));
         }
 
         userRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
@@ -250,27 +264,32 @@ public class AdminController {
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
             for (String rName : request.getRoles()) {
                 Role role = roleRepository.findByName(rName)
-                    .orElseThrow(() -> new RuntimeException("Role not found: " + rName));
+                        .orElseThrow(() -> new RuntimeException("Role not found: " + rName));
                 roles.add(role);
             }
+        }
+
+        Section section = null;
+        if (request.getSectionId() != null) {
+            section = sectionRepository.findById(request.getSectionId()).orElse(null);
         }
 
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setDepartment(department);
-        user.setSection(request.getSection());
+        user.setSection(section);
         user.setYear(request.getYear());
-        
+
         user.getRoles().clear();
         if (roles != null) {
             user.getRoles().addAll(roles);
         }
-        
+
         user.getSubRoles().clear();
         if (request.getSubRoles() != null) {
             user.getSubRoles().addAll(resolveSubRoles(request.getSubRoles(), roles));
         }
-        
+
         user.setActive(request.isActive());
 
         User saved = userRepository.save(user);
@@ -298,29 +317,68 @@ public class AdminController {
     @GetMapping("/departments")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "List Departments")
-    public ResponseEntity<ApiResponse<List<Department>>> getAllDepartments() {
-        return ResponseEntity.ok(ApiResponse.ok(departmentRepository.findAll()));
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments() {
+        List<Department> depts = departmentRepository.findAll();
+        List<Map<String, Object>> response = new ArrayList<>();
+        for (Department d : depts) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", d.getId());
+            map.put("code", d.getCode());
+            map.put("deptCode", d.getDeptCode());
+            map.put("name", d.getName());
+            map.put("deptName", d.getDeptName());
+            map.put("description", d.getDescription());
+            
+            // Query sections for this department
+            List<Section> sections = sectionRepository.findByDepartment_Id(d.getId());
+            List<Map<String, Object>> sectionMaps = new ArrayList<>();
+            for (Section s : sections) {
+                Map<String, Object> secMap = new HashMap<>();
+                secMap.put("id", s.getId());
+                secMap.put("sectionName", s.getSectionName());
+                secMap.put("name", s.getSectionName()); // Both name and sectionName for compatibility
+                secMap.put("departmentId", d.getId());
+                sectionMaps.add(secMap);
+            }
+            map.put("sections", sectionMaps);
+            response.add(map);
+        }
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PostMapping("/departments")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @Operation(summary = "Create Department")
-    public ResponseEntity<ApiResponse<Department>> createDepartment(@Valid @RequestBody CreateDepartmentRequest request) {
-        if (departmentRepository.findByCode(request.getCode()).isPresent() || departmentRepository.findByDeptCode(request.getCode()).isPresent()) {
+    public ResponseEntity<ApiResponse<Department>> createDepartment(
+            @Valid @RequestBody CreateDepartmentRequest request) {
+        if (departmentRepository.findByCode(request.getCode()).isPresent()
+                || departmentRepository.findByDeptCode(request.getCode()).isPresent()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Department code already exists"));
         }
         if (departmentRepository.findByName(request.getName()).isPresent()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Department name already exists"));
         }
         Department dept = Department.builder()
-            .deptCode(request.getCode())
-            .deptName(request.getName())
-            .code(request.getCode())
-            .name(request.getName())
-            .description(request.getDescription())
-            .build();
+                .deptCode(request.getCode())
+                .deptName(request.getName())
+                .code(request.getCode())
+                .name(request.getName())
+                .description(request.getDescription())
+                .build();
         Department saved = departmentRepository.save(dept);
+        
+        List<Section> savedSections = new ArrayList<>();
+        if (request.getSections() != null) {
+            for (String sec : request.getSections()) {
+                Section section = new Section();
+                section.setDepartment(saved);
+                section.setSectionName(sec);
+                savedSections.add(sectionRepository.save(section));
+            }
+        }
+        saved.setSections(savedSections);
+        
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Department created successfully", saved));
     }
 
@@ -336,12 +394,17 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Department not found"));
         }
 
-        if (departmentRepository.findByCode(request.getCode()).stream().anyMatch(existing -> !existing.getId().equals(id)) ||
-            departmentRepository.findByDeptCode(request.getCode()).stream().anyMatch(existing -> !existing.getId().equals(id))) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Department code already registered by another department"));
+        if (departmentRepository.findByCode(request.getCode()).stream()
+                .anyMatch(existing -> !existing.getId().equals(id)) ||
+                departmentRepository.findByDeptCode(request.getCode()).stream()
+                        .anyMatch(existing -> !existing.getId().equals(id))) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Department code already registered by another department"));
         }
-        if (departmentRepository.findByName(request.getName()).stream().anyMatch(existing -> !existing.getId().equals(id))) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Department name already registered by another department"));
+        if (departmentRepository.findByName(request.getName()).stream()
+                .anyMatch(existing -> !existing.getId().equals(id))) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Department name already registered by another department"));
         }
 
         dept.setName(request.getName());
@@ -351,6 +414,19 @@ public class AdminController {
         dept.setDescription(request.getDescription());
 
         Department saved = departmentRepository.save(dept);
+        
+        if (request.getSections() != null) {
+            sectionRepository.deleteByDepartment_Id(saved.getId());
+            List<Section> savedSections = new ArrayList<>();
+            for (String sec : request.getSections()) {
+                Section section = new Section();
+                section.setDepartment(saved);
+                section.setSectionName(sec);
+                savedSections.add(sectionRepository.save(section));
+            }
+            saved.setSections(savedSections);
+        }
+
         log.info("Admin updated department: {}", saved.getCode());
         return ResponseEntity.ok(ApiResponse.ok("Department updated successfully", saved));
     }
@@ -364,7 +440,7 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Department not found"));
         }
 
-        long sections = sectionRepository.countByDepartmentId(id);
+        long sections = sectionRepository.countByDepartment_Id(id);
         long students = studentRepository.countByDepartmentId(id);
         long faculty = facultyRepository.countByDepartmentId(id);
         long subjects = subjectRepository.countByDepartmentId(id);
@@ -373,22 +449,86 @@ public class AdminController {
         long groups = studentGroupRepository.countByDepartmentId(id);
 
         java.util.List<String> deps = new java.util.ArrayList<>();
-        if (sections > 0) deps.add(sections + " Section(s)");
-        if (students > 0) deps.add(students + " Student(s)");
-        if (faculty > 0) deps.add(faculty + " Faculty Member(s)");
-        if (subjects > 0) deps.add(subjects + " Subject(s)");
-        if (subgroups > 0) deps.add(subgroups + " Activity Subgroup(s)");
-        if (users > 0) deps.add(users + " User(s)");
-        if (groups > 0) deps.add(groups + " Student Group(s)");
+        if (sections > 0)
+            deps.add(sections + " Section(s)");
+        if (students > 0)
+            deps.add(students + " Student(s)");
+        if (faculty > 0)
+            deps.add(faculty + " Faculty Member(s)");
+        if (subjects > 0)
+            deps.add(subjects + " Subject(s)");
+        if (subgroups > 0)
+            deps.add(subgroups + " Activity Subgroup(s)");
+        if (users > 0)
+            deps.add(users + " User(s)");
+        if (groups > 0)
+            deps.add(groups + " Student Group(s)");
 
         if (!deps.isEmpty()) {
-            String msg = "Cannot delete Department because it contains: " + String.join(", ", deps) + ". Remove or reassign them first.";
+            String msg = "Cannot delete Department because it contains: " + String.join(", ", deps)
+                    + ". Remove or reassign them first.";
             return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(msg));
         }
 
         departmentRepository.deleteById(id);
         log.info("Admin deleted department with ID: {}", id);
         return ResponseEntity.ok(ApiResponse.ok("Department deleted successfully", null));
+    }
+
+    @GetMapping("/departments/{id}/sections")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Get Sections of Department")
+    public ResponseEntity<ApiResponse<List<Section>>> getSectionsOfDept(@PathVariable Long id) {
+        if (!departmentRepository.existsById(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Department not found"));
+        }
+        List<Section> sections = sectionRepository.findByDepartment_IdOrderBySectionNameAsc(id);
+        return ResponseEntity.ok(ApiResponse.ok("Sections retrieved successfully", sections));
+    }
+
+    @PostMapping("/departments/{id}/sections")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Operation(summary = "Create Section for Department")
+    public ResponseEntity<ApiResponse<Section>> createSection(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
+        Department dept = departmentRepository.findById(id).orElse(null);
+        if (dept == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Department not found"));
+        }
+        String sectionName = (String) body.get("sectionName");
+        if (sectionName == null || sectionName.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Section name is required"));
+        }
+        sectionName = sectionName.trim().toUpperCase();
+        if (sectionRepository.findByDepartmentAndSectionName(dept, sectionName).isPresent()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Section already exists in this department"));
+        }
+        Section sec = Section.builder()
+                .department(dept)
+                .sectionName(sectionName)
+                .build();
+        Section saved = sectionRepository.save(sec);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Section created successfully", saved));
+    }
+
+    @DeleteMapping("/departments/{id}/sections/{sectionId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Operation(summary = "Delete Section from Department")
+    public ResponseEntity<ApiResponse<Void>> deleteSection(
+            @PathVariable Long id,
+            @PathVariable Long sectionId) {
+        if (!departmentRepository.existsById(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Department not found"));
+        }
+        if (!sectionRepository.existsById(sectionId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Section not found"));
+        }
+        sectionRepository.deleteById(sectionId);
+        return ResponseEntity.ok(ApiResponse.ok("Section deleted successfully", null));
     }
 
     // ==========================================
@@ -400,8 +540,8 @@ public class AdminController {
     @Operation(summary = "List Roles")
     public ResponseEntity<ApiResponse<List<Role>>> getAllRoles() {
         List<Role> roles = roleRepository.findAll().stream()
-            .filter(r -> r.getName().equals("ROLE_TEACHER") || r.getName().equals("ROLE_TRANSPORT"))
-            .collect(Collectors.toList());
+                .filter(r -> r.getName().equals("ROLE_TEACHER") || r.getName().equals("ROLE_TRANSPORT"))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.ok(roles));
     }
 
@@ -409,7 +549,8 @@ public class AdminController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "List Academic Years")
     public ResponseEntity<ApiResponse<List<AcademicYear>>> getAllAcademicYears() {
-        return ResponseEntity.ok(ApiResponse.ok("Academic years fetched successfully", academicYearRepository.findAll()));
+        return ResponseEntity
+                .ok(ApiResponse.ok("Academic years fetched successfully", academicYearRepository.findAll()));
     }
 
     @GetMapping("/years")
@@ -430,7 +571,13 @@ public class AdminController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "List Genders")
     public ResponseEntity<ApiResponse<List<Gender>>> getAllGenders() {
-        return ResponseEntity.ok(ApiResponse.ok("Genders fetched successfully", genderRepository.findAll()));
+        // Only return clean gender values: Male, Female, Other
+        List<String> validGenders = java.util.Arrays.asList("Male", "Female", "Other");
+        List<Gender> filtered = genderRepository.findAll().stream()
+                .filter(g -> validGenders.stream()
+                        .anyMatch(valid -> valid.equalsIgnoreCase(g.getGenderName())))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok("Genders fetched successfully", filtered));
     }
 
     @GetMapping("/sections")
@@ -476,7 +623,8 @@ public class AdminController {
     @PostMapping("/stages")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new stage")
-    public ResponseEntity<ApiResponse<ActivityStageResponse>> createStage(@Valid @RequestBody ActivityStageRequest request) {
+    public ResponseEntity<ApiResponse<ActivityStageResponse>> createStage(
+            @Valid @RequestBody ActivityStageRequest request) {
         ActivityStageResponse saved = activityStageService.createStage(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Stage created successfully", saved));
     }
@@ -507,7 +655,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<ActivitySubgroup>> createSubgroup(
             @PathVariable Long stageId,
             @RequestBody Map<String, Object> body) {
-        
+
         ActivityStage stage = activityStageRepository.findById(stageId).orElse(null);
         if (stage == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Stage not found"));
@@ -524,11 +672,11 @@ public class AdminController {
         }
 
         ActivitySubgroup subgroup = ActivitySubgroup.builder()
-            .name(name.trim())
-            .threshold(threshold)
-            .stage(stage)
-            .build();
-        
+                .name(name.trim())
+                .threshold(threshold)
+                .stage(stage)
+                .build();
+
         ActivitySubgroup saved = activitySubgroupRepository.save(subgroup);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Subgroup created successfully", saved));
     }
@@ -540,7 +688,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<ActivitySubgroup>> updateSubgroup(
             @PathVariable Long id,
             @RequestBody Map<String, Object> body) {
-        
+
         ActivitySubgroup subgroup = activitySubgroupRepository.findById(id).orElse(null);
         if (subgroup == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Subgroup not found"));
@@ -576,7 +724,7 @@ public class AdminController {
 
         // 1. Nullify references in DisciplineLog
         disciplineLogRepository.nullifySubgroupReferences(id);
-        
+
         List<Activity> activities = activityRepository.findBySubgroupId(id);
         for (Activity act : activities) {
             disciplineLogRepository.nullifyActivityReferences(act.getId());
@@ -587,20 +735,20 @@ public class AdminController {
 
         // 3. Delete subgroup
         activitySubgroupRepository.deleteById(id);
-        
+
         log.info("Admin deleted subgroup with ID: {}", id);
         return ResponseEntity.ok(ApiResponse.ok("Subgroup deleted successfully", null));
     }
 
     private Set<SubRole> resolveSubRoles(Set<String> subRoleNames, Set<Role> roles) {
-        if (subRoleNames == null) return new HashSet<>();
+        if (subRoleNames == null)
+            return new HashSet<>();
         Role defaultRole = roles != null && !roles.isEmpty() ? roles.iterator().next() : null;
         Set<SubRole> subRoles = new HashSet<>();
         for (String name : subRoleNames) {
             SubRole sr = subRoleRepository.findByName(name)
-                .orElseGet(() -> subRoleRepository.save(
-                    SubRole.builder().name(name).role(defaultRole).build()
-                ));
+                    .orElseGet(() -> subRoleRepository.save(
+                            SubRole.builder().name(name).role(defaultRole).build()));
             subRoles.add(sr);
         }
         return subRoles;
@@ -608,25 +756,27 @@ public class AdminController {
 
     private UserResponse toResponse(User user) {
         Set<String> roleNames = user.getRoles().stream()
-            .map(Role::getName)
-            .collect(Collectors.toSet());
+                .map(Role::getName)
+                .collect(Collectors.toSet());
 
         Long deptId = user.getDepartment() != null ? user.getDepartment().getId() : null;
         String deptName = user.getDepartment() != null ? user.getDepartment().getName() : null;
 
         return UserResponse.builder()
-            .id(user.getId())
-            .username(user.getUsername())
-            .fullName(user.getFullName())
-            .email(user.getEmail())
-            .active(user.isActive())
-            .roles(roleNames)
-            .subRoles(user.getSubRoles().stream().map(SubRole::getName).collect(Collectors.toSet()))
-            .departmentId(deptId)
-            .departmentName(deptName)
-            .section(user.getSection())
-            .year(user.getYear())
-            .build();
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .active(user.isActive())
+                .roles(roleNames)
+                .subRoles(user.getSubRoles().stream().map(SubRole::getName).collect(Collectors.toSet()))
+                .departmentId(deptId)
+                .departmentName(deptName)
+                .section(user.getSection() != null ? user.getSection().getSectionName() : null)
+                .sectionId(user.getSection() != null ? user.getSection().getId() : null)
+                .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
+                .year(user.getYear())
+                .build();
     }
 
     // ==========================================
@@ -687,7 +837,8 @@ public class AdminController {
         }
 
         User faculty = null;
-        if (body.get("userId") != null && !body.get("userId").toString().isEmpty() && !body.get("userId").toString().equals("null")) {
+        if (body.get("userId") != null && !body.get("userId").toString().isEmpty()
+                && !body.get("userId").toString().equals("null")) {
             Long userId = Long.valueOf(body.get("userId").toString());
             faculty = userRepository.findById(userId).orElse(null);
             if (faculty == null) {
@@ -701,90 +852,111 @@ public class AdminController {
 
         subgroup.setAssignedFaculty(faculty);
         ActivitySubgroup saved = activitySubgroupRepository.save(subgroup);
-        log.info("Admin assigned faculty {} to subgroup {}", faculty != null ? faculty.getUsername() : "null", subgroup.getName());
+        log.info("Admin assigned faculty {} to subgroup {}", faculty != null ? faculty.getUsername() : "null",
+                subgroup.getName());
         return ResponseEntity.ok(ApiResponse.ok("Faculty assigned successfully", saved));
-     }
+    }
 
     private void populateActivityTransientFields(Activity activity) {
-        String ownerDeptName = activity.getOwnerDepartment();
-        Department department = null;
-        if (ownerDeptName != null && !ownerDeptName.trim().isEmpty()) {
-            department = departmentRepository.findByName(ownerDeptName)
-                .orElseGet(() -> departmentRepository.findByCode(ownerDeptName).orElse(null));
-        }
-
-        if (department != null) {
-            activity.setDepartmentId(department.getId().toString());
+        List<ActivityAssignment> assignments = activityAssignmentRepository.findByActivityId(activity.getId());
+        List<Map<String, Object>> summary = new ArrayList<>();
+        
+        for (ActivityAssignment aa : assignments) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", aa.getId());
+            map.put("scope", aa.getAssignmentScope() != null ? aa.getAssignmentScope().name() : "");
+            map.put("departmentId", aa.getDepartment() != null ? aa.getDepartment().getId() : null);
+            map.put("departmentName", aa.getDepartment() != null ? aa.getDepartment().getName() : "Global");
+            map.put("sectionId", aa.getSection() != null ? aa.getSection().getId() : null);
+            map.put("section", aa.getSection() != null ? aa.getSection().getSectionName() : null);
+            map.put("sectionName", aa.getSection() != null ? aa.getSection().getSectionName() : null);
+            map.put("assignmentMode", activity.getAssignmentMode());
             
-            List<Section> sections = sectionRepository.findByDepartmentId(department.getId());
-            List<Map<String, Object>> summary = new ArrayList<>();
-            
-            if (sections != null && !sections.isEmpty()) {
-                for (Section sec : sections) {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("section", sec.getSectionName());
-                    map.put("sectionId", sec.getId());
-                    
-                    ActivityAssignment aa = activityAssignmentRepository
-                        .findByActivityIdAndSectionId(activity.getId(), sec.getId()).orElse(null);
-                    if (aa != null) {
-                        map.put("teacherId", aa.getTeacher().getId());
-                        map.put("teacherName", aa.getTeacher().getFullName());
-                        map.put("teacher", aa.getTeacher().getFullName());
-                        map.put("username", aa.getTeacher().getUsername());
-                    } else {
-                        map.put("teacherId", null);
-                        map.put("teacherName", "Not Assigned");
-                        map.put("teacher", "Not Assigned");
-                        map.put("username", "");
-                    }
-                    summary.add(map);
-                }
+            if (aa.getTeacher() != null) {
+                map.put("teacherId", aa.getTeacher().getId());
+                map.put("teacherName", aa.getTeacher().getFullName());
+                map.put("teacher", aa.getTeacher().getFullName());
+                map.put("username", aa.getTeacher().getUsername());
             } else {
-                Map<String, Object> map = new HashMap<>();
-                map.put("type", "DEPARTMENT");
-                
-                ActivityAssignment aa = activityAssignmentRepository
-                    .findByActivityIdAndSectionIsNull(activity.getId()).orElse(null);
-                if (aa != null) {
-                    map.put("teacherId", aa.getTeacher().getId());
-                    map.put("teacherName", aa.getTeacher().getFullName());
-                    map.put("teacher", aa.getTeacher().getFullName());
-                    map.put("username", aa.getTeacher().getUsername());
-                } else {
-                    map.put("teacherId", null);
-                    map.put("teacherName", "Not Assigned");
-                    map.put("teacher", "Not Assigned");
-                    map.put("username", "");
-                }
-                summary.add(map);
+                map.put("teacherId", 0);
+                map.put("teacherName", "Any Faculty");
+                map.put("teacher", "Any Faculty");
+                map.put("username", "any");
             }
-            activity.setAssignmentSummary(summary);
-        } else {
-            activity.setAssignmentSummary(new ArrayList<>());
+            summary.add(map);
         }
-
-        if (activity.getOwnerSubrole() != null && !activity.getOwnerSubrole().trim().isEmpty()) {
-            userRepository.findByUsername(activity.getOwnerSubrole())
-                .ifPresent(user -> activity.setTeacherId(user.getId().toString()));
+        activity.setAssignmentSummary(summary);
+        
+        // Populate departmentId for backward compat if there's any department set
+        if (!assignments.isEmpty() && assignments.get(0).getDepartment() != null) {
+            activity.setDepartmentId(assignments.get(0).getDepartment().getId().toString());
         }
     }
+
     private ActivityAssignmentResponse toResponse(ActivityAssignment aa) {
-        if (aa == null) return null;
+        if (aa == null)
+            return null;
         return ActivityAssignmentResponse.builder()
-            .id(aa.getId())
-            .activityId(aa.getActivity() != null ? aa.getActivity().getId() : null)
-            .activityName(aa.getActivity() != null ? aa.getActivity().getName() : null)
-            .departmentId(aa.getDepartment() != null ? aa.getDepartment().getId() : null)
-            .departmentName(aa.getDepartment() != null ? aa.getDepartment().getName() : null)
-            .sectionId(aa.getSection() != null ? aa.getSection().getId() : null)
-            .sectionName(aa.getSection() != null ? aa.getSection().getSectionName() : null)
-            .teacherId(aa.getTeacher() != null ? aa.getTeacher().getId() : null)
-            .teacherName(aa.getTeacher() != null ? aa.getTeacher().getFullName() : null)
-            .teacherUsername(aa.getTeacher() != null ? aa.getTeacher().getUsername() : null)
-            .assignedBy(aa.getAssignedBy() != null ? aa.getAssignedBy().getFullName() : null)
-            .assignedAt(aa.getAssignedAt())
-            .build();
+                .id(aa.getId())
+                .activityId(aa.getActivity() != null ? aa.getActivity().getId() : null)
+                .activityName(aa.getActivity() != null ? aa.getActivity().getName() : null)
+                .departmentId(aa.getDepartment() != null ? aa.getDepartment().getId() : null)
+                .departmentName(aa.getDepartment() != null ? aa.getDepartment().getName() : null)
+                .sectionId(aa.getSection() != null ? aa.getSection().getId() : null)
+                .sectionName(aa.getSection() != null ? aa.getSection().getSectionName() : null)
+                .teacherId(aa.getTeacher() != null ? aa.getTeacher().getId() : 0L)
+                .teacherName(aa.getTeacher() != null ? aa.getTeacher().getFullName() : "Any Faculty")
+                .teacherUsername(aa.getTeacher() != null ? aa.getTeacher().getUsername() : "any")
+                .assignedBy(aa.getAssignedBy() != null ? aa.getAssignedBy().getFullName() : null)
+                .assignedAt(aa.getAssignedAt())
+                .year(aa.getYear())
+                .assignmentScope(aa.getAssignmentScope() != null ? aa.getAssignmentScope().name() : null)
+                .build();
+    }
+
+    private static String normalizeYearToRoman(String yr) {
+        if (yr == null)
+            return null;
+        String t = yr.trim().toUpperCase();
+        if (t.equals("1") || t.equals("I"))
+            return "I";
+        if (t.equals("2") || t.equals("II"))
+            return "II";
+        if (t.equals("3") || t.equals("III"))
+            return "III";
+        if (t.equals("4") || t.equals("IV"))
+            return "IV";
+        return yr;
+    }
+
+    private boolean isAssignmentMatching(ActivityAssignment a, User u) {
+        if (u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))) {
+            return true;
+        }
+        
+        // GLOBAL scope
+        if (a.getAssignmentScope() == AssignmentScope.GLOBAL) {
+            return true;
+        }
+
+        return a.getTeacher() != null && a.getTeacher().getId().equals(u.getId());
+    }
+
+    private ActivityAssignment getPriorityAssignment(List<ActivityAssignment> matches) {
+        if (matches.isEmpty()) return null;
+        for (ActivityAssignment a : matches) {
+            if (a.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY) return a;
+        }
+        for (ActivityAssignment a : matches) {
+            if (a.getAssignmentScope() == AssignmentScope.SECTION) return a;
+        }
+        for (ActivityAssignment a : matches) {
+            if (a.getAssignmentScope() == AssignmentScope.DEPARTMENT) return a;
+        }
+        for (ActivityAssignment a : matches) {
+            if (a.getAssignmentScope() == AssignmentScope.GLOBAL) return a;
+        }
+        return matches.get(0);
     }
 
     @GetMapping("/my-activities")
@@ -792,17 +964,28 @@ public class AdminController {
     @Transactional(readOnly = true)
     @Operation(summary = "Get activities assigned to the currently logged in teacher")
     public ResponseEntity<ApiResponse<List<MyActivityResponse>>> getMyActivities() {
-        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("User not found"));
         }
 
-        List<ActivityAssignment> assignments = activityAssignmentRepository.findByTeacherId(currentUser.getId());
+        List<ActivityAssignment> allAssignments = activityAssignmentRepository.findAll();
+
+        List<ActivityAssignment> matchingAssignments = allAssignments.stream()
+                .filter(a -> isAssignmentMatching(a, currentUser))
+                .collect(Collectors.toList());
+
+        // Group by Activity ID and get one assignment per activity
+        Map<Long, List<ActivityAssignment>> assignmentsByActivity = matchingAssignments.stream()
+                .collect(Collectors.groupingBy(a -> a.getActivity().getId()));
+
         List<MyActivityResponse> responses = new ArrayList<>();
-        for (ActivityAssignment aa : assignments) {
+        for (Map.Entry<Long, List<ActivityAssignment>> entry : assignmentsByActivity.entrySet()) {
+            List<ActivityAssignment> activityAssignments = entry.getValue();
+            ActivityAssignment aa = getPriorityAssignment(activityAssignments);
             Activity act = aa.getActivity();
-            if (act == null) continue;
 
             List<String> evidenceList = new java.util.ArrayList<>();
             if (act.getEvidence() != null && !act.getEvidence().trim().isEmpty()) {
@@ -812,30 +995,37 @@ public class AdminController {
             }
 
             responses.add(MyActivityResponse.builder()
-                .activityId(act.getId())
-                .name(act.getName())
-                .description(act.getDescription())
-                .frequency(act.getAwardFrequency())
-                .evidence(evidenceList)
-                .xp(act.getXp())
-                .type(act.getType())
-                .justification(act.getJustification())
-                .departmentId(aa.getDepartment() != null ? aa.getDepartment().getId() : null)
-                .departmentName(aa.getDepartment() != null ? aa.getDepartment().getName() : null)
-                .sectionId(aa.getSection() != null ? aa.getSection().getId() : null)
-                .sectionName(aa.getSection() != null ? aa.getSection().getSectionName() : null)
-                .assignedBy(aa.getAssignedBy() != null ? aa.getAssignedBy().getFullName() : "")
-                .assignedAt(aa.getAssignedAt())
-                .xpCategory(act.getXpCategory())
-                .awardXp(act.getAwardXp())
-                .awardType(act.getAwardType())
-                .repeatAllowed(act.isRepeatAllowed())
-                .cap(act.getCap())
-                .awardFrequency(act.getAwardFrequency())
-                .awardDays(act.getAwardDays())
-                .build());
+                    .activityId(act.getId())
+                    .name(act.getName())
+                    .description(act.getDescription())
+                    .frequency(act.getAwardFrequency())
+                    .evidence(evidenceList)
+                    .xp(act.getXp())
+                    .type(act.getType())
+                    .justification(act.getJustification())
+                    .departmentId(aa.getDepartment() != null ? aa.getDepartment().getId() : null)
+                    .departmentName(aa.getDepartment() != null ? aa.getDepartment().getName() : "Global")
+                    .sectionId(aa.getSection() != null ? aa.getSection().getId() : null)
+                    .sectionName(aa.getSection() != null ? aa.getSection().getSectionName() : null)
+                    .assignedBy(aa.getAssignedBy() != null ? aa.getAssignedBy().getFullName() : "")
+                    .assignedAt(aa.getAssignedAt())
+                    .xpCategory(act.getXpCategory())
+                    .awardXp(act.getAwardXp())
+                    .awardEnabled(act.getAwardEnabled())
+                    .penaltyEnabled(act.getPenaltyEnabled())
+                    .penaltyXp(act.getPenaltyXp())
+                    .awardType(act.getAwardType())
+                    .repeatAllowed(act.isRepeatAllowed())
+                    .xpType(act.getXpType())
+                    .cap(act.getCap())
+                    .awardFrequency(act.getAwardFrequency())
+                    .awardDays(act.getAwardDays())
+                    .build());
         }
 
+        responses.sort(java.util.Comparator.comparing(MyActivityResponse::getName));
+
+        log.info("CC getMyActivities: Activities returned count: {}", responses.size());
         return ResponseEntity.ok(ApiResponse.ok("My activities loaded successfully", responses));
     }
 
@@ -851,10 +1041,11 @@ public class AdminController {
         if (!activitySubgroupRepository.existsById(subgroupId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Subgroup not found"));
         }
-        
+
         List<Activity> activities = activityRepository.findBySubgroupId(subgroupId);
-        // Events are now global – all activities are visible to all users regardless of department.
-        
+        // Events are now global – all activities are visible to all users regardless of
+        // department.
+
         for (Activity activity : activities) {
             populateActivityTransientFields(activity);
         }
@@ -868,7 +1059,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<Activity>> createActivity(
             @PathVariable Long subgroupId,
             @RequestBody Map<String, Object> body) {
-        
+
         ActivitySubgroup subgroup = activitySubgroupRepository.findById(subgroupId)
                 .orElse(null);
         if (subgroup == null) {
@@ -878,15 +1069,15 @@ public class AdminController {
         Activity activity = new Activity();
         activity.setSubgroup(subgroup);
         activity.setStage(subgroup.getStage());
-        
+
         String name = (String) body.get("name");
         activity.setName(name);
         activity.setActivityName(name);
-        
+
         String desc = (String) body.get("description");
         activity.setDescription(desc);
         activity.setActivityDescription(desc);
-        
+
         activity.setFrequency((String) body.get("frequency"));
         activity.setOwnerDepartment(""); // Department removed: events are global for all departments
         activity.setOwnerSubrole(""); // teacher assignment removed from Admin creation
@@ -898,51 +1089,126 @@ public class AdminController {
         } else if (evidenceObj instanceof String) {
             activity.setEvidence((String) evidenceObj);
         }
-        
+
         activity.setXp((String) body.get("xp"));
         activity.setCap(body.get("cap"));
         activity.setType((String) body.get("type"));
         activity.setModeType(body.get("type") != null ? (String) body.get("type") : "Individual");
         activity.setJustification((String) body.get("justification"));
-        
+
+        String xpType = "Reward";
+        if (body.containsKey("xpType") && body.get("xpType") != null) {
+            xpType = body.get("xpType").toString().trim();
+        }
+        activity.setXpType(xpType);
+
         String xpCategory = (String) body.get("xpCategory");
         if (xpCategory == null || xpCategory.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("XP Category is required"));
         }
         List<String> allowedCategories = List.of(
-            "Academic", "Skill", "Communication", "Leadership", "Discipline",
-            "Placement", "Innovation", "Community", "Sports", "Cultural"
-        );
+                "Academic", "Skill", "Communication", "Leadership", "Discipline",
+                "Placement", "Innovation", "Community", "Sports", "Cultural");
         boolean isAllowed = allowedCategories.stream().anyMatch(cat -> cat.equalsIgnoreCase(xpCategory.trim()));
         if (!isAllowed) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Invalid XP Category: " + xpCategory));
         }
         String matchedCategory = allowedCategories.stream()
-            .filter(cat -> cat.equalsIgnoreCase(xpCategory.trim()))
-            .findFirst()
-            .orElse(xpCategory);
+                .filter(cat -> cat.equalsIgnoreCase(xpCategory.trim()))
+                .findFirst()
+                .orElse(xpCategory);
         activity.setXpCategory(matchedCategory);
-        
-        // Parse & Validate Award XP
+
+        // Parse & Validate Award XP & Penalty XP Configuration
+        Boolean awardEnabled = false;
+        if (body.containsKey("awardEnabled")) {
+            Object val = body.get("awardEnabled");
+            if (val instanceof Boolean) awardEnabled = (Boolean) val;
+            else if (val instanceof String) awardEnabled = Boolean.parseBoolean((String) val);
+        }
         Integer awardXp = 0;
         if (body.containsKey("awardXp")) {
-            Object xpVal = body.get("awardXp");
-            if (xpVal instanceof Number) {
-                awardXp = ((Number) xpVal).intValue();
-            } else if (xpVal instanceof String) {
-                try {
-                    awardXp = Integer.parseInt((String) xpVal);
-                } catch (Exception ignored) {}
+            Object val = body.get("awardXp");
+            if (val instanceof Number) awardXp = ((Number) val).intValue();
+            else if (val instanceof String) {
+                try { awardXp = Integer.parseInt((String) val); } catch (Exception ignored) {}
             }
         } else if (body.containsKey("xp")) {
-            try {
-                awardXp = Integer.parseInt(body.get("xp").toString());
-            } catch (Exception ignored) {}
+            try { awardXp = Integer.parseInt(body.get("xp").toString()); } catch (Exception ignored) {}
         }
-        if (awardXp <= 0) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Award XP must be greater than zero"));
+
+        Boolean penaltyEnabled = false;
+        if (body.containsKey("penaltyEnabled")) {
+            Object val = body.get("penaltyEnabled");
+            if (val instanceof Boolean) penaltyEnabled = (Boolean) val;
+            else if (val instanceof String) penaltyEnabled = Boolean.parseBoolean((String) val);
         }
+        Integer penaltyXp = 0;
+        if (body.containsKey("penaltyXp")) {
+            Object val = body.get("penaltyXp");
+            if (val instanceof Number) penaltyXp = ((Number) val).intValue();
+            else if (val instanceof String) {
+                try { penaltyXp = Integer.parseInt((String) val); } catch (Exception ignored) {}
+            }
+        }
+
+        // Backward compatibility parsing from passXp / failXp / xpType / awardXp
+        if (!body.containsKey("awardEnabled") && !body.containsKey("penaltyEnabled")) {
+            Integer passXp = 0;
+            if (body.containsKey("passXp")) {
+                try { passXp = Integer.parseInt(body.get("passXp").toString()); } catch (Exception ignored) {}
+            }
+            Integer failXp = 0;
+            if (body.containsKey("failXp")) {
+                try { failXp = Integer.parseInt(body.get("failXp").toString()); } catch (Exception ignored) {}
+            }
+            if (passXp > 0 || failXp > 0) {
+                awardEnabled = passXp > 0;
+                awardXp = passXp;
+                penaltyEnabled = failXp > 0;
+                penaltyXp = failXp;
+            } else {
+                String reqXpType = body.containsKey("xpType") && body.get("xpType") != null ? body.get("xpType").toString() : "Reward";
+                if ("Penalty".equalsIgnoreCase(reqXpType) || "Discipline".equalsIgnoreCase(reqXpType)) {
+                    penaltyEnabled = true;
+                    penaltyXp = awardXp;
+                    awardEnabled = false;
+                    awardXp = 0;
+                } else if ("Mixed".equalsIgnoreCase(reqXpType)) {
+                    awardEnabled = true;
+                    penaltyEnabled = true;
+                    penaltyXp = awardXp;
+                } else {
+                    awardEnabled = true;
+                    penaltyEnabled = false;
+                    penaltyXp = 0;
+                }
+            }
+        }
+
+        // Validation Rules:
+        if (!awardEnabled && !penaltyEnabled) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("At least one XP Configuration (Award or Penalty) must be enabled"));
+        }
+        if (awardEnabled) {
+            if (awardXp == null || awardXp < 0 || (!penaltyEnabled && awardXp == 0)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Award XP value must be greater than zero when enabled"));
+            }
+        } else {
+            awardXp = 0;
+        }
+        if (penaltyEnabled) {
+            if (penaltyXp == null || penaltyXp <= 0) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Penalty XP value must be greater than zero when enabled"));
+            }
+        } else {
+            penaltyXp = 0;
+        }
+
+        activity.setAwardEnabled(awardEnabled);
         activity.setAwardXp(awardXp);
+        activity.setPenaltyEnabled(penaltyEnabled);
+        activity.setPenaltyXp(penaltyXp);
 
         // Parse Award Type
         String awardType = "Fixed XP";
@@ -952,7 +1218,7 @@ public class AdminController {
         activity.setAwardType(awardType);
 
         // ── Award Frequency ───────────────────────────────────────────────────────
-        List<String> validFrequencies = List.of("One Time", "Daily", "Weekly", "Monthly", "Manual");
+        List<String> validFrequencies = List.of("One Time", "Daily", "Weekly", "Monthly", "Every Period", "Per Assignment", "Manual");
         String awardFrequency = "One Time";
         if (body.containsKey("awardFrequency") && body.get("awardFrequency") != null) {
             awardFrequency = body.get("awardFrequency").toString().trim();
@@ -963,11 +1229,14 @@ public class AdminController {
         final String awardFrequencyFinal = awardFrequency;
         boolean freqValid = validFrequencies.stream().anyMatch(f -> f.equalsIgnoreCase(awardFrequencyFinal));
         if (!freqValid) {
+            freqValid = customFrequencyRepository.findByNameIgnoreCase(awardFrequencyFinal).isPresent();
+        }
+        if (!freqValid) {
             return ResponseEntity.badRequest().body(ApiResponse.error(
-                "Invalid Award Frequency. Must be one of: One Time, Daily, Weekly, Monthly, Manual"));
+                    "Invalid Award Frequency. Must be one of: One Time, Daily, Weekly, Monthly, Every Period, Per Assignment, Manual, or a registered Custom Frequency"));
         }
         String matchedFrequency = validFrequencies.stream()
-            .filter(f -> f.equalsIgnoreCase(awardFrequencyFinal)).findFirst().orElse("One Time");
+                .filter(f -> f.equalsIgnoreCase(awardFrequencyFinal)).findFirst().orElse(awardFrequencyFinal);
         activity.setAwardFrequency(matchedFrequency);
         // Keep resetPeriod in sync for backward compat
         activity.setResetPeriod(matchedFrequency);
@@ -977,15 +1246,30 @@ public class AdminController {
         Integer cap = 1;
         if (body.containsKey("cap") && body.get("cap") != null) {
             Object capVal = body.get("cap");
-            if (capVal instanceof Number) cap = ((Number) capVal).intValue();
-            else { try { cap = Integer.parseInt(capVal.toString()); } catch (Exception ignored) {} }
+            if (capVal instanceof Number)
+                cap = ((Number) capVal).intValue();
+            else {
+                try {
+                    cap = Integer.parseInt(capVal.toString());
+                } catch (Exception ignored) {
+                }
+            }
         } else if (body.containsKey("maximumAwards") && body.get("maximumAwards") != null) {
             Object maxA = body.get("maximumAwards");
-            if (maxA instanceof Number) cap = ((Number) maxA).intValue();
-            else { try { cap = Integer.parseInt(maxA.toString()); } catch (Exception ignored) {} }
+            if (maxA instanceof Number)
+                cap = ((Number) maxA).intValue();
+            else {
+                try {
+                    cap = Integer.parseInt(maxA.toString());
+                } catch (Exception ignored) {
+                }
+            }
         }
         if (matchedFrequency.equalsIgnoreCase("One Time") || matchedFrequency.equalsIgnoreCase("Manual")) {
             cap = 1;
+        }
+        if (matchedFrequency.equalsIgnoreCase("Every Period")) {
+            cap = 8;
         }
         if (cap <= 0) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Cap must be greater than zero"));
@@ -1005,7 +1289,7 @@ public class AdminController {
             }
             if (awardDays == null || awardDays.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error(
-                    "Award Days are required when Award Frequency is Weekly"));
+                        "Award Days are required when Award Frequency is Weekly"));
             }
         }
         activity.setAwardDays(awardDays);
@@ -1018,7 +1302,8 @@ public class AdminController {
             } else if (dispO instanceof String) {
                 try {
                     displayOrder = Integer.parseInt((String) dispO);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
         activity.setDisplayOrder(displayOrder);
@@ -1045,7 +1330,11 @@ public class AdminController {
 
         activity.setMaxPoints(100);
 
+        log.info("Entity before save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
+                 activity.getAwardEnabled(), activity.getAwardXp(), activity.getPenaltyEnabled(), activity.getPenaltyXp());
         Activity saved = activityRepository.save(activity);
+        log.info("Entity after save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
+                 saved.getAwardEnabled(), saved.getAwardXp(), saved.getPenaltyEnabled(), saved.getPenaltyXp());
         populateActivityTransientFields(saved);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Activity created successfully", saved));
     }
@@ -1057,12 +1346,12 @@ public class AdminController {
     public ResponseEntity<ApiResponse<Activity>> updateActivity(
             @PathVariable Long activityId,
             @RequestBody Map<String, Object> body) {
-        
+
         Activity activity = activityRepository.findById(activityId).orElse(null);
         if (activity == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Activity not found"));
         }
-        
+
         if (body.containsKey("name")) {
             String name = (String) body.get("name");
             activity.setName(name);
@@ -1100,40 +1389,111 @@ public class AdminController {
         if (body.containsKey("justification")) {
             activity.setJustification((String) body.get("justification"));
         }
+        if (body.containsKey("xpType") && body.get("xpType") != null) {
+            activity.setXpType(body.get("xpType").toString().trim());
+        }
         if (body.containsKey("xpCategory")) {
             String xpCategory = (String) body.get("xpCategory");
             if (xpCategory == null || xpCategory.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("XP Category is required"));
             }
             List<String> allowedCategories = List.of(
-                "Academic", "Skill", "Communication", "Leadership", "Discipline",
-                "Placement", "Innovation", "Community", "Sports", "Cultural"
-            );
+                    "Academic", "Skill", "Communication", "Leadership", "Discipline",
+                    "Placement", "Innovation", "Community", "Sports", "Cultural");
             boolean isAllowed = allowedCategories.stream().anyMatch(cat -> cat.equalsIgnoreCase(xpCategory.trim()));
             if (!isAllowed) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Invalid XP Category: " + xpCategory));
             }
             String matchedCategory = allowedCategories.stream()
-                .filter(cat -> cat.equalsIgnoreCase(xpCategory.trim()))
-                .findFirst()
-                .orElse(xpCategory);
+                    .filter(cat -> cat.equalsIgnoreCase(xpCategory.trim()))
+                    .findFirst()
+                    .orElse(xpCategory);
             activity.setXpCategory(matchedCategory);
         }
 
-        if (body.containsKey("awardXp")) {
-            Integer awardXp = 0;
-            Object xpVal = body.get("awardXp");
-            if (xpVal instanceof Number) {
-                awardXp = ((Number) xpVal).intValue();
-            } else if (xpVal instanceof String) {
-                try {
-                    awardXp = Integer.parseInt((String) xpVal);
-                } catch (Exception ignored) {}
+        if (body.containsKey("awardEnabled") || body.containsKey("penaltyEnabled") || body.containsKey("awardXp") || body.containsKey("penaltyXp") || body.containsKey("passXp") || body.containsKey("failXp") || body.containsKey("xpType")) {
+            Boolean awardEnabled = activity.getAwardEnabled();
+            if (body.containsKey("awardEnabled")) {
+                Object val = body.get("awardEnabled");
+                if (val instanceof Boolean) awardEnabled = (Boolean) val;
+                else if (val instanceof String) awardEnabled = Boolean.parseBoolean((String) val);
             }
-            if (awardXp <= 0) {
-                return ResponseEntity.badRequest().body(ApiResponse.error("Award XP must be greater than zero"));
+            Integer awardXp = activity.getAwardXp();
+            if (body.containsKey("awardXp")) {
+                Object val = body.get("awardXp");
+                if (val instanceof Number) awardXp = ((Number) val).intValue();
+                else if (val instanceof String) {
+                    try { awardXp = Integer.parseInt((String) val); } catch (Exception ignored) {}
+                }
+            } else if (body.containsKey("xp")) {
+                try { awardXp = Integer.parseInt(body.get("xp").toString()); } catch (Exception ignored) {}
             }
+
+            Boolean penaltyEnabled = activity.getPenaltyEnabled();
+            if (body.containsKey("penaltyEnabled")) {
+                Object val = body.get("penaltyEnabled");
+                if (val instanceof Boolean) penaltyEnabled = (Boolean) val;
+                else if (val instanceof String) penaltyEnabled = Boolean.parseBoolean((String) val);
+            }
+            Integer penaltyXp = activity.getPenaltyXp();
+            if (body.containsKey("penaltyXp")) {
+                Object val = body.get("penaltyXp");
+                if (val instanceof Number) penaltyXp = ((Number) val).intValue();
+                else if (val instanceof String) {
+                    try { penaltyXp = Integer.parseInt((String) val); } catch (Exception ignored) {}
+                }
+            }
+
+            // Backward compatibility checks during updates
+            if (!body.containsKey("awardEnabled") && !body.containsKey("penaltyEnabled")) {
+                if (body.containsKey("passXp") || body.containsKey("failXp")) {
+                    Integer passXp = body.containsKey("passXp") ? Integer.parseInt(body.get("passXp").toString()) : (activity.getAwardEnabled() ? activity.getAwardXp() : 0);
+                    Integer failXp = body.containsKey("failXp") ? Integer.parseInt(body.get("failXp").toString()) : (activity.getPenaltyEnabled() ? activity.getPenaltyXp() : 0);
+                    awardEnabled = passXp > 0;
+                    awardXp = passXp;
+                    penaltyEnabled = failXp > 0;
+                    penaltyXp = failXp;
+                } else if (body.containsKey("xpType")) {
+                    String reqXpType = body.get("xpType").toString();
+                    if ("Penalty".equalsIgnoreCase(reqXpType) || "Discipline".equalsIgnoreCase(reqXpType)) {
+                        penaltyEnabled = true;
+                        penaltyXp = awardXp;
+                        awardEnabled = false;
+                        awardXp = 0;
+                    } else if ("Mixed".equalsIgnoreCase(reqXpType)) {
+                        awardEnabled = true;
+                        penaltyEnabled = true;
+                        penaltyXp = awardXp;
+                    } else {
+                        awardEnabled = true;
+                        penaltyEnabled = false;
+                        penaltyXp = 0;
+                    }
+                }
+            }
+
+            if (!awardEnabled && !penaltyEnabled) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("At least one XP Configuration (Award or Penalty) must be enabled"));
+            }
+            if (awardEnabled) {
+                if (awardXp == null || awardXp < 0 || (!penaltyEnabled && awardXp == 0)) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("Award XP value must be greater than zero when enabled"));
+                }
+            } else {
+                awardXp = 0;
+            }
+            if (penaltyEnabled) {
+                if (penaltyXp == null || penaltyXp <= 0) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("Penalty XP value must be greater than zero when enabled"));
+                }
+            } else {
+                penaltyXp = 0;
+            }
+
+            activity.setAwardEnabled(awardEnabled);
             activity.setAwardXp(awardXp);
+            activity.setPenaltyEnabled(penaltyEnabled);
+            activity.setPenaltyXp(penaltyXp);
         }
 
         if (body.containsKey("awardType") && body.get("awardType") != null) {
@@ -1141,16 +1501,19 @@ public class AdminController {
         }
 
         // ── Award Frequency ───────────────────────────────────────────────────────
-        List<String> validFrequencies2 = List.of("One Time", "Daily", "Weekly", "Monthly", "Manual");
+        List<String> validFrequencies2 = List.of("One Time", "Daily", "Weekly", "Monthly", "Every Period", "Per Assignment", "Manual");
         if (body.containsKey("awardFrequency") && body.get("awardFrequency") != null) {
             String af = body.get("awardFrequency").toString().trim();
             boolean afValid = validFrequencies2.stream().anyMatch(f -> f.equalsIgnoreCase(af));
             if (!afValid) {
+                afValid = customFrequencyRepository.findByNameIgnoreCase(af).isPresent();
+            }
+            if (!afValid) {
                 return ResponseEntity.badRequest().body(ApiResponse.error(
-                    "Invalid Award Frequency. Must be one of: One Time, Daily, Weekly, Monthly, Manual"));
+                        "Invalid Award Frequency. Must be one of: One Time, Daily, Weekly, Monthly, Every Period, Per Assignment, Manual, or a registered Custom Frequency"));
             }
             String matchedAf = validFrequencies2.stream()
-                .filter(f -> f.equalsIgnoreCase(af)).findFirst().orElse("One Time");
+                    .filter(f -> f.equalsIgnoreCase(af)).findFirst().orElse(af);
             activity.setAwardFrequency(matchedAf);
             activity.setResetPeriod(matchedAf);
             activity.setRepeatAllowed(!matchedAf.equalsIgnoreCase("One Time"));
@@ -1159,20 +1522,38 @@ public class AdminController {
         // ── Cap ───────────────────────────────────────────────────────────────────
         String currentFreq = activity.getAwardFrequency();
         boolean isOneTimeOrManual = currentFreq.equalsIgnoreCase("One Time") || currentFreq.equalsIgnoreCase("Manual");
-        if (body.containsKey("cap") && body.get("cap") != null && !isOneTimeOrManual) {
+        boolean isEveryPeriod = currentFreq.equalsIgnoreCase("Every Period");
+        if (body.containsKey("cap") && body.get("cap") != null && !isOneTimeOrManual && !isEveryPeriod) {
             Object capVal = body.get("cap");
             Integer newCap = null;
-            if (capVal instanceof Number) newCap = ((Number) capVal).intValue();
-            else { try { newCap = Integer.parseInt(capVal.toString()); } catch (Exception ignored) {} }
-            if (newCap != null && newCap > 0) activity.setMaximumAwards(newCap);
-        } else if (body.containsKey("maximumAwards") && body.get("maximumAwards") != null && !isOneTimeOrManual) {
+            if (capVal instanceof Number)
+                newCap = ((Number) capVal).intValue();
+            else {
+                try {
+                    newCap = Integer.parseInt(capVal.toString());
+                } catch (Exception ignored) {
+                }
+            }
+            if (newCap != null && newCap > 0)
+                activity.setMaximumAwards(newCap);
+        } else if (body.containsKey("maximumAwards") && body.get("maximumAwards") != null && !isOneTimeOrManual && !isEveryPeriod) {
             Object maxA = body.get("maximumAwards");
             Integer newMax = null;
-            if (maxA instanceof Number) newMax = ((Number) maxA).intValue();
-            else { try { newMax = Integer.parseInt(maxA.toString()); } catch (Exception ignored) {} }
-            if (newMax != null && newMax > 0) activity.setMaximumAwards(newMax);
+            if (maxA instanceof Number)
+                newMax = ((Number) maxA).intValue();
+            else {
+                try {
+                    newMax = Integer.parseInt(maxA.toString());
+                } catch (Exception ignored) {
+                }
+            }
+            if (newMax != null && newMax > 0)
+                activity.setMaximumAwards(newMax);
         }
-        if (isOneTimeOrManual) activity.setMaximumAwards(1);
+        if (isOneTimeOrManual)
+            activity.setMaximumAwards(1);
+        if (isEveryPeriod)
+            activity.setMaximumAwards(8);
 
         // ── Award Days ────────────────────────────────────────────────────────────
         if (body.containsKey("awardDays")) {
@@ -1180,15 +1561,16 @@ public class AdminController {
             if (daysVal == null) {
                 activity.setAwardDays(null);
             } else if (daysVal instanceof List) {
-                activity.setAwardDays(((List<?>) daysVal).stream().map(Object::toString).collect(Collectors.joining(",")));
+                activity.setAwardDays(
+                        ((List<?>) daysVal).stream().map(Object::toString).collect(Collectors.joining(",")));
             } else {
                 activity.setAwardDays(daysVal.toString().trim().isEmpty() ? null : daysVal.toString().trim());
             }
         }
         if (activity.getAwardFrequency().equalsIgnoreCase("Weekly") &&
-            (activity.getAwardDays() == null || activity.getAwardDays().trim().isEmpty())) {
+                (activity.getAwardDays() == null || activity.getAwardDays().trim().isEmpty())) {
             return ResponseEntity.badRequest().body(ApiResponse.error(
-                "Award Days are required when Award Frequency is Weekly"));
+                    "Award Days are required when Award Frequency is Weekly"));
         }
         if (body.containsKey("displayOrder")) {
             Object dispO = body.get("displayOrder");
@@ -1197,7 +1579,8 @@ public class AdminController {
             } else if (dispO instanceof String) {
                 try {
                     activity.setDisplayOrder(Integer.parseInt((String) dispO));
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
         if (body.containsKey("status") && body.get("status") != null) {
@@ -1212,104 +1595,162 @@ public class AdminController {
             activity.setMandatory(Boolean.parseBoolean(body.get("isMandatory").toString()));
         }
 
+        log.info("Entity before save [Update] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
+                 activity.getAwardEnabled(), activity.getAwardXp(), activity.getPenaltyEnabled(), activity.getPenaltyXp());
         Activity saved = activityRepository.save(activity);
+        log.info("Entity after save [Update] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
+                 saved.getAwardEnabled(), saved.getAwardXp(), saved.getPenaltyEnabled(), saved.getPenaltyXp());
         populateActivityTransientFields(saved);
         return ResponseEntity.ok(ApiResponse.ok("Activity updated successfully", saved));
     }
 
-    @PostMapping(value = {"/activities/{id}/assign", "/activity/{id}/assign"})
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PostMapping(value = { "/activities/{id}/assign", "/activity/{id}/assign" })
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    @Operation(summary = "Assign a teacher to an activity")
-    public ResponseEntity<ApiResponse<ActivityAssignmentResponse>> assignActivity(
+    @Operation(summary = "Assign departments/sections/faculty to an activity")
+    public ResponseEntity<ApiResponse<Void>> assignActivity(
             @PathVariable Long id,
             @RequestBody Map<String, Object> body) {
         
-        log.info("CC Assignment Request received for Activity ID: {}", id);
+        log.info("Admin Assignment Request received for Activity ID: {}", id);
         
-        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByUsername(username).orElse(null);
-        boolean isAdmin = currentUser != null && currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-        boolean isCc = currentUser != null && currentUser.getSubRoles().stream().map(com.spdms.entity.SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
-        
-        if (!isAdmin && !isCc) {
-            log.warn("Access Denied: User {} is neither admin nor CC", username);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error("Access Denied: Only Admins or Class Coordinators can assign activities."));
-        }
-
         Activity activity = activityRepository.findById(id).orElse(null);
         if (activity == null) {
-            log.warn("Activity not found with ID: {}", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Activity not found"));
         }
+        
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
 
-        // Events are now global – ownerDepartment may be empty.
-        // Resolve department from ownerDepartment if set, otherwise fall back to the requesting user's department.
-        String ownerDeptName = activity.getOwnerDepartment();
-        Department department = null;
-        if (ownerDeptName != null && !ownerDeptName.trim().isEmpty()) {
-            department = departmentRepository.findByName(ownerDeptName)
-                .orElseGet(() -> departmentRepository.findByCode(ownerDeptName).orElse(null));
-        }
-        if (department == null && currentUser != null && currentUser.getDepartment() != null) {
-            // Fall back to the requesting user's department (applicable for CC users on global events)
-            department = currentUser.getDepartment();
-            log.info("Activity {} has no owner department; using requesting user's department: {}", id, department.getName());
-        }
-        if (department == null) {
-            log.warn("Could not resolve a department for activity {} assignment", id);
-            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot resolve department for assignment. Ensure the user has a department assigned."));
-        }
+        // First delete referencing student activity xp records to prevent constraint violation
+        studentActivityXpRepository.deleteByActivityId(id);
 
-        if (!isAdmin && currentUser.getDepartment() != null) {
-            if (!currentUser.getDepartment().getId().equals(department.getId())) {
-                log.warn("Access Denied: Coordinator department {} does not match activity department {}", currentUser.getDepartment().getId(), department.getId());
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.error("Access Denied: You can only assign activities for your own department."));
+        // Delete all existing assignments
+        activityAssignmentRepository.deleteByActivityId(id);
+
+        boolean ccEnabled = Boolean.TRUE.equals(body.get("ccEnabled"));
+        boolean globalEnabled = Boolean.TRUE.equals(body.get("globalEnabled"));
+
+        if (ccEnabled) {
+            // ── CLASS COORDINATOR ASSIGNMENT MODE ──────────────────────────────
+            activity.setAssignmentMode("CLASS_COORDINATOR");
+            activityRepository.save(activity);
+
+            List<Department> allDepts = departmentRepository.findAll();
+            List<String> warnings = new ArrayList<>();
+
+            for (Department dept : allDepts) {
+                List<Section> sections = sectionRepository.findByDepartment_Id(dept.getId());
+                for (Section sec : sections) {
+                    log.info("Checking CC for Department: {} (ID: {}), Section: {} (ID: {})", dept.getName(), dept.getId(), sec.getSectionName(), sec.getId());
+                    java.util.List<User> ccs = userRepository.findClassCoordinatorsByDepartmentAndSection(dept.getId(), sec.getId());
+                    if (ccs.isEmpty()) {
+                        // Debug WHY it failed
+                        java.util.List<User> allUsersInSection = userRepository.findAll().stream()
+                            .filter(u -> u.getSection() != null && u.getSection().getId().equals(sec.getId()))
+                            .collect(Collectors.toList());
+                        
+                        if (allUsersInSection.isEmpty()) {
+                            log.warn("No users found in Section ID: {}", sec.getId());
+                        } else {
+                            for (User u : allUsersInSection) {
+                                boolean hasTeacherRole = u.getRoles().stream().anyMatch(r -> "ROLE_TEACHER".equals(r.getName()));
+                                boolean hasCCSubRole = u.getSubRoles().stream().anyMatch(sr -> "CC".equalsIgnoreCase(sr.getName()));
+                                log.warn("User in section - ID: {}, Name: {}, Dept ID: {}, Sec ID: {}, hasTeacherRole: {}, hasCCSubRole: {}, active: {}", 
+                                    u.getId(), u.getFullName(), 
+                                    u.getDepartment() != null ? u.getDepartment().getId() : "null",
+                                    u.getSection() != null ? u.getSection().getId() : "null",
+                                    hasTeacherRole, hasCCSubRole, u.isActive());
+                            }
+                        }
+                        warnings.add("Section " + sec.getSectionName() + " (" + dept.getName() + "): No Class Coordinator assigned");
+                        continue;
+                    }
+                    User cc = ccs.get(0);
+                    log.info("✔ CC Found - Teacher: {}, Department: {}, Section: {}, Teacher ID: {}", cc.getFullName(), dept.getName(), sec.getSectionName(), cc.getId());
+                    ActivityAssignment aa = new ActivityAssignment();
+                    aa.setActivity(activity);
+                    aa.setAssignmentScope(AssignmentScope.SECTION);
+                    aa.setDepartment(dept);
+                    aa.setSection(sec);
+                    aa.setTeacher(cc);
+                    aa.setAssignedBy(currentUser);
+                    aa.setAssignedAt(LocalDateTime.now());
+                    aa.setYear("1");
+                    activityAssignmentRepository.save(aa);
+                    log.info("CC Assignment: Activity {} → {} (CC of {} / {})", id, cc.getFullName(), dept.getName(), sec.getSectionName());
+                }
+            }
+
+            if (!warnings.isEmpty()) {
+                log.warn("CC Assignment completed with warnings: {}", warnings);
+            }
+            return ResponseEntity.ok(ApiResponse.ok("Class Coordinator assignments saved successfully", null));
+
+        } else if (globalEnabled) {
+            // ── GLOBAL ASSIGNMENT MODE ─────────────────────────────────────────
+            activity.setAssignmentMode("GLOBAL");
+            activityRepository.save(activity);
+
+            List<Department> allDepts = departmentRepository.findAll();
+            for (Department dept : allDepts) {
+                ActivityAssignment aa = new ActivityAssignment();
+                aa.setActivity(activity);
+                aa.setAssignmentScope(AssignmentScope.GLOBAL);
+                aa.setDepartment(dept);
+                aa.setAssignedBy(currentUser);
+                aa.setAssignedAt(LocalDateTime.now());
+                aa.setYear("1");
+                activityAssignmentRepository.save(aa);
+            }
+        } else {
+            // ── MANUAL ASSIGNMENT MODE ─────────────────────────────────────────
+            activity.setAssignmentMode("MANUAL");
+            activityRepository.save(activity);
+
+            List<Map<String, Object>> assignmentsList = (List<Map<String, Object>>) body.get("assignments");
+            if (assignmentsList != null) {
+                for (Map<String, Object> item : assignmentsList) {
+                    ActivityAssignment aa = new ActivityAssignment();
+                    aa.setActivity(activity);
+                    
+                    String scopeStr = (String) item.get("scope");
+                    AssignmentScope scope = AssignmentScope.valueOf(scopeStr);
+                    aa.setAssignmentScope(scope);
+
+                    if (item.get("departmentId") != null) {
+                        Long deptId = Long.valueOf(item.get("departmentId").toString());
+                        Department dept = departmentRepository.findById(deptId).orElse(null);
+                        aa.setDepartment(dept);
+                    }
+                    
+                    if (item.get("sectionId") != null) {
+                        Long secId = Long.valueOf(item.get("sectionId").toString());
+                        Section sec = sectionRepository.findById(secId).orElse(null);
+                        aa.setSection(sec);
+                    }
+
+                    if (item.get("facultyId") != null) {
+                        Long facId = Long.valueOf(item.get("facultyId").toString());
+                        User teacher = userRepository.findById(facId).orElse(null);
+                        aa.setTeacher(teacher);
+                    }
+
+                    String year = (String) item.get("year");
+                    if (year == null || year.trim().isEmpty()) {
+                        year = "1";
+                    }
+                    aa.setYear(year);
+
+                    aa.setAssignedBy(currentUser);
+                    aa.setAssignedAt(LocalDateTime.now());
+                    activityAssignmentRepository.save(aa);
+                }
             }
         }
 
-        if (body.get("teacherId") == null) {
-            log.warn("teacherId is missing in request body");
-            return ResponseEntity.badRequest().body(ApiResponse.error("teacherId is required"));
-        }
-        Long teacherId = Long.valueOf(body.get("teacherId").toString());
-        User teacher = userRepository.findById(teacherId)
-            .orElseThrow(() -> new RuntimeException("Teacher not found"));
-
-        Long sectionId = null;
-        Section section = null;
-        if (body.get("sectionId") != null && !body.get("sectionId").toString().isEmpty() && !body.get("sectionId").toString().equals("null")) {
-            sectionId = Long.valueOf(body.get("sectionId").toString());
-            section = sectionRepository.findById(sectionId)
-                .orElseThrow(() -> new RuntimeException("Section not found"));
-        }
-
-        log.info("Processing assignment: Teacher: {} ({}), Section: {}", teacher.getFullName(), teacher.getId(), section != null ? section.getSectionName() : "None");
-
-        ActivityAssignment assignment;
-        if (sectionId != null) {
-            assignment = activityAssignmentRepository.findByActivityIdAndSectionId(id, sectionId)
-                .orElse(new ActivityAssignment());
-            assignment.setSection(section);
-        } else {
-            assignment = activityAssignmentRepository.findByActivityIdAndSectionIsNull(id)
-                .orElse(new ActivityAssignment());
-            assignment.setSection(null);
-        }
-
-        assignment.setActivity(activity);
-        assignment.setDepartment(department);
-        assignment.setTeacher(teacher);
-        assignment.setAssignedBy(currentUser);
-        assignment.setAssignedAt(LocalDateTime.now());
-
-        log.info("Saving assignment to database. Current ID (null means new): {}", assignment.getId());
-        ActivityAssignment saved = activityAssignmentRepository.saveAndFlush(assignment);
-        log.info("Assignment successfully saved and flushed to database. Generated ID: {}", saved.getId());
-        
-        return ResponseEntity.ok(ApiResponse.ok("Teacher assigned successfully", toResponse(saved)));
+        return ResponseEntity.ok(ApiResponse.ok("Assignments updated successfully", null));
     }
 
     @DeleteMapping("/activities/{activityId}")
@@ -1320,9 +1761,88 @@ public class AdminController {
         if (!activityRepository.existsById(activityId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Activity not found"));
         }
+        studentActivityXpRepository.deleteByActivityId(activityId);
+        activityAssignmentRepository.deleteByActivityId(activityId);
         disciplineLogRepository.nullifyActivityReferences(activityId);
         activityRepository.deleteById(activityId);
         log.info("Admin deleted activity with ID: {}", activityId);
         return ResponseEntity.ok(ApiResponse.ok("Activity deleted successfully", null));
+    }
+
+    @GetMapping("/departments/class-coordinators")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Get all class coordinators mapped by department and section")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getClassCoordinators() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        List<User> users = userRepository.findAll();
+        for (User u : users) {
+            boolean isTeacher = u.getRoles().stream().anyMatch(r -> "ROLE_TEACHER".equals(r.getName()));
+            boolean isCC = u.getSubRoles().stream().anyMatch(sr -> "CC".equalsIgnoreCase(sr.getName()));
+            if (isTeacher && isCC && u.isActive()) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("department", u.getDepartment() != null ? u.getDepartment().getName() : null);
+                map.put("departmentId", u.getDepartment() != null ? u.getDepartment().getId() : null);
+                map.put("section", u.getSection() != null ? u.getSection().getSectionName() : null);
+                map.put("sectionId", u.getSection() != null ? u.getSection().getId() : null);
+                map.put("teacher", u.getFullName());
+                map.put("teacherId", u.getId());
+                result.add(map);
+            }
+        }
+        return ResponseEntity.ok(ApiResponse.ok("Class Coordinators fetched successfully", result));
+    }
+
+    @GetMapping("/frequencies/custom")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get all custom award frequencies")
+    public ResponseEntity<ApiResponse<List<com.spdms.entity.CustomFrequency>>> getCustomFrequencies() {
+        return ResponseEntity.ok(ApiResponse.ok("Fetched custom frequencies", customFrequencyRepository.findAll()));
+    }
+
+    @PostMapping("/frequencies/custom")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create a custom award frequency")
+    public ResponseEntity<ApiResponse<com.spdms.entity.CustomFrequency>> createCustomFrequency(
+            @RequestBody Map<String, Object> payload) {
+        String name = (String) payload.get("name");
+        if (name == null || name.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Name is required"));
+        }
+        name = name.trim();
+
+        if (customFrequencyRepository.findByNameIgnoreCase(name).isPresent()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Custom frequency with this name already exists"));
+        }
+
+        String capType = (String) payload.getOrDefault("capType", "UNLIMITED");
+        Integer defaultCap = payload.containsKey("defaultCap") && payload.get("defaultCap") != null
+                ? Integer.parseInt(payload.get("defaultCap").toString())
+                : 0;
+
+        com.spdms.entity.CustomFrequency freq = new com.spdms.entity.CustomFrequency(name, capType, defaultCap);
+        freq = customFrequencyRepository.save(freq);
+
+        return ResponseEntity.ok(ApiResponse.ok("Custom frequency created", freq));
+    }
+
+    @jakarta.annotation.PostConstruct
+    @org.springframework.transaction.annotation.Transactional
+    public void migrateLegacyNullYears() {
+        log.info("Starting default year migration for ActivityAssignment records...");
+        List<ActivityAssignment> assignments = activityAssignmentRepository.findAll();
+        boolean changed = false;
+        for (ActivityAssignment aa : assignments) {
+            if (aa.getYear() == null || aa.getYear().trim().isEmpty()) {
+                aa.setYear("1");
+                activityAssignmentRepository.save(aa);
+                changed = true;
+            }
+        }
+        if (changed) {
+            log.info("Default year migration completed successfully.");
+        } else {
+            log.info("No legacy ActivityAssignment records needed migration.");
+        }
     }
 }

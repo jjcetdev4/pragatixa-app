@@ -23,7 +23,6 @@ public class UpdateStudentRequest {
     private String semester;
     private String academicYear;
     private String year;
-    private String section;
     private boolean active;
 
     @Size(max = 100)
@@ -64,9 +63,6 @@ public class UpdateStudentRequest {
 
     public String getYear() { return year; }
     public void setYear(String year) { this.year = year; }
-
-    public String getSection() { return section; }
-    public void setSection(String section) { this.section = section; }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

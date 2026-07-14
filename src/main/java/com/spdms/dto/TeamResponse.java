@@ -9,6 +9,9 @@ public class TeamResponse {
     private String captainId;
     private String captainName;
     private List<StudentResponse> teamMembers;
+    private Long assignmentId;
+    private String assignmentName;
+    private boolean canDelete;
 
     public TeamResponse() {}
 
@@ -19,6 +22,31 @@ public class TeamResponse {
         this.captainId = captainId;
         this.captainName = captainName;
         this.teamMembers = teamMembers;
+        this.canDelete = false;
+    }
+
+    public TeamResponse(Long teamId, String teamName, int teamCapacity, String captainId, String captainName, List<StudentResponse> teamMembers, Long assignmentId, String assignmentName) {
+        this.teamId = teamId;
+        this.teamName = teamName;
+        this.teamCapacity = teamCapacity;
+        this.captainId = captainId;
+        this.captainName = captainName;
+        this.teamMembers = teamMembers;
+        this.assignmentId = assignmentId;
+        this.assignmentName = assignmentName;
+        this.canDelete = false;
+    }
+
+    public TeamResponse(Long teamId, String teamName, int teamCapacity, String captainId, String captainName, List<StudentResponse> teamMembers, Long assignmentId, String assignmentName, boolean canDelete) {
+        this.teamId = teamId;
+        this.teamName = teamName;
+        this.teamCapacity = teamCapacity;
+        this.captainId = captainId;
+        this.captainName = captainName;
+        this.teamMembers = teamMembers;
+        this.assignmentId = assignmentId;
+        this.assignmentName = assignmentName;
+        this.canDelete = canDelete;
     }
 
     public Long getTeamId() { return teamId; }
@@ -38,4 +66,13 @@ public class TeamResponse {
 
     public List<StudentResponse> getTeamMembers() { return teamMembers; }
     public void setTeamMembers(List<StudentResponse> teamMembers) { this.teamMembers = teamMembers; }
+
+    public Long getAssignmentId() { return assignmentId; }
+    public void setAssignmentId(Long assignmentId) { this.assignmentId = assignmentId; }
+
+    public String getAssignmentName() { return assignmentName; }
+    public void setAssignmentName(String assignmentName) { this.assignmentName = assignmentName; }
+
+    public boolean isCanDelete() { return canDelete; }
+    public void setCanDelete(boolean canDelete) { this.canDelete = canDelete; }
 }

@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -30,6 +31,8 @@ public class DataInitializer implements CommandLineRunner {
     private final GenderRepository genderRepository;
     private final SectionRepository sectionRepository;
     private final SubRoleRepository subRoleRepository;
+    private final ActivityAssignmentRepository activityAssignmentRepository;
+    private final ActivityRepository activityRepository;
 
     public DataInitializer(RoleRepository roleRepository,
                            UserRepository userRepository,
@@ -41,7 +44,9 @@ public class DataInitializer implements CommandLineRunner {
                            SemesterRepository semesterRepository,
                            GenderRepository genderRepository,
                            SectionRepository sectionRepository,
-                           SubRoleRepository subRoleRepository) {
+                           SubRoleRepository subRoleRepository,
+                           ActivityAssignmentRepository activityAssignmentRepository,
+                           ActivityRepository activityRepository) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
@@ -53,12 +58,17 @@ public class DataInitializer implements CommandLineRunner {
         this.genderRepository = genderRepository;
         this.sectionRepository = sectionRepository;
         this.subRoleRepository = subRoleRepository;
+        this.activityAssignmentRepository = activityAssignmentRepository;
+        this.activityRepository = activityRepository;
     }
 
     @Override
     public void run(String... args) {
         seedRoles();
         seedAcademicYears();
+        seedGenders();
+        seedDepartments();
+        seedTeacherUser();
         seedAdminUser();
 
         // Ensure default student has password "1234"
@@ -72,6 +82,49 @@ public class DataInitializer implements CommandLineRunner {
         });
 
         migrateStudentPasswords();
+        migrateActivityXp();
+    }
+
+    private void migrateActivityXp() {
+        List<Activity> activities = activityRepository.findAll();
+        boolean saved = false;
+        for (Activity act : activities) {
+            if (act.getAwardEnabled() == null || act.getPenaltyEnabled() == null) {
+                int legacyXp = act.getAwardXp() != null ? act.getAwardXp() : 0;
+                String type = act.getXpType() != null ? act.getXpType() : "Reward";
+
+                if ("Penalty".equalsIgnoreCase(type) || "Discipline".equalsIgnoreCase(type)) {
+                    act.setAwardEnabled(false);
+                    act.setAwardXp(0);
+                    act.setPenaltyEnabled(true);
+                    act.setPenaltyXp(legacyXp);
+                } else if ("Mixed".equalsIgnoreCase(type)) {
+                    act.setAwardEnabled(true);
+                    act.setPenaltyEnabled(true);
+                    act.setPenaltyXp(legacyXp);
+                } else {
+                    act.setAwardEnabled(true);
+                    act.setAwardXp(legacyXp);
+                    act.setPenaltyEnabled(false);
+                    act.setPenaltyXp(0);
+                }
+
+                activityRepository.save(act);
+                saved = true;
+            }
+        }
+        if (saved) {
+            log.info("Migrated existing activities to new Award/Penalty toggle schema successfully.");
+        }
+    }
+
+    private void seedGenders() {
+        for (String name : new String[]{"Male", "Female", "Other"}) {
+            if (genderRepository.findByGenderName(name).isEmpty()) {
+                genderRepository.save(Gender.builder().genderName(name).build());
+                log.info("Seeded gender: {}", name);
+            }
+        }
     }
 
     private void seedRoles() {
@@ -118,40 +171,6 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private void seedSections() {
-        Department cseDept = departmentRepository.findByDeptCode("CSE").orElse(null);
-        if (cseDept != null && sectionRepository.findByDepartmentAndSectionName(cseDept, "A").isEmpty()) {
-            sectionRepository.save(Section.builder()
-                .department(cseDept)
-                .sectionName("A")
-                .build());
-            log.info("Seeded section: A for CSE");
-        }
-    }
-
-    private void seedAdminUser() {
-        Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseThrow();
-        userRepository.findByUsername("admin").ifPresentOrElse(
-            existing -> {
-                existing.setPassword(passwordEncoder.encode("12345"));
-                userRepository.save(existing);
-                log.info("Admin password updated: username=admin | password=12345");
-            },
-            () -> {
-                User admin = User.builder()
-                    .username("admin")
-                    .password(passwordEncoder.encode("12345"))
-                    .fullName("System Administrator")
-                    .email("admin@spdms.com")
-                    .roles(Set.of(adminRole))
-                    .active(true)
-                    .build();
-                userRepository.save(admin);
-                log.info("Default admin created: username=admin | password=12345");
-            }
-        );
-    }
-
     private void seedTeacherUser() {
         Role teacherRole = roleRepository.findByName("ROLE_TEACHER").orElseThrow();
         
@@ -162,19 +181,33 @@ public class DataInitializer implements CommandLineRunner {
             subRoleRepository.save(SubRole.builder().name("HOD").role(teacherRole).build())
         );
 
-        if (!userRepository.existsByUsername("jaga")) {
-            User ccTeacher = User.builder()
-                .username("jaga")
-                .password(passwordEncoder.encode("1234"))
-                .fullName("Jaga CC")
-                .email("jaga@spdms.com")
-                .roles(Set.of(teacherRole))
-                .subRoles(Set.of(ccSubrole))
-                .active(true)
-                .build();
-            userRepository.save(ccTeacher);
-            log.info("CC Teacher created: username=jaga | password=1234");
-        }
+        Department cseDept = departmentRepository.findByDeptCode("CSE").orElse(null);
+
+        userRepository.findByUsername("jaga").ifPresentOrElse(
+            existing -> {
+                existing.setDepartment(cseDept);
+                existing.setYear("1");
+                existing.setSection(null);
+                userRepository.save(existing);
+                log.info("CC Teacher jaga profile updated with department, year");
+            },
+            () -> {
+                User ccTeacher = User.builder()
+                    .username("jaga")
+                    .password(passwordEncoder.encode("1234"))
+                    .fullName("Jaga CC")
+                    .email("jaga@spdms.com")
+                    .roles(Set.of(teacherRole))
+                    .subRoles(Set.of(ccSubrole))
+                    .department(cseDept)
+                    .year("1")
+                    .section(null)
+                    .active(true)
+                    .build();
+                userRepository.save(ccTeacher);
+                log.info("CC Teacher created: username=jaga | password=1234");
+            }
+        );
 
         if (!userRepository.existsByUsername("sharu")) {
             User hodTeacher = User.builder()
@@ -210,7 +243,6 @@ public class DataInitializer implements CommandLineRunner {
 
             // 2. Fetch lookup entities
             Department cseDept = departmentRepository.findByDeptCode("CSE").orElseThrow();
-            Section secA = sectionRepository.findByDepartmentAndSectionName(cseDept, "A").orElseThrow();
             Gender male = genderRepository.findByGenderName("Male").orElseThrow();
             AcademicYear ay = academicYearRepository.findByAcademicYear("2024-2025").orElseThrow();
             Year y1 = yearRepository.findByYearNo((byte) 1).orElseThrow();
@@ -223,7 +255,7 @@ public class DataInitializer implements CommandLineRunner {
                 .email("sharugesh@spdms.com")
                 .password(passwordEncoder.encode("1234"))
                 .department(cseDept)
-                .sectionRef(secA)
+                .section(null)
                 .user(studentUser)
                 .genderRef(male)
                 .phoneNo("1234567890")
@@ -233,7 +265,6 @@ public class DataInitializer implements CommandLineRunner {
                 .academicYear("2024-2025")
                 .semester("1")
                 .year("1")
-                .section("A")
                 .gender("Male")
                 .active(true)
                 .score(100)
@@ -268,4 +299,28 @@ public class DataInitializer implements CommandLineRunner {
             log.info("All student passwords are up to date.");
         }
     }
+
+    private void seedAdminUser() {
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseThrow();
+        userRepository.findByUsername("admin").ifPresentOrElse(
+            existing -> {
+                existing.setPassword(passwordEncoder.encode("12345"));
+                userRepository.save(existing);
+                log.info("Admin password updated: username=admin | password=12345");
+            },
+            () -> {
+                User admin = User.builder()
+                    .username("admin")
+                    .password(passwordEncoder.encode("12345"))
+                    .fullName("System Administrator")
+                    .email("admin@spdms.com")
+                    .roles(Set.of(adminRole))
+                    .active(true)
+                    .build();
+                userRepository.save(admin);
+                log.info("Default admin created: username=admin | password=12345");
+            }
+        );
+    }
+
 }

@@ -33,6 +33,9 @@ public class StudentActivityXp {
     @Column(name = "remarks", length = 255)
     private String remarks;
 
+    @Column(name = "result", nullable = false, length = 50)
+    private String result = "PASS";
+
     @Column(name = "awarded_at", nullable = false)
     private LocalDateTime awardedAt;
 
@@ -45,6 +48,18 @@ public class StudentActivityXp {
         this.assignment = assignment;
         this.xpAwarded = xpAwarded;
         this.remarks = remarks;
+        this.awardedAt = awardedAt;
+        this.result = xpAwarded >= 0 ? "PASS" : "FAIL";
+    }
+
+    public StudentActivityXp(Student student, Activity activity, User teacher, ActivityAssignment assignment, int xpAwarded, String remarks, String result, LocalDateTime awardedAt) {
+        this.student = student;
+        this.activity = activity;
+        this.teacher = teacher;
+        this.assignment = assignment;
+        this.xpAwarded = xpAwarded;
+        this.remarks = remarks;
+        this.result = result;
         this.awardedAt = awardedAt;
     }
 
@@ -68,6 +83,9 @@ public class StudentActivityXp {
 
     public String getRemarks() { return remarks; }
     public void setRemarks(String remarks) { this.remarks = remarks; }
+
+    public String getResult() { return result != null ? result : "PASS"; }
+    public void setResult(String result) { this.result = result; }
 
     public LocalDateTime getAwardedAt() { return awardedAt; }
     public void setAwardedAt(LocalDateTime awardedAt) { this.awardedAt = awardedAt; }

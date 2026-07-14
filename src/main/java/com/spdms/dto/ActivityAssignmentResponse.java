@@ -15,10 +15,13 @@ public class ActivityAssignmentResponse {
     private String teacherUsername;
     private String assignedBy;
     private LocalDateTime assignedAt;
+    private String year;
+
+    private String assignmentScope;
 
     public ActivityAssignmentResponse() {}
 
-    public ActivityAssignmentResponse(Long id, Long activityId, String activityName, Long departmentId, String departmentName, Long sectionId, String sectionName, Long teacherId, String teacherName, String teacherUsername, String assignedBy, LocalDateTime assignedAt) {
+    public ActivityAssignmentResponse(Long id, Long activityId, String activityName, Long departmentId, String departmentName, Long sectionId, String sectionName, Long teacherId, String teacherName, String teacherUsername, String assignedBy, LocalDateTime assignedAt, String year, String assignmentScope) {
         this.id = id;
         this.activityId = activityId;
         this.activityName = activityName;
@@ -31,6 +34,8 @@ public class ActivityAssignmentResponse {
         this.teacherUsername = teacherUsername;
         this.assignedBy = assignedBy;
         this.assignedAt = assignedAt;
+        this.year = year;
+        this.assignmentScope = assignmentScope;
     }
 
     public Long getId() { return id; }
@@ -69,6 +74,12 @@ public class ActivityAssignmentResponse {
     public LocalDateTime getAssignedAt() { return assignedAt; }
     public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
 
+    public String getYear() { return year; }
+    public void setYear(String year) { this.year = year; }
+
+    public String getAssignmentScope() { return assignmentScope; }
+    public void setAssignmentScope(String assignmentScope) { this.assignmentScope = assignmentScope; }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -86,6 +97,8 @@ public class ActivityAssignmentResponse {
         private String teacherUsername;
         private String assignedBy;
         private LocalDateTime assignedAt;
+        private String year;
+        private String assignmentScope;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder activityId(Long activityId) { this.activityId = activityId; return this; }
@@ -99,9 +112,11 @@ public class ActivityAssignmentResponse {
         public Builder teacherUsername(String teacherUsername) { this.teacherUsername = teacherUsername; return this; }
         public Builder assignedBy(String assignedBy) { this.assignedBy = assignedBy; return this; }
         public Builder assignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; return this; }
+        public Builder year(String year) { this.year = year; return this; }
+        public Builder assignmentScope(String assignmentScope) { this.assignmentScope = assignmentScope; return this; }
 
         public ActivityAssignmentResponse build() {
-            return new ActivityAssignmentResponse(id, activityId, activityName, departmentId, departmentName, sectionId, sectionName, teacherId, teacherName, teacherUsername, assignedBy, assignedAt);
+            return new ActivityAssignmentResponse(id, activityId, activityName, departmentId, departmentName, sectionId, sectionName, teacherId, teacherName, teacherUsername, assignedBy, assignedAt, year, assignmentScope);
         }
     }
 }

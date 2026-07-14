@@ -12,6 +12,8 @@ public class CreateTeamRequest {
     @Min(value = 1, message = "Team size must be at least 1")
     private int size;
 
+    private Long assignmentId;
+
     private String captainStudentId;
 
     private List<String> memberStudentIds; // other member student IDs
@@ -23,6 +25,9 @@ public class CreateTeamRequest {
 
     public int getSize() { return size; }
     public void setSize(int size) { this.size = size; }
+
+    public Long getAssignmentId() { return assignmentId; }
+    public void setAssignmentId(Long assignmentId) { this.assignmentId = assignmentId; }
 
     public String getCaptainStudentId() { return captainStudentId; }
     public void setCaptainStudentId(String captainStudentId) { this.captainStudentId = captainStudentId; }

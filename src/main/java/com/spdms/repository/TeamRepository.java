@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface TeamRepository extends JpaRepository<Team, Long> {
     Optional<Team> findByName(String name);
     boolean existsByName(String name);
+    java.util.List<Team> findByAssignmentId(Long assignmentId);
+    boolean existsByNameAndAssignmentId(String name, Long assignmentId);
 }

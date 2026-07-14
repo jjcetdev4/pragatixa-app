@@ -18,13 +18,19 @@ public class MyActivityResponse {
     private String sectionName;
     private String assignedBy;
     private LocalDateTime assignedAt;
+    private String assignedFacultyName;
+    private String assignmentMode;
     private String xpCategory;
     private Integer awardXp;
+    private Boolean awardEnabled;
+    private Boolean penaltyEnabled;
+    private Integer penaltyXp;
     private String awardType;
     private boolean repeatAllowed;
+    private String xpType;
     // ── Refactored Award Rules ─────────────────────────────────────────────────
     private Integer cap;            // max awards per frequency window
-    private String awardFrequency;  // One Time | Daily | Weekly | Monthly | Manual
+    private String awardFrequency;  // One Time | Daily | Weekly | Monthly | Manual | Per Assignment
     private String awardDays;       // comma-separated days, set when Weekly
 
     public MyActivityResponse() {}
@@ -32,8 +38,8 @@ public class MyActivityResponse {
     public MyActivityResponse(Long activityId, String name, String description, String frequency,
                                List<String> evidence, String xp, String type, String justification,
                                Long departmentId, String departmentName, Long sectionId, String sectionName,
-                               String assignedBy, LocalDateTime assignedAt, String xpCategory,
-                               Integer awardXp, String awardType, boolean repeatAllowed,
+                               String assignedBy, LocalDateTime assignedAt, String assignedFacultyName, String assignmentMode, String xpCategory,
+                               Integer awardXp, Boolean awardEnabled, Boolean penaltyEnabled, Integer penaltyXp, String awardType, boolean repeatAllowed, String xpType,
                                Integer cap, String awardFrequency, String awardDays) {
         this.activityId = activityId;
         this.name = name;
@@ -49,10 +55,16 @@ public class MyActivityResponse {
         this.sectionName = sectionName;
         this.assignedBy = assignedBy;
         this.assignedAt = assignedAt;
+        this.assignedFacultyName = assignedFacultyName;
+        this.assignmentMode = assignmentMode;
         this.xpCategory = xpCategory;
         this.awardXp = awardXp;
+        this.awardEnabled = awardEnabled;
+        this.penaltyEnabled = penaltyEnabled;
+        this.penaltyXp = penaltyXp;
         this.awardType = awardType;
         this.repeatAllowed = repeatAllowed;
+        this.xpType = xpType;
         this.cap = cap;
         this.awardFrequency = awardFrequency;
         this.awardDays = awardDays;
@@ -106,11 +118,26 @@ public class MyActivityResponse {
     public LocalDateTime getAssignedAt() { return assignedAt; }
     public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
 
+    public String getAssignedFacultyName() { return assignedFacultyName; }
+    public void setAssignedFacultyName(String assignedFacultyName) { this.assignedFacultyName = assignedFacultyName; }
+
+    public String getAssignmentMode() { return assignmentMode; }
+    public void setAssignmentMode(String assignmentMode) { this.assignmentMode = assignmentMode; }
+
     public String getXpCategory() { return xpCategory; }
     public void setXpCategory(String xpCategory) { this.xpCategory = xpCategory; }
 
     public Integer getAwardXp() { return awardXp; }
     public void setAwardXp(Integer awardXp) { this.awardXp = awardXp; }
+
+    public Boolean getAwardEnabled() { return awardEnabled; }
+    public void setAwardEnabled(Boolean awardEnabled) { this.awardEnabled = awardEnabled; }
+
+    public Boolean getPenaltyEnabled() { return penaltyEnabled; }
+    public void setPenaltyEnabled(Boolean penaltyEnabled) { this.penaltyEnabled = penaltyEnabled; }
+
+    public Integer getPenaltyXp() { return penaltyXp; }
+    public void setPenaltyXp(Integer penaltyXp) { this.penaltyXp = penaltyXp; }
 
     public String getAwardType() { return awardType; }
     public void setAwardType(String awardType) { this.awardType = awardType; }
@@ -126,6 +153,10 @@ public class MyActivityResponse {
 
     public String getAwardDays() { return awardDays; }
     public void setAwardDays(String awardDays) { this.awardDays = awardDays; }
+
+    // ── Backward-compat getters ────────────────────────────────────────────────
+    public String getXpType() { return xpType; }
+    public void setXpType(String xpType) { this.xpType = xpType; }
 
     // ── Backward-compat getters ────────────────────────────────────────────────
     public Integer getMaximumAwards() { return cap; }
@@ -148,10 +179,16 @@ public class MyActivityResponse {
         private String sectionName;
         private String assignedBy;
         private LocalDateTime assignedAt;
+        private String assignedFacultyName;
+        private String assignmentMode;
         private String xpCategory;
         private Integer awardXp;
+        private Boolean awardEnabled;
+        private Boolean penaltyEnabled;
+        private Integer penaltyXp;
         private String awardType;
         private boolean repeatAllowed;
+        private String xpType;
         private Integer cap = 1;
         private String awardFrequency = "One Time";
         private String awardDays;
@@ -170,10 +207,16 @@ public class MyActivityResponse {
         public Builder sectionName(String v)        { this.sectionName = v;    return this; }
         public Builder assignedBy(String v)         { this.assignedBy = v;     return this; }
         public Builder assignedAt(LocalDateTime v)  { this.assignedAt = v;     return this; }
+        public Builder assignedFacultyName(String v){ this.assignedFacultyName = v; return this; }
+        public Builder assignmentMode(String v)     { this.assignmentMode = v; return this; }
         public Builder xpCategory(String v)         { this.xpCategory = v;     return this; }
         public Builder awardXp(Integer v)           { this.awardXp = v;        return this; }
+        public Builder awardEnabled(Boolean v)      { this.awardEnabled = v;   return this; }
+        public Builder penaltyEnabled(Boolean v)    { this.penaltyEnabled = v; return this; }
+        public Builder penaltyXp(Integer v)         { this.penaltyXp = v;      return this; }
         public Builder awardType(String v)          { this.awardType = v;      return this; }
         public Builder repeatAllowed(boolean v)     { this.repeatAllowed = v;  return this; }
+        public Builder xpType(String v)             { this.xpType = v;         return this; }
         public Builder cap(Integer v)               { this.cap = v;            return this; }
         public Builder awardFrequency(String v)     { this.awardFrequency = v; return this; }
         public Builder awardDays(String v)          { this.awardDays = v;      return this; }
@@ -184,7 +227,7 @@ public class MyActivityResponse {
         public MyActivityResponse build() {
             return new MyActivityResponse(activityId, name, description, frequency, evidence,
                     xp, type, justification, departmentId, departmentName, sectionId, sectionName,
-                    assignedBy, assignedAt, xpCategory, awardXp, awardType, repeatAllowed,
+                    assignedBy, assignedAt, assignedFacultyName, assignmentMode, xpCategory, awardXp, awardEnabled, penaltyEnabled, penaltyXp, awardType, repeatAllowed, xpType,
                     cap, awardFrequency, awardDays);
         }
     }
