@@ -3,6 +3,7 @@ package com.spdms.entity;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import com.spdms.enums.StageStatus;
 
 @Entity
 @Table(name = "activity_stages", uniqueConstraints = {
@@ -24,14 +25,21 @@ public class ActivityStage {
     @Column(length = 255)
     private String description;
 
-    @Column(name = "start_date")
-    private LocalDate startDate;
+    @Column(name = "expected_xp", nullable = false)
+    private Integer expectedXp = 0;
 
-    @Column(name = "end_date")
-    private LocalDate endDate;
+    @Column(name = "start_datetime")
+    private LocalDateTime startDateTime;
+
+    @Column(name = "end_datetime")
+    private LocalDateTime endDateTime;
 
     @Column(name = "display_order", nullable = false)
     private int displayOrder = 0;
+
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private StageStatus status = StageStatus.UPCOMING;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
@@ -42,21 +50,40 @@ public class ActivityStage {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "use_date_validation", nullable = false)
+    private boolean useDateValidation = true;
+
+    @Column(name = "use_threshold_validation", nullable = false)
+    private boolean useThresholdValidation = false;
+
+    @Column(name = "use_combined_validation", nullable = false)
+    private boolean useCombinedValidation = false;
+
     public ActivityStage() {}
 
-    public ActivityStage(Long id, String name, String description, LocalDate startDate, LocalDate endDate, int displayOrder, boolean isActive) {
+    public ActivityStage(Long id, String name, String description, Integer expectedXp, LocalDateTime startDateTime, LocalDateTime endDateTime, int displayOrder, StageStatus status) {
         this.id = id;
         this.name = name;
         this.stageName = name;
         this.description = description;
-        this.startDate = startDate;
-        this.endDate = endDate;
+        this.expectedXp = expectedXp != null ? expectedXp : 0;
+        this.startDateTime = startDateTime;
+        this.endDateTime = endDateTime;
         this.displayOrder = displayOrder;
-        this.isActive = isActive;
+        this.status = status;
     }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public boolean isUseDateValidation() { return useDateValidation; }
+    public void setUseDateValidation(boolean useDateValidation) { this.useDateValidation = useDateValidation; }
+
+    public boolean isUseThresholdValidation() { return useThresholdValidation; }
+    public void setUseThresholdValidation(boolean useThresholdValidation) { this.useThresholdValidation = useThresholdValidation; }
+
+    public boolean isUseCombinedValidation() { return useCombinedValidation; }
+    public void setUseCombinedValidation(boolean useCombinedValidation) { this.useCombinedValidation = useCombinedValidation; }
 
     public String getStageName() { return stageName; }
     public void setStageName(String stageName) { this.stageName = stageName; }
@@ -67,18 +94,23 @@ public class ActivityStage {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    public Integer getExpectedXp() { return expectedXp; }
+    public void setExpectedXp(Integer expectedXp) { this.expectedXp = expectedXp; }
 
-    public LocalDate getEndDate() { return endDate; }
-    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    public LocalDateTime getStartDateTime() { return startDateTime; }
+    public void setStartDateTime(LocalDateTime startDateTime) { this.startDateTime = startDateTime; }
+
+    public LocalDateTime getEndDateTime() { return endDateTime; }
+    public void setEndDateTime(LocalDateTime endDateTime) { this.endDateTime = endDateTime; }
 
     public int getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
 
-    public boolean getIsActive() { return isActive; }
+    public StageStatus getStatus() { return status; }
+    public void setStatus(StageStatus status) { this.status = status; }
+
     public boolean isActive() { return isActive; }
-    public void setIsActive(boolean isActive) { this.isActive = isActive; }
+    public void setActive(boolean active) { isActive = active; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
@@ -91,10 +123,15 @@ public class ActivityStage {
         public Builder stageName(String v) { stage.stageName = v; return this; }
         public Builder name(String v) { stage.name = v; return this; }
         public Builder description(String v) { stage.description = v; return this; }
-        public Builder startDate(LocalDate v) { stage.startDate = v; return this; }
-        public Builder endDate(LocalDate v) { stage.endDate = v; return this; }
+        public Builder expectedXp(Integer v) { stage.expectedXp = v; return this; }
+        public Builder startDateTime(LocalDateTime v) { stage.startDateTime = v; return this; }
+        public Builder endDateTime(LocalDateTime v) { stage.endDateTime = v; return this; }
         public Builder displayOrder(int v) { stage.displayOrder = v; return this; }
+        public Builder status(StageStatus v) { stage.status = v; return this; }
         public Builder isActive(boolean v) { stage.isActive = v; return this; }
+        public Builder useDateValidation(boolean v) { stage.useDateValidation = v; return this; }
+        public Builder useThresholdValidation(boolean v) { stage.useThresholdValidation = v; return this; }
+        public Builder useCombinedValidation(boolean v) { stage.useCombinedValidation = v; return this; }
         public ActivityStage build() { return stage; }
     }
 }

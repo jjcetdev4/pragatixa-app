@@ -382,6 +382,9 @@ public class StudentXpController {
         if (activity == null) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Activity not found"));
         }
+        if (activity.getStage() != null && activity.getStage().getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot award XP for an activity in a non-active stage."));
+        }
 
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activity.getId());
         List<ActivityAssignment> matching = allAssignments.stream()
@@ -476,6 +479,9 @@ public class StudentXpController {
         Activity activity = activityRepository.findById(request.getActivityId()).orElse(null);
         if (activity == null) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Activity not found"));
+        }
+        if (activity.getStage() != null && activity.getStage().getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot award XP for an activity in a non-active stage."));
         }
 
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activity.getId());

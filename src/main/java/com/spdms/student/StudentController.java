@@ -26,9 +26,24 @@ import java.util.List;
 public class StudentController {
 
     private final StudentService studentService;
+    private final StageValidationService stageValidationService;
+    private final com.spdms.admin.ActivityStageService activityStageService;
+    private final com.spdms.repository.UserRepository userRepository;
+    private final com.spdms.repository.StudentRepository studentRepository;
+    private final com.spdms.repository.ActivityRepository activityRepository;
 
-    public StudentController(StudentService studentService) {
+    public StudentController(StudentService studentService,
+                             StageValidationService stageValidationService,
+                             com.spdms.admin.ActivityStageService activityStageService,
+                             com.spdms.repository.UserRepository userRepository,
+                             com.spdms.repository.StudentRepository studentRepository,
+                             com.spdms.repository.ActivityRepository activityRepository) {
         this.studentService = studentService;
+        this.stageValidationService = stageValidationService;
+        this.activityStageService = activityStageService;
+        this.userRepository = userRepository;
+        this.studentRepository = studentRepository;
+        this.activityRepository = activityRepository;
     }
 
     /** POST /api/v1/students – Add new student (Admin or Teacher only) */
@@ -179,5 +194,44 @@ public class StudentController {
         return response.isSuccess()
             ? ResponseEntity.ok(response)
             : ResponseEntity.badRequest().body(response);
+    }
+
+    /** GET /api/v1/students/stages – Get all stages with validation for logged-in student */
+    @GetMapping("/stages")
+    @PreAuthorize("hasAnyRole('STUDENT')")
+    @Operation(summary = "Get Stages Configured for Student", description = "Returns list of stages enriched with specific user validation (unlock rules).")
+    public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getStudentStages() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        com.spdms.entity.User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("User not found"));
+        }
+        com.spdms.entity.Student student = studentRepository.findByEmail(user.getEmail()).orElse(null);
+        if (student == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Student profile not found"));
+        }
+
+        List<ActivityStageResponse> stages = activityStageService.getAllStages();
+        for (ActivityStageResponse stage : stages) {
+            StageValidationResponse validation = stageValidationService.validateStage(student.getId(), stage.getId());
+            stage.setValidation(validation);
+            stage.setVisible(validation.isVisible());
+            stage.setLocked(validation.isLocked());
+            stage.setIsCompleted(validation.isCompleted());
+            stage.setIsActive(validation.isActive());
+            stage.setStageStatus(validation.getStageStatus());
+        }
+
+        return ResponseEntity.ok(ApiResponse.ok(stages));
+    }
+
+    /** GET /api/v1/students/subgroups/{subgroupId}/activities – Shared endpoint for read-only activity data */
+    @GetMapping("/subgroups/{subgroupId}/activities")
+    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Get all activities of a subgroup")
+    public ResponseEntity<ApiResponse<List<com.spdms.entity.Activity>>> getActivitiesBySubgroup(@PathVariable Long subgroupId) {
+        List<com.spdms.entity.Activity> activities = activityRepository.findBySubgroupId(subgroupId);
+        // We only want the basic fields mapped to avoid serialization issues, but ApiResponse handles it 
+        return ResponseEntity.ok(ApiResponse.ok(activities)); 
     }
 }

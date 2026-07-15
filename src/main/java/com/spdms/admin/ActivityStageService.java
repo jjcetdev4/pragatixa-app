@@ -10,6 +10,8 @@ import com.spdms.repository.ActivityRepository;
 import com.spdms.repository.ActivityStageRepository;
 import com.spdms.repository.ActivitySubgroupRepository;
 import com.spdms.repository.DisciplineLogRepository;
+import com.spdms.repository.StudentRepository;
+import com.spdms.entity.Student;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
@@ -29,22 +31,25 @@ public class ActivityStageService {
     private final ActivityRepository activityRepository;
     private final DisciplineLogRepository disciplineLogRepository;
     private final ActivityStageMapper activityStageMapper;
+    private final StudentRepository studentRepository;
 
     public ActivityStageService(ActivityStageRepository activityStageRepository,
                                 ActivitySubgroupRepository activitySubgroupRepository,
                                 ActivityRepository activityRepository,
                                 DisciplineLogRepository disciplineLogRepository,
-                                ActivityStageMapper activityStageMapper) {
+                                ActivityStageMapper activityStageMapper,
+                                StudentRepository studentRepository) {
         this.activityStageRepository = activityStageRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityRepository = activityRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.activityStageMapper = activityStageMapper;
+        this.studentRepository = studentRepository;
     }
 
     @Transactional(readOnly = true)
     public List<ActivityStageResponse> getAllStages() {
-        List<ActivityStage> stages = activityStageRepository.findAll(Sort.by(Sort.Direction.ASC, "displayOrder"));
+        List<ActivityStage> stages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
         return stages.stream().map(stage -> {
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             
@@ -138,14 +143,16 @@ public class ActivityStageService {
     }
 
     private void validateStage(ActivityStageRequest request, Long existingId) {
-        if (request.getStartDate() == null || request.getEndDate() == null) {
-            throw new IllegalArgumentException("Start date and end date are required");
+        if (request.getStartDateTime() == null || request.getEndDateTime() == null) {
+            throw new IllegalArgumentException("Start datetime and end datetime are required");
         }
-        if (request.getEndDate().isBefore(request.getStartDate())) {
-            throw new IllegalArgumentException("End date cannot be before start date");
+        if (request.getEndDateTime().isBefore(request.getStartDateTime())) {
+            throw new IllegalArgumentException("End datetime cannot be before start datetime");
+        }
+        if (request.getExpectedXp() != null && request.getExpectedXp() < 0) {
+            throw new IllegalArgumentException("Expected XP cannot be negative");
         }
         
-        // Check duplicate name
         if (existingId == null) {
             if (activityStageRepository.existsByName(request.getName())) {
                 throw new IllegalArgumentException("Stage name already exists");
@@ -156,19 +163,55 @@ public class ActivityStageService {
             }
         }
         
-        if (request.isActive()) {
-            List<ActivityStage> activeStages = activityStageRepository.findByIsActiveTrue();
-            for (ActivityStage other : activeStages) {
-                if (existingId != null && other.getId().equals(existingId)) {
-                    continue;
-                }
-                if (other.getStartDate() != null && other.getEndDate() != null) {
-                    // Check overlap: S1 <= E2 && S2 <= E1
-                    if (!request.getStartDate().isAfter(other.getEndDate()) && !other.getStartDate().isAfter(request.getEndDate())) {
-                        throw new IllegalArgumentException("Stage dates overlap with another active stage: " + other.getName() + " (" + other.getStartDate() + " to " + other.getEndDate() + ")");
-                    }
+        List<ActivityStage> allStages = activityStageRepository.findAll();
+        for (ActivityStage other : allStages) {
+            if (existingId != null && other.getId().equals(existingId)) {
+                continue;
+            }
+            if (other.getDisplayOrder() == request.getDisplayOrder()) {
+                throw new IllegalArgumentException("Display order " + request.getDisplayOrder() + " is already used by stage: " + other.getName());
+            }
+            if (other.getStartDateTime() != null && other.getEndDateTime() != null) {
+                // Check overlap: S1 < E2 && S2 < E1
+                if (request.getStartDateTime().isBefore(other.getEndDateTime()) && other.getStartDateTime().isBefore(request.getEndDateTime())) {
+                    throw new IllegalArgumentException("Stage dates overlap with another stage: " + other.getName() + " (" + other.getStartDateTime() + " to " + other.getEndDateTime() + ")");
                 }
             }
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getStageReport(Long id) {
+        ActivityStage stage = activityStageRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Stage not found"));
+
+        List<Student> allStudents = studentRepository.findByActiveTrue();
+        int expectedXp = stage.getExpectedXp() != null ? stage.getExpectedXp() : 0;
+        
+        long reachedTarget = 0;
+        long totalXpAll = 0;
+
+        for (Student s : allStudents) {
+            totalXpAll += s.getTotalXp();
+            if (expectedXp > 0 && s.getTotalXp() >= expectedXp) {
+                reachedTarget++;
+            }
+        }
+
+        int totalStudents = allStudents.size();
+        double avgXp = totalStudents > 0 ? (double) totalXpAll / totalStudents : 0;
+        long belowTarget = totalStudents - reachedTarget;
+        double completionPercent = totalStudents > 0 ? ((double) reachedTarget / totalStudents) * 100 : 0;
+
+        Map<String, Object> report = new HashMap<>();
+        report.put("stageName", stage.getName());
+        report.put("expectedXp", expectedXp);
+        report.put("averageXp", Math.round(avgXp * 100.0) / 100.0);
+        report.put("reachedTarget", reachedTarget);
+        report.put("belowTarget", belowTarget);
+        report.put("completionPercent", Math.round(completionPercent * 100.0) / 100.0);
+        report.put("totalStudents", totalStudents);
+
+        return report;
     }
 }

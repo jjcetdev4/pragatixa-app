@@ -63,6 +63,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -646,6 +647,18 @@ public class AdminController {
             @Valid @RequestBody ActivityStageRequest request) {
         ActivityStageResponse updated = activityStageService.updateStage(id, request);
         return ResponseEntity.ok(ApiResponse.ok("Stage updated successfully", updated));
+    }
+
+    @GetMapping("/stages/{id}/report")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get stage completion report")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getStageReport(@PathVariable Long id) {
+        try {
+            Map<String, Object> report = activityStageService.getStageReport(id);
+            return ResponseEntity.ok(ApiResponse.ok(report));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @PostMapping("/stages/{stageId}/subgroups")

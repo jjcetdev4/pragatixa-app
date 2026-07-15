@@ -137,6 +137,9 @@ public class GroupActivityController {
         }
 
         Activity activity = assignment.getActivity();
+        if (activity.getStage() != null && activity.getStage().getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot award XP for an activity in a non-active stage."));
+        }
         
         // Parsing the payload: expects a list of objects like { "studentId": "...", "xp": 10, "remarks": "..." }
         // OR an equal distribution: { "equalDistribution": true, "xp": 10, "remarks": "..." }
