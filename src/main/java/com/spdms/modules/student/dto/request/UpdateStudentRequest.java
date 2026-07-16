@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.spdms.modules.student.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
