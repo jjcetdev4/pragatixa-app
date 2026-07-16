@@ -2,6 +2,7 @@ package com.spdms.infrastructure.initializer;
 
 import com.spdms.entity.*;
 import com.spdms.repository.*;
+import com.spdms.modules.faculty.repository.*;
 import com.spdms.modules.student.repository.*;
 import com.spdms.modules.authentication.repository.UserRepository;
 import com.spdms.modules.authentication.repository.SubRoleRepository;

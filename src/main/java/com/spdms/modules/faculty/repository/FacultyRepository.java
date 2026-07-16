@@ -1,4 +1,4 @@
-package com.spdms.repository;
+package com.spdms.modules.faculty.repository;
 
 import com.spdms.entity.Faculty;
 import org.springframework.data.jpa.repository.JpaRepository;
