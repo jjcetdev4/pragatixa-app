@@ -1,6 +1,6 @@
 package com.spdms.config;
 
-import com.spdms.security.JwtAuthFilter;
+import com.spdms.modules.authentication.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;

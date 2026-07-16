@@ -1,4 +1,7 @@
-package com.spdms.security;
+package com.spdms.modules.authentication.security;
+import com.spdms.security.JwtUtil;
+import com.spdms.security.StudentDetailsService;
+import com.spdms.security.StudentAuthResolver;
 import com.spdms.modules.authentication.security.CustomUserDetailsService;
 
 import jakarta.servlet.FilterChain;
