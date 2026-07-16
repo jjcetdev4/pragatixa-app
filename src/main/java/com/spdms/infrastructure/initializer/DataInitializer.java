@@ -1,4 +1,4 @@
-package com.spdms.config;
+package com.spdms.infrastructure.initializer;
 
 import com.spdms.entity.*;
 import com.spdms.repository.*;
