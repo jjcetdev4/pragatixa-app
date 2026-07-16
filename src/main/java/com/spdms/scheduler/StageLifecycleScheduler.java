@@ -2,7 +2,7 @@ package com.spdms.scheduler;
 
 import com.spdms.entity.ActivityStage;
 import com.spdms.enums.StageStatus;
-import com.spdms.repository.ActivityStageRepository;
+import com.spdms.modules.activity.repository.ActivityStageRepository;
 import com.spdms.entity.Notification;
 import com.spdms.entity.Student;
 import com.spdms.repository.NotificationRepository;

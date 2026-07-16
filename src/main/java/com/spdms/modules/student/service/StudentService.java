@@ -6,6 +6,7 @@ import com.spdms.modules.student.dto.response.*;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
+import com.spdms.modules.activity.repository.*;
 import com.spdms.modules.faculty.repository.*;
 import com.spdms.modules.student.repository.*;
 import com.spdms.modules.authentication.repository.UserRepository;

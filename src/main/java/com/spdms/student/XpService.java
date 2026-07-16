@@ -5,7 +5,7 @@ import com.spdms.entity.Student;
 import com.spdms.entity.XpTransaction;
 import com.spdms.entity.Streak;
 import com.spdms.entity.Activity;
-import com.spdms.repository.ActivityRepository;
+import com.spdms.modules.activity.repository.ActivityRepository;
 import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.repository.XpTransactionRepository;
 import com.spdms.repository.StreakRepository;

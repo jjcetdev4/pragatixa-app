@@ -1,4 +1,4 @@
-package com.spdms.repository;
+package com.spdms.modules.activity.repository;
 
 import com.spdms.entity.ActivityStage;
 import org.springframework.data.jpa.repository.JpaRepository;

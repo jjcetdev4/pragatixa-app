@@ -36,7 +36,7 @@ public class StudentController {
     private final com.spdms.admin.ActivityStageService activityStageService;
     private final com.spdms.modules.authentication.repository.UserRepository userRepository;
     private final com.spdms.modules.student.repository.StudentRepository studentRepository;
-    private final com.spdms.repository.ActivityRepository activityRepository;
+    private final com.spdms.modules.activity.repository.ActivityRepository activityRepository;
     private final com.spdms.repository.DisciplineLogRepository disciplineLogRepository;
     private final com.spdms.repository.ActivityAssignmentRepository activityAssignmentRepository;
     private final com.spdms.modules.student.repository.StudentActivityXpRepository studentActivityXpRepository;
@@ -48,7 +48,7 @@ public class StudentController {
             com.spdms.admin.ActivityStageService activityStageService,
             com.spdms.modules.authentication.repository.UserRepository userRepository,
             com.spdms.modules.student.repository.StudentRepository studentRepository,
-            com.spdms.repository.ActivityRepository activityRepository,
+            com.spdms.modules.activity.repository.ActivityRepository activityRepository,
             com.spdms.repository.DisciplineLogRepository disciplineLogRepository,
             com.spdms.repository.ActivityAssignmentRepository activityAssignmentRepository,
             com.spdms.modules.student.repository.StudentActivityXpRepository studentActivityXpRepository,
