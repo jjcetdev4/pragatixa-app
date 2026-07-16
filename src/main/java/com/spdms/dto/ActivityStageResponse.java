@@ -13,20 +13,20 @@ public class ActivityStageResponse {
     private Integer expectedXp;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
-    private int displayOrder;
+    private Integer displayOrder;
     private StageStatus status;
-    private boolean isActive;
-    private boolean isUpcoming;
-    private boolean isCompleted;
+    private Boolean isActive;
+    private Boolean isUpcoming;
+    private Boolean isCompleted;
     private String remainingTime;
     private String countdown;
-    private List<Map<String, Object>> subgroups;
+    private List<ActivitySubgroupResponse> subgroups;
     private StageValidationResponse validation;
-    private boolean useDateValidation;
-    private boolean useThresholdValidation;
-    private boolean useCombinedValidation;
-    private boolean isVisible;
-    private boolean isLocked;
+    private Boolean useDateValidation;
+    private Boolean useThresholdValidation;
+    private Boolean useCombinedValidation;
+    private Boolean isVisible;
+    private Boolean isLocked;
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -47,23 +47,23 @@ public class ActivityStageResponse {
     public LocalDateTime getEndDateTime() { return endDateTime; }
     public void setEndDateTime(LocalDateTime endDateTime) { this.endDateTime = endDateTime; }
 
-    public int getDisplayOrder() { return displayOrder; }
-    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
+    public Integer getDisplayOrder() { return displayOrder; }
+    public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
 
     public StageStatus getStatus() { return status; }
     public void setStatus(StageStatus status) { this.status = status; }
 
-    public boolean getIsActive() { return isActive; }
-    public boolean isActive() { return isActive; }
-    public void setIsActive(boolean isActive) { this.isActive = isActive; }
+    public Boolean getIsActive() { return isActive; }
+    public Boolean isActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
-    public boolean getIsUpcoming() { return isUpcoming; }
-    public boolean isUpcoming() { return isUpcoming; }
-    public void setIsUpcoming(boolean isUpcoming) { this.isUpcoming = isUpcoming; }
+    public Boolean getIsUpcoming() { return isUpcoming; }
+    public Boolean isUpcoming() { return isUpcoming; }
+    public void setIsUpcoming(Boolean isUpcoming) { this.isUpcoming = isUpcoming; }
 
-    public boolean getIsCompleted() { return isCompleted; }
-    public boolean isCompleted() { return isCompleted; }
-    public void setIsCompleted(boolean isCompleted) { this.isCompleted = isCompleted; }
+    public Boolean getIsCompleted() { return isCompleted; }
+    public Boolean isCompleted() { return isCompleted; }
+    public void setIsCompleted(Boolean isCompleted) { this.isCompleted = isCompleted; }
 
     public String getRemainingTime() { return remainingTime; }
     public void setRemainingTime(String remainingTime) { this.remainingTime = remainingTime; }
@@ -71,26 +71,26 @@ public class ActivityStageResponse {
     public String getCountdown() { return countdown; }
     public void setCountdown(String countdown) { this.countdown = countdown; }
 
-    public List<Map<String, Object>> getSubgroups() { return subgroups; }
-    public void setSubgroups(List<Map<String, Object>> subgroups) { this.subgroups = subgroups; }
+    public List<ActivitySubgroupResponse> getSubgroups() { return subgroups; }
+    public void setSubgroups(List<ActivitySubgroupResponse> subgroups) { this.subgroups = subgroups; }
 
     public StageValidationResponse getValidation() { return validation; }
     public void setValidation(StageValidationResponse validation) { this.validation = validation; }
 
-    public boolean isUseDateValidation() { return useDateValidation; }
-    public void setUseDateValidation(boolean useDateValidation) { this.useDateValidation = useDateValidation; }
+    public Boolean isUseDateValidation() { return useDateValidation; }
+    public void setUseDateValidation(Boolean useDateValidation) { this.useDateValidation = useDateValidation; }
 
-    public boolean isUseThresholdValidation() { return useThresholdValidation; }
-    public void setUseThresholdValidation(boolean useThresholdValidation) { this.useThresholdValidation = useThresholdValidation; }
+    public Boolean isUseThresholdValidation() { return useThresholdValidation; }
+    public void setUseThresholdValidation(Boolean useThresholdValidation) { this.useThresholdValidation = useThresholdValidation; }
 
-    public boolean isUseCombinedValidation() { return useCombinedValidation; }
-    public void setUseCombinedValidation(boolean useCombinedValidation) { this.useCombinedValidation = useCombinedValidation; }
+    public Boolean isUseCombinedValidation() { return useCombinedValidation; }
+    public void setUseCombinedValidation(Boolean useCombinedValidation) { this.useCombinedValidation = useCombinedValidation; }
 
-    public boolean isVisible() { return isVisible; }
-    public void setVisible(boolean visible) { isVisible = visible; }
+    public Boolean isVisible() { return isVisible; }
+    public void setVisible(Boolean visible) { isVisible = visible; }
 
-    public boolean isLocked() { return isLocked; }
-    public void setLocked(boolean locked) { isLocked = locked; }
+    public Boolean isLocked() { return isLocked; }
+    public void setLocked(Boolean locked) { isLocked = locked; }
 
     private String stageStatus;
     

@@ -36,6 +36,7 @@ public class TeamController {
     private final StudentActivityXpRepository studentActivityXpRepository;
     private final GroupDeletionAuditLogRepository auditLogRepository;
     private final com.spdms.service.AssignmentSecurityService assignmentSecurityService;
+    private final com.spdms.security.StudentAuthResolver studentAuthResolver;
 
     public TeamController(TeamRepository teamRepository,
                           UserRepository userRepository,
@@ -45,7 +46,8 @@ public class TeamController {
                           ActivityAssignmentRepository activityAssignmentRepository,
                           StudentActivityXpRepository studentActivityXpRepository,
                           GroupDeletionAuditLogRepository auditLogRepository,
-                          com.spdms.service.AssignmentSecurityService assignmentSecurityService) {
+                          com.spdms.service.AssignmentSecurityService assignmentSecurityService,
+                          com.spdms.security.StudentAuthResolver studentAuthResolver) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -55,6 +57,7 @@ public class TeamController {
         this.studentActivityXpRepository = studentActivityXpRepository;
         this.auditLogRepository = auditLogRepository;
         this.assignmentSecurityService = assignmentSecurityService;
+        this.studentAuthResolver = studentAuthResolver;
     }
 
     @PostMapping
@@ -224,11 +227,7 @@ public class TeamController {
     @Transactional(readOnly = true)
     @Operation(summary = "Get My Team", description = "Returns the team details for the logged-in student (captain/member).")
     public ResponseEntity<ApiResponse<TeamResponse>> getMyTeam() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Student student = studentRepository.findByStudentId(username).orElse(null);
-        if (student == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Student not found"));
-        }
+        Student student = studentAuthResolver.getLoggedInStudent();
         Team team = student.getTeam();
         if (team == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("You do not belong to any team"));
@@ -424,11 +423,7 @@ public class TeamController {
     @Transactional(readOnly = true)
     @Operation(summary = "Get My Classmates", description = "Returns a list of students in the same department and section as the logged-in student.")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getMyClassmates() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Student currentStudent = studentRepository.findByStudentId(username).orElse(null);
-        if (currentStudent == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Student profile not found"));
-        }
+        Student currentStudent = studentAuthResolver.getLoggedInStudent();
 
         if (currentStudent.getDepartment() == null || currentStudent.getSection() == null) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Student is not assigned to a department and section."));
@@ -459,11 +454,7 @@ public class TeamController {
     @Transactional
     @Operation(summary = "Add Team Member", description = "Adds a student to the captain's team.")
     public ResponseEntity<ApiResponse<Void>> addMember(@RequestParam String studentId) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Student captain = studentRepository.findByStudentId(username).orElse(null);
-        if (captain == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Captain student not found"));
-        }
+        Student captain = studentAuthResolver.getLoggedInStudent();
         Team team = captain.getTeam();
         if (team == null || team.getCaptain() == null || !team.getCaptain().getId().equals(captain.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("You are not the captain of any team"));
@@ -560,11 +551,7 @@ public class TeamController {
     @Transactional
     @Operation(summary = "Request Team Member Removal", description = "Creates a request to remove a student from the captain's team.")
     public ResponseEntity<ApiResponse<Void>> requestRemoveMember(@RequestParam String studentId, @RequestParam(required = false, defaultValue = "Requested by Captain") String reason) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Student captain = studentRepository.findByStudentId(username).orElse(null);
-        if (captain == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Captain student not found"));
-        }
+        Student captain = studentAuthResolver.getLoggedInStudent();
         Team team = captain.getTeam();
         if (team == null || team.getCaptain() == null || !team.getCaptain().getId().equals(captain.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("You are not the captain of any team"));

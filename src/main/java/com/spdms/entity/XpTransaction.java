@@ -16,6 +16,10 @@ public class XpTransaction {
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"team"})
     private Student student;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "activity_id")
+    private Activity activity;
+
     @Column(nullable = false, length = 50)
     private String category; // ACADEMIC, SKILL, LEADERSHIP, CAREER, INNOVATION, COMMUNITY, DISCIPLINE
 
@@ -51,6 +55,9 @@ public class XpTransaction {
     public Student getStudent() { return student; }
     public void setStudent(Student student) { this.student = student; }
 
+    public Activity getActivity() { return activity; }
+    public void setActivity(Activity activity) { this.activity = activity; }
+
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
@@ -83,6 +90,7 @@ public class XpTransaction {
     public static class Builder {
         private final XpTransaction x = new XpTransaction();
         public Builder student(Student v) { x.student = v; return this; }
+        public Builder activity(Activity v) { x.activity = v; return this; }
         public Builder category(String v) { x.category = v; return this; }
         public Builder activityName(String v) { x.activityName = v; return this; }
         public Builder xpPoints(int v) { x.xpPoints = v; return this; }

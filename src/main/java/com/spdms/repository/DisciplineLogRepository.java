@@ -20,4 +20,7 @@ public interface DisciplineLogRepository extends JpaRepository<DisciplineLog, Lo
     @Modifying
     @Query("UPDATE DisciplineLog dl SET dl.activity = null WHERE dl.activity.id = :activityId")
     void nullifyActivityReferences(@Param("activityId") Long activityId);
+
+    @Query("SELECT COALESCE(SUM(dl.points), 0) FROM DisciplineLog dl WHERE dl.student.id = :studentId AND dl.activity.id = :activityId AND (dl.remarks IS NULL OR dl.remarks NOT IN ('PENDING', 'PENDING REVIEW', 'REJECTED'))")
+    int sumApprovedPointsByStudentAndActivity(@Param("studentId") Long studentId, @Param("activityId") Long activityId);
 }

@@ -49,25 +49,64 @@ public class ActivityStageService {
 
     @Transactional(readOnly = true)
     public List<ActivityStageResponse> getAllStages() {
+        System.out.println("Loading stages...");
         List<ActivityStage> stages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
-        return stages.stream().map(stage -> {
+        System.out.println("Total stages from database: " + stages.size());
+
+        List<ActivityStageResponse> responses = stages.stream().map(stage -> {
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             
             // Map subgroups
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
-            List<Map<String, Object>> subMaps = subgroups.stream().map(sub -> {
-                Map<String, Object> subMap = new HashMap<>();
-                subMap.put("id", sub.getId());
-                subMap.put("name", sub.getName());
-                subMap.put("threshold", sub.getThreshold());
-                subMap.put("assignedFacultyId", sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getId() : null);
-                subMap.put("assignedFacultyName", sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getFullName() : null);
+            List<com.spdms.dto.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
+                com.spdms.dto.ActivitySubgroupResponse subMap = new com.spdms.dto.ActivitySubgroupResponse();
+                subMap.setId(sub.getId());
+                subMap.setName(sub.getName());
+                subMap.setThreshold(sub.getThreshold());
+                subMap.setAssignedFacultyId(sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getId() : null);
+                subMap.setAssignedFacultyName(sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getFullName() : null);
+                
+                // Fetch and attach missing nested activity list
+                List<Activity> activities = activityRepository.findBySubgroupId(sub.getId());
+                List<com.spdms.dto.ActivityResponse> actMaps = activities.stream().map(act -> {
+                    com.spdms.dto.ActivityResponse actMap = new com.spdms.dto.ActivityResponse();
+                    actMap.setActivityId(act.getId());
+                    actMap.setActivityName(act.getActivityName() != null ? act.getActivityName() : act.getName());
+                    actMap.setDescription(act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
+                    int rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp() : act.getMaxPoints();
+                    actMap.setRewardXp(rewardXp);
+                    actMap.setFrequency(act.getFrequency() != null ? act.getFrequency() : act.getAwardFrequency());
+                    actMap.setEvidence(act.getEvidence());
+                    
+                    String facultyName = null;
+                    Long facultyId = null;
+                    if (sub.getAssignedFaculty() != null) {
+                        facultyName = sub.getAssignedFaculty().getFullName();
+                        facultyId = sub.getAssignedFaculty().getId();
+                    }
+                    actMap.setFacultyName(facultyName);
+                    actMap.setFacultyId(facultyId);
+                    
+                    return actMap;
+                }).collect(Collectors.toList());
+                
+                subMap.setActivities(actMaps);
                 return subMap;
             }).collect(Collectors.toList());
             
             response.setSubgroups(subMaps);
+
+            System.out.println("Stage ID: " + response.getId());
+            System.out.println("Stage Name: " + response.getName());
+            System.out.println("Display Order: " + response.getDisplayOrder());
+            System.out.println("Status: " + response.getStatus());
+            System.out.println("Subgroup Count: " + subMaps.size());
+
             return response;
         }).collect(Collectors.toList());
+
+        System.out.println("Return Count: " + responses.size());
+        return responses;
     }
 
     @Transactional(readOnly = true)
@@ -75,13 +114,39 @@ public class ActivityStageService {
         return activityStageRepository.findById(id).map(stage -> {
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
-            List<Map<String, Object>> subMaps = subgroups.stream().map(sub -> {
-                Map<String, Object> subMap = new HashMap<>();
-                subMap.put("id", sub.getId());
-                subMap.put("name", sub.getName());
-                subMap.put("threshold", sub.getThreshold());
-                subMap.put("assignedFacultyId", sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getId() : null);
-                subMap.put("assignedFacultyName", sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getFullName() : null);
+            List<com.spdms.dto.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
+                com.spdms.dto.ActivitySubgroupResponse subMap = new com.spdms.dto.ActivitySubgroupResponse();
+                subMap.setId(sub.getId());
+                subMap.setName(sub.getName());
+                subMap.setThreshold(sub.getThreshold());
+                subMap.setAssignedFacultyId(sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getId() : null);
+                subMap.setAssignedFacultyName(sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getFullName() : null);
+                
+                // Fetch and attach missing nested activity list
+                List<Activity> activities = activityRepository.findBySubgroupId(sub.getId());
+                List<com.spdms.dto.ActivityResponse> actMaps = activities.stream().map(act -> {
+                    com.spdms.dto.ActivityResponse actMap = new com.spdms.dto.ActivityResponse();
+                    actMap.setActivityId(act.getId());
+                    actMap.setActivityName(act.getActivityName() != null ? act.getActivityName() : act.getName());
+                    actMap.setDescription(act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
+                    int rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp() : act.getMaxPoints();
+                    actMap.setRewardXp(rewardXp);
+                    actMap.setFrequency(act.getFrequency() != null ? act.getFrequency() : act.getAwardFrequency());
+                    actMap.setEvidence(act.getEvidence());
+                    
+                    String facultyName = null;
+                    Long facultyId = null;
+                    if (sub.getAssignedFaculty() != null) {
+                        facultyName = sub.getAssignedFaculty().getFullName();
+                        facultyId = sub.getAssignedFaculty().getId();
+                    }
+                    actMap.setFacultyName(facultyName);
+                    actMap.setFacultyId(facultyId);
+                    
+                    return actMap;
+                }).collect(Collectors.toList());
+                
+                subMap.setActivities(actMaps);
                 return subMap;
             }).collect(Collectors.toList());
             response.setSubgroups(subMaps);

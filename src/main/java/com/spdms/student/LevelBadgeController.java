@@ -4,6 +4,7 @@ import com.spdms.dto.ApiResponse;
 import com.spdms.entity.Badge;
 import com.spdms.entity.Level;
 import com.spdms.entity.StudentBadge;
+import com.spdms.dto.StudentBadgeResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,9 +21,11 @@ import java.util.List;
 public class LevelBadgeController {
 
     private final LevelBadgeService levelBadgeService;
+    private final com.spdms.security.StudentAuthResolver studentAuthResolver;
 
-    public LevelBadgeController(LevelBadgeService levelBadgeService) {
+    public LevelBadgeController(LevelBadgeService levelBadgeService, com.spdms.security.StudentAuthResolver studentAuthResolver) {
         this.levelBadgeService = levelBadgeService;
+        this.studentAuthResolver = studentAuthResolver;
     }
 
     /** GET /api/v1/levels – Get all 8 levels */
@@ -45,7 +48,7 @@ public class LevelBadgeController {
     @GetMapping("/levels/me/current")
     @Operation(summary = "Get Current Logged-in Student's Level")
     public ResponseEntity<ApiResponse<Level>> getCurrentLoggedInLevel() {
-        String studentId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String studentId = studentAuthResolver.getLoggedInStudent().getStudentId();
         return levelBadgeService.getCurrentLevelForStudent(studentId)
                 .map(level -> ResponseEntity.ok(ApiResponse.ok(level)))
                 .orElse(ResponseEntity.notFound().build());
@@ -61,24 +64,35 @@ public class LevelBadgeController {
     /** GET /api/v1/badges/student/me – Get logged-in student's earned & pending badges */
     @GetMapping("/badges/student/me")
     @Operation(summary = "Get My Badges", description = "Returns all earned and pending badge claims for the active student session.")
-    public ResponseEntity<ApiResponse<List<StudentBadge>>> getMyBadges() {
-        String studentId = SecurityContextHolder.getContext().getAuthentication().getName();
+    public ResponseEntity<ApiResponse<List<StudentBadgeResponse>>> getMyBadges() {
+        String studentId = studentAuthResolver.getLoggedInStudent().getStudentId();
         return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getBadgesForStudent(studentId)));
     }
 
     /** GET /api/v1/badges/student/{studentId} – Get a specific student's badges */
     @GetMapping("/badges/student/{studentId}")
     @Operation(summary = "Get Badges by Student ID")
-    public ResponseEntity<ApiResponse<List<StudentBadge>>> getBadgesForStudent(@PathVariable String studentId) {
+    public ResponseEntity<ApiResponse<List<StudentBadgeResponse>>> getBadgesForStudent(@PathVariable String studentId) {
         return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getBadgesForStudent(studentId)));
     }
 
     /** POST /api/v1/badges/submit – Student submits a claim for a badge */
     @PostMapping("/badges/submit")
     @Operation(summary = "Claim Badge", description = "Student submits a badge claim with evidence URL.")
-    public ResponseEntity<ApiResponse<StudentBadge>> submitBadgeClaim(@RequestBody ClaimBadgeRequest request) {
-        String studentId = SecurityContextHolder.getContext().getAuthentication().getName();
-        ApiResponse<StudentBadge> response = levelBadgeService.submitBadgeClaim(studentId, request.getBadgeName(), request.getEvidenceUrl());
+    public ResponseEntity<ApiResponse<StudentBadgeResponse>> submitBadgeClaim(@RequestBody ClaimBadgeRequest request) {
+        String studentId = studentAuthResolver.getLoggedInStudent().getStudentId();
+        
+        System.out.println("----- BADGE REQUEST RECEIVED -----");
+        System.out.println("Student ID: " + studentId);
+        System.out.println("Badge Name: " + request.getBadgeName());
+        System.out.println("Evidence URL: " + request.getEvidenceUrl());
+
+        ApiResponse<StudentBadgeResponse> response = levelBadgeService.submitBadgeClaim(studentId, request.getBadgeName(), request.getEvidenceUrl());
+        
+        System.out.println("Saved Successfully: " + response.isSuccess());
+        System.out.println("Teacher Pending Count: " + levelBadgeService.getPendingBadgeClaims().size());
+        System.out.println("----------------------------------");
+
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);
@@ -88,9 +102,21 @@ public class LevelBadgeController {
     @PutMapping("/badges/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Approve Badge Claim", description = "Approves a pending badge claim. Requires Faculty or Admin role.")
-    public ResponseEntity<ApiResponse<StudentBadge>> approveBadgeClaim(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<StudentBadgeResponse>> approveBadgeClaim(@PathVariable Long id) {
         String approvedBy = SecurityContextHolder.getContext().getAuthentication().getName();
-        ApiResponse<StudentBadge> response = levelBadgeService.approveBadgeClaim(id, approvedBy);
+        ApiResponse<StudentBadgeResponse> response = levelBadgeService.approveBadgeClaim(id, approvedBy);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
+    }
+
+    /** PUT /api/v1/badges/{id}/reject – Faculty/Admin rejects a badge claim */
+    @PutMapping("/badges/{id}/reject")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Reject Badge Claim", description = "Rejects a pending badge claim. Requires Faculty or Admin role.")
+    public ResponseEntity<ApiResponse<StudentBadgeResponse>> rejectBadgeClaim(@PathVariable Long id) {
+        String rejectedBy = SecurityContextHolder.getContext().getAuthentication().getName();
+        ApiResponse<StudentBadgeResponse> response = levelBadgeService.rejectBadgeClaim(id, rejectedBy);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);
@@ -100,7 +126,7 @@ public class LevelBadgeController {
     @GetMapping("/badges/pending")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Get Pending Badge Claims", description = "Returns all student badge claims with PENDING status. Requires Faculty or Admin role.")
-    public ResponseEntity<ApiResponse<List<StudentBadge>>> getPendingBadgeClaims() {
+    public ResponseEntity<ApiResponse<List<StudentBadgeResponse>>> getPendingBadgeClaims() {
         return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getPendingBadgeClaims()));
     }
 

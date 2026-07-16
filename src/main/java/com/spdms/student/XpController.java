@@ -18,9 +18,11 @@ import java.util.Map;
 public class XpController {
 
     private final XpService xpService;
+    private final com.spdms.security.StudentAuthResolver studentAuthResolver;
 
-    public XpController(XpService xpService) {
+    public XpController(XpService xpService, com.spdms.security.StudentAuthResolver studentAuthResolver) {
         this.xpService = xpService;
+        this.studentAuthResolver = studentAuthResolver;
     }
 
     /** GET /api/v1/xp/{studentId}/summary – Total + by category summary */
@@ -51,7 +53,7 @@ public class XpController {
     @PostMapping("/submit")
     @Operation(summary = "Submit XP Claim", description = "Allows a student to submit evidence link for an activity.")
     public ResponseEntity<ApiResponse<XpTransaction>> submitXpClaim(@RequestBody ClaimSubmissionRequest request) {
-        String studentId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String studentId = studentAuthResolver.getLoggedInStudent().getStudentId();
         ApiResponse<XpTransaction> response = xpService.submitXpClaim(
                 studentId,
                 request.getCategory(),

@@ -10,6 +10,7 @@ import java.util.List;
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
     List<Activity> findByStageId(Long stageId);
     List<Activity> findBySubgroupId(Long subgroupId);
+    List<Activity> findBySubgroupIdIn(List<Long> subgroupIds);
     List<Activity> findByActivityName(String activityName);
 
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT act FROM Activity act JOIN ActivityAssignment a ON a.activity.id = act.id " +

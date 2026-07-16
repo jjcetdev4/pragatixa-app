@@ -5,6 +5,7 @@ import com.spdms.entity.Badge;
 import com.spdms.entity.Level;
 import com.spdms.entity.Student;
 import com.spdms.entity.StudentBadge;
+import com.spdms.dto.StudentBadgeResponse;
 import com.spdms.repository.BadgeRepository;
 import com.spdms.repository.LevelRepository;
 import com.spdms.repository.StudentBadgeRepository;
@@ -52,16 +53,18 @@ public class LevelBadgeService {
         return badgeRepository.findAll();
     }
 
-    public List<StudentBadge> getBadgesForStudent(String studentId) {
+    public List<StudentBadgeResponse> getBadgesForStudent(String studentId) {
         Optional<Student> studentOpt = studentRepository.findByStudentId(studentId);
         if (studentOpt.isEmpty()) {
             return List.of();
         }
-        return studentBadgeRepository.findByStudentId(studentOpt.get().getId());
+        return studentBadgeRepository.findByStudentId(studentOpt.get().getId()).stream()
+                .map(StudentBadgeResponse::new)
+                .toList();
     }
 
     @Transactional
-    public ApiResponse<StudentBadge> submitBadgeClaim(String studentId, String badgeName, String evidenceUrl) {
+    public ApiResponse<StudentBadgeResponse> submitBadgeClaim(String studentId, String badgeName, String evidenceUrl) {
         Optional<Student> studentOpt = studentRepository.findByStudentId(studentId);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
@@ -74,8 +77,14 @@ public class LevelBadgeService {
         Student student = studentOpt.get();
         Badge badge = badgeOpt.get();
 
-        if (studentBadgeRepository.existsByStudentIdAndBadgeId(student.getId(), badge.getId())) {
-            return ApiResponse.error("You have already claimed or been awarded this badge");
+        List<StudentBadge> existingClaims = studentBadgeRepository.findByStudentIdAndBadgeId(student.getId(), badge.getId());
+        for (StudentBadge existingClaim : existingClaims) {
+            if ("APPROVED".equalsIgnoreCase(existingClaim.getStatus())) {
+                return ApiResponse.error("You have already earned this badge.");
+            }
+            if ("PENDING".equalsIgnoreCase(existingClaim.getStatus())) {
+                return ApiResponse.error("Your claim for this badge is already pending.");
+            }
         }
 
         StudentBadge claim = StudentBadge.builder()
@@ -87,11 +96,11 @@ public class LevelBadgeService {
                 .build();
 
         StudentBadge saved = studentBadgeRepository.save(claim);
-        return ApiResponse.ok("Badge claim submitted successfully", saved);
+        return ApiResponse.ok("Badge claim submitted successfully", new StudentBadgeResponse(saved));
     }
 
     @Transactional
-    public ApiResponse<StudentBadge> approveBadgeClaim(Long claimId, String approvedBy) {
+    public ApiResponse<StudentBadgeResponse> approveBadgeClaim(Long claimId, String approvedBy) {
         Optional<StudentBadge> claimOpt = studentBadgeRepository.findById(claimId);
         if (claimOpt.isEmpty()) {
             return ApiResponse.error("Badge claim not found");
@@ -107,10 +116,35 @@ public class LevelBadgeService {
         claim.setAwardedAt(LocalDateTime.now());
 
         StudentBadge saved = studentBadgeRepository.save(claim);
-        return ApiResponse.ok("Badge claim approved successfully", saved);
+        return ApiResponse.ok("Badge claim approved successfully", new StudentBadgeResponse(saved));
     }
 
-    public List<StudentBadge> getPendingBadgeClaims() {
-        return studentBadgeRepository.findByStatus("PENDING");
+    @Transactional
+    public ApiResponse<StudentBadgeResponse> rejectBadgeClaim(Long claimId, String rejectedBy) {
+        Optional<StudentBadge> claimOpt = studentBadgeRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            return ApiResponse.error("Badge claim not found");
+        }
+
+        StudentBadge claim = claimOpt.get();
+        if ("APPROVED".equalsIgnoreCase(claim.getStatus())) {
+            return ApiResponse.error("Cannot reject an already approved badge");
+        }
+        if ("REJECTED".equalsIgnoreCase(claim.getStatus())) {
+            return ApiResponse.error("Badge claim is already rejected");
+        }
+
+        claim.setStatus("REJECTED");
+        claim.setApprovedBy(rejectedBy); // Overloading this field to store who rejected
+        claim.setAwardedAt(LocalDateTime.now());
+
+        StudentBadge saved = studentBadgeRepository.save(claim);
+        return ApiResponse.ok("Badge claim rejected successfully", new StudentBadgeResponse(saved));
+    }
+
+    public List<StudentBadgeResponse> getPendingBadgeClaims() {
+        return studentBadgeRepository.findByStatus("PENDING").stream()
+                .map(StudentBadgeResponse::new)
+                .toList();
     }
 }

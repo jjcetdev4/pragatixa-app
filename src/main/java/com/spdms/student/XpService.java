@@ -97,15 +97,20 @@ public class XpService {
 
         // Resolve XP Category from the Activity if possible
         String resolvedCategory = category;
+        Activity resolvedActivity = null;
         if (activityName != null) {
             List<Activity> activityList = activityRepository.findByActivityName(activityName);
-            if (!activityList.isEmpty() && activityList.get(0).getXpCategory() != null) {
-                resolvedCategory = activityList.get(0).getXpCategory();
+            if (!activityList.isEmpty()) {
+                resolvedActivity = activityList.get(0);
+                if (resolvedActivity.getXpCategory() != null) {
+                    resolvedCategory = resolvedActivity.getXpCategory();
+                }
             }
         }
 
         XpTransaction claim = XpTransaction.builder()
                 .student(student)
+                .activity(resolvedActivity)
                 .category(resolvedCategory.toUpperCase())
                 .activityName(activityName)
                 .xpPoints(allowedPoints)

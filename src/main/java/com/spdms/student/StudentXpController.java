@@ -451,6 +451,7 @@ public class StudentXpController {
         // Create matching XpTransaction for student profile history view
         XpTransaction tx = XpTransaction.builder()
             .student(student)
+            .activity(activity)
             .category(activity.getXpCategory() != null ? activity.getXpCategory().toUpperCase() : "SKILL")
             .activityName(activity.getName() + " (" + resultStr + " - Awarded by " + teacher.getFullName() + ")")
             .xpPoints(xpToAward)
@@ -570,6 +571,7 @@ public class StudentXpController {
             // Create matching XpTransaction
             XpTransaction tx = XpTransaction.builder()
                 .student(student)
+                .activity(activity)
                 .category(activity.getXpCategory() != null ? activity.getXpCategory().toUpperCase() : "SKILL")
                 .activityName(activity.getName() + " (" + resultStr + " - Awarded by " + teacher.getFullName() + ")")
                 .xpPoints(xpToAward)
@@ -622,6 +624,10 @@ public class StudentXpController {
             if (!history.isEmpty()) {
                 return "Student " + student.getFullName() + " has already been awarded XP for this one-time activity.";
             }
+            return null;
+        }
+        // Per Assignment - unlimited awards
+        if ("Per Assignment".equalsIgnoreCase(awardFrequency)) {
             return null;
         }
 

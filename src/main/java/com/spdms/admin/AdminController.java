@@ -1284,7 +1284,10 @@ public class AdminController {
         if (matchedFrequency.equalsIgnoreCase("Every Period")) {
             cap = 8;
         }
-        if (cap <= 0) {
+        if (matchedFrequency.equalsIgnoreCase("Per Assignment")) {
+            cap = null;
+        }
+        if (cap != null && cap <= 0) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Cap must be greater than zero"));
         }
         activity.setMaximumAwards(cap);
@@ -1567,6 +1570,8 @@ public class AdminController {
             activity.setMaximumAwards(1);
         if (isEveryPeriod)
             activity.setMaximumAwards(8);
+        if (currentFreq.equalsIgnoreCase("Per Assignment"))
+            activity.setMaximumAwards(null);
 
         // ── Award Days ────────────────────────────────────────────────────────────
         if (body.containsKey("awardDays")) {

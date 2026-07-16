@@ -26,7 +26,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 /**
- * Spring Security configuration – JWT stateless, CORS enabled, Swagger whitelisted.
+ * Spring Security configuration – JWT stateless, CORS enabled, Swagger
+ * whitelisted.
  */
 @Configuration
 @EnableWebSecurity
@@ -37,41 +38,40 @@ public class SecurityConfig {
     private final com.spdms.security.CustomUserDetailsService customUserDetailsService;
     private final com.spdms.security.StudentDetailsService studentDetailsService;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, 
-                          com.spdms.security.CustomUserDetailsService customUserDetailsService, 
-                          com.spdms.security.StudentDetailsService studentDetailsService) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+            com.spdms.security.CustomUserDetailsService customUserDetailsService,
+            com.spdms.security.StudentDetailsService studentDetailsService) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.customUserDetailsService = customUserDetailsService;
         this.studentDetailsService = studentDetailsService;
     }
 
     private static final String[] PUBLIC_ENDPOINTS = {
-        "/api/v1/auth/login",
-        "/api/v1/auth/student-login",
-        "/api/v1/auth/test-users",
-        "/swagger-ui/**",
-        "/swagger-ui.html",
-        "/api-docs/**",
-        "/v3/api-docs/**"
+            "/api/v1/auth/login",
+            "/api/v1/auth/student-login",
+            "/api/v1/auth/test-users",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/api-docs/**",
+            "/v3/api-docs/**"
     };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/students/me").hasRole("STUDENT")
-                .requestMatchers(HttpMethod.POST, "/api/v1/students").hasAnyRole("ADMIN", "TEACHER")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/students/**").hasAnyRole("ADMIN", "TEACHER")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/students/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/v1/students/**").hasAnyRole("ADMIN", "TEACHER", "STUDENT")
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/students/me").hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/students").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/students/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/students/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/students/**")
+                        .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -95,9 +95,8 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager() {
         return new ProviderManager(
-            staffAuthenticationProvider(),
-            studentAuthenticationProvider()
-        );
+                staffAuthenticationProvider(),
+                studentAuthenticationProvider());
     }
 
     @Bean

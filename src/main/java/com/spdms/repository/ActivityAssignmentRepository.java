@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface ActivityAssignmentRepository extends JpaRepository<ActivityAssignment, Long> {
     List<ActivityAssignment> findByActivityId(Long activityId);
+    List<ActivityAssignment> findByActivityIdIn(List<Long> activityIds);
     Optional<ActivityAssignment> findByActivityIdAndSectionId(Long activityId, Long sectionId);
     Optional<ActivityAssignment> findByActivityIdAndSectionIsNull(Long activityId);
     List<ActivityAssignment> findByTeacherId(Long teacherId);

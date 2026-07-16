@@ -1,67 +1,67 @@
 package com.spdms.dto;
 
 public class StageValidationResponse {
-    private boolean isVisible;
-    private boolean isLocked;
-    private boolean isCompleted;
-    private boolean isActive;
-    private boolean useDateValidation;
-    private boolean useThresholdValidation;
-    private boolean useCombinedValidation;
+    private Boolean isVisible;
+    private Boolean isLocked;
+    private Boolean isCompleted;
+    private Boolean isActive;
+    private Boolean useDateValidation;
+    private Boolean useThresholdValidation;
+    private Boolean useCombinedValidation;
 
-    public boolean isVisible() {
+    public Boolean isVisible() {
         return isVisible;
     }
 
-    public void setVisible(boolean visible) {
+    public void setVisible(Boolean visible) {
         isVisible = visible;
     }
 
-    public boolean isLocked() {
+    public Boolean isLocked() {
         return isLocked;
     }
 
-    public void setLocked(boolean locked) {
+    public void setLocked(Boolean locked) {
         isLocked = locked;
     }
 
-    public boolean isCompleted() {
+    public Boolean isCompleted() {
         return isCompleted;
     }
 
-    public void setCompleted(boolean completed) {
+    public void setCompleted(Boolean completed) {
         isCompleted = completed;
     }
 
-    public boolean isActive() {
+    public Boolean isActive() {
         return isActive;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(Boolean active) {
         isActive = active;
     }
 
-    public boolean isUseDateValidation() {
+    public Boolean isUseDateValidation() {
         return useDateValidation;
     }
 
-    public void setUseDateValidation(boolean useDateValidation) {
+    public void setUseDateValidation(Boolean useDateValidation) {
         this.useDateValidation = useDateValidation;
     }
 
-    public boolean isUseThresholdValidation() {
+    public Boolean isUseThresholdValidation() {
         return useThresholdValidation;
     }
 
-    public void setUseThresholdValidation(boolean useThresholdValidation) {
+    public void setUseThresholdValidation(Boolean useThresholdValidation) {
         this.useThresholdValidation = useThresholdValidation;
     }
 
-    public boolean isUseCombinedValidation() {
+    public Boolean isUseCombinedValidation() {
         return useCombinedValidation;
     }
 
-    public void setUseCombinedValidation(boolean useCombinedValidation) {
+    public void setUseCombinedValidation(Boolean useCombinedValidation) {
         this.useCombinedValidation = useCombinedValidation;
     }
 

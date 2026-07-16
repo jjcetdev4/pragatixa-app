@@ -171,8 +171,15 @@ public class Activity {
         } catch (Exception ignored) {}
     }
 
-    public Integer getCap() { return maximumAwards != null ? maximumAwards : 1; }
+    public Integer getCap() { 
+        if ("Per Assignment".equalsIgnoreCase(awardFrequency)) return null;
+        return maximumAwards != null ? maximumAwards : 1; 
+    }
     public void setCap(Object cap) {
+        if ("Per Assignment".equalsIgnoreCase(awardFrequency)) {
+            this.maximumAwards = null;
+            return;
+        }
         if (cap == null) { this.maximumAwards = 1; return; }
         try { this.maximumAwards = cap instanceof Number ? ((Number) cap).intValue() : Integer.parseInt(cap.toString()); }
         catch (Exception ignored) { this.maximumAwards = 1; }
