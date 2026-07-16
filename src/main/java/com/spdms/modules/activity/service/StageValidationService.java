@@ -1,4 +1,4 @@
-package com.spdms.student;
+package com.spdms.modules.activity.service;
 
 import com.spdms.modules.activity.dto.response.StageValidationResponse;
 import com.spdms.entity.ActivityStage;

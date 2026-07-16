@@ -38,7 +38,7 @@ public class StudentXpController {
     private final StudentActivityXpRepository studentActivityXpRepository;
     private final XpTransactionRepository xpTransactionRepository;
     private final SectionRepository sectionRepository;
-    private final com.spdms.service.AssignmentSecurityService assignmentSecurityService;
+    private final com.spdms.modules.activity.service.AssignmentSecurityService assignmentSecurityService;
 
     public StudentXpController(UserRepository userRepository,
                                ActivityRepository activityRepository,
@@ -47,7 +47,7 @@ public class StudentXpController {
                                StudentActivityXpRepository studentActivityXpRepository,
                                XpTransactionRepository xpTransactionRepository,
                                SectionRepository sectionRepository,
-                               com.spdms.service.AssignmentSecurityService assignmentSecurityService) {
+                               com.spdms.modules.activity.service.AssignmentSecurityService assignmentSecurityService) {
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;

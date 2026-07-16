@@ -1,4 +1,4 @@
-package com.spdms.service;
+package com.spdms.modules.activity.service;
 
 import com.spdms.entity.ActivityAssignment;
 import com.spdms.entity.AssignmentScope;

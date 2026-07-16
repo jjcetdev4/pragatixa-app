@@ -2,11 +2,11 @@ package com.spdms;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.spdms.admin.ActivityStageService;
+import com.spdms.modules.activity.service.ActivityStageService;
 import com.spdms.modules.activity.dto.response.ActivityStageResponse;
 import com.spdms.entity.Student;
 import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.student.StageValidationService;
+import com.spdms.modules.activity.service.StageValidationService;
 import com.spdms.modules.activity.dto.response.StageValidationResponse;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

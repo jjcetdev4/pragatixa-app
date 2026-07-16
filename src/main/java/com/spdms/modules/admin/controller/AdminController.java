@@ -7,7 +7,7 @@ import com.spdms.modules.admin.dto.request.CreateDepartmentRequest;
 import com.spdms.modules.authentication.dto.response.UserResponse;
 import com.spdms.modules.activity.dto.request.ActivityStageRequest;
 import com.spdms.modules.activity.dto.response.ActivityStageResponse;
-import com.spdms.admin.ActivityStageService;
+import com.spdms.modules.activity.service.ActivityStageService;
 import com.spdms.entity.Department;
 import com.spdms.entity.Role;
 import com.spdms.entity.User;

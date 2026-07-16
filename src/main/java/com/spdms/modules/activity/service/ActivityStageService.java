@@ -1,4 +1,4 @@
-package com.spdms.admin;
+package com.spdms.modules.activity.service;
 
 import com.spdms.modules.activity.dto.request.ActivityStageRequest;
 import com.spdms.modules.activity.dto.response.ActivityStageResponse;

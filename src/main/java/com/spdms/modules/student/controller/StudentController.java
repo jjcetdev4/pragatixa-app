@@ -1,7 +1,7 @@
 package com.spdms.modules.student.controller;
 
 import com.spdms.modules.student.service.StudentService;
-import com.spdms.student.StageValidationService;
+import com.spdms.modules.activity.service.StageValidationService;
 
 import com.spdms.dto.*;
 import com.spdms.modules.activity.dto.request.*;
@@ -35,7 +35,7 @@ public class StudentController {
 
     private final StudentService studentService;
     private final StageValidationService stageValidationService;
-    private final com.spdms.admin.ActivityStageService activityStageService;
+    private final com.spdms.modules.activity.service.ActivityStageService activityStageService;
     private final com.spdms.modules.authentication.repository.UserRepository userRepository;
     private final com.spdms.modules.student.repository.StudentRepository studentRepository;
     private final com.spdms.modules.activity.repository.ActivityRepository activityRepository;
@@ -47,7 +47,7 @@ public class StudentController {
 
     public StudentController(StudentService studentService,
             StageValidationService stageValidationService,
-            com.spdms.admin.ActivityStageService activityStageService,
+            com.spdms.modules.activity.service.ActivityStageService activityStageService,
             com.spdms.modules.authentication.repository.UserRepository userRepository,
             com.spdms.modules.student.repository.StudentRepository studentRepository,
             com.spdms.modules.activity.repository.ActivityRepository activityRepository,
