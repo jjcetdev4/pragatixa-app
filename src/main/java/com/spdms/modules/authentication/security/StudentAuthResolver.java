@@ -2,7 +2,7 @@ package com.spdms.modules.authentication.security;
 
 import com.spdms.entity.Student;
 import com.spdms.entity.User;
-import com.spdms.exception.StudentNotFoundException;
+import com.spdms.modules.student.exception.StudentNotFoundException;
 import com.spdms.repository.StudentRepository;
 import com.spdms.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
