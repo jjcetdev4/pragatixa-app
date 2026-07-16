@@ -5,7 +5,7 @@ import com.spdms.entity.Badge;
 import com.spdms.entity.Level;
 import com.spdms.entity.Student;
 import com.spdms.entity.StudentBadge;
-import com.spdms.dto.StudentBadgeResponse;
+import com.spdms.modules.student.dto.response.StudentBadgeResponse;
 import com.spdms.repository.BadgeRepository;
 import com.spdms.repository.LevelRepository;
 import com.spdms.repository.StudentBadgeRepository;
