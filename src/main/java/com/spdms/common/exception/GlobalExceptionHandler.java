@@ -1,4 +1,4 @@
-package com.spdms.exception;
+package com.spdms.common.exception;
 
 import com.spdms.common.response.ApiResponse;
 import org.slf4j.Logger;
