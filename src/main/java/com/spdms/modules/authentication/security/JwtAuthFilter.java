@@ -1,6 +1,6 @@
 package com.spdms.modules.authentication.security;
 import com.spdms.modules.authentication.security.JwtUtil;
-import com.spdms.security.StudentDetailsService;
+import com.spdms.modules.authentication.security.StudentDetailsService;
 import com.spdms.modules.authentication.security.StudentAuthResolver;
 import com.spdms.modules.authentication.security.CustomUserDetailsService;
 

@@ -36,11 +36,11 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final com.spdms.modules.authentication.security.CustomUserDetailsService customUserDetailsService;
-    private final com.spdms.security.StudentDetailsService studentDetailsService;
+    private final com.spdms.modules.authentication.security.StudentDetailsService studentDetailsService;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter,
             com.spdms.modules.authentication.security.CustomUserDetailsService customUserDetailsService,
-            com.spdms.security.StudentDetailsService studentDetailsService) {
+            com.spdms.modules.authentication.security.StudentDetailsService studentDetailsService) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.customUserDetailsService = customUserDetailsService;
         this.studentDetailsService = studentDetailsService;
