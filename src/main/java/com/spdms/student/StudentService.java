@@ -1,6 +1,8 @@
 package com.spdms.student;
 
 import com.spdms.dto.*;
+import com.spdms.modules.student.dto.request.*;
+import com.spdms.modules.student.dto.response.*;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
