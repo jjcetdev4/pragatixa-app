@@ -1,9 +1,9 @@
-package com.spdms.admin;
+package com.spdms.modules.admin.controller;
 
 import com.spdms.common.response.ApiResponse;
 import com.spdms.modules.authentication.dto.request.CreateUserRequest;
 import com.spdms.modules.authentication.dto.request.UpdateUserRequest;
-import com.spdms.dto.CreateDepartmentRequest;
+import com.spdms.modules.admin.dto.request.CreateDepartmentRequest;
 import com.spdms.modules.authentication.dto.response.UserResponse;
 import com.spdms.dto.ActivityStageRequest;
 import com.spdms.dto.ActivityStageResponse;
