@@ -1,4 +1,4 @@
-package com.spdms.admin;
+package com.spdms.modules.activity.controller;
 
 import com.spdms.common.response.ApiResponse;
 import com.spdms.modules.student.dto.response.StudentResponse;
