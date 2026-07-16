@@ -4,6 +4,7 @@ import com.spdms.dto.*;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
+import com.spdms.modules.authentication.repository.RoleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
