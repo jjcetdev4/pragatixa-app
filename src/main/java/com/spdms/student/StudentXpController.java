@@ -2,7 +2,7 @@ package com.spdms.student;
 
 import com.spdms.common.response.ApiResponse;
 import com.spdms.dto.AwardXpRequest;
-import com.spdms.dto.MyActivityStudentsResponse;
+import com.spdms.modules.student.dto.response.MyActivityStudentsResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
 import com.spdms.modules.authentication.repository.UserRepository;

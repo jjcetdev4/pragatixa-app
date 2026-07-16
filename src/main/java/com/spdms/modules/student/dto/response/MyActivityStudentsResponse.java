@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.spdms.modules.student.dto.response;
 
 import java.util.List;
 
