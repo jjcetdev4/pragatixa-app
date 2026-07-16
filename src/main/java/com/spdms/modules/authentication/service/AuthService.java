@@ -1,4 +1,4 @@
-package com.spdms.auth;
+package com.spdms.modules.authentication.service;
 
 import com.spdms.common.response.ApiResponse;
 import com.spdms.modules.authentication.dto.response.AuthResponse;
