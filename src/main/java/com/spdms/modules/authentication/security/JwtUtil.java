@@ -1,4 +1,4 @@
-package com.spdms.security;
+package com.spdms.modules.authentication.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

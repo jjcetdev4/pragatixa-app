@@ -9,7 +9,7 @@ import com.spdms.entity.User;
 import com.spdms.entity.SubRole;
 import com.spdms.repository.StudentRepository;
 import com.spdms.modules.authentication.repository.UserRepository;
-import com.spdms.security.JwtUtil;
+import com.spdms.modules.authentication.security.JwtUtil;
 import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
