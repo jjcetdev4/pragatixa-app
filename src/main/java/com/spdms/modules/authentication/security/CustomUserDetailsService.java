@@ -1,4 +1,4 @@
-package com.spdms.security;
+package com.spdms.modules.authentication.security;
 
 import com.spdms.entity.User;
 import com.spdms.modules.authentication.repository.UserRepository;
