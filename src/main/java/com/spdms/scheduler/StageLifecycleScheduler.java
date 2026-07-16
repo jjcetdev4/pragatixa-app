@@ -6,7 +6,7 @@ import com.spdms.repository.ActivityStageRepository;
 import com.spdms.entity.Notification;
 import com.spdms.entity.Student;
 import com.spdms.repository.NotificationRepository;
-import com.spdms.repository.StudentRepository;
+import com.spdms.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;

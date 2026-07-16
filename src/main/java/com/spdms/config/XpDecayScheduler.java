@@ -3,7 +3,7 @@ package com.spdms.config;
 import com.spdms.entity.Student;
 import com.spdms.entity.Streak;
 import com.spdms.entity.XpTransaction;
-import com.spdms.repository.StudentRepository;
+import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.repository.StreakRepository;
 import com.spdms.repository.XpTransactionRepository;
 import org.springframework.scheduling.annotation.Scheduled;

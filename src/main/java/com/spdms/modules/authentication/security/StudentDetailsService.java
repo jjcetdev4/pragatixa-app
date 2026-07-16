@@ -1,7 +1,7 @@
 package com.spdms.modules.authentication.security;
 
 import com.spdms.entity.Student;
-import com.spdms.repository.StudentRepository;
+import com.spdms.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

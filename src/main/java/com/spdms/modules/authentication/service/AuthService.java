@@ -7,7 +7,7 @@ import com.spdms.modules.authentication.dto.request.StudentLoginRequest;
 import com.spdms.entity.Student;
 import com.spdms.entity.User;
 import com.spdms.entity.SubRole;
-import com.spdms.repository.StudentRepository;
+import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.modules.authentication.repository.UserRepository;
 import com.spdms.modules.authentication.security.JwtUtil;
 import java.util.ArrayList;

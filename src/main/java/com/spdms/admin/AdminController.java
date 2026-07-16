@@ -17,7 +17,7 @@ import com.spdms.entity.Activity;
 import com.spdms.entity.Subject;
 import com.spdms.repository.DepartmentRepository;
 import com.spdms.modules.authentication.repository.RoleRepository;
-import com.spdms.repository.StudentRepository;
+import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.modules.authentication.repository.UserRepository;
 import com.spdms.repository.ActivityStageRepository;
 import com.spdms.repository.ActivitySubgroupRepository;

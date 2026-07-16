@@ -10,7 +10,7 @@ import com.spdms.repository.ActivityRepository;
 import com.spdms.repository.ActivityStageRepository;
 import com.spdms.repository.ActivitySubgroupRepository;
 import com.spdms.repository.DisciplineLogRepository;
-import com.spdms.repository.StudentRepository;
+import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.entity.Student;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

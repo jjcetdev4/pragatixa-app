@@ -5,7 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.spdms.admin.ActivityStageService;
 import com.spdms.dto.ActivityStageResponse;
 import com.spdms.entity.Student;
-import com.spdms.repository.StudentRepository;
+import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.student.StageValidationService;
 import com.spdms.dto.StageValidationResponse;
 import org.springframework.boot.CommandLineRunner;

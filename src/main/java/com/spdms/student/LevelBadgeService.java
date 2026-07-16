@@ -9,7 +9,7 @@ import com.spdms.modules.student.dto.response.StudentBadgeResponse;
 import com.spdms.repository.BadgeRepository;
 import com.spdms.repository.LevelRepository;
 import com.spdms.modules.student.repository.StudentBadgeRepository;
-import com.spdms.repository.StudentRepository;
+import com.spdms.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
