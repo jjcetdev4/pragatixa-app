@@ -1,6 +1,7 @@
-package com.spdms.dto;
+package com.spdms.modules.activity.dto.response;
 
 import java.util.List;
+import com.spdms.modules.activity.dto.response.ActivityResponse;
 
 public class ActivitySubgroupResponse {
     private Long id;

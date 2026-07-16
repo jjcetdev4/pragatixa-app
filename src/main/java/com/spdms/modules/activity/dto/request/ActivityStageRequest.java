@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.spdms.modules.activity.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

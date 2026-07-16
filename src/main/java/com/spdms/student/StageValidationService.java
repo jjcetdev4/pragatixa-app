@@ -1,6 +1,6 @@
 package com.spdms.student;
 
-import com.spdms.dto.StageValidationResponse;
+import com.spdms.modules.activity.dto.response.StageValidationResponse;
 import com.spdms.entity.ActivityStage;
 import com.spdms.entity.ActivitySubgroup;
 import com.spdms.entity.DisciplineLog;

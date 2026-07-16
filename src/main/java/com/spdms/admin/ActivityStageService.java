@@ -1,7 +1,7 @@
 package com.spdms.admin;
 
-import com.spdms.dto.ActivityStageRequest;
-import com.spdms.dto.ActivityStageResponse;
+import com.spdms.modules.activity.dto.request.ActivityStageRequest;
+import com.spdms.modules.activity.dto.response.ActivityStageResponse;
 import com.spdms.entity.Activity;
 import com.spdms.entity.ActivityStage;
 import com.spdms.entity.ActivitySubgroup;
@@ -58,8 +58,8 @@ public class ActivityStageService {
             
             // Map subgroups
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
-            List<com.spdms.dto.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
-                com.spdms.dto.ActivitySubgroupResponse subMap = new com.spdms.dto.ActivitySubgroupResponse();
+            List<com.spdms.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
+                com.spdms.modules.activity.dto.response.ActivitySubgroupResponse subMap = new com.spdms.modules.activity.dto.response.ActivitySubgroupResponse();
                 subMap.setId(sub.getId());
                 subMap.setName(sub.getName());
                 subMap.setThreshold(sub.getThreshold());
@@ -68,8 +68,8 @@ public class ActivityStageService {
                 
                 // Fetch and attach missing nested activity list
                 List<Activity> activities = activityRepository.findBySubgroupId(sub.getId());
-                List<com.spdms.dto.ActivityResponse> actMaps = activities.stream().map(act -> {
-                    com.spdms.dto.ActivityResponse actMap = new com.spdms.dto.ActivityResponse();
+                List<com.spdms.modules.activity.dto.response.ActivityResponse> actMaps = activities.stream().map(act -> {
+                    com.spdms.modules.activity.dto.response.ActivityResponse actMap = new com.spdms.modules.activity.dto.response.ActivityResponse();
                     actMap.setActivityId(act.getId());
                     actMap.setActivityName(act.getActivityName() != null ? act.getActivityName() : act.getName());
                     actMap.setDescription(act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
@@ -114,8 +114,8 @@ public class ActivityStageService {
         return activityStageRepository.findById(id).map(stage -> {
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
-            List<com.spdms.dto.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
-                com.spdms.dto.ActivitySubgroupResponse subMap = new com.spdms.dto.ActivitySubgroupResponse();
+            List<com.spdms.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
+                com.spdms.modules.activity.dto.response.ActivitySubgroupResponse subMap = new com.spdms.modules.activity.dto.response.ActivitySubgroupResponse();
                 subMap.setId(sub.getId());
                 subMap.setName(sub.getName());
                 subMap.setThreshold(sub.getThreshold());
@@ -124,8 +124,8 @@ public class ActivityStageService {
                 
                 // Fetch and attach missing nested activity list
                 List<Activity> activities = activityRepository.findBySubgroupId(sub.getId());
-                List<com.spdms.dto.ActivityResponse> actMaps = activities.stream().map(act -> {
-                    com.spdms.dto.ActivityResponse actMap = new com.spdms.dto.ActivityResponse();
+                List<com.spdms.modules.activity.dto.response.ActivityResponse> actMaps = activities.stream().map(act -> {
+                    com.spdms.modules.activity.dto.response.ActivityResponse actMap = new com.spdms.modules.activity.dto.response.ActivityResponse();
                     actMap.setActivityId(act.getId());
                     actMap.setActivityName(act.getActivityName() != null ? act.getActivityName() : act.getName());
                     actMap.setDescription(act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());

@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.spdms.modules.activity.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;

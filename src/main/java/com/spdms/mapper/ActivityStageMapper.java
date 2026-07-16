@@ -1,7 +1,7 @@
 package com.spdms.mapper;
 
-import com.spdms.dto.ActivityStageRequest;
-import com.spdms.dto.ActivityStageResponse;
+import com.spdms.modules.activity.dto.request.ActivityStageRequest;
+import com.spdms.modules.activity.dto.response.ActivityStageResponse;
 import com.spdms.entity.ActivityStage;
 import com.spdms.enums.StageStatus;
 import org.springframework.stereotype.Component;

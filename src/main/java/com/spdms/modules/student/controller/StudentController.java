@@ -4,6 +4,8 @@ import com.spdms.modules.student.service.StudentService;
 import com.spdms.student.StageValidationService;
 
 import com.spdms.dto.*;
+import com.spdms.modules.activity.dto.request.*;
+import com.spdms.modules.activity.dto.response.*;
 import com.spdms.modules.student.dto.request.*;
 import com.spdms.modules.student.dto.response.*;
 import com.spdms.common.response.ApiResponse;
@@ -249,7 +251,7 @@ public class StudentController {
                 List<Long> subgroupIds = new java.util.ArrayList<>();
                 for (ActivityStageResponse stage : stages) {
                     if (stage.getSubgroups() != null) {
-                        for (com.spdms.dto.ActivitySubgroupResponse subgroup : stage.getSubgroups()) {
+                        for (com.spdms.modules.activity.dto.response.ActivitySubgroupResponse subgroup : stage.getSubgroups()) {
                             subgroupIds.add(subgroup.getId());
                         }
                     }
@@ -324,13 +326,13 @@ public class StudentController {
                     stage.setStageStatus(validation.getStageStatus());
 
                     if (stage.getSubgroups() != null) {
-                        for (com.spdms.dto.ActivitySubgroupResponse subgroup : stage.getSubgroups()) {
+                        for (com.spdms.modules.activity.dto.response.ActivitySubgroupResponse subgroup : stage.getSubgroups()) {
                             Long subId = subgroup.getId();
                             List<com.spdms.entity.Activity> activities = activitiesBySubgroup.getOrDefault(subId, java.util.Collections.emptyList());
-                            List<com.spdms.dto.ActivityResponse> enrichedActivities = new java.util.ArrayList<>();
+                            List<com.spdms.modules.activity.dto.response.ActivityResponse> enrichedActivities = new java.util.ArrayList<>();
                             
                             for (com.spdms.entity.Activity act : activities) {
-                                  com.spdms.dto.ActivityResponse actMap = new com.spdms.dto.ActivityResponse();
+                                  com.spdms.modules.activity.dto.response.ActivityResponse actMap = new com.spdms.modules.activity.dto.response.ActivityResponse();
                                   actMap.setActivityId(act.getId());
                                   
                                   String currentActivityName = act.getActivityName() != null ? act.getActivityName() : act.getName();

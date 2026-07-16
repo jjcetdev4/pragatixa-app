@@ -1,6 +1,8 @@
 package com.spdms.admin;
 
 import com.spdms.dto.*;
+import com.spdms.modules.activity.dto.request.*;
+import com.spdms.modules.activity.dto.response.*;
 import com.spdms.modules.student.dto.response.*;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.*;
