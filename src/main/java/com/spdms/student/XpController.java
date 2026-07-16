@@ -18,9 +18,9 @@ import java.util.Map;
 public class XpController {
 
     private final XpService xpService;
-    private final com.spdms.security.StudentAuthResolver studentAuthResolver;
+    private final com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
-    public XpController(XpService xpService, com.spdms.security.StudentAuthResolver studentAuthResolver) {
+    public XpController(XpService xpService, com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.xpService = xpService;
         this.studentAuthResolver = studentAuthResolver;
     }

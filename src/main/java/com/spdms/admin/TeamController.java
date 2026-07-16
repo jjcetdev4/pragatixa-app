@@ -38,7 +38,7 @@ public class TeamController {
     private final StudentActivityXpRepository studentActivityXpRepository;
     private final GroupDeletionAuditLogRepository auditLogRepository;
     private final com.spdms.service.AssignmentSecurityService assignmentSecurityService;
-    private final com.spdms.security.StudentAuthResolver studentAuthResolver;
+    private final com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
     public TeamController(TeamRepository teamRepository,
                           UserRepository userRepository,
@@ -49,7 +49,7 @@ public class TeamController {
                           StudentActivityXpRepository studentActivityXpRepository,
                           GroupDeletionAuditLogRepository auditLogRepository,
                           com.spdms.service.AssignmentSecurityService assignmentSecurityService,
-                          com.spdms.security.StudentAuthResolver studentAuthResolver) {
+                          com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;

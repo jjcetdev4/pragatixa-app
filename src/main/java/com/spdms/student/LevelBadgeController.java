@@ -21,9 +21,9 @@ import java.util.List;
 public class LevelBadgeController {
 
     private final LevelBadgeService levelBadgeService;
-    private final com.spdms.security.StudentAuthResolver studentAuthResolver;
+    private final com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
-    public LevelBadgeController(LevelBadgeService levelBadgeService, com.spdms.security.StudentAuthResolver studentAuthResolver) {
+    public LevelBadgeController(LevelBadgeService levelBadgeService, com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.levelBadgeService = levelBadgeService;
         this.studentAuthResolver = studentAuthResolver;
     }

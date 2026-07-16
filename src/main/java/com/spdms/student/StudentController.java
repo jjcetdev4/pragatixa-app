@@ -36,7 +36,7 @@ public class StudentController {
     private final com.spdms.repository.ActivityAssignmentRepository activityAssignmentRepository;
     private final com.spdms.repository.StudentActivityXpRepository studentActivityXpRepository;
     private final com.spdms.repository.XpTransactionRepository xpTransactionRepository;
-    private final com.spdms.security.StudentAuthResolver studentAuthResolver;
+    private final com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
     public StudentController(StudentService studentService,
             StageValidationService stageValidationService,
@@ -48,7 +48,7 @@ public class StudentController {
             com.spdms.repository.ActivityAssignmentRepository activityAssignmentRepository,
             com.spdms.repository.StudentActivityXpRepository studentActivityXpRepository,
             com.spdms.repository.XpTransactionRepository xpTransactionRepository,
-            com.spdms.security.StudentAuthResolver studentAuthResolver) {
+            com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.studentService = studentService;
         this.stageValidationService = stageValidationService;
         this.activityStageService = activityStageService;
