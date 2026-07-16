@@ -1,6 +1,7 @@
-package com.spdms.student;
+package com.spdms.modules.student.controller;
 
 import com.spdms.modules.student.service.StudentService;
+import com.spdms.student.XpService;
 
 import com.spdms.common.response.ApiResponse;
 import com.spdms.dto.AwardXpRequest;
