@@ -1,4 +1,4 @@
-package com.spdms.config;
+package com.spdms.modules.authentication.security;
 
 import com.spdms.modules.authentication.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
