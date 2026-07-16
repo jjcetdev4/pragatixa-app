@@ -2,7 +2,7 @@ package com.spdms.admin;
 
 import com.spdms.common.response.ApiResponse;
 import com.spdms.modules.authentication.dto.request.CreateUserRequest;
-import com.spdms.dto.UpdateUserRequest;
+import com.spdms.modules.authentication.dto.request.UpdateUserRequest;
 import com.spdms.dto.CreateDepartmentRequest;
 import com.spdms.dto.UserResponse;
 import com.spdms.dto.ActivityStageRequest;
