@@ -1,4 +1,4 @@
-package com.spdms.repository;
+package com.spdms.modules.student.repository;
 
 import com.spdms.entity.StudentGroup;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -35,7 +35,7 @@ import com.spdms.entity.SubRole;
 import com.spdms.modules.authentication.repository.SubRoleRepository;
 import com.spdms.repository.SectionRepository;
 import com.spdms.repository.FacultyRepository;
-import com.spdms.repository.StudentGroupRepository;
+import com.spdms.modules.student.repository.StudentGroupRepository;
 import com.spdms.repository.AcademicYearRepository;
 import com.spdms.repository.YearRepository;
 import com.spdms.repository.SemesterRepository;
