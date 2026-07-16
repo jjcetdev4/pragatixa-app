@@ -1,7 +1,7 @@
 package com.spdms.auth;
 
 import com.spdms.common.response.ApiResponse;
-import com.spdms.dto.AuthResponse;
+import com.spdms.modules.authentication.dto.response.AuthResponse;
 import com.spdms.dto.LoginRequest;
 import com.spdms.dto.StudentLoginRequest;
 import com.spdms.entity.Student;

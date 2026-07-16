@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.spdms.modules.authentication.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
