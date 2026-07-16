@@ -1,4 +1,4 @@
-package com.spdms.auth;
+package com.spdms.modules.authentication.controller;
 import com.spdms.modules.authentication.service.AuthService;
 
 
