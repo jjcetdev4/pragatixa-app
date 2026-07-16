@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.spdms.modules.authentication.dto.request;
 
 import jakarta.validation.constraints.*;
 import java.util.Set;
