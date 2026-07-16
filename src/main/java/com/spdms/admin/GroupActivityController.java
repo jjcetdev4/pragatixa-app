@@ -5,6 +5,7 @@ import com.spdms.dto.StudentResponse;
 import com.spdms.dto.TeamResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
+import com.spdms.modules.authentication.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

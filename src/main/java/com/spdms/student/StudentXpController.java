@@ -5,6 +5,7 @@ import com.spdms.dto.AwardXpRequest;
 import com.spdms.dto.MyActivityStudentsResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
+import com.spdms.modules.authentication.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;

@@ -8,7 +8,7 @@ import com.spdms.entity.Student;
 import com.spdms.entity.User;
 import com.spdms.entity.SubRole;
 import com.spdms.repository.StudentRepository;
-import com.spdms.repository.UserRepository;
+import com.spdms.modules.authentication.repository.UserRepository;
 import com.spdms.security.JwtUtil;
 import java.util.ArrayList;
 import org.slf4j.Logger;

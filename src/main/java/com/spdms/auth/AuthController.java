@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  * This class handles all incoming HTTP requests for login.
  * It is separated from business logic (which lives in AuthService) to follow the Single Responsibility Principle.
  */
-import com.spdms.repository.UserRepository;
+import com.spdms.modules.authentication.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/v1/auth")

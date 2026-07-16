@@ -2,6 +2,8 @@ package com.spdms.infrastructure.initializer;
 
 import com.spdms.entity.*;
 import com.spdms.repository.*;
+import com.spdms.modules.authentication.repository.UserRepository;
+import com.spdms.modules.authentication.repository.SubRoleRepository;
 import com.spdms.modules.authentication.repository.RoleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

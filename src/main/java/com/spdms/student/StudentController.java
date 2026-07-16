@@ -29,7 +29,7 @@ public class StudentController {
     private final StudentService studentService;
     private final StageValidationService stageValidationService;
     private final com.spdms.admin.ActivityStageService activityStageService;
-    private final com.spdms.repository.UserRepository userRepository;
+    private final com.spdms.modules.authentication.repository.UserRepository userRepository;
     private final com.spdms.repository.StudentRepository studentRepository;
     private final com.spdms.repository.ActivityRepository activityRepository;
     private final com.spdms.repository.DisciplineLogRepository disciplineLogRepository;
@@ -41,7 +41,7 @@ public class StudentController {
     public StudentController(StudentService studentService,
             StageValidationService stageValidationService,
             com.spdms.admin.ActivityStageService activityStageService,
-            com.spdms.repository.UserRepository userRepository,
+            com.spdms.modules.authentication.repository.UserRepository userRepository,
             com.spdms.repository.StudentRepository studentRepository,
             com.spdms.repository.ActivityRepository activityRepository,
             com.spdms.repository.DisciplineLogRepository disciplineLogRepository,

@@ -1,7 +1,7 @@
 package com.spdms.security;
 
 import com.spdms.entity.User;
-import com.spdms.repository.UserRepository;
+import com.spdms.modules.authentication.repository.UserRepository;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;

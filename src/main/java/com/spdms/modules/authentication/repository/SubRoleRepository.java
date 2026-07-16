@@ -1,4 +1,4 @@
-package com.spdms.repository;
+package com.spdms.modules.authentication.repository;
 
 import com.spdms.entity.SubRole;
 import org.springframework.data.jpa.repository.JpaRepository;

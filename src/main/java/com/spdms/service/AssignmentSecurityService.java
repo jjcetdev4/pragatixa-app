@@ -3,7 +3,7 @@ package com.spdms.service;
 import com.spdms.entity.ActivityAssignment;
 import com.spdms.entity.AssignmentScope;
 import com.spdms.entity.User;
-import com.spdms.repository.UserRepository;
+import com.spdms.modules.authentication.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
