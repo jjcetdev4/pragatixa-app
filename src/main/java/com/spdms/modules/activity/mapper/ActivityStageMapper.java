@@ -1,4 +1,4 @@
-package com.spdms.mapper;
+package com.spdms.modules.activity.mapper;
 
 import com.spdms.modules.activity.dto.request.ActivityStageRequest;
 import com.spdms.modules.activity.dto.response.ActivityStageResponse;

@@ -5,7 +5,7 @@ import com.spdms.modules.activity.dto.response.ActivityStageResponse;
 import com.spdms.entity.Activity;
 import com.spdms.entity.ActivityStage;
 import com.spdms.entity.ActivitySubgroup;
-import com.spdms.mapper.ActivityStageMapper;
+import com.spdms.modules.activity.mapper.ActivityStageMapper;
 import com.spdms.modules.activity.repository.ActivityRepository;
 import com.spdms.modules.activity.repository.ActivityStageRepository;
 import com.spdms.modules.activity.repository.ActivitySubgroupRepository;
