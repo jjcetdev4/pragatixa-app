@@ -1,4 +1,4 @@
-package com.spdms.student;
+package com.spdms.modules.student.service;
 
 import com.spdms.dto.*;
 import com.spdms.modules.student.dto.request.*;

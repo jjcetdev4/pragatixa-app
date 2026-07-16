@@ -1,5 +1,7 @@
 package com.spdms.student;
 
+import com.spdms.modules.student.service.StudentService;
+
 import com.spdms.common.response.ApiResponse;
 import com.spdms.dto.AwardXpRequest;
 import com.spdms.modules.student.dto.response.MyActivityStudentsResponse;

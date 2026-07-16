@@ -1,5 +1,7 @@
 package com.spdms.student;
 
+import com.spdms.modules.student.service.StudentService;
+
 import com.spdms.dto.*;
 import com.spdms.modules.student.dto.request.*;
 import com.spdms.modules.student.dto.response.*;
