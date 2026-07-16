@@ -2,6 +2,7 @@ package com.spdms.dto;
 
 import java.util.List;
 
+import com.spdms.modules.student.dto.response.StudentResponse;
 public class TeamResponse {
     private Long teamId;
     private String teamName;

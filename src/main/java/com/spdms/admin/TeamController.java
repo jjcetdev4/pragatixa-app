@@ -1,6 +1,7 @@
 package com.spdms.admin;
 
 import com.spdms.dto.*;
+import com.spdms.modules.student.dto.response.*;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.spdms.modules.student.dto.response.StudentResponse;
 @RestController
 @RequestMapping("/api/v1/teams")
 @Tag(name = "Teams", description = "Student team management for Class Coordinators (CC) and Students")
