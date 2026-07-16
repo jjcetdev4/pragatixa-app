@@ -20,11 +20,11 @@ public class StageValidationService {
 
     private final ActivityStageRepository activityStageRepository;
     private final ActivitySubgroupRepository activitySubgroupRepository;
-    private final com.spdms.repository.StudentActivityXpRepository studentActivityXpRepository;
+    private final com.spdms.modules.student.repository.StudentActivityXpRepository studentActivityXpRepository;
 
     public StageValidationService(ActivityStageRepository activityStageRepository,
                                   ActivitySubgroupRepository activitySubgroupRepository,
-                                  com.spdms.repository.StudentActivityXpRepository studentActivityXpRepository) {
+                                  com.spdms.modules.student.repository.StudentActivityXpRepository studentActivityXpRepository) {
         this.activityStageRepository = activityStageRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;

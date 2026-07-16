@@ -6,6 +6,7 @@ import com.spdms.modules.student.dto.response.*;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
+import com.spdms.modules.student.repository.*;
 import com.spdms.modules.authentication.repository.UserRepository;
 import com.spdms.modules.authentication.repository.RoleRepository;
 import org.slf4j.Logger;

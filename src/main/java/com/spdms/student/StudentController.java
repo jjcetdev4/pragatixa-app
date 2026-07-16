@@ -36,7 +36,7 @@ public class StudentController {
     private final com.spdms.repository.ActivityRepository activityRepository;
     private final com.spdms.repository.DisciplineLogRepository disciplineLogRepository;
     private final com.spdms.repository.ActivityAssignmentRepository activityAssignmentRepository;
-    private final com.spdms.repository.StudentActivityXpRepository studentActivityXpRepository;
+    private final com.spdms.modules.student.repository.StudentActivityXpRepository studentActivityXpRepository;
     private final com.spdms.repository.XpTransactionRepository xpTransactionRepository;
     private final com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
@@ -48,7 +48,7 @@ public class StudentController {
             com.spdms.repository.ActivityRepository activityRepository,
             com.spdms.repository.DisciplineLogRepository disciplineLogRepository,
             com.spdms.repository.ActivityAssignmentRepository activityAssignmentRepository,
-            com.spdms.repository.StudentActivityXpRepository studentActivityXpRepository,
+            com.spdms.modules.student.repository.StudentActivityXpRepository studentActivityXpRepository,
             com.spdms.repository.XpTransactionRepository xpTransactionRepository,
             com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.studentService = studentService;

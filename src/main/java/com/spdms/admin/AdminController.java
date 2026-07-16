@@ -25,7 +25,7 @@ import com.spdms.repository.SubjectRepository;
 import com.spdms.repository.ActivityRepository;
 import com.spdms.repository.DisciplineLogRepository;
 import com.spdms.repository.ActivityAssignmentRepository;
-import com.spdms.repository.StudentActivityXpRepository;
+import com.spdms.modules.student.repository.StudentActivityXpRepository;
 import com.spdms.entity.ActivityAssignment;
 import com.spdms.entity.AssignmentScope;
 import com.spdms.dto.ActivityAssignmentResponse;
