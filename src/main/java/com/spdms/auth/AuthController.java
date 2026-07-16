@@ -2,7 +2,7 @@ package com.spdms.auth;
 
 import com.spdms.common.response.ApiResponse;
 import com.spdms.modules.authentication.dto.response.AuthResponse;
-import com.spdms.dto.LoginRequest;
+import com.spdms.modules.authentication.dto.request.LoginRequest;
 import com.spdms.dto.StudentLoginRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
