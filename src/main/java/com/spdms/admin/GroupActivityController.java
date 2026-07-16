@@ -1,6 +1,6 @@
 package com.spdms.admin;
 
-import com.spdms.dto.ApiResponse;
+import com.spdms.common.response.ApiResponse;
 import com.spdms.dto.StudentResponse;
 import com.spdms.dto.TeamResponse;
 import com.spdms.entity.*;

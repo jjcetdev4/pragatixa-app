@@ -1,6 +1,6 @@
 package com.spdms.student;
 
-import com.spdms.dto.ApiResponse;
+import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.XpTransaction;
 import com.spdms.entity.Streak;
 import io.swagger.v3.oas.annotations.Operation;

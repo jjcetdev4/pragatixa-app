@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.spdms.common.response;
 
 public class ApiResponse<T> {
     private boolean success;

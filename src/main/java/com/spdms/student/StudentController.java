@@ -1,6 +1,7 @@
 package com.spdms.student;
 
 import com.spdms.dto.*;
+import com.spdms.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

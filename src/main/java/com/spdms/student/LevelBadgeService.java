@@ -1,6 +1,6 @@
 package com.spdms.student;
 
-import com.spdms.dto.ApiResponse;
+import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.Badge;
 import com.spdms.entity.Level;
 import com.spdms.entity.Student;

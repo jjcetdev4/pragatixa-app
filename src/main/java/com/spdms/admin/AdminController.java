@@ -1,6 +1,6 @@
 package com.spdms.admin;
 
-import com.spdms.dto.ApiResponse;
+import com.spdms.common.response.ApiResponse;
 import com.spdms.dto.CreateUserRequest;
 import com.spdms.dto.UpdateUserRequest;
 import com.spdms.dto.CreateDepartmentRequest;

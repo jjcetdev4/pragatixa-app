@@ -1,6 +1,6 @@
 package com.spdms.student;
 
-import com.spdms.dto.ApiResponse;
+import com.spdms.common.response.ApiResponse;
 import com.spdms.dto.AwardXpRequest;
 import com.spdms.dto.MyActivityStudentsResponse;
 import com.spdms.entity.*;
