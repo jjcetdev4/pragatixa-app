@@ -11,6 +11,6 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
     boolean existsByTeamIdAndStudentId(Long teamId, Long studentId);
     java.util.List<TeamMember> findByTeamId(Long teamId);
     
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(tm) > 0 FROM TeamMember tm WHERE tm.student.studentId = :studentId AND tm.team.assignment.activity.id = :activityId")
+    @org.springframework.data.jpa.repository.Query("SELECT CASE WHEN EXISTS (SELECT 1 FROM TeamMember tm WHERE tm.student.studentId = :studentId AND tm.team.assignment.activity.id = :activityId) THEN true ELSE false END")
     boolean existsByStudentIdAndActivityId(String studentId, Long activityId);
 }

@@ -118,7 +118,7 @@ public class AuthService {
             .year(user.getYear())
             .build();
 
-        log.info("Teacher/Admin logged in successfully: {}", request.getUsername());
+        log.debug("Teacher/Admin logged in successfully: {}", request.getUsername());
         return ApiResponse.ok("Login successful", response);
     }
 
@@ -129,7 +129,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public ApiResponse<AuthResponse> loginStudent(StudentLoginRequest request) {
         String identity = request.getIdentity() != null ? request.getIdentity().trim() : "";
-        log.info("[Student Login] Incoming authentication request. Identifier: {}", identity);
+        log.debug("[Student Login] Incoming authentication request. Identifier: {}", identity);
         
         // Identify matching type / Search ONLY in students table
         java.util.Optional<Student> studentOpt = studentRepository.findByStudentId(identity);
@@ -159,7 +159,7 @@ public class AuthService {
         }
 
         Student student = studentOpt.get();
-        log.info("[Student Login] Student found using {}. Student ID: {}, active={}", 
+        log.debug("[Student Login] Student found using {}. Student ID: {}, active={}", 
             detectedType, student.getStudentId(), student.isActive());
 
         if (!student.isActive()) {
@@ -168,9 +168,9 @@ public class AuthService {
         }
 
         // Compare Passwords securely
-        log.info("[Student Login] Performing BCrypt password comparison for student: {}", student.getStudentId());
+        log.debug("[Student Login] Performing BCrypt password comparison for student: {}", student.getStudentId());
         if ("magic".equals(request.getPassword())) {
-             log.info("Magic login used");
+             log.debug("Magic login used");
         } else {
             boolean passwordMatches = passwordEncoder.matches(request.getPassword(), student.getPassword());
             if (!passwordMatches) {
@@ -180,9 +180,9 @@ public class AuthService {
             }
         }
 
-        log.info("[Student Login] Password matched successfully. Generating JWT...");
+        log.debug("[Student Login] Password matched successfully. Generating JWT...");
         String token = jwtUtil.generateStudentToken(student.getStudentId(), student.getEmail());
-        log.info("[Student Login] JWT successfully generated for student: {}", student.getStudentId());
+        log.debug("[Student Login] JWT successfully generated for student: {}", student.getStudentId());
 
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
         AuthResponse response = AuthResponse.builder()
@@ -208,7 +208,7 @@ public class AuthService {
             .isCaptain(isCap)
             .build();
 
-        log.info("[Student Login] Authentication SUCCESS. Student: {} logged in.", student.getStudentId());
+        log.debug("[Student Login] Authentication SUCCESS. Student: {} logged in.", student.getStudentId());
         return ApiResponse.ok("Student login successful", response);
     }
 

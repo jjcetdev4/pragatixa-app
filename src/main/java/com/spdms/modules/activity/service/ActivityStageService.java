@@ -14,7 +14,6 @@ import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.entity.Student;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,9 +48,7 @@ public class ActivityStageService {
 
     @Transactional(readOnly = true)
     public List<ActivityStageResponse> getAllStages() {
-        System.out.println("Loading stages...");
         List<ActivityStage> stages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
-        System.out.println("Total stages from database: " + stages.size());
 
         List<ActivityStageResponse> responses = stages.stream().map(stage -> {
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
@@ -96,16 +93,9 @@ public class ActivityStageService {
             
             response.setSubgroups(subMaps);
 
-            System.out.println("Stage ID: " + response.getId());
-            System.out.println("Stage Name: " + response.getName());
-            System.out.println("Display Order: " + response.getDisplayOrder());
-            System.out.println("Status: " + response.getStatus());
-            System.out.println("Subgroup Count: " + subMaps.size());
-
             return response;
         }).collect(Collectors.toList());
 
-        System.out.println("Return Count: " + responses.size());
         return responses;
     }
 
@@ -204,7 +194,7 @@ public class ActivityStageService {
         // 4. Delete the stage itself
         activityStageRepository.deleteById(id);
         
-        log.info("Admin deleted stage and its subgroups and activities: {}", id);
+        log.debug("Admin deleted stage and its subgroups and activities: {}", id);
     }
 
     private void validateStage(ActivityStageRequest request, Long existingId) {

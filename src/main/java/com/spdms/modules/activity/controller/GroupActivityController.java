@@ -149,6 +149,10 @@ public class GroupActivityController {
         // OR an equal distribution: { "equalDistribution": true, "xp": 10, "remarks": "..." }
         boolean equalDistribution = body.containsKey("equalDistribution") && Boolean.parseBoolean(body.get("equalDistribution").toString());
         
+        List<StudentActivityXp> activityXpsToSave = new ArrayList<>();
+        List<XpTransaction> txsToSave = new ArrayList<>();
+        List<Student> studentsToUpdate = new ArrayList<>();
+
         if (equalDistribution) {
             int xp = Integer.parseInt(body.get("xp").toString());
             String remarks = body.containsKey("remarks") ? body.get("remarks").toString() : null;
@@ -159,7 +163,7 @@ public class GroupActivityController {
             }
 
             for (Student member : studentsToAward) {
-                applyXpToStudent(member, activity, teacher, assignment, xp, remarks);
+                applyXpToStudent(member, activity, teacher, assignment, xp, remarks, activityXpsToSave, txsToSave, studentsToUpdate);
             }
         } else {
             List<Map<String, Object>> studentsData = (List<Map<String, Object>>) body.get("students");
@@ -167,33 +171,41 @@ public class GroupActivityController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("No student data provided"));
             }
             
+            List<String> studentIds = studentsData.stream().map(s -> s.get("studentId").toString()).collect(Collectors.toList());
+            List<Student> fetchedStudents = studentRepository.findByStudentIdIn(studentIds);
+            Map<String, Student> studentMap = fetchedStudents.stream().collect(Collectors.toMap(Student::getStudentId, s -> s));
+
             for (Map<String, Object> sData : studentsData) {
                 String studentId = sData.get("studentId").toString();
                 int xp = Integer.parseInt(sData.get("xp").toString());
                 String remarks = sData.containsKey("remarks") ? sData.get("remarks").toString() : null;
                 
-                Student student = studentRepository.findByStudentId(studentId).orElse(null);
+                Student student = studentMap.get(studentId);
                 if (student != null) {
-                    applyXpToStudent(student, activity, teacher, assignment, xp, remarks);
+                    applyXpToStudent(student, activity, teacher, assignment, xp, remarks, activityXpsToSave, txsToSave, studentsToUpdate);
                 }
             }
+        }
+
+        if (!activityXpsToSave.isEmpty()) {
+            studentActivityXpRepository.saveAll(activityXpsToSave);
+            xpTransactionRepository.saveAll(txsToSave);
+            studentRepository.saveAll(studentsToUpdate);
         }
 
         return ResponseEntity.ok(ApiResponse.ok("XP awarded successfully", null));
     }
 
-    private void applyXpToStudent(Student student, Activity activity, User teacher, ActivityAssignment assignment, int xpToAward, String remarks) {
+    private void applyXpToStudent(Student student, Activity activity, User teacher, ActivityAssignment assignment, int xpToAward, String remarks, List<StudentActivityXp> activityXpsToSave, List<XpTransaction> txsToSave, List<Student> studentsToUpdate) {
         // Record history log
         StudentActivityXp record = new StudentActivityXp(
                 student, activity, teacher, assignment, xpToAward, remarks != null ? remarks : "", LocalDateTime.now());
-        studentActivityXpRepository.save(record);
+        activityXpsToSave.add(record);
 
         // Update student scores directly
-        studentRepository.updateStudentXpAndScore(
-                student.getId(),
-                student.getTotalXp() + xpToAward,
-                student.getScore() + xpToAward
-        );
+        student.setTotalXp(student.getTotalXp() + xpToAward);
+        student.setScore(student.getScore() + xpToAward);
+        studentsToUpdate.add(student);
 
         // Create XpTransaction ledger entry
         XpTransaction tx = XpTransaction.builder()
@@ -207,7 +219,7 @@ public class GroupActivityController {
                 .isPenalty(xpToAward < 0)
                 .capApplied(false)
                 .build();
-        xpTransactionRepository.save(tx);
+        txsToSave.add(tx);
     }
 
     private StudentResponse toStudentResponse(Student student) {

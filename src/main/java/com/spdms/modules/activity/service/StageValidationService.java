@@ -3,10 +3,8 @@ package com.spdms.modules.activity.service;
 import com.spdms.modules.activity.dto.response.StageValidationResponse;
 import com.spdms.entity.ActivityStage;
 import com.spdms.entity.ActivitySubgroup;
-import com.spdms.entity.DisciplineLog;
 import com.spdms.modules.activity.repository.ActivityStageRepository;
 import com.spdms.modules.activity.repository.ActivitySubgroupRepository;
-import com.spdms.repository.DisciplineLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -55,17 +53,6 @@ public class StageValidationService {
             boolean thresholdMet = true;
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stageId);
             List<com.spdms.entity.StudentActivityXp> history = studentActivityXpRepository.findByStudentId(studentId);
-            
-            System.out.println("---------------------------------");
-            System.out.println("Student ID: " + studentId);
-            System.out.println("Stage ID: " + stageId);
-            System.out.println("Stage Name: " + stage.getName());
-            System.out.println("Current Time: " + now);
-            System.out.println("Use Date Validation: " + stage.isUseDateValidation());
-            System.out.println("Use Threshold Validation: " + stage.isUseThresholdValidation());
-            System.out.println("Use Combined Validation: " + stage.isUseCombinedValidation());
-            System.out.println("Subgroup Count: " + subgroups.size());
-            System.out.println("---------------------------------");
 
             if (stage.isUseThresholdValidation() || stage.isUseCombinedValidation()) {
                 for (ActivitySubgroup subgroup : subgroups) {
@@ -75,11 +62,6 @@ public class StageValidationService {
                             .sum();
                     
                     boolean met = earnedXp >= subgroup.getThreshold();
-                    System.out.println("Subgroup ID: " + subgroup.getId());
-                    System.out.println("Subgroup Name: " + subgroup.getName());
-                    System.out.println("Threshold: " + subgroup.getThreshold());
-                    System.out.println("Earned XP: " + earnedXp);
-                    System.out.println("Threshold Met: " + met);
                     
                     if (!met) {
                         thresholdMet = false;
@@ -123,15 +105,11 @@ public class StageValidationService {
             response.setCompleted(stageStatus.equals("ENDED") || stageStatus.equals("UNLOCKED"));
             response.setActive(stageStatus.equals("ACTIVE"));
 
-            log.info("Stage Name: {} | Date Toggle: {} | Threshold Toggle: {} | Combined Toggle: {} | Status: {}", 
+            log.debug("Stage Name: {} | Date Toggle: {} | Threshold Toggle: {} | Combined Toggle: {} | Status: {}", 
                      stage.getName(), stage.isUseDateValidation(), stage.isUseThresholdValidation(), stage.isUseCombinedValidation(), stageStatus);
 
             return response;
         } catch (Exception e) {
-            System.out.println("Stage ID: " + stageId);
-            System.out.println("Student ID: " + studentId);
-            System.out.println("Exception Message: " + e.getMessage());
-            e.printStackTrace();
             throw e;
         }
     }

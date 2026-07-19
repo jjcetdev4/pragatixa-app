@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /** Find the Class Coordinator (Teacher with CC sub-role) assigned to a given section. */
     @org.springframework.data.jpa.repository.Query(
-        "SELECT u FROM User u " +
+        "SELECT DISTINCT u FROM User u " +
         "JOIN u.roles r " +
         "JOIN u.subRoles sr " +
         "WHERE u.section.id = :sectionId " +
@@ -28,4 +28,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
         @org.springframework.data.repository.query.Param("departmentId") Long departmentId,
         @org.springframework.data.repository.query.Param("sectionId") Long sectionId
     );
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT DISTINCT u FROM User u " +
+        "JOIN u.roles r " +
+        "JOIN u.subRoles sr " +
+        "WHERE r.name = 'ROLE_TEACHER' " +
+        "AND UPPER(sr.name) = 'CC' " +
+        "AND u.active = true"
+    )
+    java.util.List<User> findAllClassCoordinators();
 }

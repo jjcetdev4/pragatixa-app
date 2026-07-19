@@ -1,7 +1,6 @@
 package com.spdms.modules.authentication.security;
 import com.spdms.modules.authentication.security.JwtUtil;
 import com.spdms.modules.authentication.security.StudentDetailsService;
-import com.spdms.modules.authentication.security.StudentAuthResolver;
 import com.spdms.modules.authentication.security.CustomUserDetailsService;
 
 import jakarta.servlet.FilterChain;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * JWT Authentication Filter – intercepts every request and validates Bearer tokens.

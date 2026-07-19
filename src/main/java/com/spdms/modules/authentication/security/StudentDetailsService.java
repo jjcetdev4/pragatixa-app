@@ -28,7 +28,7 @@ public class StudentDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        log.info("[StudentDetailsService] Loading student details for identifier: {}", username);
+        log.debug("[StudentDetailsService] Loading student details for identifier: {}", username);
         
         java.util.Optional<Student> studentOpt = studentRepository.findByStudentId(username)
             .or(() -> studentRepository.findByEmail(username))
@@ -48,7 +48,7 @@ public class StudentDetailsService implements UserDetailsService {
             return new UsernameNotFoundException("Student not found with identifier: " + username);
         });
 
-        log.info("[StudentDetailsService] Found student: student_id={}, active={}", student.getStudentId(), student.isActive());
+        log.debug("[StudentDetailsService] Found student: student_id={}, active={}", student.getStudentId(), student.isActive());
 
         return User.builder()
             .username(student.getStudentId())

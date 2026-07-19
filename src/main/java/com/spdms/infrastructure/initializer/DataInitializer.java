@@ -83,7 +83,7 @@ public class DataInitializer implements CommandLineRunner {
             if (current == null || !passwordEncoder.matches("1234", current)) {
                 s.setPassword(passwordEncoder.encode("1234"));
                 studentRepository.save(s);
-                log.info("Reset default student sharugesh password to 1234");
+                log.debug("Reset default student sharugesh password to 1234");
             }
         });
 
@@ -120,7 +120,7 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
         if (saved) {
-            log.info("Migrated existing activities to new Award/Penalty toggle schema successfully.");
+            log.debug("Migrated existing activities to new Award/Penalty toggle schema successfully.");
         }
     }
 
@@ -128,7 +128,7 @@ public class DataInitializer implements CommandLineRunner {
         for (String name : new String[]{"Male", "Female", "Other"}) {
             if (genderRepository.findByGenderName(name).isEmpty()) {
                 genderRepository.save(Gender.builder().genderName(name).build());
-                log.info("Seeded gender: {}", name);
+                log.debug("Seeded gender: {}", name);
             }
         }
     }
@@ -137,7 +137,7 @@ public class DataInitializer implements CommandLineRunner {
         for (String roleName : new String[]{"ROLE_ADMIN", "ROLE_TEACHER", "ROLE_TRANSPORT", "ROLE_STUDENT"}) {
             if (!roleRepository.existsByName(roleName)) {
                 roleRepository.save(Role.builder().name(roleName).build());
-                log.info("Seeded role: {}", roleName);
+                log.debug("Seeded role: {}", roleName);
             }
         }
     }
@@ -160,7 +160,7 @@ public class DataInitializer implements CommandLineRunner {
                     .name(d[0])
                     .description(null)
                     .build());
-                log.info("Seeded department: {}", d[1]);
+                log.debug("Seeded department: {}", d[1]);
             }
         }
     }
@@ -173,7 +173,7 @@ public class DataInitializer implements CommandLineRunner {
                 .endDate(LocalDate.of(2025, 5, 31))
                 .status(AcademicYear.Status.ACTIVE)
                 .build());
-            log.info("Seeded academic year: 2024-2025");
+            log.debug("Seeded academic year: 2024-2025");
         }
     }
 
@@ -195,7 +195,7 @@ public class DataInitializer implements CommandLineRunner {
                 existing.setYear("1");
                 existing.setSection(null);
                 userRepository.save(existing);
-                log.info("CC Teacher jaga profile updated with department, year");
+                log.debug("CC Teacher jaga profile updated with department, year");
             },
             () -> {
                 User ccTeacher = User.builder()
@@ -211,7 +211,7 @@ public class DataInitializer implements CommandLineRunner {
                     .active(true)
                     .build();
                 userRepository.save(ccTeacher);
-                log.info("CC Teacher created: username=jaga | password=1234");
+                log.debug("CC Teacher created: username=jaga | password=1234");
             }
         );
 
@@ -226,7 +226,7 @@ public class DataInitializer implements CommandLineRunner {
                 .active(true)
                 .build();
             userRepository.save(hodTeacher);
-            log.info("HOD Teacher created: username=sharu | password=1234");
+            log.debug("HOD Teacher created: username=sharu | password=1234");
         }
     }
 
@@ -277,12 +277,12 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
             
             studentRepository.save(student);
-            log.info("Default student created: studentId=sharugesh | password=1234");
+            log.debug("Default student created: studentId=sharugesh | password=1234");
         }
     }
 
     private void migrateStudentPasswords() {
-        log.info("Starting student password migration check...");
+        log.debug("Starting student password migration check...");
         java.util.List<Student> students = studentRepository.findAll();
         int count = 0;
         for (Student s : students) {
@@ -300,9 +300,9 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
         if (count > 0) {
-            log.info("Completed student password migration. Updated {} student passwords.", count);
+            log.debug("Completed student password migration. Updated {} student passwords.", count);
         } else {
-            log.info("All student passwords are up to date.");
+            log.debug("All student passwords are up to date.");
         }
     }
 
@@ -312,7 +312,7 @@ public class DataInitializer implements CommandLineRunner {
             existing -> {
                 existing.setPassword(passwordEncoder.encode("12345"));
                 userRepository.save(existing);
-                log.info("Admin password updated: username=admin | password=12345");
+                log.debug("Admin password updated: username=admin | password=12345");
             },
             () -> {
                 User admin = User.builder()
@@ -324,7 +324,7 @@ public class DataInitializer implements CommandLineRunner {
                     .active(true)
                     .build();
                 userRepository.save(admin);
-                log.info("Default admin created: username=admin | password=12345");
+                log.debug("Default admin created: username=admin | password=12345");
             }
         );
     }

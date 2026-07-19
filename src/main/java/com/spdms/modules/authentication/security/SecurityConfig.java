@@ -5,16 +5,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,13 +34,16 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final com.spdms.modules.authentication.security.CustomUserDetailsService customUserDetailsService;
     private final com.spdms.modules.authentication.security.StudentDetailsService studentDetailsService;
+    private final String[] allowedOrigins;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter,
             com.spdms.modules.authentication.security.CustomUserDetailsService customUserDetailsService,
-            com.spdms.modules.authentication.security.StudentDetailsService studentDetailsService) {
+            com.spdms.modules.authentication.security.StudentDetailsService studentDetailsService,
+            @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins}") String[] allowedOrigins) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.customUserDetailsService = customUserDetailsService;
         this.studentDetailsService = studentDetailsService;
+        this.allowedOrigins = allowedOrigins;
     }
 
     private static final String[] PUBLIC_ENDPOINTS = {
@@ -107,7 +107,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList(allowedOrigins));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

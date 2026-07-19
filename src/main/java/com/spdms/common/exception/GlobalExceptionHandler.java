@@ -58,13 +58,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse<Void> handleRuntimeException(RuntimeException ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
-        return ApiResponse.error("An unexpected error occurred: " + ex.getMessage());
+        return ApiResponse.error("An unexpected error occurred. Please contact support.");
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse<Void> handleGenericException(Exception ex) {
         log.error("Generic error: {}", ex.getMessage(), ex);
-        return ApiResponse.error("Internal server error: " + ex.getClass().getName() + " - " + ex.getMessage());
+        return ApiResponse.error("Internal server error. Please contact support.");
     }
 }

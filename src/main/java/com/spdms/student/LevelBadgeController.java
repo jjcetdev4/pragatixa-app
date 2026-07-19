@@ -3,7 +3,6 @@ package com.spdms.student;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.Badge;
 import com.spdms.entity.Level;
-import com.spdms.entity.StudentBadge;
 import com.spdms.modules.student.dto.response.StudentBadgeResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -82,17 +81,8 @@ public class LevelBadgeController {
     public ResponseEntity<ApiResponse<StudentBadgeResponse>> submitBadgeClaim(@RequestBody ClaimBadgeRequest request) {
         String studentId = studentAuthResolver.getLoggedInStudent().getStudentId();
         
-        System.out.println("----- BADGE REQUEST RECEIVED -----");
-        System.out.println("Student ID: " + studentId);
-        System.out.println("Badge Name: " + request.getBadgeName());
-        System.out.println("Evidence URL: " + request.getEvidenceUrl());
-
         ApiResponse<StudentBadgeResponse> response = levelBadgeService.submitBadgeClaim(studentId, request.getBadgeName(), request.getEvidenceUrl());
         
-        System.out.println("Saved Successfully: " + response.isSuccess());
-        System.out.println("Teacher Pending Count: " + levelBadgeService.getPendingBadgeClaims().size());
-        System.out.println("----------------------------------");
-
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);

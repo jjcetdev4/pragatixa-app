@@ -54,7 +54,7 @@ public class StageLifecycleScheduler {
             }
 
             if (stage.getStatus() != newStatus) {
-                log.info("Stage '{}' transitioned from {} to {}", stage.getName(), stage.getStatus(), newStatus);
+                log.debug("Stage '{}' transitioned from {} to {}", stage.getName(), stage.getStatus(), newStatus);
                 stage.setStatus(newStatus);
                 activityStageRepository.save(stage);
                 updated = true;
@@ -74,12 +74,13 @@ public class StageLifecycleScheduler {
         }
         
         if (updated) {
-            log.info("Stage lifecycle statuses updated successfully.");
+            log.debug("Stage lifecycle statuses updated successfully.");
         }
     }
 
     private void notifyStudents(String title, String message) {
         List<Student> activeStudents = studentRepository.findByActiveTrue();
+        List<Notification> notifications = new java.util.ArrayList<>();
         for (Student student : activeStudents) {
             Notification notification = Notification.builder()
                     .title(title)
@@ -89,7 +90,10 @@ public class StageLifecycleScheduler {
                     .incidentDate(LocalDateTime.now())
                     .isRead(false)
                     .build();
-            notificationRepository.save(notification);
+            notifications.add(notification);
+        }
+        if (!notifications.isEmpty()) {
+            notificationRepository.saveAll(notifications);
         }
     }
 }

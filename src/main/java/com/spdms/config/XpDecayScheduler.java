@@ -37,6 +37,10 @@ public class XpDecayScheduler {
         List<Streak> allStreaks = streakRepository.findAll();
         LocalDateTime thresholdTime = LocalDateTime.now().minusHours(36);
 
+        List<Streak> streaksToSave = new java.util.ArrayList<>();
+        List<XpTransaction> txsToSave = new java.util.ArrayList<>();
+        List<Student> studentsToSave = new java.util.ArrayList<>();
+
         for (Streak streak : allStreaks) {
             // If the streak is active and hasn't been updated for 36 hours
             if (!streak.isBroken() && streak.getCurrentStreak() > 0 && 
@@ -46,7 +50,7 @@ public class XpDecayScheduler {
                 streak.setBroken(true);
                 int oldStreak = streak.getCurrentStreak();
                 streak.setCurrentStreak(0);
-                streakRepository.save(streak);
+                streaksToSave.add(streak);
 
                 // Apply negative XP transaction
                 Student student = streak.getStudent();
@@ -65,12 +69,18 @@ public class XpDecayScheduler {
                         .capApplied(false)
                         .build();
 
-                xpTransactionRepository.save(penaltyTx);
+                txsToSave.add(penaltyTx);
 
                 // Deduct from student's total XP
                 student.setTotalXp(Math.max(-9999, student.getTotalXp() - Math.abs(penaltyPoints)));
-                studentRepository.save(student);
+                if (!studentsToSave.contains(student)) {
+                    studentsToSave.add(student);
+                }
             }
         }
+
+        if (!streaksToSave.isEmpty()) streakRepository.saveAll(streaksToSave);
+        if (!txsToSave.isEmpty()) xpTransactionRepository.saveAll(txsToSave);
+        if (!studentsToSave.isEmpty()) studentRepository.saveAll(studentsToSave);
     }
 }

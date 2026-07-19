@@ -82,7 +82,7 @@ public class StudentAuthResolver {
             throw new StudentNotFoundException("Student profile not found for this user");
         }
 
-        log.info("Resolved Authenticated Student - Username: {}, Resolved Student ID: {}, Resolved Student Name: {}", 
+        log.debug("Resolved Authenticated Student - Username: {}, Resolved Student ID: {}, Resolved Student Name: {}", 
                  username, student.getStudentId(), student.getFullName());
 
         return student;

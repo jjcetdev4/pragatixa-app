@@ -14,13 +14,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
     open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
+
+  main:
+    log-startup-info: false
+    banner-mode: off
 
   security:
     user:
@@ -32,6 +35,9 @@ jwt:
   expiration: 86400000
   student-expiration: 43200000
 
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:4200}
+
 springdoc:
   api-docs:
     path: /api-docs
@@ -40,7 +46,11 @@ springdoc:
     tags-sorter: alpha
 
 logging:
+  pattern:
+    console: "%msg%n%ex"
   level:
-    com.spdms: DEBUG
-    org.springframework.security: INFO
-    org.hibernate.SQL: DEBUG
+    com.spdms: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    com.zaxxer.hikari: WARN
+    org.apache: WARN
