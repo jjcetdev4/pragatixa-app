@@ -23,22 +23,26 @@ public class AdminDashboardService {
     private final DepartmentRepository departmentRepository;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
+    private final com.spdms.repository.DisciplineLogRepository disciplineLogRepository;
 
-    public AdminDashboardService(DepartmentRepository departmentRepository, StudentRepository studentRepository, UserRepository userRepository) {
+    public AdminDashboardService(DepartmentRepository departmentRepository, StudentRepository studentRepository, UserRepository userRepository, com.spdms.repository.DisciplineLogRepository disciplineLogRepository) {
         this.departmentRepository = departmentRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
+        this.disciplineLogRepository = disciplineLogRepository;
     }
 
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboardStats() {
         long totalStudents = studentRepository.count();
         long totalUsers = userRepository.count();
         long totalDepartments = departmentRepository.count();
+        long totalAlerts = disciplineLogRepository.count();
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalStudents", totalStudents);
         stats.put("totalUsers", totalUsers);
         stats.put("totalDepartments", totalDepartments);
+        stats.put("totalAlerts", totalAlerts);
 
         return ResponseEntity.ok(ApiResponse.ok("Stats loaded", stats));
     }

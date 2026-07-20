@@ -164,7 +164,12 @@ public class Activity {
     public int getMaxPoints() { return maxPoints; }
     public void setMaxPoints(int maxPoints) { this.maxPoints = maxPoints; }
 
-    public String getXp() { return awardXp != null ? awardXp.toString() : "0"; }
+    public String getXp() {
+        if ("Penalty".equalsIgnoreCase(xpType)) {
+            return penaltyXp != null ? "-" + penaltyXp : "0";
+        }
+        return awardXp != null ? awardXp.toString() : "0";
+    }
     public void setXp(String xp) {
         try {
             this.awardXp = Integer.parseInt(xp);
