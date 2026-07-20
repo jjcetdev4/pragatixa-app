@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public class StudentResponse {
     private Long id;
-    private String studentId;
+    private String regNo;
     private String fullName;
     private String email;
     private String phone;
@@ -39,8 +39,8 @@ public class StudentResponse {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getStudentId() { return studentId; }
-    public void setStudentId(String studentId) { this.studentId = studentId; }
+    public String getRegNo() { return regNo; }
+    public void setRegNo(String regNo) { this.regNo = regNo; }
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getEmail() { return email; }
@@ -94,7 +94,7 @@ public class StudentResponse {
     public static class Builder {
         private final StudentResponse r = new StudentResponse();
         public Builder id(Long v) { r.id = v; return this; }
-        public Builder studentId(String v) { r.studentId = v; return this; }
+        public Builder regNo(String v) { r.regNo = v; return this; }
         public Builder fullName(String v) { r.fullName = v; return this; }
         public Builder email(String v) { r.email = v; return this; }
         public Builder phone(String v) { r.phone = v; return this; }

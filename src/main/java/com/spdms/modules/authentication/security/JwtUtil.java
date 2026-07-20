@@ -41,11 +41,11 @@ public class JwtUtil {
         return buildToken(claims, userDetails.getUsername(), expiration);
     }
 
-    public String generateStudentToken(String studentId, String email) {
+    public String generateStudentToken(String regNo, String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "STUDENT");
         claims.put("email", email);
-        return buildToken(claims, studentId, studentExpiration);
+        return buildToken(claims, regNo, studentExpiration);
     }
 
     private String buildToken(Map<String, Object> extraClaims, String subject, long expiryMs) {
@@ -65,11 +65,11 @@ public class JwtUtil {
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
-    public boolean isStudentTokenValid(String token, String studentId) {
+    public boolean isStudentTokenValid(String token, String regNo) {
         try {
             final String subject = extractUsername(token);
             final String type = extractClaim(token, claims -> claims.get("type", String.class));
-            return subject.equals(studentId) && "STUDENT".equals(type) && !isTokenExpired(token);
+            return subject.equals(regNo) && "STUDENT".equals(type) && !isTokenExpired(token);
         } catch (JwtException e) {
             log.warn("Invalid student token: {}", e.getMessage());
             return false;

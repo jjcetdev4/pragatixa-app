@@ -17,11 +17,11 @@ public class StudentXpAggregator {
         this.xpTransactionRepository = xpTransactionRepository;
     }
 
-    public AggregatedXp aggregateXpForStudent(Long studentId) {
+    public AggregatedXp aggregateXpForStudent(Long regNo) {
         Map<Long, Integer> xpByActivityId = new HashMap<>();
         Map<String, Integer> xpByActivityName = new HashMap<>();
         
-        List<XpTransaction> allTxs = xpTransactionRepository.findByStudentIdAndStatus(studentId, "APPROVED");
+        List<XpTransaction> allTxs = xpTransactionRepository.findByStudentIdAndStatus(regNo, "APPROVED");
 
         for (XpTransaction tx : allTxs) {
             if (tx.getActivity() != null) {

@@ -12,7 +12,7 @@ public class StudentBadge {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "reg_no", nullable = false)
     private Student student;
 
     @ManyToOne(fetch = FetchType.EAGER)

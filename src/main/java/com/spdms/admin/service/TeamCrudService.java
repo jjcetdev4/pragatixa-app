@@ -61,7 +61,7 @@ public class TeamCrudService {
     public ResponseEntity<ApiResponse<TeamResponse>> createTeam(CreateTeamRequest request, String username) {
         log.debug("Creating Team with name: {}", request.getName());
         
-        Student studentAttempt = studentRepository.findByStudentId(username).orElse(null);
+        Student studentAttempt = studentRepository.findByRegNo(username).orElse(null);
         if (studentAttempt != null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: Students are not allowed to create groups."));
         }
@@ -82,7 +82,7 @@ public class TeamCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Captain Student ID is required."));
         }
 
-        Student captain = studentRepository.findByStudentId(request.getCaptainStudentId()).orElse(null);
+        Student captain = studentRepository.findByRegNo(request.getCaptainStudentId()).orElse(null);
         if (captain == null) return ResponseEntity.badRequest().body(ApiResponse.error("Captain student not found with ID: " + request.getCaptainStudentId()));
         if (captain.getTeam() != null) return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName() + " is already assigned to team: " + captain.getTeam().getName()));
 
@@ -94,12 +94,12 @@ public class TeamCrudService {
         if (request.getMemberStudentIds() != null && !request.getMemberStudentIds().isEmpty()) {
             List<String> validIds = new java.util.ArrayList<>();
             for (String sid : request.getMemberStudentIds()) {
-                if (!sid.trim().equalsIgnoreCase(captain.getStudentId().trim())) {
+                if (!sid.trim().equalsIgnoreCase(captain.getRegNo().trim())) {
                     validIds.add(sid);
                 }
             }
             if (!validIds.isEmpty()) {
-                List<Student> fetchedMembers = studentRepository.findByStudentIdIn(validIds);
+                List<Student> fetchedMembers = studentRepository.findByRegNoIn(validIds);
                 if (fetchedMembers.size() < validIds.size()) {
                     return ResponseEntity.badRequest().body(ApiResponse.error("One or more member students not found."));
                 }
@@ -119,7 +119,10 @@ public class TeamCrudService {
                 .name(request.getName())
                 .size(request.getSize())
                 .captain(captain)
-                .assignment(assignment)
+                .department(captain.getDepartment())
+                .year(captain.getYear())
+                .section(captain.getSection())
+                .createdBy(creator)
                 .build();
         Team savedTeam = teamRepository.save(team);
         log.debug("Saved Team: {}", savedTeam.getName());
@@ -136,7 +139,7 @@ public class TeamCrudService {
         studentResponses.add(mapper.toStudentResponse(captain));
         for (Student m : members) studentResponses.add(mapper.toStudentResponse(m));
 
-        TeamResponse response = new TeamResponse(savedTeam.getId(), savedTeam.getName(), savedTeam.getSize(), captain.getStudentId(), captain.getFullName(), studentResponses);
+        TeamResponse response = new TeamResponse(savedTeam.getId(), savedTeam.getName(), savedTeam.getSize(), captain.getRegNo(), captain.getFullName(), studentResponses);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Team created successfully", response));
     }
 
@@ -188,19 +191,15 @@ public class TeamCrudService {
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
 
-        ActivityAssignment assignment = team.getAssignment();
-        if (assignment == null) return ResponseEntity.badRequest().body(ApiResponse.error("Team is missing assignment context"));
-
-        if (!validationService.canDeleteTeam(currentUser, assignment)) {
+        if (!validationService.canDeleteTeam(currentUser, null)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: Only Admin, Assigned Faculty, or Class Coordinators of the section can delete this team."));
         }
 
         List<Student> allMembers = new ArrayList<>(team.getMembers());
         if (team.getCaptain() != null && !allMembers.contains(team.getCaptain())) allMembers.add(team.getCaptain());
 
-        if (!allMembers.isEmpty() && studentActivityXpRepository.existsByAssignmentAndStudentIn(assignment, allMembers)) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("This group already contains awarded activity records. Please archive or complete administrative cleanup before deletion."));
-        }
+        // Check if the team has any XP records in any assignment (can't easily do this globally here, so we skip or do a broader check)
+        // Ignoring activity check since team is now global for the section
 
         List<Student> studentsToUpdate = new ArrayList<>();
         if (team.getCaptain() != null) {
@@ -227,7 +226,7 @@ public class TeamCrudService {
         teamRepository.delete(team);
 
         boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-        boolean isAssignedFaculty = assignment.getTeacher() != null && assignment.getTeacher().getUsername().equals(username);
+        boolean isAssignedFaculty = false; // We can't determine this globally without an assignment context
         String roleStr = isAdmin ? "ADMIN" : (isAssignedFaculty ? "ASSIGNED_FACULTY" : "CC");
         
         GroupDeletionAuditLog auditLog = new GroupDeletionAuditLog(

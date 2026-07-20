@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public class StudentBadgeResponse {
     private Long id;
-    private String studentId;
+    private String regNo;
     private String studentName;
     private Long badgeId;
     private String badgeName;
@@ -27,7 +27,7 @@ public class StudentBadgeResponse {
         this.awardedAt = claim.getAwardedAt();
 
         if (claim.getStudent() != null) {
-            this.studentId = claim.getStudent().getStudentId();
+            this.regNo = claim.getStudent().getRegNo();
             this.studentName = claim.getStudent().getFullName();
         }
 
@@ -45,8 +45,8 @@ public class StudentBadgeResponse {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getStudentId() { return studentId; }
-    public void setStudentId(String studentId) { this.studentId = studentId; }
+    public String getRegNo() { return regNo; }
+    public void setRegNo(String regNo) { this.regNo = regNo; }
 
     public String getStudentName() { return studentName; }
     public void setStudentName(String studentName) { this.studentName = studentName; }

@@ -5,6 +5,8 @@ import com.spdms.entity.Student;
 import com.spdms.entity.Team;
 import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.repository.TeamRepository;
+import com.spdms.entity.User;
+import com.spdms.modules.authentication.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,19 +17,42 @@ public class TeamMemberService {
 
     private final TeamRepository teamRepository;
     private final StudentRepository studentRepository;
+    private final UserRepository userRepository;
 
-    public TeamMemberService(TeamRepository teamRepository, StudentRepository studentRepository) {
+    public TeamMemberService(TeamRepository teamRepository, StudentRepository studentRepository, UserRepository userRepository) {
         this.teamRepository = teamRepository;
         this.studentRepository = studentRepository;
+        this.userRepository = userRepository;
+    }
+
+    private boolean isAuthorizedForTeam(User currentUser, Team team, boolean isCC, boolean isAdmin) {
+        if (isAdmin) return true;
+        if (isCC) {
+            return team.getDepartment() != null && currentUser.getDepartment() != null && team.getDepartment().getId().equals(currentUser.getDepartment().getId()) &&
+                   team.getYear() != null && currentUser.getYear() != null && team.getYear().equals(currentUser.getYear()) &&
+                   team.getSection() != null && currentUser.getSection() != null && team.getSection().getId().equals(currentUser.getSection().getId());
+        }
+        return false;
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> addMemberToTeam(Long id, String studentId) {
+    public ResponseEntity<ApiResponse<Void>> addMemberToTeam(Long id, String regNo) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+        
+        boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
+        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+
         Team team = teamRepository.findById(id).orElse(null);
         if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
 
-        Student member = studentRepository.findByStudentId(studentId).orElse(null);
-        if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + studentId));
+        if (!isAuthorizedForTeam(currentUser, team, isCC, isAdmin)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You can only manage teams in your assigned class."));
+        }
+
+        Student member = studentRepository.findByRegNo(regNo).orElse(null);
+        if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
         if (member.getTeam() != null) return ResponseEntity.badRequest().body(ApiResponse.error("Student " + member.getFullName() + " is already in team: " + member.getTeam().getName()));
 
         long currentMembersCount = team.getMembers().size();
@@ -43,12 +68,23 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> removeMemberFromTeam(Long id, String studentId) {
+    public ResponseEntity<ApiResponse<Void>> removeMemberFromTeam(Long id, String regNo) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+        
+        boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
+        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+
         Team team = teamRepository.findById(id).orElse(null);
         if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
 
-        Student member = studentRepository.findByStudentId(studentId).orElse(null);
-        if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + studentId));
+        if (!isAuthorizedForTeam(currentUser, team, isCC, isAdmin)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You can only manage teams in your assigned class."));
+        }
+
+        Student member = studentRepository.findByRegNo(regNo).orElse(null);
+        if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
         if (member.getTeam() == null || !member.getTeam().getId().equals(team.getId())) return ResponseEntity.badRequest().body(ApiResponse.error("Student is not a member of this team"));
         if (team.getCaptain() != null && member.getId().equals(team.getCaptain().getId())) return ResponseEntity.badRequest().body(ApiResponse.error("You cannot remove the captain from the team this way"));
 
@@ -58,12 +94,23 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> assignTeamCaptain(Long id, String studentId) {
+    public ResponseEntity<ApiResponse<Void>> assignTeamCaptain(Long id, String regNo) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+        
+        boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
+        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+
         Team team = teamRepository.findById(id).orElse(null);
         if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
 
-        Student captain = studentRepository.findByStudentId(studentId).orElse(null);
-        if (captain == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + studentId));
+        if (!isAuthorizedForTeam(currentUser, team, isCC, isAdmin)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You can only manage teams in your assigned class."));
+        }
+
+        Student captain = studentRepository.findByRegNo(regNo).orElse(null);
+        if (captain == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
         if (captain.getTeam() != null && !captain.getTeam().getId().equals(team.getId())) return ResponseEntity.badRequest().body(ApiResponse.error("Student is already assigned to a different team: " + captain.getTeam().getName()));
 
         captain.setTeam(team);
@@ -74,14 +121,14 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> addMemberByStudent(Student captain, String studentId) {
+    public ResponseEntity<ApiResponse<Void>> addMemberByStudent(Student captain, String regNo) {
         Team team = captain.getTeam();
         if (team == null || team.getCaptain() == null || !team.getCaptain().getId().equals(captain.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("You are not the captain of any team"));
         }
 
-        Student member = studentRepository.findByStudentId(studentId).orElse(null);
-        if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + studentId));
+        Student member = studentRepository.findByRegNo(regNo).orElse(null);
+        if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
         if (member.getTeam() != null) return ResponseEntity.badRequest().body(ApiResponse.error("Student " + member.getFullName() + " is already in team: " + member.getTeam().getName()));
 
         long currentMembersCount = team.getMembers().size();
@@ -97,22 +144,13 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> addMemberByCC(Long id, String studentId) {
-        return addMemberToTeam(id, studentId);
+    public ResponseEntity<ApiResponse<Void>> addMemberByCC(Long id, String regNo) {
+        return addMemberToTeam(id, regNo);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> removeMemberByCC(Long id, String studentId) {
-        Team team = teamRepository.findById(id).orElse(null);
-        if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
-
-        Student member = studentRepository.findByStudentId(studentId).orElse(null);
-        if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + studentId));
-        if (member.getTeam() == null || !member.getTeam().getId().equals(team.getId())) return ResponseEntity.badRequest().body(ApiResponse.error("Student is not a member of this team"));
-        if (team.getCaptain() != null && member.getId().equals(team.getCaptain().getId())) return ResponseEntity.badRequest().body(ApiResponse.error("Cannot directly remove the captain. Reassign captaincy first."));
-
-        member.setTeam(null);
-        studentRepository.save(member);
-        return ResponseEntity.ok(ApiResponse.ok("Member removed successfully", null));
+    public ResponseEntity<ApiResponse<Void>> removeMemberByCC(Long id, String regNo) {
+        return removeMemberFromTeam(id, regNo);
     }
+
 }

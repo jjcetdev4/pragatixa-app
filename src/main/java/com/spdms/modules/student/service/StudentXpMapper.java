@@ -28,7 +28,6 @@ public class StudentXpMapper {
             studentDetails.add(new MyActivityStudentsResponse.StudentDetail(
                 s.getId(),
                 s.getFullName(),
-                s.getStudentId(),
                 s.getRegNo(),
                 s.getDepartment() != null ? s.getDepartment().getName() : "",
                 secName,

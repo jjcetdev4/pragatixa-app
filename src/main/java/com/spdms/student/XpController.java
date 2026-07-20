@@ -25,37 +25,37 @@ public class XpController {
         this.studentAuthResolver = studentAuthResolver;
     }
 
-    /** GET /api/v1/xp/{studentId}/summary – Total + by category summary */
-    @GetMapping("/{studentId}/summary")
+    /** GET /api/v1/xp/{regNo}/summary – Total + by category summary */
+    @GetMapping("/{regNo}/summary")
     @Operation(summary = "Get XP Summary", description = "Returns total XP points earned by category.")
-    public ResponseEntity<ApiResponse<Map<String, Integer>>> getXpSummary(@PathVariable String studentId) {
-        return ResponseEntity.ok(ApiResponse.ok(xpService.getXpSummary(studentId)));
+    public ResponseEntity<ApiResponse<Map<String, Integer>>> getXpSummary(@PathVariable String regNo) {
+        return ResponseEntity.ok(ApiResponse.ok(xpService.getXpSummary(regNo)));
     }
 
-    /** GET /api/v1/xp/{studentId}/history – Paginated XP history */
-    @GetMapping("/{studentId}/history")
+    /** GET /api/v1/xp/{regNo}/history – Paginated XP history */
+    @GetMapping("/{regNo}/history")
     @Operation(summary = "Get Paginated XP History", description = "Returns a paginated list of XP transactions for a student.")
     public ResponseEntity<ApiResponse<Page<XpTransaction>>> getXpHistory(
-            @PathVariable String studentId,
+            @PathVariable String regNo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(ApiResponse.ok(xpService.getXpHistory(studentId, page, size)));
+        return ResponseEntity.ok(ApiResponse.ok(xpService.getXpHistory(regNo, page, size)));
     }
 
-    /** GET /api/v1/xp/{studentId}/streaks – Get active student streaks */
-    @GetMapping("/{studentId}/streaks")
+    /** GET /api/v1/xp/{regNo}/streaks – Get active student streaks */
+    @GetMapping("/{regNo}/streaks")
     @Operation(summary = "Get Student Streaks", description = "Returns all coding, diary, and library streaks for a student.")
-    public ResponseEntity<ApiResponse<List<Streak>>> getStudentStreaks(@PathVariable String studentId) {
-        return ResponseEntity.ok(ApiResponse.ok(xpService.getStudentStreaks(studentId)));
+    public ResponseEntity<ApiResponse<List<Streak>>> getStudentStreaks(@PathVariable String regNo) {
+        return ResponseEntity.ok(ApiResponse.ok(xpService.getStudentStreaks(regNo)));
     }
 
     /** POST /api/v1/xp/submit – Student submits activity claim */
     @PostMapping("/submit")
     @Operation(summary = "Submit XP Claim", description = "Allows a student to submit evidence link for an activity.")
     public ResponseEntity<ApiResponse<XpTransaction>> submitXpClaim(@RequestBody ClaimSubmissionRequest request) {
-        String studentId = studentAuthResolver.getLoggedInStudent().getStudentId();
+        String regNo = studentAuthResolver.getLoggedInStudent().getRegNo();
         ApiResponse<XpTransaction> response = xpService.submitXpClaim(
-                studentId,
+                regNo,
                 request.getCategory(),
                 request.getActivityName(),
                 request.getXpPoints(),
@@ -91,7 +91,7 @@ public class XpController {
     public ResponseEntity<ApiResponse<XpTransaction>> logViolation(@RequestBody LogViolationRequest request) {
         String appliedBy = SecurityContextHolder.getContext().getAuthentication().getName();
         ApiResponse<XpTransaction> response = xpService.logViolation(
-                request.getStudentId(),
+                request.getRegNo(),
                 request.getViolationType(),
                 request.getXpPenalty(),
                 appliedBy,
@@ -121,13 +121,13 @@ public class XpController {
     }
 
     public static class LogViolationRequest {
-        private String studentId;
+        private String regNo;
         private String violationType;
         private int xpPenalty;
         private String description;
 
-        public String getStudentId() { return studentId; }
-        public void setStudentId(String studentId) { this.studentId = studentId; }
+        public String getRegNo() { return regNo; }
+        public void setRegNo(String regNo) { this.regNo = regNo; }
 
         public String getViolationType() { return violationType; }
         public void setViolationType(String violationType) { this.violationType = violationType; }

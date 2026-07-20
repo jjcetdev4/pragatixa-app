@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "team_members", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_team_student", columnNames = {"team_id", "student_id"})
+    @UniqueConstraint(name = "uk_team_student", columnNames = {"team_id", "reg_no"})
 })
 public class TeamMember {
 
@@ -13,7 +13,7 @@ public class TeamMember {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "reg_no", nullable = false)
     private Student student;
 
     @Column(name = "is_captain", nullable = false)

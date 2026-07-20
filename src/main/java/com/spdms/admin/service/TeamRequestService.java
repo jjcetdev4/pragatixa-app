@@ -40,17 +40,17 @@ public class TeamRequestService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> requestRemoveMember(Student captain, String studentId, String reason) {
+    public ResponseEntity<ApiResponse<Void>> requestRemoveMember(Student captain, String regNo, String reason) {
         Team team = captain.getTeam();
         if (team == null || team.getCaptain() == null || !team.getCaptain().getId().equals(captain.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("You are not the captain of any team"));
         }
 
-        Student member = studentRepository.findByStudentId(studentId).orElse(null);
-        if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + studentId));
+        Student member = studentRepository.findByRegNo(regNo).orElse(null);
+        if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
         if (member.getTeam() == null || !member.getTeam().getId().equals(team.getId())) return ResponseEntity.badRequest().body(ApiResponse.error("Student is not a member of your team"));
         if (member.getId().equals(captain.getId())) return ResponseEntity.badRequest().body(ApiResponse.error("You cannot remove yourself from the team"));
-        if (teamRemovalRequestRepository.existsByTeamIdAndStudentStudentIdAndStatus(team.getId(), studentId, "PENDING")) {
+        if (teamRemovalRequestRepository.existsByTeamIdAndStudentStudentIdAndStatus(team.getId(), regNo, "PENDING")) {
             return ResponseEntity.badRequest().body(ApiResponse.error("A pending removal request already exists for this student"));
         }
 
@@ -64,9 +64,16 @@ public class TeamRequestService {
         User currentUser = userRepository.findByUsername(username).orElse(null);
         List<TeamRemovalRequest> requests = teamRemovalRequestRepository.findByStatus("PENDING");
         
-        if (currentUser != null) {
+        if (currentUser != null && !currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))) {
             requests = requests.stream()
-                    .filter(req -> assignmentSecurityService.isUserAssignedFaculty(req.getTeam().getAssignment(), currentUser))
+                    .filter(req -> {
+                        boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
+                        return isCC && req.getTeam().getDepartment() != null 
+                            && req.getTeam().getDepartment().getId().equals(currentUser.getDepartment().getId())
+                            && req.getTeam().getYear().equals(currentUser.getYear())
+                            && req.getTeam().getSection() != null
+                            && req.getTeam().getSection().getId().equals(currentUser.getSection().getId());
+                    })
                     .collect(Collectors.toList());
         }
 
@@ -81,8 +88,16 @@ public class TeamRequestService {
         if (!"PENDING".equals(request.getStatus())) return ResponseEntity.badRequest().body(ApiResponse.error("Request is not pending"));
 
         User currentUser = userRepository.findByUsername(username).orElse(null);
-        if (currentUser != null && !assignmentSecurityService.isUserAssignedFaculty(request.getTeam().getAssignment(), currentUser)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not authorized to approve this request."));
+        if (currentUser != null && !currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))) {
+            boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
+            boolean isAuthorized = isCC && request.getTeam().getDepartment() != null 
+                            && request.getTeam().getDepartment().getId().equals(currentUser.getDepartment().getId())
+                            && request.getTeam().getYear().equals(currentUser.getYear())
+                            && request.getTeam().getSection() != null
+                            && request.getTeam().getSection().getId().equals(currentUser.getSection().getId());
+            if (!isAuthorized) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not authorized to approve this request."));
+            }
         }
 
         Student member = request.getStudent();
@@ -105,8 +120,16 @@ public class TeamRequestService {
         if (!"PENDING".equals(request.getStatus())) return ResponseEntity.badRequest().body(ApiResponse.error("Request is not pending"));
 
         User currentUser = userRepository.findByUsername(username).orElse(null);
-        if (currentUser != null && !assignmentSecurityService.isUserAssignedFaculty(request.getTeam().getAssignment(), currentUser)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not authorized to reject this request."));
+        if (currentUser != null && !currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))) {
+            boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
+            boolean isAuthorized = isCC && request.getTeam().getDepartment() != null 
+                            && request.getTeam().getDepartment().getId().equals(currentUser.getDepartment().getId())
+                            && request.getTeam().getYear().equals(currentUser.getYear())
+                            && request.getTeam().getSection() != null
+                            && request.getTeam().getSection().getId().equals(currentUser.getSection().getId());
+            if (!isAuthorized) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You are not authorized to reject this request."));
+            }
         }
 
         request.setStatus("REJECTED");

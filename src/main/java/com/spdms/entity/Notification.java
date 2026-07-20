@@ -16,7 +16,7 @@ public class Notification {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id")
+    @JoinColumn(name = "reg_no")
     private Student student;
 
     @Column(nullable = false, length = 255)

@@ -86,22 +86,22 @@ public class TeamController {
     @PostMapping("/{id}/members")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Add Team Member by Team ID", description = "Adds a student to a team by team ID.")
-    public ResponseEntity<ApiResponse<Void>> addMemberToTeam(@PathVariable Long id, @RequestParam String studentId) {
-        return teamMemberService.addMemberToTeam(id, studentId);
+    public ResponseEntity<ApiResponse<Void>> addMemberToTeam(@PathVariable Long id, @RequestParam String regNo) {
+        return teamMemberService.addMemberToTeam(id, regNo);
     }
 
-    @DeleteMapping("/{id}/members/{studentId}")
+    @DeleteMapping("/{id}/members/{regNo}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Remove Team Member by Team ID", description = "Removes a student from a team by team ID.")
-    public ResponseEntity<ApiResponse<Void>> removeMemberFromTeam(@PathVariable Long id, @PathVariable String studentId) {
-        return teamMemberService.removeMemberFromTeam(id, studentId);
+    public ResponseEntity<ApiResponse<Void>> removeMemberFromTeam(@PathVariable Long id, @PathVariable String regNo) {
+        return teamMemberService.removeMemberFromTeam(id, regNo);
     }
 
     @PostMapping("/{id}/captain")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Assign Team Captain", description = "Assigns/promotes a student to captain of a team.")
-    public ResponseEntity<ApiResponse<Void>> assignTeamCaptain(@PathVariable Long id, @RequestParam String studentId) {
-        return teamMemberService.assignTeamCaptain(id, studentId);
+    public ResponseEntity<ApiResponse<Void>> assignTeamCaptain(@PathVariable Long id, @RequestParam String regNo) {
+        return teamMemberService.assignTeamCaptain(id, regNo);
     }
 
     @GetMapping("/my-classmates")
@@ -115,31 +115,31 @@ public class TeamController {
     @PostMapping("/my-team/add-member")
     @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     @Operation(summary = "Add Team Member", description = "Adds a student to the captain's team.")
-    public ResponseEntity<ApiResponse<Void>> addMember(@RequestParam String studentId) {
+    public ResponseEntity<ApiResponse<Void>> addMember(@RequestParam String regNo) {
         Student captain = studentAuthResolver.getLoggedInStudent();
-        return teamMemberService.addMemberByStudent(captain, studentId);
+        return teamMemberService.addMemberByStudent(captain, regNo);
     }
 
     @PostMapping("/{id}/add-member")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @Operation(summary = "Add Team Member (CC)", description = "Adds a student to a specific team (CC/Admin only).")
-    public ResponseEntity<ApiResponse<Void>> addMemberByCC(@PathVariable Long id, @RequestParam String studentId) {
-        return teamMemberService.addMemberByCC(id, studentId);
+    public ResponseEntity<ApiResponse<Void>> addMemberByCC(@PathVariable Long id, @RequestParam String regNo) {
+        return teamMemberService.addMemberByCC(id, regNo);
     }
 
     @PostMapping("/{id}/remove-member")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @Operation(summary = "Remove Team Member (CC)", description = "Removes a student from a specific team (CC/Admin only).")
-    public ResponseEntity<ApiResponse<Void>> removeMemberByCC(@PathVariable Long id, @RequestParam String studentId) {
-        return teamMemberService.removeMemberByCC(id, studentId);
+    public ResponseEntity<ApiResponse<Void>> removeMemberByCC(@PathVariable Long id, @RequestParam String regNo) {
+        return teamMemberService.removeMemberByCC(id, regNo);
     }
 
     @PostMapping("/my-team/remove-request")
     @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     @Operation(summary = "Request Team Member Removal", description = "Creates a request to remove a student from the captain's team.")
-    public ResponseEntity<ApiResponse<Void>> requestRemoveMember(@RequestParam String studentId, @RequestParam(required = false, defaultValue = "Requested by Captain") String reason) {
+    public ResponseEntity<ApiResponse<Void>> requestRemoveMember(@RequestParam String regNo, @RequestParam(required = false, defaultValue = "Requested by Captain") String reason) {
         Student captain = studentAuthResolver.getLoggedInStudent();
-        return teamRequestService.requestRemoveMember(captain, studentId, reason);
+        return teamRequestService.requestRemoveMember(captain, regNo, reason);
     }
 
     @GetMapping("/removal-requests/pending")

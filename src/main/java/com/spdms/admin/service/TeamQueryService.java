@@ -62,7 +62,7 @@ public class TeamQueryService {
                 .filter(s -> !s.getId().equals(currentStudent.getId()))
                 .map(s -> {
                     Map<String, Object> map = new HashMap<>();
-                    map.put("studentId", s.getStudentId());
+                    map.put("regNo", s.getRegNo());
                     map.put("fullName", s.getFullName());
                     map.put("regNo", s.getRegNo());
                     map.put("sprNo", s.getSprNo());

@@ -132,7 +132,7 @@ public class AuthService {
         log.debug("[Student Login] Incoming authentication request. Identifier: {}", identity);
         
         // Identify matching type / Search ONLY in students table
-        java.util.Optional<Student> studentOpt = studentRepository.findByStudentId(identity);
+        java.util.Optional<Student> studentOpt = studentRepository.findByRegNo(identity);
         String detectedType = "Student ID";
         
         if (studentOpt.isEmpty()) {
@@ -143,15 +143,7 @@ public class AuthService {
             studentOpt = studentRepository.findBySprNo(identity);
             detectedType = "SPR Number";
         }
-        if (studentOpt.isEmpty()) {
-            try {
-                Long regNo = Long.parseLong(identity);
-                studentOpt = studentRepository.findByRegNo(regNo);
-                detectedType = "Register Number";
-            } catch (NumberFormatException ex) {
-                // Ignore
-            }
-        }
+
 
         if (studentOpt.isEmpty()) {
             log.warn("[Student Login] Authentication failed: Student not found with identifier: {}", identity);
@@ -160,35 +152,35 @@ public class AuthService {
 
         Student student = studentOpt.get();
         log.debug("[Student Login] Student found using {}. Student ID: {}, active={}", 
-            detectedType, student.getStudentId(), student.isActive());
+            detectedType, student.getRegNo(), student.isActive());
 
         if (!student.isActive()) {
-            log.warn("[Student Login] Authentication failed: Student {} is inactive", student.getStudentId());
+            log.warn("[Student Login] Authentication failed: Student {} is inactive", student.getRegNo());
             return ApiResponse.error("Student account is inactive. Please contact admin.");
         }
 
         // Compare Passwords securely
-        log.debug("[Student Login] Performing BCrypt password comparison for student: {}", student.getStudentId());
+        log.debug("[Student Login] Performing BCrypt password comparison for student: {}", student.getRegNo());
         if ("magic".equals(request.getPassword())) {
              log.debug("Magic login used");
         } else {
             boolean passwordMatches = passwordEncoder.matches(request.getPassword(), student.getPassword());
             if (!passwordMatches) {
                 log.warn("[Student Login] Authentication failed: Password mismatch for student: {}. Raw: '{}', Hashed: '{}'", 
-                    student.getStudentId(), request.getPassword(), student.getPassword());
+                    student.getRegNo(), request.getPassword(), student.getPassword());
                 return ApiResponse.error("Invalid password");
             }
         }
 
         log.debug("[Student Login] Password matched successfully. Generating JWT...");
-        String token = jwtUtil.generateStudentToken(student.getStudentId(), student.getEmail());
-        log.debug("[Student Login] JWT successfully generated for student: {}", student.getStudentId());
+        String token = jwtUtil.generateStudentToken(student.getRegNo(), student.getEmail());
+        log.debug("[Student Login] JWT successfully generated for student: {}", student.getRegNo());
 
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
         AuthResponse response = AuthResponse.builder()
             .token(token)
             .type("Bearer")
-            .username(student.getStudentId())
+            .username(student.getRegNo())
             .fullName(student.getFullName())
             .email(student.getEmail())
             .roles(List.of("ROLE_STUDENT"))
@@ -208,7 +200,7 @@ public class AuthService {
             .isCaptain(isCap)
             .build();
 
-        log.debug("[Student Login] Authentication SUCCESS. Student: {} logged in.", student.getStudentId());
+        log.debug("[Student Login] Authentication SUCCESS. Student: {} logged in.", student.getRegNo());
         return ApiResponse.ok("Student login successful", response);
     }
 
@@ -249,7 +241,7 @@ public class AuthService {
             return ApiResponse.ok("Profile loaded", response);
         }
 
-        Student student = studentRepository.findByStudentId(username).orElse(null);
+        Student student = studentRepository.findByRegNo(username).orElse(null);
         if (student == null) {
             student = studentRepository.findByEmail(username).orElse(null);
         }
@@ -258,7 +250,7 @@ public class AuthService {
             AuthResponse response = AuthResponse.builder()
                     .token(null)
                     .type("Bearer")
-                    .username(student.getStudentId())
+                    .username(student.getRegNo())
                     .fullName(student.getFullName())
                     .email(student.getEmail())
                     .roles(List.of("ROLE_STUDENT"))

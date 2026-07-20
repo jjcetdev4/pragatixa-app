@@ -28,8 +28,8 @@ public class XpQueryService {
         this.streakRepository = streakRepository;
     }
 
-    public Map<String, Integer> getXpSummary(String studentId) {
-        List<XpTransaction> txs = xpTransactionRepository.findByStudentStudentId(studentId);
+    public Map<String, Integer> getXpSummary(String regNo) {
+        List<XpTransaction> txs = xpTransactionRepository.findByStudentStudentId(regNo);
         Map<String, Integer> summary = new HashMap<>();
         summary.put("ACADEMIC", 0);
         summary.put("SKILL", 0);
@@ -51,12 +51,12 @@ public class XpQueryService {
         return summary;
     }
 
-    public Page<XpTransaction> getXpHistory(String studentId, int page, int size) {
+    public Page<XpTransaction> getXpHistory(String regNo, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("submittedAt").descending());
-        return xpTransactionRepository.findByStudentStudentId(studentId, pageable);
+        return xpTransactionRepository.findByStudentStudentId(regNo, pageable);
     }
 
-    public List<Streak> getStudentStreaks(String studentId) {
-        return streakRepository.findByStudentStudentId(studentId);
+    public List<Streak> getStudentStreaks(String regNo) {
+        return streakRepository.findByStudentStudentId(regNo);
     }
 }

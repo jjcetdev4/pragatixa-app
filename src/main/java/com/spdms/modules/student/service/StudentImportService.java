@@ -100,7 +100,7 @@ public class StudentImportService {
                 req.setFullName(name);
                 req.setDepartmentName(deptName);
                 req.setSprNo(sprNo);
-                req.setStudentId(regNo);
+                req.setRegNo(regNo);
                 req.setDateOfBirth(dob);
                 req.setPhone(phoneNo);
                 req.setEmail(email);
@@ -158,12 +158,12 @@ public class StudentImportService {
 
 
             for (CreateStudentRequest request : requests) {
-                if (request.getStudentId() == null || request.getStudentId().trim().isEmpty() ||
+                if (request.getRegNo() == null || request.getRegNo().trim().isEmpty() ||
                     request.getEmail() == null || request.getEmail().trim().isEmpty()) {
                     continue;
                 }
 
-                String regNo = request.getStudentId().trim();
+                String regNo = request.getRegNo().trim();
                 String email = request.getEmail().trim();
 
                 if (processedStudentIds.contains(regNo)) return ApiResponse.error("Duplicate Register No '" + regNo + "' found in the uploaded batch.");
@@ -201,7 +201,7 @@ public class StudentImportService {
                 String rawPassword = dob != null ? dob.format(DateTimeFormatter.ofPattern("ddMMyyyy")) : regNo;
                 String encodedPassword = passwordEncoder.encode(rawPassword);
 
-                Student student = studentRepository.findByStudentId(regNo).or(() -> studentRepository.findByEmail(email)).orElse(null);
+                Student student = studentRepository.findByRegNo(regNo).or(() -> studentRepository.findByEmail(email)).orElse(null);
 
                 if (student != null) {
                     if (request.getSprNo() != null && !request.getSprNo().trim().isEmpty()) {
@@ -240,7 +240,7 @@ public class StudentImportService {
                     studentsToSave.add(student);
                     updateCount++;
                 } else {
-                    if (studentRepository.existsByStudentId(regNo)) return ApiResponse.error("Student Register No '" + regNo + "' already exists.");
+                    if (studentRepository.existsByRegNo(regNo)) return ApiResponse.error("Student Register No '" + regNo + "' already exists.");
                     if (studentRepository.existsByEmail(email)) return ApiResponse.error("Email '" + email + "' already exists.");
                     if (request.getSprNo() != null && !request.getSprNo().trim().isEmpty()) {
                         String cleanSpr = request.getSprNo().trim();
@@ -248,7 +248,7 @@ public class StudentImportService {
                     }
 
                     student = Student.builder()
-                        .studentId(regNo)
+                        .regNo(regNo)
                         .fullName(request.getFullName().trim())
                         .email(email)
                         .password(encodedPassword)

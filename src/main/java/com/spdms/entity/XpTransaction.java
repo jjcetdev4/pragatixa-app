@@ -12,7 +12,7 @@ public class XpTransaction {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "reg_no", nullable = false)
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"team"})
     private Student student;
 

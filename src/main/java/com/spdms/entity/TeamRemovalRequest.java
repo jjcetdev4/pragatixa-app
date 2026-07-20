@@ -16,7 +16,7 @@ public class TeamRemovalRequest {
     private Team team;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "reg_no", nullable = false)
     private Student student;
 
     @ManyToOne(fetch = FetchType.EAGER)

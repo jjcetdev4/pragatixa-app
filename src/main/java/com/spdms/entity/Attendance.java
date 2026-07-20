@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "attendance", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_attendance", columnNames = {"student_id", "subject_id", "attendance_datetime"})
+    @UniqueConstraint(name = "uk_attendance", columnNames = {"reg_no", "subject_id", "attendance_datetime"})
 })
 public class Attendance {
 
@@ -18,7 +18,7 @@ public class Attendance {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "reg_no", nullable = false)
     private Student student;
 
     @ManyToOne(fetch = FetchType.EAGER)

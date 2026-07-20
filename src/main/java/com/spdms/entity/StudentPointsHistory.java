@@ -12,7 +12,7 @@ public class StudentPointsHistory {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "student_id")
+    @JoinColumn(name = "reg_no")
     private Student student;
 
     @ManyToOne(fetch = FetchType.EAGER)

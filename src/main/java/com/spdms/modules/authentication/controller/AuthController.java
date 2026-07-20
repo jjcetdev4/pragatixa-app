@@ -59,7 +59,7 @@ public class AuthController {
      * API 2: Student Login
      * Endpoint: POST /api/v1/auth/student-login
      * 
-     * @param request Contains identity (studentId or email) and password
+     * @param request Contains identity (regNo or email) and password
      * @return 200 OK with JWT token if successful, or 401 Unauthorized if failed
      */
     @PostMapping("/student-login")

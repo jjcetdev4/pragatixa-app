@@ -168,8 +168,8 @@ public class StudentActivityQueryService {
 
         List<Student> studentList = new ArrayList<>(uniqueStudents);
         studentList.sort((s1, s2) -> {
-            Long r1 = s1.getRegNo() != null ? s1.getRegNo() : 0L;
-            Long r2 = s2.getRegNo() != null ? s2.getRegNo() : 0L;
+            String r1 = s1.getRegNo() != null ? s1.getRegNo() : "";
+            String r2 = s2.getRegNo() != null ? s2.getRegNo() : "";
             return r1.compareTo(r2);
         });
 

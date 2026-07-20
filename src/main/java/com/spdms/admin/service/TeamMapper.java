@@ -22,7 +22,7 @@ public class TeamMapper {
 
         return StudentResponse.builder()
                 .id(student.getId())
-                .studentId(student.getStudentId())
+                .regNo(student.getRegNo())
                 .fullName(student.getFullName())
                 .email(student.getEmail())
                 .phone(student.getPhone())
@@ -47,12 +47,12 @@ public class TeamMapper {
                 .map(this::toStudentResponse)
                 .collect(Collectors.toList());
 
-        String captainId = team.getCaptain() != null ? team.getCaptain().getStudentId() : null;
+        String captainId = team.getCaptain() != null ? team.getCaptain().getRegNo() : null;
         String captainName = team.getCaptain() != null ? team.getCaptain().getFullName() : null;
 
         if (captainId != null) {
             boolean captainInMembers = studentResponses.stream()
-                    .anyMatch(s -> s.getStudentId().equals(captainId));
+                    .anyMatch(s -> s.getRegNo().equals(captainId));
             if (!captainInMembers) {
                 studentResponses.add(0, toStudentResponse(team.getCaptain()));
             }
@@ -72,9 +72,9 @@ public class TeamMapper {
                 req.getId(),
                 req.getTeam().getId(),
                 req.getTeam().getName(),
-                req.getStudent().getStudentId(),
+                req.getStudent().getRegNo(),
                 req.getStudent().getFullName(),
-                req.getCaptain().getStudentId(),
+                req.getCaptain().getRegNo(),
                 req.getCaptain().getFullName(),
                 req.getReason(),
                 req.getStatus(),

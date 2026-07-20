@@ -8,8 +8,8 @@ import java.util.List;
 
 @Repository
 public interface StudentActivityXpRepository extends JpaRepository<StudentActivityXp, Long> {
-    List<StudentActivityXp> findByStudentId(Long studentId);
-    List<StudentActivityXp> findByStudentIdAndActivityId(Long studentId, Long activityId);
+    List<StudentActivityXp> findByRegNo(Long regNo);
+    List<StudentActivityXp> findByStudentIdAndActivityId(Long regNo, Long activityId);
 
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional

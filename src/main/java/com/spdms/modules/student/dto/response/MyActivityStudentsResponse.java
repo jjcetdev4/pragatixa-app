@@ -106,8 +106,7 @@ public class MyActivityStudentsResponse {
     public static class StudentDetail {
         private Long id;
         private String fullName;
-        private String studentId;
-        private Long regNo;
+        private String regNo;
         private String departmentName;
         private String sectionName;
         private String year;
@@ -116,10 +115,9 @@ public class MyActivityStudentsResponse {
 
         public StudentDetail() {}
 
-        public StudentDetail(Long id, String fullName, String studentId, Long regNo, String departmentName, String sectionName, String year, int totalXp, int score) {
+        public StudentDetail(Long id, String fullName, String regNo, String departmentName, String sectionName, String year, int totalXp, int score) {
             this.id = id;
             this.fullName = fullName;
-            this.studentId = studentId;
             this.regNo = regNo;
             this.departmentName = departmentName;
             this.sectionName = sectionName;
@@ -134,11 +132,9 @@ public class MyActivityStudentsResponse {
         public String getFullName() { return fullName; }
         public void setFullName(String fullName) { this.fullName = fullName; }
 
-        public String getStudentId() { return studentId; }
-        public void setStudentId(String studentId) { this.studentId = studentId; }
+        public String getRegNo() { return regNo; }
+        public void setRegNo(String regNo) { this.regNo = regNo; }
 
-        public Long getRegNo() { return regNo; }
-        public void setRegNo(Long regNo) { this.regNo = regNo; }
 
         public String getDepartmentName() { return departmentName; }
         public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }

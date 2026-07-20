@@ -87,18 +87,26 @@ public class GroupActivityController {
         }
         final boolean finalCanDelete = canDelete;
 
-        List<Team> teams = teamRepository.findByAssignmentId(assignmentId);
+        List<Team> teams = teamRepository.findAll().stream().filter(t -> {
+            if (assignment.getAssignmentScope() == AssignmentScope.GLOBAL) return true;
+            if (t.getDepartment() == null || assignment.getDepartment() == null) return false;
+            if (!t.getDepartment().getId().equals(assignment.getDepartment().getId())) return false;
+            if (assignment.getAssignmentScope() == AssignmentScope.DEPARTMENT) return true;
+            if (t.getYear() == null || assignment.getYear() == null || !t.getYear().equals(assignment.getYear())) return false;
+            if (t.getSection() == null || assignment.getSection() == null || !t.getSection().getId().equals(assignment.getSection().getId())) return false;
+            return true;
+        }).collect(Collectors.toList());
         List<TeamResponse> responses = teams.stream().map(g -> {
             List<StudentResponse> studentResponses = g.getMembers().stream()
                     .map(this::toStudentResponse)
                     .collect(Collectors.toList());
 
-            String captainId = g.getCaptain() != null ? g.getCaptain().getStudentId() : null;
+            String captainId = g.getCaptain() != null ? g.getCaptain().getRegNo() : null;
             String captainName = g.getCaptain() != null ? g.getCaptain().getFullName() : null;
 
             if (captainId != null) {
                 boolean captainInMembers = studentResponses.stream()
-                        .anyMatch(s -> s.getStudentId().equals(captainId));
+                        .anyMatch(s -> s.getRegNo().equals(captainId));
                 if (!captainInMembers) {
                     studentResponses.add(0, toStudentResponse(g.getCaptain()));
                 }
@@ -135,9 +143,13 @@ public class GroupActivityController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
         }
 
-        ActivityAssignment assignment = team.getAssignment();
+        if (!body.containsKey("assignmentId")) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("assignmentId must be provided in the request body"));
+        }
+        Long assignmentId = Long.valueOf(body.get("assignmentId").toString());
+        ActivityAssignment assignment = activityAssignmentRepository.findById(assignmentId).orElse(null);
         if (assignment == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Team is not part of a group activity assignment"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Assignment not found"));
         }
 
         Activity activity = assignment.getActivity();
@@ -145,7 +157,7 @@ public class GroupActivityController {
             return ResponseEntity.badRequest().body(ApiResponse.error("Cannot award XP for an activity in a non-active stage."));
         }
         
-        // Parsing the payload: expects a list of objects like { "studentId": "...", "xp": 10, "remarks": "..." }
+        // Parsing the payload: expects a list of objects like { "regNo": "...", "xp": 10, "remarks": "..." }
         // OR an equal distribution: { "equalDistribution": true, "xp": 10, "remarks": "..." }
         boolean equalDistribution = body.containsKey("equalDistribution") && Boolean.parseBoolean(body.get("equalDistribution").toString());
         
@@ -171,16 +183,16 @@ public class GroupActivityController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("No student data provided"));
             }
             
-            List<String> studentIds = studentsData.stream().map(s -> s.get("studentId").toString()).collect(Collectors.toList());
-            List<Student> fetchedStudents = studentRepository.findByStudentIdIn(studentIds);
-            Map<String, Student> studentMap = fetchedStudents.stream().collect(Collectors.toMap(Student::getStudentId, s -> s));
+            List<String> studentIds = studentsData.stream().map(s -> s.get("regNo").toString()).collect(Collectors.toList());
+            List<Student> fetchedStudents = studentRepository.findByRegNoIn(studentIds);
+            Map<String, Student> studentMap = fetchedStudents.stream().collect(Collectors.toMap(Student::getRegNo, s -> s));
 
             for (Map<String, Object> sData : studentsData) {
-                String studentId = sData.get("studentId").toString();
+                String regNo = sData.get("regNo").toString();
                 int xp = Integer.parseInt(sData.get("xp").toString());
                 String remarks = sData.containsKey("remarks") ? sData.get("remarks").toString() : null;
                 
-                Student student = studentMap.get(studentId);
+                Student student = studentMap.get(regNo);
                 if (student != null) {
                     applyXpToStudent(student, activity, teacher, assignment, xp, remarks, activityXpsToSave, txsToSave, studentsToUpdate);
                 }
@@ -224,7 +236,7 @@ public class GroupActivityController {
 
     private StudentResponse toStudentResponse(Student student) {
         StudentResponse s = new StudentResponse();
-        s.setStudentId(student.getStudentId());
+        s.setRegNo(student.getRegNo());
         s.setFullName(student.getFullName());
         s.setDepartmentName(student.getDepartment() != null ? student.getDepartment().getName() : null);
         s.setSection(student.getSection() != null ? student.getSection().getSectionName() : null);

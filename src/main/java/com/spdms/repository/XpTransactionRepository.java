@@ -9,11 +9,11 @@ import java.util.List;
 
 @Repository
 public interface XpTransactionRepository extends JpaRepository<XpTransaction, Long> {
-    List<XpTransaction> findByStudentStudentId(String studentId);
-    List<XpTransaction> findByStudentIdAndStatus(Long studentId, String status);
-    List<XpTransaction> findByStudentStudentIdAndCategory(String studentId, String category);
-    Page<XpTransaction> findByStudentStudentId(String studentId, Pageable pageable);
+    List<XpTransaction> findByStudentStudentId(String regNo);
+    List<XpTransaction> findByStudentIdAndStatus(Long regNo, String status);
+    List<XpTransaction> findByStudentStudentIdAndCategory(String regNo, String category);
+    Page<XpTransaction> findByStudentStudentId(String regNo, Pageable pageable);
 
-    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(tx.xpPoints), 0) FROM XpTransaction tx WHERE tx.student.id = :studentId AND tx.activity.id = :activityId AND tx.status = 'APPROVED'")
-    int sumApprovedPointsByStudentAndActivity(@org.springframework.data.repository.query.Param("studentId") Long studentId, @org.springframework.data.repository.query.Param("activityId") Long activityId);
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(tx.xpPoints), 0) FROM XpTransaction tx WHERE tx.student.id = :regNo AND tx.activity.id = :activityId AND tx.status = 'APPROVED'")
+    int sumApprovedPointsByStudentAndActivity(@org.springframework.data.repository.query.Param("regNo") Long regNo, @org.springframework.data.repository.query.Param("activityId") Long activityId);
 }

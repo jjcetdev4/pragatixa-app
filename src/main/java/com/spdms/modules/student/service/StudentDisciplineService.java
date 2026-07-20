@@ -45,13 +45,13 @@ public class StudentDisciplineService {
     }
 
     @Transactional
-    public ApiResponse<StudentResponse> adjustPoints(Long studentId, PointAdjustmentRequest request, String username) {
+    public ApiResponse<StudentResponse> adjustPoints(Long regNo, PointAdjustmentRequest request, String username) {
         User creator = userRepository.findByUsername(username).orElse(null);
         if (creator == null) {
             return ApiResponse.error("Unauthorized");
         }
 
-        Student student = studentRepository.findById(studentId).orElse(null);
+        Student student = studentRepository.findById(regNo).orElse(null);
         if (student == null) {
             return ApiResponse.error("Student not found");
         }
@@ -90,16 +90,16 @@ public class StudentDisciplineService {
                 .build();
         disciplineLogRepository.save(logEntry);
 
-        log.debug("Teacher {} adjusted student {} points by {}. Reason: {}", creator.getUsername(), student.getStudentId(), request.getPoints(), request.getReason());
+        log.debug("Teacher {} adjusted student {} points by {}. Reason: {}", creator.getUsername(), student.getRegNo(), request.getPoints(), request.getReason());
         return ApiResponse.ok("Points updated successfully", studentMapper.toResponse(saved));
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<DisciplineLog>> getDisciplineLogs(Long studentId) {
-        if (!studentRepository.existsById(studentId)) {
+    public ApiResponse<List<DisciplineLog>> getDisciplineLogs(Long regNo) {
+        if (!studentRepository.existsById(regNo)) {
             return ApiResponse.error("Student not found");
         }
-        List<DisciplineLog> logs = disciplineLogRepository.findByStudentIdOrderByCreatedAtDesc(studentId);
+        List<DisciplineLog> logs = disciplineLogRepository.findByStudentIdOrderByCreatedAtDesc(regNo);
         return ApiResponse.ok("Discipline logs loaded", logs);
     }
 

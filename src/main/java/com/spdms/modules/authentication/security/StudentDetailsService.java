@@ -30,28 +30,21 @@ public class StudentDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("[StudentDetailsService] Loading student details for identifier: {}", username);
         
-        java.util.Optional<Student> studentOpt = studentRepository.findByStudentId(username)
+        java.util.Optional<Student> studentOpt = studentRepository.findByRegNo(username)
             .or(() -> studentRepository.findByEmail(username))
             .or(() -> studentRepository.findBySprNo(username));
 
-        if (studentOpt.isEmpty()) {
-            try {
-                Long regNo = Long.parseLong(username.trim());
-                studentOpt = studentRepository.findByRegNo(regNo);
-            } catch (NumberFormatException e) {
-                // Ignore if not a valid number
-            }
-        }
+
 
         Student student = studentOpt.orElseThrow(() -> {
             log.warn("[StudentDetailsService] Student not found with identifier: {}", username);
             return new UsernameNotFoundException("Student not found with identifier: " + username);
         });
 
-        log.debug("[StudentDetailsService] Found student: student_id={}, active={}", student.getStudentId(), student.isActive());
+        log.debug("[StudentDetailsService] Found student: reg_no={}, active={}", student.getRegNo(), student.isActive());
 
         return User.builder()
-            .username(student.getStudentId())
+            .username(student.getRegNo())
             .password(student.getPassword())
             .authorities(List.of(new SimpleGrantedAuthority("ROLE_STUDENT")))
             .accountExpired(false)

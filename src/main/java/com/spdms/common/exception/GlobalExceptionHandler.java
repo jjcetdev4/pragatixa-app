@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
         String errors = ex.getBindingResult().getFieldErrors().stream()
             .map(FieldError::getDefaultMessage)
             .collect(Collectors.joining(", "));
-        return ApiResponse.error("Validation failed: " + errors);
+        return ApiResponse.error(errors);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

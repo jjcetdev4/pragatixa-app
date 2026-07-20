@@ -34,11 +34,11 @@ public class LevelBadgeController {
         return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getAllLevels()));
     }
 
-    /** GET /api/v1/levels/student/{studentId}/current – Get student's current level by roll number */
-    @GetMapping("/levels/student/{studentId}/current")
+    /** GET /api/v1/levels/student/{regNo}/current – Get student's current level by roll number */
+    @GetMapping("/levels/student/{regNo}/current")
     @Operation(summary = "Get Student's Current Level", description = "Determines a student's active level based on their current XP score.")
-    public ResponseEntity<ApiResponse<Level>> getCurrentLevelForStudent(@PathVariable String studentId) {
-        return levelBadgeService.getCurrentLevelForStudent(studentId)
+    public ResponseEntity<ApiResponse<Level>> getCurrentLevelForStudent(@PathVariable String regNo) {
+        return levelBadgeService.getCurrentLevelForStudent(regNo)
                 .map(level -> ResponseEntity.ok(ApiResponse.ok(level)))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -47,8 +47,8 @@ public class LevelBadgeController {
     @GetMapping("/levels/me/current")
     @Operation(summary = "Get Current Logged-in Student's Level")
     public ResponseEntity<ApiResponse<Level>> getCurrentLoggedInLevel() {
-        String studentId = studentAuthResolver.getLoggedInStudent().getStudentId();
-        return levelBadgeService.getCurrentLevelForStudent(studentId)
+        String regNo = studentAuthResolver.getLoggedInStudent().getRegNo();
+        return levelBadgeService.getCurrentLevelForStudent(regNo)
                 .map(level -> ResponseEntity.ok(ApiResponse.ok(level)))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -64,24 +64,24 @@ public class LevelBadgeController {
     @GetMapping("/badges/student/me")
     @Operation(summary = "Get My Badges", description = "Returns all earned and pending badge claims for the active student session.")
     public ResponseEntity<ApiResponse<List<StudentBadgeResponse>>> getMyBadges() {
-        String studentId = studentAuthResolver.getLoggedInStudent().getStudentId();
-        return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getBadgesForStudent(studentId)));
+        String regNo = studentAuthResolver.getLoggedInStudent().getRegNo();
+        return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getBadgesForStudent(regNo)));
     }
 
-    /** GET /api/v1/badges/student/{studentId} – Get a specific student's badges */
-    @GetMapping("/badges/student/{studentId}")
+    /** GET /api/v1/badges/student/{regNo} – Get a specific student's badges */
+    @GetMapping("/badges/student/{regNo}")
     @Operation(summary = "Get Badges by Student ID")
-    public ResponseEntity<ApiResponse<List<StudentBadgeResponse>>> getBadgesForStudent(@PathVariable String studentId) {
-        return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getBadgesForStudent(studentId)));
+    public ResponseEntity<ApiResponse<List<StudentBadgeResponse>>> getBadgesForStudent(@PathVariable String regNo) {
+        return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getBadgesForStudent(regNo)));
     }
 
     /** POST /api/v1/badges/submit – Student submits a claim for a badge */
     @PostMapping("/badges/submit")
     @Operation(summary = "Claim Badge", description = "Student submits a badge claim with evidence URL.")
     public ResponseEntity<ApiResponse<StudentBadgeResponse>> submitBadgeClaim(@RequestBody ClaimBadgeRequest request) {
-        String studentId = studentAuthResolver.getLoggedInStudent().getStudentId();
+        String regNo = studentAuthResolver.getLoggedInStudent().getRegNo();
         
-        ApiResponse<StudentBadgeResponse> response = levelBadgeService.submitBadgeClaim(studentId, request.getBadgeName(), request.getEvidenceUrl());
+        ApiResponse<StudentBadgeResponse> response = levelBadgeService.submitBadgeClaim(regNo, request.getBadgeName(), request.getEvidenceUrl());
         
         return response.isSuccess()
                 ? ResponseEntity.ok(response)

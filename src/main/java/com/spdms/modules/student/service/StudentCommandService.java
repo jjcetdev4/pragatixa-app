@@ -50,8 +50,8 @@ public class StudentCommandService {
             return ApiResponse.error("Access Denied: Only Class Coordinators (CC) can add students.");
         }
 
-        if (studentRepository.existsByStudentId(request.getStudentId())) {
-            return ApiResponse.error("Student ID '" + request.getStudentId() + "' already exists");
+        if (studentRepository.existsByRegNo(request.getRegNo())) {
+            return ApiResponse.error("Student ID '" + request.getRegNo() + "' already exists");
         }
         if (studentRepository.existsByEmail(request.getEmail())) {
             return ApiResponse.error("Email '" + request.getEmail() + "' is already registered");
@@ -85,7 +85,7 @@ public class StudentCommandService {
         }
 
         Student student = Student.builder()
-            .studentId(request.getStudentId().trim())
+            .regNo(request.getRegNo().trim())
             .fullName(request.getFullName().trim())
             .email(request.getEmail().trim())
             .password(passwordEncoder.encode(rawPassword))
@@ -182,13 +182,13 @@ public class StudentCommandService {
             return ApiResponse.error("Student not found with ID: " + id);
         }
 
-        entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM discipline_logs WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM team_removal_requests WHERE student_id = :sid OR captain_id = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM team_members WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM student_badges WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM streaks WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM discipline_logs WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM team_removal_requests WHERE reg_no = :sid OR captain_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM team_members WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM student_badges WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM streaks WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
         entityManager.createNativeQuery("UPDATE teams SET captain_id = NULL WHERE captain_id = :sid").setParameter("sid", id).executeUpdate();
 
         User user = student.getUser();

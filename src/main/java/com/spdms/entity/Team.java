@@ -10,7 +10,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "teams", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_team_name_assignment", columnNames = {"name", "assignment_id"})
+    @UniqueConstraint(name = "uk_team_name_class", columnNames = {"name", "department_id", "year", "section_id"})
 })
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Team {
@@ -30,8 +30,19 @@ public class Team {
     private Student captain;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "assignment_id")
-    private ActivityAssignment assignment;
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    @Column(name = "year")
+    private String year;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "section_id")
+    private Section section;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "created_by_id")
+    private User createdBy;
 
     @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team", "teams"})
@@ -86,12 +97,36 @@ public class Team {
         this.members = members;
     }
 
-    public ActivityAssignment getAssignment() {
-        return assignment;
+    public Department getDepartment() {
+        return department;
     }
 
-    public void setAssignment(ActivityAssignment assignment) {
-        this.assignment = assignment;
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public Section getSection() {
+        return section;
+    }
+
+    public void setSection(Section section) {
+        this.section = section;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
     }
 
     public static Builder builder() {
@@ -103,7 +138,11 @@ public class Team {
         public Builder name(String v) { team.name = v; return this; }
         public Builder size(int v) { team.size = v; return this; }
         public Builder captain(Student v) { team.captain = v; return this; }
-        public Builder assignment(ActivityAssignment v) { team.assignment = v; return this; }
+        public Builder department(Department v) { team.department = v; return this; }
+        public Builder year(String v) { team.year = v; return this; }
+        public Builder section(Section v) { team.section = v; return this; }
+        public Builder createdBy(User v) { team.createdBy = v; return this; }
+        public Builder members(Set<Student> v) { team.members = v; return this; }
         public Team build() { return team; }
     }
 }

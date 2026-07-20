@@ -6,7 +6,7 @@ public class TeamRemovalRequestDto {
     private Long id;
     private Long teamId;
     private String teamName;
-    private String studentId;
+    private String regNo;
     private String studentName;
     private String captainId;
     private String captainName;
@@ -16,11 +16,11 @@ public class TeamRemovalRequestDto {
 
     public TeamRemovalRequestDto() {}
 
-    public TeamRemovalRequestDto(Long id, Long teamId, String teamName, String studentId, String studentName, String captainId, String captainName, String reason, String status, LocalDateTime createdAt) {
+    public TeamRemovalRequestDto(Long id, Long teamId, String teamName, String regNo, String studentName, String captainId, String captainName, String reason, String status, LocalDateTime createdAt) {
         this.id = id;
         this.teamId = teamId;
         this.teamName = teamName;
-        this.studentId = studentId;
+        this.regNo = regNo;
         this.studentName = studentName;
         this.captainId = captainId;
         this.captainName = captainName;
@@ -53,12 +53,12 @@ public class TeamRemovalRequestDto {
         this.teamName = teamName;
     }
 
-    public String getStudentId() {
-        return studentId;
+    public String getRegNo() {
+        return regNo;
     }
 
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
     }
 
     public String getStudentName() {

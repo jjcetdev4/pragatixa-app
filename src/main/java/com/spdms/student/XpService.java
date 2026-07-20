@@ -20,20 +20,20 @@ public class XpService {
         this.xpCommandService = xpCommandService;
     }
 
-    public Map<String, Integer> getXpSummary(String studentId) {
-        return xpQueryService.getXpSummary(studentId);
+    public Map<String, Integer> getXpSummary(String regNo) {
+        return xpQueryService.getXpSummary(regNo);
     }
 
-    public Page<XpTransaction> getXpHistory(String studentId, int page, int size) {
-        return xpQueryService.getXpHistory(studentId, page, size);
+    public Page<XpTransaction> getXpHistory(String regNo, int page, int size) {
+        return xpQueryService.getXpHistory(regNo, page, size);
     }
 
-    public List<Streak> getStudentStreaks(String studentId) {
-        return xpQueryService.getStudentStreaks(studentId);
+    public List<Streak> getStudentStreaks(String regNo) {
+        return xpQueryService.getStudentStreaks(regNo);
     }
 
-    public ApiResponse<XpTransaction> submitXpClaim(String studentId, String category, String activityName, int xpPoints, String evidenceUrl) {
-        return xpCommandService.submitXpClaim(studentId, category, activityName, xpPoints, evidenceUrl);
+    public ApiResponse<XpTransaction> submitXpClaim(String regNo, String category, String activityName, int xpPoints, String evidenceUrl) {
+        return xpCommandService.submitXpClaim(regNo, category, activityName, xpPoints, evidenceUrl);
     }
 
     public ApiResponse<XpTransaction> approveXpClaim(Long txId, String approvedBy) {
@@ -44,7 +44,7 @@ public class XpService {
         return xpCommandService.rejectXpClaim(txId, approvedBy);
     }
 
-    public ApiResponse<XpTransaction> logViolation(String studentId, String violationType, int xpPenalty, String appliedBy, String description) {
-        return xpCommandService.logViolation(studentId, violationType, xpPenalty, appliedBy, description);
+    public ApiResponse<XpTransaction> logViolation(String regNo, String violationType, int xpPenalty, String appliedBy, String description) {
+        return xpCommandService.logViolation(regNo, violationType, xpPenalty, appliedBy, description);
     }
 }

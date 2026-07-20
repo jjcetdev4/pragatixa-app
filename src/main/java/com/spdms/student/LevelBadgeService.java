@@ -38,8 +38,8 @@ public class LevelBadgeService {
         return levelRepository.findAll();
     }
 
-    public Optional<Level> getCurrentLevelForStudent(String studentId) {
-        Optional<Student> studentOpt = studentRepository.findByStudentId(studentId);
+    public Optional<Level> getCurrentLevelForStudent(String regNo) {
+        Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
         if (studentOpt.isEmpty()) {
             return Optional.empty();
         }
@@ -53,19 +53,19 @@ public class LevelBadgeService {
         return badgeRepository.findAll();
     }
 
-    public List<StudentBadgeResponse> getBadgesForStudent(String studentId) {
-        Optional<Student> studentOpt = studentRepository.findByStudentId(studentId);
+    public List<StudentBadgeResponse> getBadgesForStudent(String regNo) {
+        Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
         if (studentOpt.isEmpty()) {
             return List.of();
         }
-        return studentBadgeRepository.findByStudentId(studentOpt.get().getId()).stream()
+        return studentBadgeRepository.findByRegNo(studentOpt.get().getId()).stream()
                 .map(StudentBadgeResponse::new)
                 .toList();
     }
 
     @Transactional
-    public ApiResponse<StudentBadgeResponse> submitBadgeClaim(String studentId, String badgeName, String evidenceUrl) {
-        Optional<Student> studentOpt = studentRepository.findByStudentId(studentId);
+    public ApiResponse<StudentBadgeResponse> submitBadgeClaim(String regNo, String badgeName, String evidenceUrl) {
+        Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
         }

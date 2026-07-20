@@ -29,7 +29,7 @@ public class StudentMapper {
 
         return StudentResponse.builder()
             .id(student.getId())
-            .studentId(student.getStudentId())
+            .regNo(student.getRegNo())
             .fullName(student.getFullName())
             .email(student.getEmail())
             .phone(student.getPhone())

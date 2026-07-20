@@ -38,8 +38,8 @@ public class XpCommandService {
     }
 
     @Transactional
-    public ApiResponse<XpTransaction> submitXpClaim(String studentId, String category, String activityName, int xpPoints, String evidenceUrl) {
-        Optional<Student> studentOpt = studentRepository.findByStudentId(studentId);
+    public ApiResponse<XpTransaction> submitXpClaim(String regNo, String category, String activityName, int xpPoints, String evidenceUrl) {
+        Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
         }
@@ -120,8 +120,8 @@ public class XpCommandService {
     }
 
     @Transactional
-    public ApiResponse<XpTransaction> logViolation(String studentId, String violationType, int xpPenalty, String appliedBy, String description) {
-        Optional<Student> studentOpt = studentRepository.findByStudentId(studentId);
+    public ApiResponse<XpTransaction> logViolation(String regNo, String violationType, int xpPenalty, String appliedBy, String description) {
+        Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
         }
@@ -173,7 +173,7 @@ public class XpCommandService {
         }
 
         if (type != null) {
-            Optional<Streak> streakOpt = streakRepository.findByStudentStudentIdAndStreakType(student.getStudentId(), type);
+            Optional<Streak> streakOpt = streakRepository.findByStudentStudentIdAndStreakType(student.getRegNo(), type);
             Streak streak;
             if (streakOpt.isEmpty()) {
                 streak = Streak.builder()

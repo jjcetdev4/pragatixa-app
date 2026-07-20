@@ -28,7 +28,7 @@ public class StudentAuthResolver {
      * Resolves the currently authenticated Student identity using stable mapping rather than just email.
      * 1. Looks up the authenticated User.
      * 2. Checks if there is a direct User -> Student relationship (findByUserId).
-     * 3. Checks if the Username matches studentId, regNo, or sprNo.
+     * 3. Checks if the Username matches regNo, regNo, or sprNo.
      * 4. As a last resort, checks email matching.
      * 
      * @return The authenticated Student entity
@@ -53,24 +53,17 @@ public class StudentAuthResolver {
 
         // 3. Try to find by stable identifiers matching the JWT subject (username)
         if (student == null) {
-            student = studentRepository.findByStudentId(username).orElse(null);
+            student = studentRepository.findByRegNo(username).orElse(null);
         }
 
         // 2. Try to find by stable identifiers matching the username
         if (student == null) {
-            student = studentRepository.findByStudentId(username).orElse(null);
+            student = studentRepository.findByRegNo(username).orElse(null);
         }
         if (student == null) {
             student = studentRepository.findBySprNo(username).orElse(null);
         }
-        if (student == null) {
-            try {
-                Long regNo = Long.parseLong(username);
-                student = studentRepository.findByRegNo(regNo).orElse(null);
-            } catch (NumberFormatException e) {
-                // Ignore, username is not a numeric register number
-            }
-        }
+
 
         // 3. Fallback: email matching
         if (student == null && user.getEmail() != null) {
@@ -83,7 +76,7 @@ public class StudentAuthResolver {
         }
 
         log.debug("Resolved Authenticated Student - Username: {}, Resolved Student ID: {}, Resolved Student Name: {}", 
-                 username, student.getStudentId(), student.getFullName());
+                 username, student.getRegNo(), student.getFullName());
 
         return student;
     }

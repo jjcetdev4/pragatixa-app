@@ -38,6 +38,7 @@ public class StudentXpService {
     private final XpTransactionRepository xpTransactionRepository;
     private final AssignmentSecurityService assignmentSecurityService;
     private final StudentXpValidator validator;
+    private final com.spdms.admin.service.CaptainSelectionService captainSelectionService;
 
     public StudentXpService(UserRepository userRepository,
                             ActivityRepository activityRepository,
@@ -46,7 +47,8 @@ public class StudentXpService {
                             StudentActivityXpRepository studentActivityXpRepository,
                             XpTransactionRepository xpTransactionRepository,
                             AssignmentSecurityService assignmentSecurityService,
-                            StudentXpValidator validator) {
+                            StudentXpValidator validator,
+                            com.spdms.admin.service.CaptainSelectionService captainSelectionService) {
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
@@ -55,6 +57,7 @@ public class StudentXpService {
         this.xpTransactionRepository = xpTransactionRepository;
         this.assignmentSecurityService = assignmentSecurityService;
         this.validator = validator;
+        this.captainSelectionService = captainSelectionService;
     }
 
     public ActivityAssignment findMatchingAssignmentForStudent(List<ActivityAssignment> matching, Student student) {
@@ -78,7 +81,7 @@ public class StudentXpService {
         User teacher = userRepository.findByUsername(username).orElse(null);
         if (teacher == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.<Void>error("Teacher profile not found"));
 
-        Student student = studentRepository.findById(request.getStudentId()).orElse(null);
+        Student student = studentRepository.findById(request.getRegNo()).orElse(null);
         if (student == null) return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Student not found"));
 
         Activity activity = activityRepository.findById(request.getActivityId()).orElse(null);
@@ -128,8 +131,8 @@ public class StudentXpService {
 
         List<Long> studentIds = request.getStudentIds();
         if (studentIds == null || studentIds.isEmpty()) {
-            if (request.getStudentId() != null) {
-                studentIds = List.of(request.getStudentId());
+            if (request.getRegNo() != null) {
+                studentIds = List.of(request.getRegNo());
             } else {
                 return ResponseEntity.badRequest().body(ApiResponse.<Void>error("At least one student must be selected"));
             }
@@ -145,10 +148,10 @@ public class StudentXpService {
         Map<Long, Student> studentMap = studentRepository.findAllById(studentIds)
             .stream().collect(Collectors.toMap(Student::getId, s -> s));
 
-        for (Long studentId : studentIds) {
-            Student student = studentMap.get(studentId);
+        for (Long regNo : studentIds) {
+            Student student = studentMap.get(regNo);
             if (student == null) {
-                errors.add("Student ID " + studentId + " not found");
+                errors.add("Student ID " + regNo + " not found");
                 continue;
             }
 
@@ -166,6 +169,9 @@ public class StudentXpService {
 
             student.setTotalXp(student.getTotalXp() + xpToAward);
             student.setScore(student.getScore() + xpToAward);
+            
+            captainSelectionService.evaluateCaptainPromotion(student);
+
             studentsToUpdate.add(student);
 
             StudentActivityXp record = new StudentActivityXp(
@@ -245,6 +251,9 @@ public class StudentXpService {
 
         student.setTotalXp(student.getTotalXp() + xpToAward);
         student.setScore(student.getScore() + xpToAward);
+        
+        captainSelectionService.evaluateCaptainPromotion(student);
+
         studentRepository.save(student);
 
         XpTransaction tx = XpTransaction.builder()

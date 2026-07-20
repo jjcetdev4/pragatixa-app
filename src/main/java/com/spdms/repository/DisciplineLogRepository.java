@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface DisciplineLogRepository extends JpaRepository<DisciplineLog, Long> {
-    List<DisciplineLog> findByStudentIdOrderByCreatedAtDesc(Long studentId);
+    List<DisciplineLog> findByStudentIdOrderByCreatedAtDesc(Long regNo);
 
     @Modifying
     @Query("UPDATE DisciplineLog dl SET dl.subgroup = null WHERE dl.subgroup.id = :subgroupId")
@@ -21,6 +21,6 @@ public interface DisciplineLogRepository extends JpaRepository<DisciplineLog, Lo
     @Query("UPDATE DisciplineLog dl SET dl.activity = null WHERE dl.activity.id = :activityId")
     void nullifyActivityReferences(@Param("activityId") Long activityId);
 
-    @Query("SELECT COALESCE(SUM(dl.points), 0) FROM DisciplineLog dl WHERE dl.student.id = :studentId AND dl.activity.id = :activityId AND (dl.remarks IS NULL OR dl.remarks NOT IN ('PENDING', 'PENDING REVIEW', 'REJECTED'))")
-    int sumApprovedPointsByStudentAndActivity(@Param("studentId") Long studentId, @Param("activityId") Long activityId);
+    @Query("SELECT COALESCE(SUM(dl.points), 0) FROM DisciplineLog dl WHERE dl.student.id = :regNo AND dl.activity.id = :activityId AND (dl.remarks IS NULL OR dl.remarks NOT IN ('PENDING', 'PENDING REVIEW', 'REJECTED'))")
+    int sumApprovedPointsByStudentAndActivity(@Param("regNo") Long regNo, @Param("activityId") Long activityId);
 }

@@ -15,8 +15,8 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "reg_no", unique = true)
-    private Long regNo;
+    @Column(name = "reg_no", unique = true, length = 50)
+    private String regNo;
 
     @Column(name = "spr_no", unique = true, length = 50)
     private String sprNo;
@@ -90,8 +90,6 @@ public class Student {
     @Column(length = 20)
     private String semester;
 
-    @Column(name = "student_id", nullable = false, unique = true, length = 50)
-    private String studentId;
 
     @Column(length = 10)
     private String year;
@@ -120,8 +118,8 @@ public class Student {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Long getRegNo() { return regNo; }
-    public void setRegNo(Long regNo) { this.regNo = regNo; }
+    public String getRegNo() { return regNo; }
+    public void setRegNo(String regNo) { this.regNo = regNo; }
 
     public String getSprNo() { return sprNo; }
     public void setSprNo(String sprNo) { this.sprNo = sprNo; }
@@ -188,8 +186,6 @@ public class Student {
     public String getSemester() { return semester; }
     public void setSemester(String semester) { this.semester = semester; }
 
-    public String getStudentId() { return studentId; }
-    public void setStudentId(String studentId) { this.studentId = studentId; }
 
     public String getYear() { return year; }
     public void setYear(String year) { this.year = year; }
@@ -219,7 +215,7 @@ public class Student {
 
     public static class Builder {
         private final Student s = new Student();
-        public Builder regNo(Long v) { s.regNo = v; return this; }
+        public Builder regNo(String v) { s.regNo = v; return this; }
         public Builder sprNo(String v) { s.sprNo = v; return this; }
         public Builder department(Department v) { s.department = v; return this; }
         public Builder section(Section v) { s.section = v; return this; }
@@ -242,7 +238,6 @@ public class Student {
         public Builder score(int v) { s.score = v; return this; }
 
         public Builder semester(String v) { s.semester = v; return this; }
-        public Builder studentId(String v) { s.studentId = v; return this; }
         public Builder year(String v) { s.year = v; return this; }
         public Builder team(Team v) { s.team = v; return this; }
         public Builder totalXp(int v) { s.totalXp = v; return this; }

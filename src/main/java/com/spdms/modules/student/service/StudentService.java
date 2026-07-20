@@ -74,13 +74,13 @@ public class StudentService {
     }
 
     @Transactional
-        public ApiResponse<StudentResponse> adjustPoints(Long studentId, PointAdjustmentRequest request, String username) {
-        return studentDisciplineService.adjustPoints(studentId, request, username);
+        public ApiResponse<StudentResponse> adjustPoints(Long regNo, PointAdjustmentRequest request, String username) {
+        return studentDisciplineService.adjustPoints(regNo, request, username);
     }
 
     @Transactional(readOnly = true)
-        public ApiResponse<List<DisciplineLog>> getDisciplineLogs(Long studentId) {
-        return studentDisciplineService.getDisciplineLogs(studentId);
+        public ApiResponse<List<DisciplineLog>> getDisciplineLogs(Long regNo) {
+        return studentDisciplineService.getDisciplineLogs(regNo);
     }
 
     @Transactional(readOnly = true)
@@ -89,13 +89,13 @@ public class StudentService {
     }
 
     @Transactional
-        public ApiResponse<Void> promoteToTeamCaptain(Long studentId) {
-        return studentTeamService.promoteToTeamCaptain(studentId);
+        public ApiResponse<Void> promoteToTeamCaptain(Long regNo) {
+        return studentTeamService.promoteToTeamCaptain(regNo);
     }
 
     @Transactional
-        public ApiResponse<Void> removeTeamCaptain(Long studentId) {
-        return studentTeamService.removeTeamCaptain(studentId);
+        public ApiResponse<Void> removeTeamCaptain(Long regNo) {
+        return studentTeamService.removeTeamCaptain(regNo);
     }
 
 }

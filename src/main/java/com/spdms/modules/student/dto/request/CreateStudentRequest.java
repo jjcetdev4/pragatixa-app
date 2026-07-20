@@ -6,7 +6,7 @@ import java.time.LocalDate;
 public class CreateStudentRequest {
     @NotBlank(message = "Student ID is required")
     @Size(max = 100)
-    private String studentId;
+    private String regNo;
 
     @NotBlank(message = "Full name is required")
     @Size(max = 255)
@@ -50,8 +50,8 @@ public class CreateStudentRequest {
     public String getSection() { return section; }
     public void setSection(String section) { this.section = section; }
 
-    public String getStudentId() { return studentId; }
-    public void setStudentId(String studentId) { this.studentId = studentId; }
+    public String getRegNo() { return regNo; }
+    public void setRegNo(String regNo) { this.regNo = regNo; }
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getEmail() { return email; }

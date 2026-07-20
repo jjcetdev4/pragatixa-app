@@ -34,8 +34,8 @@ public class StudentTeamService {
     }
 
     @Transactional
-    public ApiResponse<Void> promoteToTeamCaptain(Long studentId) {
-        Optional<Student> studentOpt = studentRepository.findById(studentId);
+    public ApiResponse<Void> promoteToTeamCaptain(Long regNo) {
+        Optional<Student> studentOpt = studentRepository.findById(regNo);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
         }
@@ -44,7 +44,7 @@ public class StudentTeamService {
         if (team == null) {
             String defaultTeamName = student.getFullName().trim() + "'s Team";
             if (teamRepository.existsByName(defaultTeamName)) {
-                defaultTeamName = student.getFullName().trim() + " (" + student.getStudentId().trim() + ")'s Team";
+                defaultTeamName = student.getFullName().trim() + " (" + student.getRegNo().trim() + ")'s Team";
             }
             if (teamRepository.existsByName(defaultTeamName)) {
                 defaultTeamName = student.getFullName().trim() + " Team " + System.currentTimeMillis();
@@ -67,8 +67,8 @@ public class StudentTeamService {
     }
 
     @Transactional
-    public ApiResponse<Void> removeTeamCaptain(Long studentId) {
-        Optional<Student> studentOpt = studentRepository.findById(studentId);
+    public ApiResponse<Void> removeTeamCaptain(Long regNo) {
+        Optional<Student> studentOpt = studentRepository.findById(regNo);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
         }

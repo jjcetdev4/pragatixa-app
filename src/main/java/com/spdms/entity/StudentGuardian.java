@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "student_guardians", uniqueConstraints = {
-    @UniqueConstraint(name = "student_id", columnNames = {"student_id", "relationship"})
+    @UniqueConstraint(name = "reg_no", columnNames = {"reg_no", "relationship"})
 })
 public class StudentGuardian {
 
@@ -18,7 +18,7 @@ public class StudentGuardian {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "reg_no", nullable = false)
     private Student student;
 
     @Column(name = "guardian_name", nullable = false, length = 150)

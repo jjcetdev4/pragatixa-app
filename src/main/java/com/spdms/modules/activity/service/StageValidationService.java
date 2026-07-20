@@ -28,7 +28,7 @@ public class StageValidationService {
         this.studentActivityXpRepository = studentActivityXpRepository;
     }
 
-    public StageValidationResponse validateStage(Long studentId, Long stageId) {
+    public StageValidationResponse validateStage(Long regNo, Long stageId) {
         try {
             ActivityStage stage = activityStageRepository.findById(stageId)
                     .orElseThrow(() -> new IllegalArgumentException("Stage not found"));
@@ -52,7 +52,7 @@ public class StageValidationService {
             // Calculate Threshold Status
             boolean thresholdMet = true;
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stageId);
-            List<com.spdms.entity.StudentActivityXp> history = studentActivityXpRepository.findByStudentId(studentId);
+            List<com.spdms.entity.StudentActivityXp> history = studentActivityXpRepository.findByRegNo(regNo);
 
             if (stage.isUseThresholdValidation() || stage.isUseCombinedValidation()) {
                 for (ActivitySubgroup subgroup : subgroups) {
