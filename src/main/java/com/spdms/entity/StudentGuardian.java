@@ -18,7 +18,7 @@ public class StudentGuardian {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reg_no", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
     @Column(name = "guardian_name", nullable = false, length = 150)

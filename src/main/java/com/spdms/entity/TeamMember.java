@@ -13,7 +13,7 @@ public class TeamMember {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "reg_no", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
     @Column(name = "is_captain", nullable = false)

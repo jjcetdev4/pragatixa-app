@@ -50,7 +50,7 @@ public class TeamRequestService {
         if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
         if (member.getTeam() == null || !member.getTeam().getId().equals(team.getId())) return ResponseEntity.badRequest().body(ApiResponse.error("Student is not a member of your team"));
         if (member.getId().equals(captain.getId())) return ResponseEntity.badRequest().body(ApiResponse.error("You cannot remove yourself from the team"));
-        if (teamRemovalRequestRepository.existsByTeamIdAndStudentStudentIdAndStatus(team.getId(), regNo, "PENDING")) {
+        if (teamRemovalRequestRepository.existsByTeamIdAndStudentRegNoAndStatus(team.getId(), regNo, "PENDING")) {
             return ResponseEntity.badRequest().body(ApiResponse.error("A pending removal request already exists for this student"));
         }
 

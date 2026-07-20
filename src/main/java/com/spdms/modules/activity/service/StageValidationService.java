@@ -52,7 +52,7 @@ public class StageValidationService {
             // Calculate Threshold Status
             boolean thresholdMet = true;
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stageId);
-            List<com.spdms.entity.StudentActivityXp> history = studentActivityXpRepository.findByRegNo(regNo);
+            List<com.spdms.entity.StudentActivityXp> history = studentActivityXpRepository.findByStudentId(regNo);
 
             if (stage.isUseThresholdValidation() || stage.isUseCombinedValidation()) {
                 for (ActivitySubgroup subgroup : subgroups) {

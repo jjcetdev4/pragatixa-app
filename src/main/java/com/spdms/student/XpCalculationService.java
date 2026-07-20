@@ -24,7 +24,7 @@ public class XpCalculationService {
         LocalDateTime startOfWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).withHour(0).withMinute(0);
         LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0);
 
-        List<XpTransaction> studentTxs = xpTransactionRepository.findByStudentStudentId(student.getRegNo());
+        List<XpTransaction> studentTxs = xpTransactionRepository.findByStudentRegNo(student.getRegNo());
 
         if (activity.toLowerCase().contains("attendance")) {
             int currentMonthEarned = sumPointsForActivityInPeriod(studentTxs, "attendance", startOfMonth);

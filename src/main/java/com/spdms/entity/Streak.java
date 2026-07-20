@@ -12,7 +12,7 @@ public class Streak {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "reg_no", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
     @Column(name = "streak_type", nullable = false, length = 50)

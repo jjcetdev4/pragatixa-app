@@ -173,7 +173,7 @@ public class XpCommandService {
         }
 
         if (type != null) {
-            Optional<Streak> streakOpt = streakRepository.findByStudentStudentIdAndStreakType(student.getRegNo(), type);
+            Optional<Streak> streakOpt = streakRepository.findByStudentRegNoAndStreakType(student.getRegNo(), type);
             Streak streak;
             if (streakOpt.isEmpty()) {
                 streak = Streak.builder()

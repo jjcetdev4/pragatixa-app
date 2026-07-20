@@ -58,7 +58,7 @@ public class LevelBadgeService {
         if (studentOpt.isEmpty()) {
             return List.of();
         }
-        return studentBadgeRepository.findByRegNo(studentOpt.get().getId()).stream()
+        return studentBadgeRepository.findByStudentId(studentOpt.get().getId()).stream()
                 .map(StudentBadgeResponse::new)
                 .toList();
     }

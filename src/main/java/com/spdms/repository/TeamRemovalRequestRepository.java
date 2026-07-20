@@ -9,6 +9,6 @@ import java.util.List;
 public interface TeamRemovalRequestRepository extends JpaRepository<TeamRemovalRequest, Long> {
     List<TeamRemovalRequest> findByStatus(String status);
     List<TeamRemovalRequest> findByTeamIdAndStatus(Long teamId, String status);
-    boolean existsByTeamIdAndStudentStudentIdAndStatus(Long teamId, String regNo, String status);
+    boolean existsByTeamIdAndStudentRegNoAndStatus(Long teamId, String regNo, String status);
     List<TeamRemovalRequest> findByTeamId(Long teamId);
 }
