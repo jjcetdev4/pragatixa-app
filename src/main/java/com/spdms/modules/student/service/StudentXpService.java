@@ -96,7 +96,8 @@ public class StudentXpService {
         ActivityAssignment assignment = findMatchingAssignmentForStudent(matching, student);
         if (assignment == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.<Void>error("Access Denied: You are not authorized to award XP to this student for this activity."));
 
-        int xpToAward = calculateXpToAward(activity, request.getResult());
+        int calculatedXp = calculateXpToAward(activity, request.getResult());
+        int xpToAward = request.getXp() != 0 ? request.getXp() : calculatedXp;
 
         String limitError = validator.checkAwardLimit(student, activity);
         if (limitError != null) return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.<Void>error(limitError));
@@ -122,7 +123,8 @@ public class StudentXpService {
             .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, teacher))
             .collect(Collectors.toList());
 
-        int xpToAward = calculateXpToAward(activity, request.getResult());
+        int calculatedXp = calculateXpToAward(activity, request.getResult());
+        int xpToAward = request.getXp() != 0 ? request.getXp() : calculatedXp;
 
         List<Long> studentIds = request.getStudentIds();
         if (studentIds == null || studentIds.isEmpty()) {
@@ -204,6 +206,7 @@ public class StudentXpService {
         int xpToAward = 0;
         Boolean isAward = activity.getAwardEnabled();
         Boolean isPenalty = activity.getPenaltyEnabled();
+        
         if (isAward == null && isPenalty == null) {
             if ("Penalty".equalsIgnoreCase(activity.getXpType())) {
                 isAward = false;
@@ -213,16 +216,24 @@ public class StudentXpService {
                 isPenalty = false;
             }
         }
-        if ("FAIL".equalsIgnoreCase(resultStr)) {
-            if (Boolean.TRUE.equals(isPenalty)) {
+        
+        boolean awardable = Boolean.TRUE.equals(isAward);
+        boolean penalizable = Boolean.TRUE.equals(isPenalty);
+        
+        if (penalizable && !awardable) {
+            int px = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : (activity.getAwardXp() != null ? activity.getAwardXp() : 0);
+            xpToAward = -Math.abs(px);
+        } else if (awardable && !penalizable) {
+            xpToAward = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+        } else {
+            if ("FAIL".equalsIgnoreCase(resultStr)) {
                 int px = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : (activity.getAwardXp() != null ? activity.getAwardXp() : 0);
                 xpToAward = -Math.abs(px);
-            }
-        } else {
-            if (Boolean.TRUE.equals(isAward)) {
+            } else {
                 xpToAward = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
             }
         }
+        
         return xpToAward;
     }
 
