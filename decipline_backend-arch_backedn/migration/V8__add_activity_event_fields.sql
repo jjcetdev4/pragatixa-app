@@ -1,0 +1,4 @@
+ALTER TABLE `activities`
+ADD COLUMN `maximum_awards` INT DEFAULT 1,
+ADD COLUMN `display_order` INT DEFAULT 0,
+ADD COLUMN `status` VARCHAR(50) DEFAULT 'ACTIVE';
