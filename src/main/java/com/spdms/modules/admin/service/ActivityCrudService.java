@@ -153,13 +153,32 @@ public class ActivityCrudService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> deleteActivity(Long activityId) {
-        if (!activityRepository.existsById(activityId)) {
+    public ResponseEntity<ApiResponse<Void>> deleteActivity(Long activityId, boolean force) {
+        Activity activity = activityRepository.findById(activityId).orElse(null);
+        if (activity == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Activity not found"));
         }
-        studentActivityXpRepository.deleteByActivityId(activityId);
-        activityAssignmentRepository.deleteByActivityId(activityId);
-        disciplineLogRepository.nullifyActivityReferences(activityId);
+        
+        long xpTransactions = studentActivityXpRepository.countByActivityId(activityId);
+        long studentAssignments = activityAssignmentRepository.countByActivityId(activityId);
+        long disciplineLogs = disciplineLogRepository.countByActivityId(activityId);
+        boolean isMappedToStage = activity.getStage() != null;
+
+        if (!force && (xpTransactions > 0 || studentAssignments > 0 || disciplineLogs > 0 || isMappedToStage)) {
+            String msg = "Cannot delete Activity. Currently referenced by: " +
+                         (xpTransactions > 0 ? "\n• " + xpTransactions + " XP Transactions" : "") +
+                         (studentAssignments > 0 ? "\n• " + studentAssignments + " Student Assignments" : "") +
+                         (disciplineLogs > 0 ? "\n• " + disciplineLogs + " Discipline Logs" : "") +
+                         (isMappedToStage ? "\n• 1 Stage Mapping" : "");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.<Void>error(msg));
+        }
+
+        if (force) {
+            studentActivityXpRepository.deleteByActivityId(activityId);
+            activityAssignmentRepository.deleteByActivityId(activityId);
+            disciplineLogRepository.nullifyActivityReferences(activityId);
+        }
+
         activityRepository.deleteById(activityId);
         log.debug("Admin deleted activity with ID: {}", activityId);
         return ResponseEntity.ok(ApiResponse.ok("Activity deleted successfully", null));

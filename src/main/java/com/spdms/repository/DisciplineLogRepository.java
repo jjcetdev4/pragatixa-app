@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface DisciplineLogRepository extends JpaRepository<DisciplineLog, Long> {
     List<DisciplineLog> findByStudentIdOrderByCreatedAtDesc(Long regNo);
+    
+    long countByActivityId(Long activityId);
 
     @Modifying
     @Query("UPDATE DisciplineLog dl SET dl.subgroup = null WHERE dl.subgroup.id = :subgroupId")

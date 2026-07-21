@@ -42,8 +42,8 @@ public class AdminActivityService {
         return crudService.updateActivity(activityId, body);
     }
 
-    public ResponseEntity<ApiResponse<Void>> deleteActivity(Long activityId) {
-        return crudService.deleteActivity(activityId);
+    public ResponseEntity<ApiResponse<Void>> deleteActivity(Long activityId, boolean force) {
+        return crudService.deleteActivity(activityId, force);
     }
 
     public ResponseEntity<ApiResponse<Void>> assignActivity(Long activityId, Map<String, Object> payload) {

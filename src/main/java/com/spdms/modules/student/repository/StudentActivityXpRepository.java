@@ -10,6 +10,8 @@ import java.util.List;
 public interface StudentActivityXpRepository extends JpaRepository<StudentActivityXp, Long> {
     List<StudentActivityXp> findByStudentId(Long studentId);
     List<StudentActivityXp> findByStudentIdAndActivityId(Long regNo, Long activityId);
+    
+    long countByActivityId(Long activityId);
 
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional

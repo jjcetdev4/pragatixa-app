@@ -76,8 +76,10 @@ public class AdminActivityController {
     @DeleteMapping("/activities/{activityId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete an activity")
-    public ResponseEntity<ApiResponse<Void>> deleteActivity(@PathVariable Long activityId) {
-        return adminActivityService.deleteActivity(activityId);
+    public ResponseEntity<ApiResponse<Void>> deleteActivity(
+            @PathVariable Long activityId,
+            @RequestParam(required = false, defaultValue = "false") boolean force) {
+        return adminActivityService.deleteActivity(activityId, force);
     }
 
     @GetMapping("/frequencies/custom")
