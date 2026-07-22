@@ -57,22 +57,15 @@ public class CaptainSelectionService {
     }
 
     public void reassignCaptain(Team team, Student promotedStudent) {
-        // Find all active members in the same team who have NOT been promoted out of the team's base stage
-        // A simple heuristic: find the highest XP student in the team who is not the promoted student.
-        // The prompt says: "Not already promoted out of the team"
-        // Let's assume anyone with stage <= promotedStudent.getStage() - 1 is eligible.
-        // Actually, just anyone currently in the team who is active.
-        
-        int teamBaseStage = promotedStudent.getStage() - 1; // Since we just incremented it
+        int teamBaseStage = promotedStudent.getStage() - 1; 
         
         List<Student> eligibleMembers = team.getMembers().stream()
                 .filter(Student::isActive)
                 .filter(m -> !m.getId().equals(promotedStudent.getId()))
-                .filter(m -> m.getStage() <= teamBaseStage) // Not promoted out
+                .filter(m -> m.getStage() <= teamBaseStage) 
                 .collect(Collectors.toList());
 
         if (eligibleMembers.isEmpty()) {
-            // If no eligible members, the team might just have no captain or we fall back to any member
             eligibleMembers = team.getMembers().stream()
                     .filter(Student::isActive)
                     .filter(m -> !m.getId().equals(promotedStudent.getId()))
@@ -82,12 +75,13 @@ public class CaptainSelectionService {
         if (eligibleMembers.isEmpty()) {
             team.setCaptain(null);
         } else {
-            // Sort by 1. Highest XP 2. Earliest timestamp (simulated by lowest ID if timestamp not available)
             eligibleMembers.sort(Comparator.comparingInt(Student::getTotalXp).reversed()
                     .thenComparing(Student::getId));
             
             Student newCaptain = eligibleMembers.get(0);
             team.setCaptain(newCaptain);
+            newCaptain.setCaptain(true);
+            studentRepository.save(newCaptain);
         }
         
         teamRepository.save(team);

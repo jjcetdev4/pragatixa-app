@@ -378,7 +378,7 @@ private int calculateXpToAward(Activity activity, String resultStr) {
     }
 
     private void evaluateStagePromotion(Student student) {
-        com.spdms.entity.ActivityStage currentStage = activityStageRepository.findByDisplayOrder(student.getCurrentStage()).orElse(null);
+        com.spdms.entity.ActivityStage currentStage = activityStageRepository.findByDisplayOrder(student.getStage()).orElse(null);
         if (currentStage == null || currentStage.getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
             return;
         }
@@ -387,10 +387,12 @@ private int calculateXpToAward(Activity activity, String resultStr) {
         boolean thresholdsMet = stageValidationService.isStageThresholdsMet(student.getId(), currentStage.getId());
         
         if ("UNLOCKED".equals(validation.getStageStatus()) || thresholdsMet) {
-            com.spdms.entity.ActivityStage nextStage = activityStageRepository.findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(student.getCurrentStage()).orElse(null);
+            com.spdms.entity.ActivityStage nextStage = activityStageRepository.findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(student.getStage()).orElse(null);
             if (nextStage != null) {
-                student.setCurrentStage(nextStage.getDisplayOrder());
+                System.out.println("PROMOTION TRIGGERED: Student " + student.getRegNo() + " promoted to Stage " + nextStage.getDisplayOrder());
+                
                 student.setStage(nextStage.getDisplayOrder());
+                student.setCurrentStage(nextStage.getDisplayOrder()); // Backward compatibility
                 student.setScore(0);
                 
                 teamAssignmentService.assignTeamOnPromotion(student, nextStage);

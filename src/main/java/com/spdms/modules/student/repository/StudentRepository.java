@@ -34,7 +34,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE Student s SET s.currentStage = :stageOrder")
+    @Query("UPDATE Student s SET s.stage = :stageOrder")
     void updateAllStudentsCurrentStage(@Param("stageOrder") int stageOrder);
 
     List<Student> findByActiveTrue();

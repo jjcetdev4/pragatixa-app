@@ -109,7 +109,7 @@ public class Student {
     @Column(name = "stage", nullable = false)
     private int stage = 1;
 
-    @Column(name = "current_stage", nullable = false)
+    @Transient
     private int currentStage = 1;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -229,10 +229,10 @@ public class Student {
         this.currentStage = stage;
     }
 
-    public int getCurrentStage() { return currentStage; }
+    public int getCurrentStage() { return stage; }
     public void setCurrentStage(int currentStage) { 
-        this.currentStage = currentStage;
         this.stage = currentStage;
+        this.currentStage = currentStage;
     }
 
     public LocalDateTime getCreatedAt() { return createdAt; }

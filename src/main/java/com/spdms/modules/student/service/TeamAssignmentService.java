@@ -34,14 +34,14 @@ public class TeamAssignmentService {
 
     @Transactional
     public void assignTeamOnPromotion(Student student, ActivityStage nextStage) {
-        if (nextStage.getDisplayOrder() == 2) {
-            handleStage2Promotion(student, nextStage);
-        } else if (nextStage.getDisplayOrder() > 2) {
+        if (student.getTeam() == null) {
+            handleInitialTeamAssignment(student, nextStage);
+        } else {
             handleSubsequentStagePromotion(student, nextStage);
         }
     }
 
-    private void handleStage2Promotion(Student student, ActivityStage nextStage) {
+    private void handleInitialTeamAssignment(Student student, ActivityStage nextStage) {
         Long deptId = student.getDepartment() != null ? student.getDepartment().getId() : null;
         Long secId = student.getSection() != null ? student.getSection().getId() : null;
         String yearStr = student.getYear();
@@ -61,7 +61,7 @@ public class TeamAssignmentService {
         ensureTeamsExist(deptId, secId, yearStr, teamCount, student.getDepartment(), student.getSection(), nextStage);
 
         long promotedCount = classStudents.stream()
-                .filter(s -> s.getStage() >= 2 && s.getPromotionOrder() != null)
+                .filter(s -> s.getStage() >= nextStage.getDisplayOrder() && s.getPromotionOrder() != null)
                 .count();
 
         int myOrder = (int) promotedCount + 1;

@@ -178,6 +178,7 @@ public class XpCommandService {
             if (streakOpt.isEmpty()) {
                 streak = Streak.builder()
                         .student(student)
+                        .regNo(student.getRegNo())
                         .streakType(type)
                         .currentStreak(1)
                         .lastUpdated(LocalDateTime.now())

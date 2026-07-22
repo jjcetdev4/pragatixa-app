@@ -30,12 +30,8 @@ public class ActivityStageMapper {
                 .mustThreshold(request.getMustThreshold() != null ? request.getMustThreshold() : 0)
                 .individualThreshold(request.getIndividualThreshold() != null ? request.getIndividualThreshold() : 0)
                 .groupThreshold(request.getGroupThreshold() != null ? request.getGroupThreshold() : 0)
-                .status(calculateStatus(request.getStartDateTime(), request.getEndDateTime()))
+                .status(StageStatus.UPCOMING) // Default to UPCOMING for new stages
                 .build();
-    }
-
-    private StageStatus calculateStatus(LocalDateTime start, LocalDateTime end) {
-        return StageStatus.ACTIVE;
     }
 
     public void updateEntity(ActivityStageRequest request, ActivityStage entity) {
@@ -55,7 +51,6 @@ public class ActivityStageMapper {
         entity.setMustThreshold(request.getMustThreshold() != null ? request.getMustThreshold() : 0);
         entity.setIndividualThreshold(request.getIndividualThreshold() != null ? request.getIndividualThreshold() : 0);
         entity.setGroupThreshold(request.getGroupThreshold() != null ? request.getGroupThreshold() : 0);
-        entity.setStatus(calculateStatus(request.getStartDateTime(), request.getEndDateTime()));
     }
 
     public ActivityStageResponse toResponse(ActivityStage entity) {
@@ -77,8 +72,8 @@ public class ActivityStageMapper {
         response.setIndividualThreshold(entity.getIndividualThreshold());
         response.setGroupThreshold(entity.getGroupThreshold());
         
-        // Dynamically calculate status against current server time
-        StageStatus calculatedStatus = calculateStatus(entity.getStartDateTime(), entity.getEndDateTime());
+        // Dynamically calculate time remaining but use true database status
+        StageStatus calculatedStatus = entity.getStatus();
         response.setStatus(calculatedStatus);
         response.setIsActive(calculatedStatus == StageStatus.ACTIVE);
         response.setIsUpcoming(calculatedStatus == StageStatus.UPCOMING);

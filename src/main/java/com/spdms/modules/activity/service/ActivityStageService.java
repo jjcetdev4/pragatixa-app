@@ -31,19 +31,22 @@ public class ActivityStageService {
     private final DisciplineLogRepository disciplineLogRepository;
     private final ActivityStageMapper activityStageMapper;
     private final StudentRepository studentRepository;
+    private final com.spdms.repository.StageTeamRepository stageTeamRepository;
 
     public ActivityStageService(ActivityStageRepository activityStageRepository,
                                 ActivitySubgroupRepository activitySubgroupRepository,
                                 ActivityRepository activityRepository,
                                 DisciplineLogRepository disciplineLogRepository,
                                 ActivityStageMapper activityStageMapper,
-                                StudentRepository studentRepository) {
+                                StudentRepository studentRepository,
+                                com.spdms.repository.StageTeamRepository stageTeamRepository) {
         this.activityStageRepository = activityStageRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityRepository = activityRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.activityStageMapper = activityStageMapper;
         this.studentRepository = studentRepository;
+        this.stageTeamRepository = stageTeamRepository;
     }
 
     @Transactional
@@ -177,6 +180,10 @@ public class ActivityStageService {
             throw new NoSuchElementException("Stage not found");
         }
         
+        // 0. Delete StageTeams referencing this stage
+        List<com.spdms.entity.StageTeam> stageTeams = stageTeamRepository.findByStageId(id);
+        stageTeamRepository.deleteAll(stageTeams);
+        
         List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(id);
         
         // 1. Nullify references in DisciplineLog for each subgroup and activity of this stage
@@ -198,7 +205,7 @@ public class ActivityStageService {
         // 4. Delete the stage itself
         activityStageRepository.deleteById(id);
         
-        log.debug("Admin deleted stage and its subgroups and activities: {}", id);
+        log.debug("Admin deleted stage and its subgroups, activities, and teams: {}", id);
     }
 
     private void validateStage(ActivityStageRequest request, Long existingId) {
