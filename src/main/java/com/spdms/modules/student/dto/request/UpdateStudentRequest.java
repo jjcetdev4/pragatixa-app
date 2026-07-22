@@ -37,6 +37,8 @@ public class UpdateStudentRequest {
     private Long genderId;
     private Long teamId;
     private String password;
+    
+    private GuardianDTO guardian;
 
     public UpdateStudentRequest() {}
 
@@ -96,4 +98,7 @@ public class UpdateStudentRequest {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public GuardianDTO getGuardian() { return guardian; }
+    public void setGuardian(GuardianDTO guardian) { this.guardian = guardian; }
 }

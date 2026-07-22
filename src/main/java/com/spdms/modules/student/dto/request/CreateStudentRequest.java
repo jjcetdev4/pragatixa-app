@@ -44,11 +44,16 @@ public class CreateStudentRequest {
     private String academicYear;
     private String year;
     private String section;
+    
+    private GuardianDTO guardian;
 
     public CreateStudentRequest() {}
 
     public String getSection() { return section; }
     public void setSection(String section) { this.section = section; }
+
+    public GuardianDTO getGuardian() { return guardian; }
+    public void setGuardian(GuardianDTO guardian) { this.guardian = guardian; }
 
     public String getRegNo() { return regNo; }
     public void setRegNo(String regNo) { this.regNo = regNo; }

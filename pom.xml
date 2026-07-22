@@ -96,6 +96,13 @@
     </dependency>
 
 
+    <!-- Twilio Java SDK -->
+    <dependency>
+      <groupId>com.twilio.sdk</groupId>
+      <artifactId>twilio</artifactId>
+      <version>9.14.0</version>
+    </dependency>
+
     <!-- Springdoc OpenAPI / Swagger UI -->
     <dependency>
       <groupId>org.springdoc</groupId>

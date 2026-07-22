@@ -48,6 +48,9 @@ public class TeacherAttendanceService {
 
     @Autowired
     private AttendanceStreakService streakService;
+    
+    @Autowired
+    private com.spdms.modules.notification.service.NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<StudentAttendanceListItemResponse> getStudentListWithAttendance(LocalDate date, Integer period, Long yearId, Long deptId, Long sectionId) {
@@ -112,6 +115,14 @@ public class TeacherAttendanceService {
             } catch (Exception e) {
                 log.error("Failed to update streak", e);
                 throw new RuntimeException("Failed to update streak for student " + student.getRegNo() + ": " + e.getMessage(), e);
+            }
+            
+            if (attendance.getStatus() == Attendance.AttendanceStatus.ABSENT) {
+                try {
+                    notificationService.sendAbsenceNotification(student.getId(), request.getDate());
+                } catch (Exception e) {
+                    log.error("Failed to queue SMS notification for student {}", student.getRegNo(), e);
+                }
             }
         }
         

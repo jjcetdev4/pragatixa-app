@@ -11,6 +11,7 @@ import com.spdms.repository.*;
 import com.spdms.modules.activity.repository.*;
 import com.spdms.modules.faculty.repository.*;
 import com.spdms.modules.student.repository.*;
+import com.spdms.repository.StudentGuardianRepository;
 import com.spdms.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +45,9 @@ public class StudentImportService {
     private final YearRepository yearRepository;
     private final ExcelStudentParser excelStudentParser;
     private final StudentImportResolverService resolverService;
+    private final StudentGuardianRepository studentGuardianRepository;
 
-    public StudentImportService(AcademicYearRepository academicYearRepository, DepartmentRepository departmentRepository, GenderRepository genderRepository, PasswordEncoder passwordEncoder, SectionRepository sectionRepository, SemesterRepository semesterRepository, StudentRepository studentRepository, TeamRepository teamRepository, UserRepository userRepository, YearRepository yearRepository, ExcelStudentParser excelStudentParser, StudentImportResolverService resolverService) {
+    public StudentImportService(AcademicYearRepository academicYearRepository, DepartmentRepository departmentRepository, GenderRepository genderRepository, PasswordEncoder passwordEncoder, SectionRepository sectionRepository, SemesterRepository semesterRepository, StudentRepository studentRepository, TeamRepository teamRepository, UserRepository userRepository, YearRepository yearRepository, ExcelStudentParser excelStudentParser, StudentImportResolverService resolverService, StudentGuardianRepository studentGuardianRepository) {
         this.academicYearRepository = academicYearRepository;
         this.departmentRepository = departmentRepository;
         this.genderRepository = genderRepository;
@@ -58,6 +60,7 @@ public class StudentImportService {
         this.yearRepository = yearRepository;
         this.excelStudentParser = excelStudentParser;
         this.resolverService = resolverService;
+        this.studentGuardianRepository = studentGuardianRepository;
     }
 
     private List<String> parseCsvLine(String line) {
@@ -130,6 +133,7 @@ public class StudentImportService {
             int nameIdx = -1, deptIdx = -1, sprIdx = -1, regIdx = -1, dobIdx = -1;
             int phoneIdx = -1, emailIdx = -1, genderIdx = -1, acadYearIdx = -1;
             int yearIdx = -1, semIdx = -1, secIdx = -1, teamIdx = -1, addressIdx = -1;
+            int guardNameIdx = -1, guardRelIdx = -1, guardPhoneIdx = -1, guardEmailIdx = -1;
 
             int colCount = isCsvMode ? headerCols.size() : headerRow.getLastCellNum();
             for (int i = 0; i < colCount; i++) {
@@ -160,6 +164,10 @@ public class StudentImportService {
                 else if (header.contains("section") || header.contains("sec")) secIdx = i;
                 else if (header.contains("team")) teamIdx = i;
                 else if (header.contains("address")) addressIdx = i;
+                else if (header.contains("guardianname")) guardNameIdx = i;
+                else if (header.contains("relationship") || header.contains("relation")) guardRelIdx = i;
+                else if (header.contains("guardianphone") || header.contains("parentphone")) guardPhoneIdx = i;
+                else if (header.contains("guardianemail") || header.contains("parentemail")) guardEmailIdx = i;
             }
 
             boolean usingFallback = false;
@@ -205,6 +213,11 @@ public class StudentImportService {
                 String section = getColValue(row, csvRow, secIdx, isCsvMode, excelStudentParser);
                 String teamName = getColValue(row, csvRow, teamIdx, isCsvMode, excelStudentParser);
                 String address = getColValue(row, csvRow, addressIdx, isCsvMode, excelStudentParser);
+                
+                String gName = getColValue(row, csvRow, guardNameIdx, isCsvMode, excelStudentParser);
+                String gRel = getColValue(row, csvRow, guardRelIdx, isCsvMode, excelStudentParser);
+                String gPhone = getColValue(row, csvRow, guardPhoneIdx, isCsvMode, excelStudentParser);
+                String gEmail = getColValue(row, csvRow, guardEmailIdx, isCsvMode, excelStudentParser);
 
                 if (regNo.isEmpty() && email.isEmpty() && name.isEmpty()) {
                     continue; // Skip completely empty rows
@@ -214,6 +227,13 @@ public class StudentImportService {
                 if (regNo.isEmpty()) errors.add("Register Number missing");
                 if (email.isEmpty()) errors.add("Email missing");
                 if (name.isEmpty()) errors.add("Student Name missing");
+                
+                if (guardNameIdx != -1 && guardPhoneIdx != -1) {
+                    if (gName.isEmpty()) errors.add("Guardian Name is required");
+                    if (gRel.isEmpty()) errors.add("Guardian Relationship is required");
+                    if (gPhone.isEmpty()) errors.add("Guardian Phone is required");
+                    else if (!gPhone.matches("^\\d{10}$")) errors.add("Guardian Phone must be exactly 10 digits");
+                }
 
                 CreateStudentRequest req = new CreateStudentRequest();
                 req.setFullName(name);
@@ -230,6 +250,15 @@ public class StudentImportService {
                 req.setSection(section);
                 req.setAddress(address);
                 req.setActive(true);
+
+                if (guardNameIdx != -1) {
+                    GuardianDTO guardian = new GuardianDTO();
+                    guardian.setGuardianName(gName);
+                    guardian.setRelationship(gRel.isEmpty() ? "Parent" : gRel);
+                    guardian.setPhoneNo(gPhone);
+                    guardian.setEmail(gEmail);
+                    req.setGuardian(guardian);
+                }
 
                 Long dId = resolverService.resolveDepartment(deptName);
                 if (dId == null && !deptName.isEmpty()) errors.add("Department not found: " + deptName);
@@ -259,6 +288,15 @@ public class StudentImportService {
                     String gTrim = teamName.trim();
                     Team g = teamRepository.findByName(gTrim).orElseGet(() -> teamRepository.save(Team.builder().name(gTrim).build()));
                     req.setTeamId(g.getId());
+                }
+
+                if (guardNameIdx != -1 && guardPhoneIdx != -1 && (errors.isEmpty() || errors.stream().noneMatch(e -> e.contains("Guardian")))) {
+                    GuardianDTO gDto = new GuardianDTO();
+                    gDto.setGuardianName(gName);
+                    gDto.setRelationship(gRel);
+                    gDto.setPhoneNo(gPhone);
+                    gDto.setEmail(gEmail);
+                    req.setGuardian(gDto);
                 }
 
                 if (!errors.isEmpty()) {
@@ -328,6 +366,7 @@ public class StudentImportService {
             java.util.Set<String> processedEmails = new java.util.HashSet<>();
             java.util.Set<String> processedSprs = new java.util.HashSet<>();
             List<Student> studentsToSave = new ArrayList<>();
+            List<StudentGuardian> guardiansToSave = new ArrayList<>();
             java.util.Map<Long, Department> deptMap = new java.util.HashMap<>();
             java.util.Map<Long, Section> sectionMap = new java.util.HashMap<>();
             java.util.Map<Long, Gender> genderMap = new java.util.HashMap<>();
@@ -435,6 +474,24 @@ public class StudentImportService {
                     student.setGender(gender.getGenderName());
                     
                     studentsToSave.add(student);
+                    
+                    if (request.getGuardian() != null) {
+                        GuardianDTO gDto = request.getGuardian();
+                        StudentGuardian guardian = studentGuardianRepository.findByStudentId(student.getId()).orElse(new StudentGuardian());
+                        guardian.setStudent(student);
+                        guardian.setRegNo(student.getRegNo());
+                        guardian.setGuardianName(gDto.getGuardianName());
+                        try {
+                            guardian.setRelationship(StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()));
+                        } catch (Exception e) {
+                            guardian.setRelationship(StudentGuardian.RelationshipType.GUARDIAN);
+                        }
+                        guardian.setPhoneNo(gDto.getPhoneNo());
+                        guardian.setEmail(gDto.getEmail());
+                        guardian.setPrimary(true);
+                        guardiansToSave.add(guardian);
+                    }
+
                     updateCount++;
                 } else {
                     if (studentRepository.existsByRegNo(regNo)) return ApiResponse.error("Student Register No '" + regNo + "' already exists.");
@@ -469,11 +526,32 @@ public class StudentImportService {
                         .active(request.getActive() != null ? request.getActive() : true)
                         .build();
                     studentsToSave.add(student);
+                    
+                    if (request.getGuardian() != null) {
+                        GuardianDTO gDto = request.getGuardian();
+                        StudentGuardian guardian = new StudentGuardian();
+                        guardian.setStudent(student);
+                        guardian.setRegNo(regNo);
+                        guardian.setGuardianName(gDto.getGuardianName());
+                        try {
+                            guardian.setRelationship(StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()));
+                        } catch (Exception e) {
+                            guardian.setRelationship(StudentGuardian.RelationshipType.GUARDIAN);
+                        }
+                        guardian.setPhoneNo(gDto.getPhoneNo());
+                        guardian.setEmail(gDto.getEmail());
+                        guardian.setPrimary(true);
+                        guardiansToSave.add(guardian);
+                    }
+
                     successCount++;
                 }
             }
             if (!studentsToSave.isEmpty()) {
                 studentRepository.saveAllAndFlush(studentsToSave);
+            }
+            if (!guardiansToSave.isEmpty()) {
+                studentGuardianRepository.saveAllAndFlush(guardiansToSave);
             }
             return ApiResponse.ok("Bulk import processed: " + successCount + " students created, " + updateCount + " updated.", null);
         } catch (Exception e) {

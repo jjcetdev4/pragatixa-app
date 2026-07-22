@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class StudentGuardian {
 
     public enum RelationshipType {
-        FATHER, MOTHER, GUARDIAN, LOCAL_GUARDIAN
+        FATHER, MOTHER, GUARDIAN, PARENT
     }
 
     @Id
@@ -20,6 +20,9 @@ public class StudentGuardian {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
+
+    @Column(name = "reg_no", nullable = false, length = 50)
+    private String regNo;
 
     @Column(name = "guardian_name", nullable = false, length = 150)
     private String guardianName;
@@ -51,6 +54,9 @@ public class StudentGuardian {
     public Student getStudent() { return student; }
     public void setStudent(Student student) { this.student = student; }
 
+    public String getRegNo() { return regNo; }
+    public void setRegNo(String regNo) { this.regNo = regNo; }
+
     public String getGuardianName() { return guardianName; }
     public void setGuardianName(String guardianName) { this.guardianName = guardianName; }
 
@@ -74,6 +80,7 @@ public class StudentGuardian {
     public static class Builder {
         private final StudentGuardian sg = new StudentGuardian();
         public Builder student(Student v) { sg.student = v; return this; }
+        public Builder regNo(String v) { sg.regNo = v; return this; }
         public Builder guardianName(String v) { sg.guardianName = v; return this; }
         public Builder relationship(RelationshipType v) { sg.relationship = v; return this; }
         public Builder phoneNo(String v) { sg.phoneNo = v; return this; }

@@ -7,6 +7,7 @@ import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
 import com.spdms.modules.student.repository.StudentRepository;
+import com.spdms.repository.StudentGuardianRepository;
 import com.spdms.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +32,16 @@ public class StudentCommandService {
     private final UserRepository userRepository;
     private final StudentLookupService studentLookupService;
     private final StudentMapper studentMapper;
+    private final StudentGuardianRepository studentGuardianRepository;
 
-    public StudentCommandService(PasswordEncoder passwordEncoder, StudentRepository studentRepository, TeamRepository teamRepository, UserRepository userRepository, StudentLookupService studentLookupService, StudentMapper studentMapper) {
+    public StudentCommandService(PasswordEncoder passwordEncoder, StudentRepository studentRepository, TeamRepository teamRepository, UserRepository userRepository, StudentLookupService studentLookupService, StudentMapper studentMapper, StudentGuardianRepository studentGuardianRepository) {
         this.passwordEncoder = passwordEncoder;
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentLookupService = studentLookupService;
         this.studentMapper = studentMapper;
+        this.studentGuardianRepository = studentGuardianRepository;
     }
 
     @Transactional
@@ -110,7 +113,23 @@ public class StudentCommandService {
             .build();
 
         Student saved = studentRepository.save(student);
-        return ApiResponse.ok("Student created successfully", studentMapper.toResponse(saved));
+
+        StudentGuardian guardian = null;
+        if (request.getGuardian() != null) {
+            GuardianDTO gDto = request.getGuardian();
+            guardian = StudentGuardian.builder()
+                .student(saved)
+                .regNo(saved.getRegNo())
+                .guardianName(gDto.getGuardianName())
+                .relationship(StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()))
+                .phoneNo(gDto.getPhoneNo())
+                .email(gDto.getEmail())
+                .isPrimary(true)
+                .build();
+            guardian = studentGuardianRepository.save(guardian);
+        }
+
+        return ApiResponse.ok("Student created successfully", studentMapper.toResponse(saved, guardian));
     }
 
     @Transactional
@@ -172,7 +191,24 @@ public class StudentCommandService {
         }
 
         Student saved = studentRepository.save(student);
-        return ApiResponse.ok("Student updated successfully", studentMapper.toResponse(saved));
+
+        StudentGuardian guardian = studentGuardianRepository.findByStudentId(saved.getId()).orElse(null);
+        if (request.getGuardian() != null) {
+            GuardianDTO gDto = request.getGuardian();
+            if (guardian == null) {
+                guardian = new StudentGuardian();
+                guardian.setStudent(saved);
+                guardian.setRegNo(saved.getRegNo());
+                guardian.setPrimary(true);
+            }
+            guardian.setGuardianName(gDto.getGuardianName());
+            guardian.setRelationship(StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()));
+            guardian.setPhoneNo(gDto.getPhoneNo());
+            guardian.setEmail(gDto.getEmail());
+            guardian = studentGuardianRepository.save(guardian);
+        }
+
+        return ApiResponse.ok("Student updated successfully", studentMapper.toResponse(saved, guardian));
     }
 
     @Transactional
@@ -182,6 +218,7 @@ public class StudentCommandService {
             return ApiResponse.error("Student not found with ID: " + id);
         }
 
+        entityManager.createNativeQuery("DELETE FROM student_guardians WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
         entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
         entityManager.createNativeQuery("DELETE FROM discipline_logs WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
         entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();

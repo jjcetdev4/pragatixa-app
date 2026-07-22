@@ -5,6 +5,7 @@ import com.spdms.entity.*;
 import com.spdms.modules.student.dto.response.StudentResponse;
 import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.repository.YearRepository;
+import com.spdms.repository.StudentGuardianRepository;
 import com.spdms.modules.authentication.repository.UserRepository;
 import com.spdms.common.response.ApiResponse;
 import org.slf4j.Logger;
@@ -25,18 +26,41 @@ public class StudentQueryService {
     private final UserRepository userRepository;
     private final YearRepository yearRepository;
     private final StudentMapper studentMapper;
+    private final StudentGuardianRepository studentGuardianRepository;
 
-    public StudentQueryService(StudentRepository studentRepository, UserRepository userRepository, YearRepository yearRepository, StudentMapper studentMapper) {
+    public StudentQueryService(StudentRepository studentRepository, UserRepository userRepository, YearRepository yearRepository, StudentMapper studentMapper, StudentGuardianRepository studentGuardianRepository) {
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.yearRepository = yearRepository;
         this.studentMapper = studentMapper;
+        this.studentGuardianRepository = studentGuardianRepository;
     }
 
     public ApiResponse<StudentResponse> getStudentById(Long id) {
         return studentRepository.findById(id)
-            .map(s -> ApiResponse.ok(studentMapper.toResponse(s)))
+            .map(s -> {
+                StudentGuardian guardian = studentGuardianRepository.findByStudentId(s.getId()).orElse(null);
+                return ApiResponse.ok(studentMapper.toResponse(s, guardian));
+            })
             .orElseGet(() -> ApiResponse.error("Student not found with ID: " + id));
+    }
+
+    private Page<StudentResponse> mapWithGuardians(Page<Student> page) {
+        if (page.isEmpty()) {
+            return page.map(studentMapper::toResponse);
+        }
+        
+        java.util.List<Long> studentIds = page.getContent().stream().map(Student::getId).toList();
+        java.util.List<StudentGuardian> guardians = studentGuardianRepository.findByStudentIdIn(studentIds);
+        
+        java.util.Map<Long, StudentGuardian> guardianMap = guardians.stream()
+            .collect(java.util.stream.Collectors.toMap(
+                g -> g.getStudent().getId(),
+                g -> g,
+                (existing, replacement) -> existing
+            ));
+            
+        return page.map(s -> studentMapper.toResponse(s, guardianMap.get(s.getId())));
     }
 
     public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy) {
@@ -65,19 +89,19 @@ public class StudentQueryService {
             Section userSection = currentUser.getSection();
             
             if (currentUser.getDepartment() != null && yearRef != null && userSection != null) {
-                Page<StudentResponse> result = studentRepository.findByDepartmentAndYearAndSection(
+                Page<StudentResponse> result = mapWithGuardians(studentRepository.findByDepartmentAndYearAndSection(
                     currentUser.getDepartment().getId(),
                     yearRef.getId(),
                     userSection.getId(),
                     pageable
-                ).map(studentMapper::toResponse);
+                ));
                 return ApiResponse.ok(result);
             } else {
                 return ApiResponse.ok(Page.empty(pageable));
             }
         }
         
-        Page<StudentResponse> result = studentRepository.findAll(pageable).map(studentMapper::toResponse);
+        Page<StudentResponse> result = mapWithGuardians(studentRepository.findAll(pageable));
         return ApiResponse.ok(result);
     }
 
@@ -107,20 +131,20 @@ public class StudentQueryService {
             Section userSection = currentUser.getSection();
             
             if (currentUser.getDepartment() != null && yearRef != null && userSection != null) {
-                Page<StudentResponse> result = studentRepository.searchStudentsByCC(
+                Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudentsByCC(
                     keyword,
                     currentUser.getDepartment().getId(),
                     yearRef.getId(),
                     userSection.getId(),
                     pageable
-                ).map(studentMapper::toResponse);
+                ));
                 return ApiResponse.ok(result);
             } else {
                 return ApiResponse.ok(Page.empty(pageable));
             }
         }
         
-        Page<StudentResponse> result = studentRepository.searchStudents(keyword, pageable).map(studentMapper::toResponse);
+        Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudents(keyword, pageable));
         return ApiResponse.ok(result);
     }
 

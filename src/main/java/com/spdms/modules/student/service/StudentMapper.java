@@ -23,6 +23,10 @@ public class StudentMapper {
     private static final Logger log = LoggerFactory.getLogger(StudentMapper.class);
 
     public StudentResponse toResponse(Student student) {
+        return toResponse(student, null);
+    }
+
+    public StudentResponse toResponse(Student student, StudentGuardian guardian) {
         Long teamId = student.getTeam() != null ? student.getTeam().getId() : null;
         String teamName = student.getTeam() != null ? student.getTeam().getName() : null;
         boolean isCap = student.isCaptain();
@@ -55,7 +59,17 @@ public class StudentMapper {
             .teamId(teamId)
             .teamName(teamName)
             .isCaptain(isCap)
+            .guardian(guardian != null ? mapGuardianToDto(guardian) : null)
             .build();
+    }
+
+    private GuardianDTO mapGuardianToDto(StudentGuardian guardian) {
+        GuardianDTO dto = new GuardianDTO();
+        dto.setGuardianName(guardian.getGuardianName());
+        dto.setRelationship(guardian.getRelationship().name());
+        dto.setPhoneNo(guardian.getPhoneNo());
+        dto.setEmail(guardian.getEmail());
+        return dto;
     }
 
 }

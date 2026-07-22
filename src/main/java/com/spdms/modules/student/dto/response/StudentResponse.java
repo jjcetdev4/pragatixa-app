@@ -2,6 +2,8 @@ package com.spdms.modules.student.dto.response;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalDateTime;
+import com.spdms.modules.student.dto.request.GuardianDTO;
 
 public class StudentResponse {
     private Long id;
@@ -31,6 +33,7 @@ public class StudentResponse {
     private Long teamId;
     private String teamName;
     private boolean isCaptain;
+    private GuardianDTO guardian;
 
     public StudentResponse() {}
 
@@ -89,6 +92,8 @@ public class StudentResponse {
     public void setTeamId(Long teamId) { this.teamId = teamId; }
     public String getTeamName() { return teamName; }
     public void setTeamName(String teamName) { this.teamName = teamName; }
+    public GuardianDTO getGuardian() { return guardian; }
+    public void setGuardian(GuardianDTO guardian) { this.guardian = guardian; }
 
     public static Builder builder() { return new Builder(); }
     public static class Builder {
@@ -120,6 +125,7 @@ public class StudentResponse {
         public Builder teamId(Long v) { r.teamId = v; return this; }
         public Builder teamName(String v) { r.teamName = v; return this; }
         public Builder isCaptain(boolean v) { r.isCaptain = v; return this; }
+        public Builder guardian(GuardianDTO v) { r.guardian = v; return this; }
         public StudentResponse build() { return r; }
     }
 }
