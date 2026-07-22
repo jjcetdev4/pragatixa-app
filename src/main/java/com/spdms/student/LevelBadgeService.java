@@ -43,9 +43,9 @@ public class LevelBadgeService {
         if (studentOpt.isEmpty()) {
             return Optional.empty();
         }
-        int score = studentOpt.get().getScore();
+        int totalXp = studentOpt.get().getTotalXp();
         return levelRepository.findAll().stream()
-                .filter(lvl -> score >= lvl.getXpMin() && score <= lvl.getXpMax())
+                .filter(lvl -> totalXp >= lvl.getXpMin() && totalXp <= lvl.getXpMax())
                 .findFirst();
     }
 

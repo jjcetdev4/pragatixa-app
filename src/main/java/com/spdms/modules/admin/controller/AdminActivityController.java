@@ -3,6 +3,8 @@ package com.spdms.modules.admin.controller;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.Activity;
 import com.spdms.modules.activity.dto.response.MyActivityResponse;
+import com.spdms.modules.activity.dto.request.AssignmentRequest;
+import com.spdms.modules.activity.dto.response.ActivityAssignmentResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,9 +29,11 @@ public class AdminActivityController {
     private static final Logger log = LoggerFactory.getLogger(AdminActivityController.class);
 
     private final AdminActivityService adminActivityService;
+    private final ActivityAssignmentService activityAssignmentService;
 
-    public AdminActivityController(AdminActivityService adminActivityService) {
+    public AdminActivityController(AdminActivityService adminActivityService, ActivityAssignmentService activityAssignmentService) {
         this.adminActivityService = adminActivityService;
+        this.activityAssignmentService = activityAssignmentService;
     }
 
     @GetMapping("/my-activities")
@@ -44,6 +48,20 @@ public class AdminActivityController {
     @Operation(summary = "Get all activities of a subgroup")
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(@PathVariable Long subgroupId) {
         return adminActivityService.getActivitiesBySubgroup(subgroupId);
+    }
+
+    @GetMapping("/stages/{stageId}/activities")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @Operation(summary = "Get all activities of a stage")
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(@PathVariable Long stageId) {
+        return adminActivityService.getActivitiesByStage(stageId);
+    }
+
+    @GetMapping("/activities")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get all activities globally")
+    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities() {
+        return adminActivityService.getAllActivities();
     }
 
     @PostMapping("/subgroups/{subgroupId}/activities")
@@ -66,11 +84,34 @@ public class AdminActivityController {
 
     @PostMapping(value = { "/activities/{id}/assign", "/activity/{id}/assign" })
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Assign departments/sections/faculty to an activity")
+    @Operation(summary = "Assign departments/sections/faculty to an activity (Bulk)")
     public ResponseEntity<ApiResponse<Void>> assignActivity(
                 @PathVariable Long id,
                 @RequestBody Map<String, Object> body) {
-        return adminActivityService.assignActivity(id, body);
+        return activityAssignmentService.assignActivity(id, body);
+    }
+
+    @GetMapping("/activities/{id}/assignments")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'TEACHER')")
+    @Operation(summary = "Get all assignments for an activity")
+    public ResponseEntity<ApiResponse<List<ActivityAssignmentResponse>>> getAssignments(@PathVariable Long id) {
+        return activityAssignmentService.getAssignments(id);
+    }
+
+    @PostMapping("/activities/{id}/assignments")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR')")
+    @Operation(summary = "Add a single assignment to an activity")
+    public ResponseEntity<ApiResponse<ActivityAssignmentResponse>> addAssignment(
+                @PathVariable Long id,
+                @RequestBody AssignmentRequest request) {
+        return activityAssignmentService.addAssignment(id, request);
+    }
+
+    @DeleteMapping("/activities/assignments/{assignmentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR')")
+    @Operation(summary = "Remove a single assignment")
+    public ResponseEntity<ApiResponse<Void>> removeAssignment(@PathVariable Long assignmentId) {
+        return activityAssignmentService.removeAssignment(assignmentId);
     }
 
     @DeleteMapping("/activities/{activityId}")
@@ -97,4 +138,29 @@ public class AdminActivityController {
         return adminActivityService.createCustomFrequency(payload);
     }
 
+    @PostMapping("/stages/{stageId}/activities/{activityId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Map an existing activity to a stage")
+    public ResponseEntity<ApiResponse<Void>> mapActivityToStage(
+            @PathVariable Long stageId,
+            @PathVariable Long activityId,
+            @RequestParam String subgroup) {
+        return adminActivityService.mapActivityToStage(stageId, activityId, subgroup);
+    }
+
+    @DeleteMapping("/stages/{stageId}/activities/{activityId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Remove an activity from a stage without deleting it")
+    public ResponseEntity<ApiResponse<Void>> unmapActivityFromStage(
+            @PathVariable Long stageId,
+            @PathVariable Long activityId) {
+        return adminActivityService.unmapActivityFromStage(stageId, activityId);
+    }
+
+    @DeleteMapping("/activities/{activityId}/assignments/clear")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Remove all faculty assignments for an activity")
+    public ResponseEntity<ApiResponse<Void>> clearAssignments(@PathVariable Long activityId) {
+        return activityAssignmentService.clearAssignments(activityId);
+    }
 }

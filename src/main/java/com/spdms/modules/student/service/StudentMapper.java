@@ -25,7 +25,7 @@ public class StudentMapper {
     public StudentResponse toResponse(Student student) {
         Long teamId = student.getTeam() != null ? student.getTeam().getId() : null;
         String teamName = student.getTeam() != null ? student.getTeam().getName() : null;
-        boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
+        boolean isCap = student.isCaptain();
 
         return StudentResponse.builder()
             .id(student.getId())

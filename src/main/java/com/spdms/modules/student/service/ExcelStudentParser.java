@@ -35,14 +35,16 @@ public class ExcelStudentParser {
                 return LocalDate.parse(val); // Try YYYY-MM-DD
             } catch (Exception e) {
                 try {
-                    DateTimeFormatter f = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-                    return LocalDate.parse(val, f);
+                    return LocalDate.parse(val, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
                 } catch (Exception ex) {
                     try {
-                        DateTimeFormatter f = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                        return LocalDate.parse(val, f);
+                        return LocalDate.parse(val, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                     } catch (Exception exc) {
-                        log.warn("Unable to parse DOB string: {}", val);
+                        try {
+                            return LocalDate.parse(val, DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+                        } catch (Exception exc2) {
+                            log.warn("Unable to parse DOB string: {}", val);
+                        }
                     }
                 }
             }

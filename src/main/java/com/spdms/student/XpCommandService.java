@@ -148,7 +148,7 @@ public class XpCommandService {
         return ApiResponse.ok("Violation logged successfully. Points deducted.", saved);
     }
 
-    private void updateStreakOnSubmission(Student student, String activity) {
+    public void updateStreakOnSubmission(Student student, String activity) {
         String type = null;
         int penalty = 0;
 

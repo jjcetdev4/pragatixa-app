@@ -60,8 +60,48 @@ public class StudentImportService {
         this.resolverService = resolverService;
     }
 
+    private List<String> parseCsvLine(String line) {
+        List<String> result = new ArrayList<>();
+        if (line == null || line.trim().isEmpty()) return result;
+        try {
+            org.apache.commons.csv.CSVParser parser = org.apache.commons.csv.CSVParser.parse(
+                line, 
+                org.apache.commons.csv.CSVFormat.DEFAULT
+            );
+            for (org.apache.commons.csv.CSVRecord record : parser) {
+                for (String val : record) {
+                    result.add(val != null ? val.trim() : "");
+                }
+                break;
+            }
+        } catch (Exception e) {
+            log.error("Failed to parse CSV line using Commons CSV", e);
+        }
+        return result;
+    }
+
+    private String getColValue(Row row, List<String> csvRow, int idx, boolean isCsvMode, ExcelStudentParser parser) {
+        if (idx < 0) return "";
+        if (isCsvMode) {
+            return (csvRow != null && idx < csvRow.size()) ? csvRow.get(idx) : "";
+        } else {
+            return parser.getCellValueAsString(row.getCell(idx));
+        }
+    }
+
+    private LocalDate parseLocalDateFromString(String val) {
+        if (val == null || val.trim().isEmpty()) return null;
+        val = val.trim();
+        try { return LocalDate.parse(val); } catch (Exception e) {}
+        try { return LocalDate.parse(val, java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy")); } catch (Exception e) {}
+        try { return LocalDate.parse(val, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")); } catch (Exception e) {}
+        try { return LocalDate.parse(val, java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")); } catch (Exception e) {}
+        return null;
+    }
+
     @Transactional
     public ApiResponse<List<CreateStudentRequest>> bulkParse(MultipartFile file, String username) {
+        if (file.isEmpty()) return ApiResponse.error("Please upload an Excel file.");
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isCcOrAdmin = creator != null && (creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
                 || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
@@ -73,28 +113,107 @@ public class StudentImportService {
             List<CreateStudentRequest> parsedList = new ArrayList<>();
             Sheet sheet = workbook.getSheetAt(0);
 
-            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) return ApiResponse.error("Spreadsheet is empty or missing headers");
+
+            boolean isCsvMode = false;
+            List<String> headerCols = new ArrayList<>();
+            if (headerRow.getLastCellNum() == 1) {
+                String cellVal = excelStudentParser.getCellValueAsString(headerRow.getCell(0));
+                if (cellVal.contains(",")) {
+                    isCsvMode = true;
+                    headerCols = parseCsvLine(cellVal);
+                    log.info("Enabled automatic CSV Recovery Mode for malformed Excel file.");
+                }
+            }
+
+            int nameIdx = -1, deptIdx = -1, sprIdx = -1, regIdx = -1, dobIdx = -1;
+            int phoneIdx = -1, emailIdx = -1, genderIdx = -1, acadYearIdx = -1;
+            int yearIdx = -1, semIdx = -1, secIdx = -1, teamIdx = -1, addressIdx = -1;
+
+            int colCount = isCsvMode ? headerCols.size() : headerRow.getLastCellNum();
+            for (int i = 0; i < colCount; i++) {
+                String headerRaw;
+                if (isCsvMode) {
+                    headerRaw = headerCols.get(i);
+                } else {
+                    Cell cell = headerRow.getCell(i);
+                    if (cell == null) continue;
+                    headerRaw = excelStudentParser.getCellValueAsString(cell);
+                }
+                
+                if (headerRaw == null || headerRaw.trim().isEmpty()) continue;
+                
+                String header = headerRaw.toLowerCase().replaceAll("[_\\-\\s]", "");
+                
+                if (header.contains("name") && !header.contains("dept") && !header.contains("team")) nameIdx = i;
+                else if (header.contains("dept") || header.contains("department")) deptIdx = i;
+                else if (header.contains("spr")) sprIdx = i;
+                else if (header.contains("reg") || header.contains("register")) regIdx = i;
+                else if (header.contains("dob") || header.contains("dateofbirth") || header.contains("birth")) dobIdx = i;
+                else if (header.contains("phone") || header.contains("mobile")) phoneIdx = i;
+                else if (header.contains("email")) emailIdx = i;
+                else if (header.contains("gender") || header.contains("sex")) genderIdx = i;
+                else if (header.contains("academicyear") || header.equals("ay")) acadYearIdx = i;
+                else if (header.equals("year") || header.contains("currentyear")) yearIdx = i;
+                else if (header.contains("semester") || header.contains("sem")) semIdx = i;
+                else if (header.contains("section") || header.contains("sec")) secIdx = i;
+                else if (header.contains("team")) teamIdx = i;
+                else if (header.contains("address")) addressIdx = i;
+            }
+
+            boolean usingFallback = false;
+            if (nameIdx == -1 && regIdx == -1 && emailIdx == -1) {
+                log.info("No headers matched. Falling back to default column indices based on standard template.");
+                usingFallback = true;
+                nameIdx = 0; regIdx = 1; sprIdx = 2; emailIdx = 3; phoneIdx = 4; addressIdx = 5; dobIdx = 6;
+                deptIdx = 7; yearIdx = 8; acadYearIdx = 9; semIdx = 10; genderIdx = 11; secIdx = 12; teamIdx = 13;
+            }
+
+            int startRow = usingFallback ? 0 : 1;
+
+            for (int r = startRow; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
                 if (row == null) continue;
 
-                String name = excelStudentParser.getCellValueAsString(row.getCell(1));
-                String deptName = excelStudentParser.getCellValueAsString(row.getCell(2));
-                String sprNo = excelStudentParser.getCellValueAsString(row.getCell(3));
-                String regNo = excelStudentParser.getCellValueAsString(row.getCell(4));
-                LocalDate dob = excelStudentParser.parseLocalDate(row.getCell(5));
-                String phoneNo = excelStudentParser.getCellValueAsString(row.getCell(6));
-                String email = excelStudentParser.getCellValueAsString(row.getCell(7));
-                String gender = excelStudentParser.getCellValueAsString(row.getCell(8));
-                String academicYear = excelStudentParser.getCellValueAsString(row.getCell(9));
-                String year = excelStudentParser.getCellValueAsString(row.getCell(10));
-                String semester = excelStudentParser.getCellValueAsString(row.getCell(11));
-                String section = excelStudentParser.getCellValueAsString(row.getCell(12));
-                String teamName = excelStudentParser.getCellValueAsString(row.getCell(13));
-                String address = excelStudentParser.getCellValueAsString(row.getCell(14));
-
-                if (regNo.isEmpty() || email.isEmpty() || name.isEmpty()) {
-                    continue;
+                List<String> csvRow = null;
+                if (isCsvMode) {
+                    String rowVal = excelStudentParser.getCellValueAsString(row.getCell(0));
+                    csvRow = parseCsvLine(rowVal);
                 }
+
+                String name = getColValue(row, csvRow, nameIdx, isCsvMode, excelStudentParser);
+                String deptName = getColValue(row, csvRow, deptIdx, isCsvMode, excelStudentParser);
+                String sprNo = getColValue(row, csvRow, sprIdx, isCsvMode, excelStudentParser);
+                String regNo = getColValue(row, csvRow, regIdx, isCsvMode, excelStudentParser);
+                
+                LocalDate dob = null;
+                if (dobIdx >= 0) {
+                    if (isCsvMode) {
+                        dob = parseLocalDateFromString(getColValue(row, csvRow, dobIdx, true, excelStudentParser));
+                    } else {
+                        dob = excelStudentParser.parseLocalDate(row.getCell(dobIdx));
+                    }
+                }
+                
+                String phoneNo = getColValue(row, csvRow, phoneIdx, isCsvMode, excelStudentParser);
+                String email = getColValue(row, csvRow, emailIdx, isCsvMode, excelStudentParser);
+                String gender = getColValue(row, csvRow, genderIdx, isCsvMode, excelStudentParser);
+                String academicYear = getColValue(row, csvRow, acadYearIdx, isCsvMode, excelStudentParser);
+                String year = getColValue(row, csvRow, yearIdx, isCsvMode, excelStudentParser);
+                String semester = getColValue(row, csvRow, semIdx, isCsvMode, excelStudentParser);
+                String section = getColValue(row, csvRow, secIdx, isCsvMode, excelStudentParser);
+                String teamName = getColValue(row, csvRow, teamIdx, isCsvMode, excelStudentParser);
+                String address = getColValue(row, csvRow, addressIdx, isCsvMode, excelStudentParser);
+
+                if (regNo.isEmpty() && email.isEmpty() && name.isEmpty()) {
+                    continue; // Skip completely empty rows
+                }
+
+                List<String> errors = new ArrayList<>();
+                if (regNo.isEmpty()) errors.add("Register Number missing");
+                if (email.isEmpty()) errors.add("Email missing");
+                if (name.isEmpty()) errors.add("Student Name missing");
 
                 CreateStudentRequest req = new CreateStudentRequest();
                 req.setFullName(name);
@@ -112,12 +231,29 @@ public class StudentImportService {
                 req.setAddress(address);
                 req.setActive(true);
 
-                req.setDepartmentId(resolverService.resolveDepartment(deptName));
-                req.setGenderId(resolverService.resolveGender(gender));
-                req.setAcademicYearId(resolverService.resolveAcademicYear(academicYear));
-                req.setYearId(resolverService.resolveYear(year));
-                req.setSemesterId(resolverService.resolveSemester(semester));
-                req.setSectionId(resolverService.resolveSection(section, req.getDepartmentId()));
+                Long dId = resolverService.resolveDepartment(deptName);
+                if (dId == null && !deptName.isEmpty()) errors.add("Department not found: " + deptName);
+                req.setDepartmentId(dId);
+
+                Long gId = resolverService.resolveGender(gender);
+                if (gId == null && !gender.isEmpty()) errors.add("Gender not found: " + gender);
+                req.setGenderId(gId);
+
+                Long ayId = resolverService.resolveAcademicYear(academicYear);
+                if (ayId == null && !academicYear.isEmpty()) errors.add("Academic Year not found: " + academicYear);
+                req.setAcademicYearId(ayId);
+
+                Long yId = resolverService.resolveYear(year);
+                if (yId == null && !year.isEmpty()) errors.add("Year not found: " + year);
+                req.setYearId(yId);
+
+                Long sId = resolverService.resolveSemester(semester);
+                if (sId == null && !semester.isEmpty()) errors.add("Semester not found: " + semester);
+                req.setSemesterId(sId);
+
+                Long secId = resolverService.resolveSection(section, dId);
+                if (secId == null && !section.isEmpty()) errors.add("Section not found: " + section);
+                req.setSectionId(secId);
 
                 if (!teamName.isEmpty()) {
                     String gTrim = teamName.trim();
@@ -125,7 +261,34 @@ public class StudentImportService {
                     req.setTeamId(g.getId());
                 }
 
+                if (!errors.isEmpty()) {
+                    req.setErrorReason(String.join(", ", errors));
+                }
+
                 parsedList.add(req);
+            }
+            if (!parsedList.isEmpty()) {
+                CreateStudentRequest first = parsedList.get(0);
+                log.info("=== STEP 1: PARSED REQUEST FOR FIRST STUDENT ===");
+                log.info("FullName: {}", first.getFullName());
+                log.info("RegNo: {}", first.getRegNo());
+                log.info("SprNo: {}", first.getSprNo());
+                log.info("Email: {}", first.getEmail());
+                log.info("Phone: {}", first.getPhone());
+                log.info("DOB: {}", first.getDateOfBirth());
+                log.info("Department: {}", first.getDepartmentName());
+                log.info("DepartmentId: {}", first.getDepartmentId());
+                log.info("Year: {}", first.getYear());
+                log.info("YearId: {}", first.getYearId());
+                log.info("Section: {}", first.getSection());
+                log.info("SectionId: {}", first.getSectionId());
+                log.info("Semester: {}", first.getSemester());
+                log.info("SemesterId: {}", first.getSemesterId());
+                log.info("AcademicYear: {}", first.getAcademicYear());
+                log.info("AcademicYearId: {}", first.getAcademicYearId());
+                log.info("Gender: {}", first.getGender());
+                log.info("GenderId: {}", first.getGenderId());
+                log.info("TeamId: {}", first.getTeamId());
             }
             return ApiResponse.ok("Spreadsheet file parsed successfully", parsedList);
         } catch (Exception e) {
@@ -135,6 +298,23 @@ public class StudentImportService {
     }
 
     public ApiResponse<String> bulkImport(List<CreateStudentRequest> requests, String username) {
+        if (requests != null && !requests.isEmpty()) {
+            CreateStudentRequest first = requests.get(0);
+            log.info("=== STEP 2: INCOMING IMPORT REQUEST FOR FIRST STUDENT ===");
+            log.info("FullName: {}", first.getFullName());
+            log.info("AcademicYear: {}", first.getAcademicYear());
+            log.info("AcademicYearId: {}", first.getAcademicYearId());
+            log.info("Department: {}", first.getDepartmentName());
+            log.info("DepartmentId: {}", first.getDepartmentId());
+            log.info("Year: {}", first.getYear());
+            log.info("YearId: {}", first.getYearId());
+            log.info("Section: {}", first.getSection());
+            log.info("SectionId: {}", first.getSectionId());
+            log.info("Semester: {}", first.getSemester());
+            log.info("SemesterId: {}", first.getSemesterId());
+            log.info("Gender: {}", first.getGender());
+            log.info("GenderId: {}", first.getGenderId());
+        }
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isCcOrAdmin = creator != null && (creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
                 || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
@@ -176,9 +356,26 @@ public class StudentImportService {
                 processedStudentIds.add(regNo);
                 processedEmails.add(email);
 
+                log.info("=== STEP 3: PRE-VALIDATION CHECK FOR {} ===", request.getFullName());
+                log.info("AcademicYear: {}", request.getAcademicYear());
+                log.info("AcademicYearId: {}", request.getAcademicYearId());
+                log.info("DepartmentId: {}", request.getDepartmentId());
+                log.info("SectionId: {}", request.getSectionId());
+                log.info("SemesterId: {}", request.getSemesterId());
+                log.info("YearId: {}", request.getYearId());
+                log.info("GenderId: {}", request.getGenderId());
+
                 if (request.getDepartmentId() == null) request.setDepartmentId(resolverService.resolveDepartment(request.getDepartmentName()));
                 if (request.getGenderId() == null) request.setGenderId(resolverService.resolveGender(request.getGender()));
-                if (request.getAcademicYearId() == null) request.setAcademicYearId(resolverService.resolveAcademicYear(request.getAcademicYear()));
+                
+                if (request.getAcademicYearId() == null) {
+                    Long resolvedId = resolverService.resolveAcademicYear(request.getAcademicYear());
+                    log.warn("=== STEP 4: RESOLVER RE-EVALUATION ===");
+                    log.warn("AcademicYear String: {}", request.getAcademicYear());
+                    log.warn("Resolver returned: {}", resolvedId);
+                    request.setAcademicYearId(resolvedId);
+                }
+                
                 if (request.getYearId() == null) request.setYearId(resolverService.resolveYear(request.getYear()));
                 if (request.getSemesterId() == null) request.setSemesterId(resolverService.resolveSemester(request.getSemester()));
                 if (request.getSectionId() == null) request.setSectionId(resolverService.resolveSection(request.getSection(), request.getDepartmentId()));

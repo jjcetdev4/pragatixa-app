@@ -34,6 +34,14 @@ public class AdminActivityService {
         return queryService.getActivitiesBySubgroup(subgroupId);
     }
 
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId) {
+        return queryService.getActivitiesByStage(stageId);
+    }
+
+    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities() {
+        return queryService.getAllActivities();
+    }
+
     public ResponseEntity<ApiResponse<Activity>> createActivity(Long subgroupId, Map<String, Object> body) {
         return crudService.createActivity(subgroupId, body);
     }
@@ -56,5 +64,13 @@ public class AdminActivityService {
 
     public ResponseEntity<ApiResponse<CustomFrequency>> createCustomFrequency(Map<String, Object> payload) {
         return frequencyService.createCustomFrequency(payload);
+    }
+
+    public ResponseEntity<ApiResponse<Void>> mapActivityToStage(Long stageId, Long activityId, String subgroup) {
+        return crudService.mapActivityToStage(stageId, activityId, subgroup);
+    }
+
+    public ResponseEntity<ApiResponse<Void>> unmapActivityFromStage(Long stageId, Long activityId) {
+        return crudService.unmapActivityFromStage(stageId, activityId);
     }
 }

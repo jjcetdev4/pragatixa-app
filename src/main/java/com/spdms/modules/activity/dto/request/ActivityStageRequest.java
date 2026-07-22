@@ -15,10 +15,8 @@ public class ActivityStageRequest {
     @Min(value = 0, message = "Expected XP cannot be negative")
     private Integer expectedXp;
 
-    @NotNull(message = "Start date time is required")
     private LocalDateTime startDateTime;
 
-    @NotNull(message = "End date time is required")
     private LocalDateTime endDateTime;
 
     private int displayOrder;
@@ -26,6 +24,10 @@ public class ActivityStageRequest {
     private boolean useDateValidation = true;
     private boolean useThresholdValidation = false;
     private boolean useCombinedValidation = false;
+
+    private Integer mustThreshold = 0;
+    private Integer individualThreshold = 0;
+    private Integer groupThreshold = 0;
 
     // Getters and Setters
     public String getName() { return name; }
@@ -54,4 +56,13 @@ public class ActivityStageRequest {
 
     public boolean isUseCombinedValidation() { return useCombinedValidation; }
     public void setUseCombinedValidation(boolean useCombinedValidation) { this.useCombinedValidation = useCombinedValidation; }
+
+    public Integer getMustThreshold() { return mustThreshold; }
+    public void setMustThreshold(Integer mustThreshold) { this.mustThreshold = mustThreshold; }
+
+    public Integer getIndividualThreshold() { return individualThreshold; }
+    public void setIndividualThreshold(Integer individualThreshold) { this.individualThreshold = individualThreshold; }
+
+    public Integer getGroupThreshold() { return groupThreshold; }
+    public void setGroupThreshold(Integer groupThreshold) { this.groupThreshold = groupThreshold; }
 }

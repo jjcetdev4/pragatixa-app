@@ -113,4 +113,21 @@ public class StageValidationService {
             throw e;
         }
     }
+
+    public boolean isStageThresholdsMet(Long regNo, Long stageId) {
+        List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stageId);
+        List<com.spdms.entity.StudentActivityXp> history = studentActivityXpRepository.findByStudentId(regNo);
+        
+        for (ActivitySubgroup subgroup : subgroups) {
+            int earnedXp = history.stream()
+                    .filter(xp -> xp.getActivity() != null && xp.getActivity().getSubgroup() != null && xp.getActivity().getSubgroup().getId().equals(subgroup.getId()))
+                    .mapToInt(com.spdms.entity.StudentActivityXp::getXpAwarded)
+                    .sum();
+            
+            if (earnedXp < subgroup.getThreshold()) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

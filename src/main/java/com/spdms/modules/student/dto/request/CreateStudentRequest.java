@@ -101,4 +101,8 @@ public class CreateStudentRequest {
     public void setTeamId(Long teamId) { this.teamId = teamId; }
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
+
+    private String errorReason;
+    public String getErrorReason() { return errorReason; }
+    public void setErrorReason(String errorReason) { this.errorReason = errorReason; }
 }

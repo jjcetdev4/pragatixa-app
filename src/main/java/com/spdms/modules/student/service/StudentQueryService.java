@@ -123,4 +123,26 @@ public class StudentQueryService {
         Page<StudentResponse> result = studentRepository.searchStudents(keyword, pageable).map(studentMapper::toResponse);
         return ApiResponse.ok(result);
     }
+
+    public ApiResponse<java.util.List<com.spdms.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(String keyword) {
+        Pageable limit = PageRequest.of(0, 20); // limit to 20
+        java.util.List<Student> students = studentRepository.searchActiveStudentsForTeam(keyword, limit);
+        
+        java.util.List<com.spdms.modules.student.dto.response.StudentSearchDTO> results = students.stream().map(s -> {
+            com.spdms.modules.student.dto.response.StudentSearchDTO dto = new com.spdms.modules.student.dto.response.StudentSearchDTO();
+            dto.setId(s.getId());
+            dto.setFullName(s.getFullName());
+            dto.setRegNo(s.getRegNo());
+            dto.setSprNo(s.getSprNo());
+            dto.setDepartmentName(s.getDepartment() != null ? s.getDepartment().getName() : "N/A");
+            dto.setYear(s.getYearRef() != null ? String.valueOf(s.getYearRef().getYearNo()) : "N/A");
+            dto.setSection(s.getSection() != null ? s.getSection().getSectionName() : "N/A");
+            dto.setTeamName(s.getTeam() != null ? s.getTeam().getName() : null);
+            dto.setTeamId(s.getTeam() != null ? s.getTeam().getId() : null);
+            dto.setCurrentStage(s.getCurrentStage());
+            return dto;
+        }).collect(java.util.stream.Collectors.toList());
+
+        return ApiResponse.ok(results);
+    }
 }

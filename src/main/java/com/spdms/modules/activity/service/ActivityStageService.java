@@ -46,11 +46,12 @@ public class ActivityStageService {
         this.studentRepository = studentRepository;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ActivityStageResponse> getAllStages() {
         List<ActivityStage> stages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
 
         List<ActivityStageResponse> responses = stages.stream().map(stage -> {
+            ensureMandatorySubgroups(stage);
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             
             // Map subgroups
@@ -99,9 +100,10 @@ public class ActivityStageService {
         return responses;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Optional<ActivityStageResponse> getStageById(Long id) {
         return activityStageRepository.findById(id).map(stage -> {
+            ensureMandatorySubgroups(stage);
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
             List<com.spdms.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
@@ -151,6 +153,8 @@ public class ActivityStageService {
         ActivityStage stage = activityStageMapper.toEntity(request);
         ActivityStage saved = activityStageRepository.save(stage);
         
+        ensureMandatorySubgroups(saved);
+        
         return activityStageMapper.toResponse(saved);
     }
 
@@ -198,12 +202,6 @@ public class ActivityStageService {
     }
 
     private void validateStage(ActivityStageRequest request, Long existingId) {
-        if (request.getStartDateTime() == null || request.getEndDateTime() == null) {
-            throw new IllegalArgumentException("Start datetime and end datetime are required");
-        }
-        if (request.getEndDateTime().isBefore(request.getStartDateTime())) {
-            throw new IllegalArgumentException("End datetime cannot be before start datetime");
-        }
         if (request.getExpectedXp() != null && request.getExpectedXp() < 0) {
             throw new IllegalArgumentException("Expected XP cannot be negative");
         }
@@ -225,12 +223,6 @@ public class ActivityStageService {
             }
             if (other.getDisplayOrder() == request.getDisplayOrder()) {
                 throw new IllegalArgumentException("Display order " + request.getDisplayOrder() + " is already used by stage: " + other.getName());
-            }
-            if (other.getStartDateTime() != null && other.getEndDateTime() != null) {
-                // Check overlap: S1 < E2 && S2 < E1
-                if (request.getStartDateTime().isBefore(other.getEndDateTime()) && other.getStartDateTime().isBefore(request.getEndDateTime())) {
-                    throw new IllegalArgumentException("Stage dates overlap with another stage: " + other.getName() + " (" + other.getStartDateTime() + " to " + other.getEndDateTime() + ")");
-                }
             }
         }
     }
@@ -268,5 +260,35 @@ public class ActivityStageService {
         report.put("totalStudents", totalStudents);
 
         return report;
+    }
+
+    public void ensureMandatorySubgroups(ActivityStage stage) {
+        List<ActivitySubgroup> existing = activitySubgroupRepository.findByStageId(stage.getId());
+        List<String> categories = existing.stream().map(sub -> sub.getCategory() != null ? sub.getCategory().toLowerCase() : "").collect(Collectors.toList());
+        
+        if (!categories.contains("must")) {
+            ActivitySubgroup must = new ActivitySubgroup();
+            must.setStage(stage);
+            must.setCategory("must");
+            must.setName("Must (Individual)");
+            must.setThreshold(stage.getMustThreshold() != null ? stage.getMustThreshold() : 0);
+            activitySubgroupRepository.save(must);
+        }
+        if (!categories.contains("individual")) {
+            ActivitySubgroup ind = new ActivitySubgroup();
+            ind.setStage(stage);
+            ind.setCategory("individual");
+            ind.setName("Individual");
+            ind.setThreshold(stage.getIndividualThreshold() != null ? stage.getIndividualThreshold() : 0);
+            activitySubgroupRepository.save(ind);
+        }
+        if (!categories.contains("group")) {
+            ActivitySubgroup grp = new ActivitySubgroup();
+            grp.setStage(stage);
+            grp.setCategory("group");
+            grp.setName("Groups");
+            grp.setThreshold(stage.getGroupThreshold() != null ? stage.getGroupThreshold() : 0);
+            activitySubgroupRepository.save(grp);
+        }
     }
 }

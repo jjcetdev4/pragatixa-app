@@ -37,8 +37,9 @@ public class TeamQueryService {
     }
 
     public ResponseEntity<ApiResponse<TeamResponse>> getMyTeam(Student student) {
-        Team team = student.getTeam();
-        if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("You do not belong to any team"));
+        if (student.getTeam() == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("You do not belong to any team"));
+        Team team = teamRepository.findByIdWithMembers(student.getTeam().getId()).orElse(null);
+        if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team details could not be loaded"));
         return ResponseEntity.ok(ApiResponse.ok("Team details retrieved successfully", mapper.toTeamResponse(team)));
     }
 

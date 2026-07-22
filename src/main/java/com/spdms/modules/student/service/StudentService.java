@@ -98,4 +98,8 @@ public class StudentService {
         return studentTeamService.removeTeamCaptain(regNo);
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<List<com.spdms.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(String keyword) {
+        return studentCrudService.searchActiveStudentsForTeam(keyword);
+    }
 }

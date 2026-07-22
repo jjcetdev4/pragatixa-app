@@ -1,8 +1,9 @@
 package com.spdms.student;
 
 import com.spdms.common.response.ApiResponse;
+import com.spdms.dto.XpTransactionDto;
 import com.spdms.entity.XpTransaction;
-import com.spdms.entity.Streak;
+import com.spdms.dto.StreakResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,7 @@ public class XpController {
     /** GET /api/v1/xp/{regNo}/history – Paginated XP history */
     @GetMapping("/{regNo}/history")
     @Operation(summary = "Get Paginated XP History", description = "Returns a paginated list of XP transactions for a student.")
-    public ResponseEntity<ApiResponse<Page<XpTransaction>>> getXpHistory(
+    public ResponseEntity<ApiResponse<Page<XpTransactionDto>>> getXpHistory(
             @PathVariable String regNo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -45,7 +46,7 @@ public class XpController {
     /** GET /api/v1/xp/{regNo}/streaks – Get active student streaks */
     @GetMapping("/{regNo}/streaks")
     @Operation(summary = "Get Student Streaks", description = "Returns all coding, diary, and library streaks for a student.")
-    public ResponseEntity<ApiResponse<List<Streak>>> getStudentStreaks(@PathVariable String regNo) {
+    public ResponseEntity<ApiResponse<List<StreakResponse>>> getStudentStreaks(@PathVariable String regNo) {
         return ResponseEntity.ok(ApiResponse.ok(xpService.getStudentStreaks(regNo)));
     }
 

@@ -60,7 +60,9 @@ public class AdminDepartmentCommandService {
             map.put("id", d.getId());
             map.put("code", d.getCode());
             map.put("deptCode", d.getDeptCode());
+            map.put("departmentId", d.getId());
             map.put("name", d.getName());
+            map.put("departmentName", d.getName());
             map.put("deptName", d.getDeptName());
             map.put("description", d.getDescription());
             
@@ -75,6 +77,7 @@ public class AdminDepartmentCommandService {
                 sectionMaps.add(secMap);
             }
             map.put("sections", sectionMaps);
+            map.put("hasSections", !sections.isEmpty());
             response.add(map);
         }
         return ResponseEntity.ok(ApiResponse.ok(response));

@@ -13,5 +13,6 @@ public interface ActivityStageRepository extends JpaRepository<ActivityStage, Lo
     boolean existsByNameAndIdNot(String name, Long id);
     List<ActivityStage> findByStatus(com.spdms.enums.StageStatus status);
     List<ActivityStage> findAllByOrderByDisplayOrderAsc();
+    Optional<ActivityStage> findByDisplayOrder(int displayOrder);
     Optional<ActivityStage> findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(int displayOrder);
 }

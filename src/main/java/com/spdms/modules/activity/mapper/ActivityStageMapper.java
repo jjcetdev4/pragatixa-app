@@ -27,20 +27,15 @@ public class ActivityStageMapper {
                 .useDateValidation(request.isUseDateValidation())
                 .useThresholdValidation(request.isUseThresholdValidation())
                 .useCombinedValidation(request.isUseCombinedValidation())
+                .mustThreshold(request.getMustThreshold() != null ? request.getMustThreshold() : 0)
+                .individualThreshold(request.getIndividualThreshold() != null ? request.getIndividualThreshold() : 0)
+                .groupThreshold(request.getGroupThreshold() != null ? request.getGroupThreshold() : 0)
                 .status(calculateStatus(request.getStartDateTime(), request.getEndDateTime()))
                 .build();
     }
 
     private StageStatus calculateStatus(LocalDateTime start, LocalDateTime end) {
-        if (start == null || end == null) return StageStatus.UPCOMING;
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(start)) {
-            return StageStatus.UPCOMING;
-        } else if (!now.isBefore(start) && now.isBefore(end)) {
-            return StageStatus.ACTIVE;
-        } else {
-            return StageStatus.COMPLETED;
-        }
+        return StageStatus.ACTIVE;
     }
 
     public void updateEntity(ActivityStageRequest request, ActivityStage entity) {
@@ -57,6 +52,9 @@ public class ActivityStageMapper {
         entity.setUseDateValidation(request.isUseDateValidation());
         entity.setUseThresholdValidation(request.isUseThresholdValidation());
         entity.setUseCombinedValidation(request.isUseCombinedValidation());
+        entity.setMustThreshold(request.getMustThreshold() != null ? request.getMustThreshold() : 0);
+        entity.setIndividualThreshold(request.getIndividualThreshold() != null ? request.getIndividualThreshold() : 0);
+        entity.setGroupThreshold(request.getGroupThreshold() != null ? request.getGroupThreshold() : 0);
         entity.setStatus(calculateStatus(request.getStartDateTime(), request.getEndDateTime()));
     }
 
@@ -75,6 +73,9 @@ public class ActivityStageMapper {
         response.setUseDateValidation(entity.isUseDateValidation());
         response.setUseThresholdValidation(entity.isUseThresholdValidation());
         response.setUseCombinedValidation(entity.isUseCombinedValidation());
+        response.setMustThreshold(entity.getMustThreshold());
+        response.setIndividualThreshold(entity.getIndividualThreshold());
+        response.setGroupThreshold(entity.getGroupThreshold());
         
         // Dynamically calculate status against current server time
         StageStatus calculatedStatus = calculateStatus(entity.getStartDateTime(), entity.getEndDateTime());

@@ -43,19 +43,20 @@ public class CaptainSelectionService {
             return; // Has not crossed the threshold
         }
 
-        // Student crosses the threshold -> Promote to next stage
-        student.setStage(student.getStage() + 1);
-        studentRepository.save(student);
+        // Student crosses the threshold -> Handled entirely by StudentXpService now
+        // to avoid duplicate/conflicting stage promotion and bypassing MUST/IND/GRP thresholds
+        // student.setStage(student.getStage() + 1);
+        // studentRepository.save(student);
 
-        // Check if student is captain
-        Team team = student.getTeam();
-        if (team != null && team.getCaptain() != null && team.getCaptain().getId().equals(student.getId())) {
-            // Find new captain
-            reassignCaptain(team, student);
-        }
+        // Check if student is captain - this is also now handled by TeamAssignmentService
+        // during the actual Team Transition workflow
+        // Team team = student.getTeam();
+        // if (team != null && team.getCaptain() != null && team.getCaptain().getId().equals(student.getId())) {
+        //     reassignCaptain(team, student);
+        // }
     }
 
-    private void reassignCaptain(Team team, Student promotedStudent) {
+    public void reassignCaptain(Team team, Student promotedStudent) {
         // Find all active members in the same team who have NOT been promoted out of the team's base stage
         // A simple heuristic: find the highest XP student in the team who is not the promoted student.
         // The prompt says: "Not already promoted out of the team"

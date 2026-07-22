@@ -39,6 +39,10 @@ public class StudentXpService {
     private final AssignmentSecurityService assignmentSecurityService;
     private final StudentXpValidator validator;
     private final com.spdms.admin.service.CaptainSelectionService captainSelectionService;
+    private final com.spdms.modules.activity.repository.ActivityStageRepository activityStageRepository;
+    private final com.spdms.modules.activity.service.StageValidationService stageValidationService;
+    private final TeamAssignmentService teamAssignmentService;
+    private final com.spdms.student.XpCommandService xpCommandService;
 
     public StudentXpService(UserRepository userRepository,
                             ActivityRepository activityRepository,
@@ -48,7 +52,11 @@ public class StudentXpService {
                             XpTransactionRepository xpTransactionRepository,
                             AssignmentSecurityService assignmentSecurityService,
                             StudentXpValidator validator,
-                            com.spdms.admin.service.CaptainSelectionService captainSelectionService) {
+                            com.spdms.admin.service.CaptainSelectionService captainSelectionService,
+                            com.spdms.modules.activity.repository.ActivityStageRepository activityStageRepository,
+                            com.spdms.modules.activity.service.StageValidationService stageValidationService,
+                            TeamAssignmentService teamAssignmentService,
+                            com.spdms.student.XpCommandService xpCommandService) {
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
@@ -58,27 +66,36 @@ public class StudentXpService {
         this.assignmentSecurityService = assignmentSecurityService;
         this.validator = validator;
         this.captainSelectionService = captainSelectionService;
+        this.activityStageRepository = activityStageRepository;
+        this.stageValidationService = stageValidationService;
+        this.teamAssignmentService = teamAssignmentService;
+        this.xpCommandService = xpCommandService;
     }
 
-    public ActivityAssignment findMatchingAssignmentForStudent(List<ActivityAssignment> matching, Student student) {
+    public com.spdms.entity.ActivityAssignment findMatchingAssignmentForStudent(java.util.List<com.spdms.entity.ActivityAssignment> matching, com.spdms.entity.Student student) {
         if (student == null) return null;
-        for (ActivityAssignment a : matching) {
-            if (a.getAssignmentScope() == AssignmentScope.GLOBAL) return a;
-            if (student.getDepartment() != null && a.getDepartment() != null 
-                    && student.getDepartment().getId().equals(a.getDepartment().getId())) {
-                if (a.getAssignmentScope() == AssignmentScope.DEPARTMENT) return a;
-                if (student.getSection() != null && a.getSection() != null 
-                        && student.getSection().getId().equals(a.getSection().getId())) {
-                    return a;
-                }
+        for (com.spdms.entity.ActivityAssignment a : matching) {
+            com.spdms.entity.AssignmentScope scope = a.getAssignmentScope();
+            if (scope == com.spdms.entity.AssignmentScope.GLOBAL || scope == com.spdms.entity.AssignmentScope.SPECIFIC_FACULTY) {
+                return a;
+            }
+            if (scope == com.spdms.entity.AssignmentScope.DEPARTMENT && 
+                student.getDepartment() != null && a.getDepartment() != null && 
+                student.getDepartment().getId().equals(a.getDepartment().getId())) {
+                return a;
+            }
+            if (scope == com.spdms.entity.AssignmentScope.SECTION && 
+                student.getSection() != null && a.getSection() != null && 
+                student.getSection().getId().equals(a.getSection().getId())) {
+                return a;
             }
         }
         return null;
     }
 
-    @Transactional
-    public ResponseEntity<ApiResponse<Void>> awardStudentXp(AwardXpRequest request, String username) {
-        User teacher = userRepository.findByUsername(username).orElse(null);
+    @org.springframework.transaction.annotation.Transactional
+    public org.springframework.http.ResponseEntity<com.spdms.common.response.ApiResponse<Void>> awardStudentXp(com.spdms.dto.AwardXpRequest request, String username) {
+        com.spdms.entity.User teacher = userRepository.findByUsername(username).orElse(null);
         if (teacher == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.<Void>error("Teacher profile not found"));
 
         Student student = studentRepository.findById(request.getRegNo()).orElse(null);
@@ -89,6 +106,10 @@ public class StudentXpService {
         
         if (activity.getStage() != null && activity.getStage().getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
             return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Cannot award XP for an activity in a non-active stage."));
+        }
+
+        if (activity.getSubgroup() == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Subgroup not found for Activity " + activity.getId()));
         }
 
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activity.getId());
@@ -110,15 +131,31 @@ public class StudentXpService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> awardStudentXpBatch(AwardXpRequest request, String username) {
+        public ResponseEntity<?> awardStudentXpBatch(AwardXpRequest request, String username) {
         User teacher = userRepository.findByUsername(username).orElse(null);
         if (teacher == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.<Void>error("Teacher profile not found"));
 
         Activity activity = activityRepository.findById(request.getActivityId()).orElse(null);
         if (activity == null) return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Activity not found"));
         
+        System.out.println("Teacher username: " + username);
+        System.out.println("Teacher ID: " + teacher.getId());
+        System.out.println("Activity ID: " + activity.getId());
+        System.out.println("Activity Name: " + activity.getName());
+        System.out.println("Activity Stage: " + (activity.getStage() != null ? activity.getStage().getName() : "null"));
+        System.out.println("Activity Subgroup: " + (activity.getSubgroup() != null ? activity.getSubgroup().getName() : "null"));
+        System.out.println("Activity Category: " + (activity.getSubgroup() != null ? activity.getSubgroup().getCategory() : "null"));
+        System.out.println("StudentIds: " + request.getStudentIds());
+        System.out.println("XP: " + request.getXp());
+        System.out.println("Result: " + request.getResult());
+        System.out.println("Remarks: " + request.getRemarks());
+
         if (activity.getStage() != null && activity.getStage().getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
             return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Cannot award XP for an activity in a non-active stage."));
+        }
+
+        if (activity.getSubgroup() == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Subgroup not found for Activity " + activity.getId()));
         }
 
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activity.getId());
@@ -138,31 +175,65 @@ public class StudentXpService {
             }
         }
 
+        List<Student> students = studentRepository.findAllById(studentIds);
+        Map<Long, Student> studentMap = students.stream().collect(Collectors.toMap(Student::getId, s -> s));
+
         List<String> errors = new ArrayList<>();
         int successCount = 0;
 
-        List<StudentActivityXp> activityXpsToSave = new ArrayList<>(studentIds.size());
-        List<XpTransaction> txsToSave = new ArrayList<>(studentIds.size());
-        List<Student> studentsToUpdate = new ArrayList<>(studentIds.size());
-
-        Map<Long, Student> studentMap = studentRepository.findAllById(studentIds)
-            .stream().collect(Collectors.toMap(Student::getId, s -> s));
+        List<StudentActivityXp> activityXpsToSave = new ArrayList<>();
+        List<XpTransaction> txsToSave = new ArrayList<>();
+        List<Student> studentsToUpdate = new ArrayList<>();
 
         for (Long regNo : studentIds) {
             Student student = studentMap.get(regNo);
             if (student == null) {
-                errors.add("Student ID " + regNo + " not found");
+                String e = "Student " + regNo + " not found";
+                System.out.println("ERROR ADDED: " + e);
+                errors.add(e);
                 continue;
+            }
+
+            System.out.println("Student ID: " + student.getId());
+            System.out.println("Student Name: " + student.getFullName());
+            System.out.println("Department: " + (student.getDepartment() != null ? student.getDepartment().getName() : "null"));
+            System.out.println("Section: " + (student.getSection() != null ? student.getSection().getSectionName() : "null"));
+            System.out.println("Current Stage: " + student.getCurrentStage());
+            System.out.println("Current Score: " + student.getScore());
+            System.out.println("Must XP: " + student.getMustXp());
+            System.out.println("Individual XP: " + student.getIndividualXp());
+            System.out.println("Group XP: " + student.getGroupXp());
+
+            System.out.println("BEFORE findMatchingAssignmentForStudent()");
+            System.out.println("matching assignments count: " + matching.size());
+            for (ActivityAssignment a : matching) {
+                System.out.println("Assignment ID: " + a.getId());
+                System.out.println("Assignment Scope: " + a.getAssignmentScope());
+                System.out.println("Department: " + (a.getDepartment() != null ? a.getDepartment().getName() : "null"));
+                System.out.println("Section: " + (a.getSection() != null ? a.getSection().getSectionName() : "null"));
+                System.out.println("Assigned Teacher: " + (a.getTeacher() != null ? a.getTeacher().getFullName() : "null"));
             }
 
             ActivityAssignment assignment = findMatchingAssignmentForStudent(matching, student);
+            System.out.println("Assignment Found = " + (assignment != null ? "TRUE" : "FALSE"));
+
             if (assignment == null) {
-                errors.add("Access Denied: You are not authorized to award XP to student " + student.getFullName());
+                String e = "Access Denied: You are not authorized to award XP to student " + student.getFullName();
+                System.out.println("ERROR ADDED: " + e);
+                errors.add(e);
                 continue;
             }
 
+            System.out.println("BEFORE validator.checkAwardLimit()");
+            System.out.println("Student: " + student.getFullName());
+            System.out.println("Activity: " + activity.getName());
+            System.out.println("Award XP: " + xpToAward);
+
             String limitError = validator.checkAwardLimit(student, activity);
+            System.out.println("Validator returned: " + (limitError != null ? limitError : "NULL"));
+            
             if (limitError != null) {
+                System.out.println("ERROR ADDED: " + limitError);
                 errors.add(limitError);
                 continue;
             }
@@ -170,7 +241,20 @@ public class StudentXpService {
             student.setTotalXp(student.getTotalXp() + xpToAward);
             student.setScore(student.getScore() + xpToAward);
             
+            com.spdms.entity.ActivitySubgroup subgroup = activity.getSubgroup();
+            if (subgroup != null && subgroup.getCategory() != null) {
+                String cat = subgroup.getCategory().toUpperCase();
+                if ("M".equals(cat) || "MUST".equals(cat)) {
+                    student.setMustXp(student.getMustXp() + xpToAward);
+                } else if ("I".equals(cat) || "INDIVIDUAL".equals(cat)) {
+                    student.setIndividualXp(student.getIndividualXp() + xpToAward);
+                } else if ("G".equals(cat) || "GROUP".equals(cat)) {
+                    student.setGroupXp(student.getGroupXp() + xpToAward);
+                }
+            }
+            
             captainSelectionService.evaluateCaptainPromotion(student);
+            evaluateStagePromotion(student);
 
             studentsToUpdate.add(student);
 
@@ -193,6 +277,8 @@ public class StudentXpService {
                 .build();
             txsToSave.add(tx);
 
+            xpCommandService.updateStreakOnSubmission(student, activity.getName());
+
             successCount++;
         }
 
@@ -202,13 +288,20 @@ public class StudentXpService {
             studentRepository.saveAll(studentsToUpdate);
         }
 
-        if (successCount == 0 && !errors.isEmpty()) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Void>error(String.join(", ", errors)));
+        if (!errors.isEmpty()) {
+            System.out.println("ALL collected errors: " + String.join(", ", errors));
+            if (successCount == 0) {
+                java.util.Map<String, Object> errorRes = new java.util.HashMap<>();
+                errorRes.put("success", false);
+                errorRes.put("errors", errors);
+                return ResponseEntity.badRequest().body(errorRes);
+            } else {
+                return ResponseEntity.ok(ApiResponse.ok("XP awarded to " + successCount + " students. Errors: " + String.join(" | ", errors), null));
+            }
         }
         return ResponseEntity.ok(ApiResponse.ok("XP points awarded successfully to " + successCount + " students", null));
     }
-
-    private int calculateXpToAward(Activity activity, String resultStr) {
+private int calculateXpToAward(Activity activity, String resultStr) {
         int xpToAward = 0;
         Boolean isAward = activity.getAwardEnabled();
         Boolean isPenalty = activity.getPenaltyEnabled();
@@ -252,7 +345,20 @@ public class StudentXpService {
         student.setTotalXp(student.getTotalXp() + xpToAward);
         student.setScore(student.getScore() + xpToAward);
         
+        com.spdms.entity.ActivitySubgroup subgroup = activity.getSubgroup();
+        if (subgroup != null && subgroup.getCategory() != null) {
+            String cat = subgroup.getCategory().toUpperCase();
+            if ("M".equals(cat) || "MUST".equals(cat)) {
+                student.setMustXp(student.getMustXp() + xpToAward);
+            } else if ("I".equals(cat) || "INDIVIDUAL".equals(cat)) {
+                student.setIndividualXp(student.getIndividualXp() + xpToAward);
+            } else if ("G".equals(cat) || "GROUP".equals(cat)) {
+                student.setGroupXp(student.getGroupXp() + xpToAward);
+            }
+        }
+        
         captainSelectionService.evaluateCaptainPromotion(student);
+        evaluateStagePromotion(student);
 
         studentRepository.save(student);
 
@@ -270,4 +376,34 @@ public class StudentXpService {
             .build();
         xpTransactionRepository.save(tx);
     }
+
+    private void evaluateStagePromotion(Student student) {
+        com.spdms.entity.ActivityStage currentStage = activityStageRepository.findByDisplayOrder(student.getCurrentStage()).orElse(null);
+        if (currentStage == null || currentStage.getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
+            return;
+        }
+
+        com.spdms.modules.activity.dto.response.StageValidationResponse validation = stageValidationService.validateStage(student.getId(), currentStage.getId());
+        boolean thresholdsMet = stageValidationService.isStageThresholdsMet(student.getId(), currentStage.getId());
+        
+        if ("UNLOCKED".equals(validation.getStageStatus()) || thresholdsMet) {
+            com.spdms.entity.ActivityStage nextStage = activityStageRepository.findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(student.getCurrentStage()).orElse(null);
+            if (nextStage != null) {
+                student.setCurrentStage(nextStage.getDisplayOrder());
+                student.setStage(nextStage.getDisplayOrder());
+                student.setScore(0);
+                
+                teamAssignmentService.assignTeamOnPromotion(student, nextStage);
+                
+                studentRepository.save(student);
+            }
+        }
+    }
 }
+
+
+
+
+
+
+

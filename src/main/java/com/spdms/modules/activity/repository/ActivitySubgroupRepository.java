@@ -8,5 +8,7 @@ import java.util.List;
 @Repository
 public interface ActivitySubgroupRepository extends JpaRepository<ActivitySubgroup, Long> {
     List<ActivitySubgroup> findByStageId(Long stageId);
+    java.util.Optional<ActivitySubgroup> findByStageIdAndNameIgnoreCase(Long stageId, String name);
+    java.util.Optional<ActivitySubgroup> findByStageIdAndCategoryIgnoreCase(Long stageId, String category);
     long countByAssignedDepartmentId(Long departmentId);
 }

@@ -77,6 +77,7 @@ public class StudentDisciplineService {
 
         // Adjust point score
         student.setScore(student.getScore() + request.getPoints());
+        student.setTotalXp(student.getTotalXp() + request.getPoints());
         Student saved = studentRepository.save(student);
 
         // Record log

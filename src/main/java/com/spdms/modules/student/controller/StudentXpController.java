@@ -80,8 +80,9 @@ public class StudentXpController {
     @PostMapping("/student-xp/award/batch")
     @PreAuthorize("hasRole('TEACHER')")
     @Operation(summary = "Award XP points to multiple students for a specific activity")
-    public ResponseEntity<ApiResponse<Void>> awardStudentXpBatch(@RequestBody AwardXpRequest request) {
+    public ResponseEntity<?> awardStudentXpBatch(@RequestBody AwardXpRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return studentXpService.awardStudentXpBatch(request, username);
     }
 }
+

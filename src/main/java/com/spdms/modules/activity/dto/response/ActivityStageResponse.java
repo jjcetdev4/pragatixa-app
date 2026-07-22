@@ -26,6 +26,26 @@ public class ActivityStageResponse {
     private Boolean useCombinedValidation;
     private Boolean isVisible;
     private Boolean isLocked;
+    
+    private Integer mustThreshold;
+    private Integer individualThreshold;
+    private Integer groupThreshold;
+
+    private Integer studentMustXp;
+    private Integer studentIndividualXp;
+    private Integer studentGroupXp;
+
+    private Boolean mustCompleted;
+    private Boolean individualCompleted;
+    private Boolean groupCompleted;
+
+    private Integer mustRemaining;
+    private Integer individualRemaining;
+    private Integer groupRemaining;
+
+    private Integer overallCompletedSubgroups;
+    private Integer overallTotalSubgroups;
+    private Double overallPercentage;
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -100,4 +120,49 @@ public class ActivityStageResponse {
     public void setStageStatus(String stageStatus) {
         this.stageStatus = stageStatus;
     }
+
+    public Integer getMustThreshold() { return mustThreshold; }
+    public void setMustThreshold(Integer mustThreshold) { this.mustThreshold = mustThreshold; }
+
+    public Integer getIndividualThreshold() { return individualThreshold; }
+    public void setIndividualThreshold(Integer individualThreshold) { this.individualThreshold = individualThreshold; }
+
+    public Integer getGroupThreshold() { return groupThreshold; }
+    public void setGroupThreshold(Integer groupThreshold) { this.groupThreshold = groupThreshold; }
+
+    public Integer getStudentMustXp() { return studentMustXp; }
+    public void setStudentMustXp(Integer studentMustXp) { this.studentMustXp = studentMustXp; }
+
+    public Integer getStudentIndividualXp() { return studentIndividualXp; }
+    public void setStudentIndividualXp(Integer studentIndividualXp) { this.studentIndividualXp = studentIndividualXp; }
+
+    public Integer getStudentGroupXp() { return studentGroupXp; }
+    public void setStudentGroupXp(Integer studentGroupXp) { this.studentGroupXp = studentGroupXp; }
+
+    public Boolean getMustCompleted() { return mustCompleted; }
+    public void setMustCompleted(Boolean mustCompleted) { this.mustCompleted = mustCompleted; }
+
+    public Boolean getIndividualCompleted() { return individualCompleted; }
+    public void setIndividualCompleted(Boolean individualCompleted) { this.individualCompleted = individualCompleted; }
+
+    public Boolean getGroupCompleted() { return groupCompleted; }
+    public void setGroupCompleted(Boolean groupCompleted) { this.groupCompleted = groupCompleted; }
+
+    public Integer getMustRemaining() { return mustRemaining; }
+    public void setMustRemaining(Integer mustRemaining) { this.mustRemaining = mustRemaining; }
+
+    public Integer getIndividualRemaining() { return individualRemaining; }
+    public void setIndividualRemaining(Integer individualRemaining) { this.individualRemaining = individualRemaining; }
+
+    public Integer getGroupRemaining() { return groupRemaining; }
+    public void setGroupRemaining(Integer groupRemaining) { this.groupRemaining = groupRemaining; }
+
+    public Integer getOverallCompletedSubgroups() { return overallCompletedSubgroups; }
+    public void setOverallCompletedSubgroups(Integer overallCompletedSubgroups) { this.overallCompletedSubgroups = overallCompletedSubgroups; }
+
+    public Integer getOverallTotalSubgroups() { return overallTotalSubgroups; }
+    public void setOverallTotalSubgroups(Integer overallTotalSubgroups) { this.overallTotalSubgroups = overallTotalSubgroups; }
+
+    public Double getOverallPercentage() { return overallPercentage; }
+    public void setOverallPercentage(Double overallPercentage) { this.overallPercentage = overallPercentage; }
 }

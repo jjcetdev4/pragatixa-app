@@ -36,4 +36,22 @@ public class ActivityQueryService {
         }
         return ResponseEntity.ok(ApiResponse.ok(activities));
     }
+
+    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities() {
+        List<Activity> activities = activityRepository.findAll();
+        for (Activity activity : activities) {
+            adminAssignmentService.populateActivityTransientFields(activity);
+        }
+        return ResponseEntity.ok(ApiResponse.ok(activities));
+    }
+
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId) {
+        List<Activity> activities = activityRepository.findByStageId(stageId);
+        
+        for (Activity activity : activities) {
+            adminAssignmentService.populateActivityTransientFields(activity);
+        }
+        
+        return ResponseEntity.ok(ApiResponse.ok(activities));
+    }
 }

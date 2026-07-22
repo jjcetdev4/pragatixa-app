@@ -17,6 +17,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.spdms.modules.activity.repository.ActivityStageRepository;
+import com.spdms.entity.ActivityStage;
+
 @Service
 public class ActivityCrudService {
 
@@ -24,6 +27,7 @@ public class ActivityCrudService {
 
     private final ActivityRepository activityRepository;
     private final ActivitySubgroupRepository activitySubgroupRepository;
+    private final ActivityStageRepository activityStageRepository;
     private final ActivityAssignmentRepository activityAssignmentRepository;
     private final DisciplineLogRepository disciplineLogRepository;
     private final StudentActivityXpRepository studentActivityXpRepository;
@@ -34,6 +38,7 @@ public class ActivityCrudService {
     public ActivityCrudService(
             ActivityRepository activityRepository, 
             ActivitySubgroupRepository activitySubgroupRepository,
+            ActivityStageRepository activityStageRepository,
             ActivityAssignmentRepository activityAssignmentRepository,
             DisciplineLogRepository disciplineLogRepository,
             StudentActivityXpRepository studentActivityXpRepository,
@@ -42,6 +47,7 @@ public class ActivityCrudService {
             AdminAssignmentService adminAssignmentService) {
         this.activityRepository = activityRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
+        this.activityStageRepository = activityStageRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
@@ -182,5 +188,63 @@ public class ActivityCrudService {
         activityRepository.deleteById(activityId);
         log.debug("Admin deleted activity with ID: {}", activityId);
         return ResponseEntity.ok(ApiResponse.ok("Activity deleted successfully", null));
+    }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<Void>> mapActivityToStage(Long stageId, Long activityId, String subgroupName) {
+        Activity activity = activityRepository.findById(activityId).orElse(null);
+        if (activity == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Activity not found"));
+        }
+
+        ActivitySubgroup subgroup = activitySubgroupRepository.findByStageIdAndCategoryIgnoreCase(stageId, subgroupName)
+            .orElseGet(() -> activitySubgroupRepository.findByStageIdAndNameIgnoreCase(stageId, subgroupName).orElse(null));
+        
+        if (subgroup == null) {
+            subgroup = new ActivitySubgroup();
+            subgroup.setStage(activity.getStage() != null ? activity.getStage() : activityStageRepository.findById(stageId).orElse(null));
+            if (subgroup.getStage() == null) {
+                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Stage not found"));
+            }
+            subgroup.setCategory(subgroupName);
+            // Default Name Capitalization
+            String displayName = subgroupName.substring(0, 1).toUpperCase() + subgroupName.substring(1);
+            if (subgroupName.equalsIgnoreCase("must")) {
+                displayName = "Must (Individual)";
+                subgroup.setThreshold(subgroup.getStage().getMustThreshold() != null ? subgroup.getStage().getMustThreshold() : 0);
+            } else if (subgroupName.equalsIgnoreCase("individual")) {
+                subgroup.setThreshold(subgroup.getStage().getIndividualThreshold() != null ? subgroup.getStage().getIndividualThreshold() : 0);
+            } else if (subgroupName.equalsIgnoreCase("group")) {
+                displayName = "Groups";
+                subgroup.setThreshold(subgroup.getStage().getGroupThreshold() != null ? subgroup.getStage().getGroupThreshold() : 0);
+            } else {
+                subgroup.setThreshold(0);
+            }
+            subgroup.setName(displayName);
+            subgroup = activitySubgroupRepository.save(subgroup);
+        }
+
+        activity.setStage(subgroup.getStage());
+        activity.setSubgroup(subgroup);
+        activityRepository.save(activity);
+        
+        return ResponseEntity.ok(ApiResponse.ok("Activity mapped successfully", null));
+    }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<Void>> unmapActivityFromStage(Long stageId, Long activityId) {
+        Activity activity = activityRepository.findById(activityId).orElse(null);
+        if (activity == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Activity not found"));
+        }
+
+        if (activity.getStage() == null || !activity.getStage().getId().equals(stageId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<Void>error("Activity is not mapped to this stage"));
+        }
+
+        activity.setStage(null);
+        activityRepository.save(activity);
+
+        return ResponseEntity.ok(ApiResponse.ok("Activity removed from stage successfully", null));
     }
 }

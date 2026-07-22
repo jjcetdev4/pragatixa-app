@@ -58,6 +58,15 @@ public class ActivityStage {
     @Column(name = "use_combined_validation", nullable = false)
     private boolean useCombinedValidation = false;
 
+    @Column(name = "must_threshold", nullable = false)
+    private Integer mustThreshold = 0;
+
+    @Column(name = "individual_threshold", nullable = false)
+    private Integer individualThreshold = 0;
+
+    @Column(name = "group_threshold", nullable = false)
+    private Integer groupThreshold = 0;
+
     public ActivityStage() {}
 
     public ActivityStage(Long id, String name, String description, Integer expectedXp, LocalDateTime startDateTime, LocalDateTime endDateTime, int displayOrder, StageStatus status) {
@@ -111,6 +120,15 @@ public class ActivityStage {
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
 
+    public Integer getMustThreshold() { return mustThreshold; }
+    public void setMustThreshold(Integer mustThreshold) { this.mustThreshold = mustThreshold; }
+
+    public Integer getIndividualThreshold() { return individualThreshold; }
+    public void setIndividualThreshold(Integer individualThreshold) { this.individualThreshold = individualThreshold; }
+
+    public Integer getGroupThreshold() { return groupThreshold; }
+    public void setGroupThreshold(Integer groupThreshold) { this.groupThreshold = groupThreshold; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
@@ -131,6 +149,9 @@ public class ActivityStage {
         public Builder useDateValidation(boolean v) { stage.useDateValidation = v; return this; }
         public Builder useThresholdValidation(boolean v) { stage.useThresholdValidation = v; return this; }
         public Builder useCombinedValidation(boolean v) { stage.useCombinedValidation = v; return this; }
+        public Builder mustThreshold(Integer v) { stage.mustThreshold = v; return this; }
+        public Builder individualThreshold(Integer v) { stage.individualThreshold = v; return this; }
+        public Builder groupThreshold(Integer v) { stage.groupThreshold = v; return this; }
         public ActivityStage build() { return stage; }
     }
 }

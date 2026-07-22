@@ -85,6 +85,14 @@ public class StudentController {
         return ResponseEntity.ok(studentService.searchStudents(keyword, page, size));
     }
 
+    @GetMapping("/team-member-search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Smart search for team members", description = "Search active students by name, reg_no, or spr_no for team selection.")
+    public ResponseEntity<ApiResponse<java.util.List<com.spdms.modules.student.dto.response.StudentSearchDTO>>> searchActiveStudentsForTeam(
+            @RequestParam String keyword) {
+        return ResponseEntity.ok(studentService.searchActiveStudentsForTeam(keyword));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete Student", description = "Deletes a student record. Requires ADMIN role.")

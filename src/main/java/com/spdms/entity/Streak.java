@@ -15,6 +15,9 @@ public class Streak {
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
+    @Column(name = "reg_no", nullable = false)
+    private String regNo;
+
     @Column(name = "streak_type", nullable = false, length = 50)
     private String streakType; // MONDAY_JOURNAL, ENGLISH_DIARY, C_CODING, PYTHON_CODING, ATTIRE, PUNCTUALITY, LIBRARY, COE_LAB
 
@@ -38,6 +41,9 @@ public class Streak {
     public Student getStudent() { return student; }
     public void setStudent(Student student) { this.student = student; }
 
+    public String getRegNo() { return regNo; }
+    public void setRegNo(String regNo) { this.regNo = regNo; }
+
     public String getStreakType() { return streakType; }
     public void setStreakType(String streakType) { this.streakType = streakType; }
 
@@ -58,6 +64,7 @@ public class Streak {
     public static class Builder {
         private final Streak s = new Streak();
         public Builder student(Student v) { s.student = v; return this; }
+        public Builder regNo(String v) { s.regNo = v; return this; }
         public Builder streakType(String v) { s.streakType = v; return this; }
         public Builder currentStreak(int v) { s.currentStreak = v; return this; }
         public Builder lastUpdated(LocalDateTime v) { s.lastUpdated = v; return this; }

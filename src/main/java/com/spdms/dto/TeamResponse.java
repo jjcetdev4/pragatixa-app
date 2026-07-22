@@ -76,4 +76,45 @@ public class TeamResponse {
 
     public boolean isCanDelete() { return canDelete; }
     public void setCanDelete(boolean canDelete) { this.canDelete = canDelete; }
+
+    private Long departmentId;
+    private String departmentName;
+    private Long academicYearId;
+    private String academicYearName;
+    private Long yearId;
+    private String yearName;
+    private Long semesterId;
+    private String semesterName;
+    private Long sectionId;
+    private String sectionName;
+
+    public Long getDepartmentId() { return departmentId; }
+    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
+
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+
+    public Long getAcademicYearId() { return academicYearId; }
+    public void setAcademicYearId(Long academicYearId) { this.academicYearId = academicYearId; }
+
+    public String getAcademicYearName() { return academicYearName; }
+    public void setAcademicYearName(String academicYearName) { this.academicYearName = academicYearName; }
+
+    public Long getYearId() { return yearId; }
+    public void setYearId(Long yearId) { this.yearId = yearId; }
+
+    public String getYearName() { return yearName; }
+    public void setYearName(String yearName) { this.yearName = yearName; }
+
+    public Long getSemesterId() { return semesterId; }
+    public void setSemesterId(Long semesterId) { this.semesterId = semesterId; }
+
+    public String getSemesterName() { return semesterName; }
+    public void setSemesterName(String semesterName) { this.semesterName = semesterName; }
+
+    public Long getSectionId() { return sectionId; }
+    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+
+    public String getSectionName() { return sectionName; }
+    public void setSectionName(String sectionName) { this.sectionName = sectionName; }
 }

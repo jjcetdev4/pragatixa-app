@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface StreakRepository extends JpaRepository<Streak, Long> {
     List<Streak> findByStudentRegNo(String regNo);
     Optional<Streak> findByStudentRegNoAndStreakType(String regNo, String streakType);
+    Optional<Streak> findByStudentIdAndStreakType(Long studentId, String streakType);
 }

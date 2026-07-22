@@ -97,6 +97,15 @@ public class Student {
     @Column(name = "total_xp", nullable = false)
     private int totalXp = 0;
 
+    @Column(name = "group_xp", nullable = false)
+    private int groupXp = 0;
+
+    @Column(name = "individual_xp", nullable = false)
+    private int individualXp = 0;
+
+    @Column(name = "must_xp", nullable = false)
+    private int mustXp = 0;
+
     @Column(name = "stage", nullable = false)
     private int stage = 1;
 
@@ -112,6 +121,15 @@ public class Student {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_captain", nullable = false)
+    private boolean isCaptain = false;
+
+    @Column(name = "promotion_timestamp")
+    private LocalDateTime promotionTimestamp;
+
+    @Column(name = "promotion_order")
+    private Integer promotionOrder;
 
     public Student() {}
 
@@ -196,6 +214,15 @@ public class Student {
     public int getTotalXp() { return totalXp; }
     public void setTotalXp(int totalXp) { this.totalXp = totalXp; }
 
+    public int getGroupXp() { return groupXp; }
+    public void setGroupXp(int groupXp) { this.groupXp = groupXp; }
+
+    public int getIndividualXp() { return individualXp; }
+    public void setIndividualXp(int individualXp) { this.individualXp = individualXp; }
+
+    public int getMustXp() { return mustXp; }
+    public void setMustXp(int mustXp) { this.mustXp = mustXp; }
+
     public int getStage() { return stage; }
     public void setStage(int stage) { 
         this.stage = stage; 
@@ -210,6 +237,15 @@ public class Student {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    public boolean isCaptain() { return isCaptain; }
+    public void setCaptain(boolean captain) { isCaptain = captain; }
+
+    public LocalDateTime getPromotionTimestamp() { return promotionTimestamp; }
+    public void setPromotionTimestamp(LocalDateTime promotionTimestamp) { this.promotionTimestamp = promotionTimestamp; }
+
+    public Integer getPromotionOrder() { return promotionOrder; }
+    public void setPromotionOrder(Integer promotionOrder) { this.promotionOrder = promotionOrder; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -241,6 +277,9 @@ public class Student {
         public Builder year(String v) { s.year = v; return this; }
         public Builder team(Team v) { s.team = v; return this; }
         public Builder totalXp(int v) { s.totalXp = v; return this; }
+        public Builder groupXp(int v) { s.groupXp = v; return this; }
+        public Builder individualXp(int v) { s.individualXp = v; return this; }
+        public Builder mustXp(int v) { s.mustXp = v; return this; }
         public Builder stage(int v) { 
             s.stage = v; 
             s.currentStage = v;

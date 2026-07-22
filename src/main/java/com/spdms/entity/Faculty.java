@@ -20,7 +20,7 @@ public class Faculty {
     private Department department;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "section_id", nullable = false)
+    @JoinColumn(name = "section_id", nullable = true)
     private Section section;
 
     @Column(nullable = false, length = 100)

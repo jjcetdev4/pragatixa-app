@@ -58,13 +58,66 @@ public class TeamMapper {
             }
         }
 
-        return new TeamResponse(
+        TeamResponse response = new TeamResponse(
                 team.getId(),
                 team.getName(),
                 team.getSize(),
                 captainId,
                 captainName,
                 studentResponses);
+
+        // Data Resolution Priority
+        // 1. Team Entity (if directly stored)
+        // 2. Captain
+        // 3. First Member
+
+        Student representative = team.getCaptain();
+        if (representative == null && !team.getMembers().isEmpty()) {
+            representative = team.getMembers().stream()
+                .filter(Student::isActive)
+                .findFirst()
+                .orElse(team.getMembers().iterator().next());
+        }
+
+        // Department
+        if (team.getDepartment() != null) {
+            response.setDepartmentId(team.getDepartment().getId());
+            response.setDepartmentName(team.getDepartment().getName());
+        } else if (representative != null && representative.getDepartment() != null) {
+            response.setDepartmentId(representative.getDepartment().getId());
+            response.setDepartmentName(representative.getDepartment().getName());
+        }
+
+        // Academic Year
+        if (representative != null && representative.getAcademicYearRef() != null) {
+            response.setAcademicYearId(representative.getAcademicYearRef().getId());
+            response.setAcademicYearName(representative.getAcademicYearRef().getAcademicYear());
+        }
+
+        // Year
+        if (team.getYear() != null && !team.getYear().isEmpty()) {
+            response.setYearName(team.getYear());
+        } else if (representative != null && representative.getYearRef() != null) {
+            response.setYearId(representative.getYearRef().getId());
+            response.setYearName("Year " + representative.getYearRef().getYearNo());
+        }
+
+        // Semester
+        if (representative != null && representative.getSemesterRef() != null) {
+            response.setSemesterId(representative.getSemesterRef().getId());
+            response.setSemesterName("Semester " + representative.getSemesterRef().getSemesterNo());
+        }
+
+        // Section
+        if (team.getSection() != null) {
+            response.setSectionId(team.getSection().getId());
+            response.setSectionName(team.getSection().getSectionName());
+        } else if (representative != null && representative.getSection() != null) {
+            response.setSectionId(representative.getSection().getId());
+            response.setSectionName(representative.getSection().getSectionName());
+        }
+
+        return response;
     }
 
     public TeamRemovalRequestDto toTeamRemovalRequestDto(TeamRemovalRequest req) {

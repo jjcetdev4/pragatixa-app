@@ -45,6 +45,12 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"department", "section", "genderRef", "academicYearRef", "yearRef", "semesterRef", "team"})
     @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.section.id = :sectionId")
     List<Student> findByDepartmentIdAndSectionId(@Param("deptId") Long deptId, @Param("sectionId") Long sectionId);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user"})
+    List<Student> findByYearRefIdAndDepartmentIdAndSectionId(Long yearId, Long departmentId, Long sectionId);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user"})
+    List<Student> findByYearRefIdAndDepartmentId(Long yearId, Long departmentId);
     
     long countByDepartmentId(Long departmentId);
 
@@ -91,4 +97,11 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
            "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Student> searchStudents(@Param("keyword") String keyword, Pageable pageable);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"department", "section", "genderRef", "academicYearRef", "yearRef", "semesterRef", "team"})
+    @Query("SELECT s FROM Student s WHERE s.active = true AND (" +
+           "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(s.sprNo) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    List<Student> searchActiveStudentsForTeam(@Param("keyword") String keyword, Pageable pageable);
 }

@@ -139,7 +139,7 @@ public class TeamCrudService {
         studentResponses.add(mapper.toStudentResponse(captain));
         for (Student m : members) studentResponses.add(mapper.toStudentResponse(m));
 
-        TeamResponse response = new TeamResponse(savedTeam.getId(), savedTeam.getName(), savedTeam.getSize(), captain.getRegNo(), captain.getFullName(), studentResponses);
+        TeamResponse response = mapper.toTeamResponse(savedTeam);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Team created successfully", response));
     }
 

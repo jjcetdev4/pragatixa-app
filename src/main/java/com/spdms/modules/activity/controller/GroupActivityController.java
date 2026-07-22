@@ -42,18 +42,34 @@ public class GroupActivityController {
     private final UserRepository userRepository;
     private final XpTransactionRepository xpTransactionRepository;
 
+    private final com.spdms.admin.service.CaptainSelectionService captainSelectionService;
+    private final com.spdms.modules.activity.repository.ActivityStageRepository activityStageRepository;
+    private final com.spdms.modules.activity.service.StageValidationService stageValidationService;
+    private final com.spdms.modules.student.service.TeamAssignmentService teamAssignmentService;
+    private final com.spdms.student.XpCommandService xpCommandService;
+
     public GroupActivityController(TeamRepository teamRepository,
                                    ActivityAssignmentRepository activityAssignmentRepository,
                                    StudentActivityXpRepository studentActivityXpRepository,
                                    StudentRepository studentRepository,
                                    UserRepository userRepository,
-                                   XpTransactionRepository xpTransactionRepository) {
+                                   XpTransactionRepository xpTransactionRepository,
+                                   com.spdms.admin.service.CaptainSelectionService captainSelectionService,
+                                   com.spdms.modules.activity.repository.ActivityStageRepository activityStageRepository,
+                                   com.spdms.modules.activity.service.StageValidationService stageValidationService,
+                                   com.spdms.modules.student.service.TeamAssignmentService teamAssignmentService,
+                                   com.spdms.student.XpCommandService xpCommandService) {
         this.teamRepository = teamRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.xpTransactionRepository = xpTransactionRepository;
+        this.captainSelectionService = captainSelectionService;
+        this.activityStageRepository = activityStageRepository;
+        this.stageValidationService = stageValidationService;
+        this.teamAssignmentService = teamAssignmentService;
+        this.xpCommandService = xpCommandService;
     }
 
     @GetMapping("/assignments/{assignmentId}/teams")
@@ -214,14 +230,22 @@ public class GroupActivityController {
                 student, activity, teacher, assignment, xpToAward, remarks != null ? remarks : "", LocalDateTime.now());
         activityXpsToSave.add(record);
 
+        // Update streaks
+        xpCommandService.updateStreakOnSubmission(student, activity.getName());
+
         // Update student scores directly
         student.setTotalXp(student.getTotalXp() + xpToAward);
         student.setScore(student.getScore() + xpToAward);
+        
+        captainSelectionService.evaluateCaptainPromotion(student);
+        evaluateStagePromotion(student);
+
         studentsToUpdate.add(student);
 
         // Create XpTransaction ledger entry
         XpTransaction tx = XpTransaction.builder()
                 .student(student)
+                .activity(activity)
                 .category(activity.getXpCategory() != null ? activity.getXpCategory().toUpperCase() : "SKILL")
                 .activityName(activity.getName() + " (Group XP - Awarded by " + teacher.getFullName() + ")")
                 .xpPoints(xpToAward)
@@ -241,5 +265,26 @@ public class GroupActivityController {
         s.setDepartmentName(student.getDepartment() != null ? student.getDepartment().getName() : null);
         s.setSection(student.getSection() != null ? student.getSection().getSectionName() : null);
         return s;
+    }
+
+    private void evaluateStagePromotion(Student student) {
+        com.spdms.entity.ActivityStage currentStage = activityStageRepository.findByDisplayOrder(student.getCurrentStage()).orElse(null);
+        if (currentStage == null || currentStage.getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
+            return;
+        }
+
+        com.spdms.modules.activity.dto.response.StageValidationResponse validation = stageValidationService.validateStage(student.getId(), currentStage.getId());
+        boolean thresholdsMet = stageValidationService.isStageThresholdsMet(student.getId(), currentStage.getId());
+        
+        if ("UNLOCKED".equals(validation.getStageStatus()) || thresholdsMet) {
+            com.spdms.entity.ActivityStage nextStage = activityStageRepository.findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(student.getCurrentStage()).orElse(null);
+            if (nextStage != null) {
+                student.setCurrentStage(nextStage.getDisplayOrder());
+                student.setStage(nextStage.getDisplayOrder());
+                student.setScore(0);
+                
+                teamAssignmentService.assignTeamOnPromotion(student, nextStage);
+            }
+        }
     }
 }

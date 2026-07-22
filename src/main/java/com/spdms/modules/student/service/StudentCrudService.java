@@ -41,4 +41,8 @@ public class StudentCrudService {
     public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size) {
         return studentQueryService.searchStudents(keyword, page, size);
     }
+
+    public ApiResponse<java.util.List<com.spdms.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(String keyword) {
+        return studentQueryService.searchActiveStudentsForTeam(keyword);
+    }
 }

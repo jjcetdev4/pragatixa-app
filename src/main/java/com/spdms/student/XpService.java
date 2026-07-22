@@ -1,7 +1,8 @@
 package com.spdms.student;
 
 import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Streak;
+import com.spdms.dto.StreakResponse;
+import com.spdms.dto.XpTransactionDto;
 import com.spdms.entity.XpTransaction;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -24,11 +25,11 @@ public class XpService {
         return xpQueryService.getXpSummary(regNo);
     }
 
-    public Page<XpTransaction> getXpHistory(String regNo, int page, int size) {
+    public Page<XpTransactionDto> getXpHistory(String regNo, int page, int size) {
         return xpQueryService.getXpHistory(regNo, page, size);
     }
 
-    public List<Streak> getStudentStreaks(String regNo) {
+    public List<StreakResponse> getStudentStreaks(String regNo) {
         return xpQueryService.getStudentStreaks(regNo);
     }
 
@@ -46,5 +47,9 @@ public class XpService {
 
     public ApiResponse<XpTransaction> logViolation(String regNo, String violationType, int xpPenalty, String appliedBy, String description) {
         return xpCommandService.logViolation(regNo, violationType, xpPenalty, appliedBy, description);
+    }
+
+    public void updateStreakOnSubmission(com.spdms.entity.Student student, String activity) {
+        xpCommandService.updateStreakOnSubmission(student, activity);
     }
 }

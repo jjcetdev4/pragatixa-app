@@ -44,14 +44,7 @@ public class StageLifecycleScheduler {
                 continue;
             }
 
-            StageStatus newStatus;
-            if (now.isBefore(stage.getStartDateTime())) {
-                newStatus = StageStatus.UPCOMING;
-            } else if (!now.isBefore(stage.getStartDateTime()) && now.isBefore(stage.getEndDateTime())) {
-                newStatus = StageStatus.ACTIVE;
-            } else {
-                newStatus = StageStatus.COMPLETED;
-            }
+            StageStatus newStatus = StageStatus.ACTIVE;
 
             if (stage.getStatus() != newStatus) {
                 log.debug("Stage '{}' transitioned from {} to {}", stage.getName(), stage.getStatus(), newStatus);
@@ -60,7 +53,6 @@ public class StageLifecycleScheduler {
                 updated = true;
 
                 if (newStatus == StageStatus.ACTIVE) {
-                    studentRepository.updateAllStudentsCurrentStage(stage.getDisplayOrder());
                     notifyStudents("New Stage Started", "Welcome to " + stage.getName() + "! New activities are now available.");
                 } else if (newStatus == StageStatus.COMPLETED) {
                     notifyStudents("Stage Locked", "Stage " + stage.getName() + " has ended. Activities are now locked.");

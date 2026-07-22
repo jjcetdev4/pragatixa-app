@@ -17,5 +17,9 @@ public interface StudentActivityXpRepository extends JpaRepository<StudentActivi
     @org.springframework.transaction.annotation.Transactional
     void deleteByActivityId(Long activityId);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByAssignmentId(Long assignmentId);
+
     boolean existsByAssignmentAndStudentIn(com.spdms.entity.ActivityAssignment assignment, java.util.Collection<com.spdms.entity.Student> students);
 }
