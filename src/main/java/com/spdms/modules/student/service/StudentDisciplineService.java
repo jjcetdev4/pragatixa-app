@@ -35,13 +35,20 @@ public class StudentDisciplineService {
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final StudentMapper studentMapper;
+    private final XpEngineService xpEngineService;
 
-    public StudentDisciplineService(ActivitySubgroupRepository activitySubgroupRepository, DisciplineLogRepository disciplineLogRepository, StudentRepository studentRepository, UserRepository userRepository, StudentMapper studentMapper) {
+    public StudentDisciplineService(ActivitySubgroupRepository activitySubgroupRepository, 
+                                    DisciplineLogRepository disciplineLogRepository, 
+                                    StudentRepository studentRepository, 
+                                    UserRepository userRepository, 
+                                    StudentMapper studentMapper,
+                                    XpEngineService xpEngineService) {
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.studentMapper = studentMapper;
+        this.xpEngineService = xpEngineService;
     }
 
     @Transactional
@@ -75,14 +82,12 @@ public class StudentDisciplineService {
             }
         }
 
-        // Adjust point score
-        student.setScore(student.getScore() + request.getPoints());
-        student.setTotalXp(student.getTotalXp() + request.getPoints());
-        Student saved = studentRepository.save(student);
+        // Adjust point score using centralized XP Engine
+        Student saved = xpEngineService.awardXp(student, null, creator, null, request.getPoints(), request.getReason());
 
         // Record log
         DisciplineLog logEntry = DisciplineLog.builder()
-                .student(student)
+                .student(saved)
                 .points(request.getPoints())
                 .reason(request.getReason())
                 .subgroup(subgroup)
@@ -91,7 +96,7 @@ public class StudentDisciplineService {
                 .build();
         disciplineLogRepository.save(logEntry);
 
-        log.debug("Teacher {} adjusted student {} points by {}. Reason: {}", creator.getUsername(), student.getRegNo(), request.getPoints(), request.getReason());
+        log.debug("Teacher {} adjusted student {} points by {}. Reason: {}", creator.getUsername(), saved.getRegNo(), request.getPoints(), request.getReason());
         return ApiResponse.ok("Points updated successfully", studentMapper.toResponse(saved));
     }
 

@@ -27,6 +27,9 @@ public class ActivityStageResponse {
     private Boolean isVisible;
     private Boolean isLocked;
     
+    private String stageState;
+    private Boolean isCurrentStage;
+    
     private Integer mustThreshold;
     private Integer individualThreshold;
     private Integer groupThreshold;
@@ -113,13 +116,15 @@ public class ActivityStageResponse {
 
     private String stageStatus;
     
-    public String getStageStatus() {
-        return stageStatus;
-    }
+    public String getStageStatus() { return stageStatus; }
+    public void setStageStatus(String stageStatus) { this.stageStatus = stageStatus; }
 
-    public void setStageStatus(String stageStatus) {
-        this.stageStatus = stageStatus;
-    }
+    public String getStageState() { return stageState; }
+    public void setStageState(String stageState) { this.stageState = stageState; }
+
+    public Boolean getIsCurrentStage() { return isCurrentStage; }
+    public Boolean isCurrentStage() { return isCurrentStage; }
+    public void setIsCurrentStage(Boolean isCurrentStage) { this.isCurrentStage = isCurrentStage; }
 
     public Integer getMustThreshold() { return mustThreshold; }
     public void setMustThreshold(Integer mustThreshold) { this.mustThreshold = mustThreshold; }

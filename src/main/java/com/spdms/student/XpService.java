@@ -49,7 +49,4 @@ public class XpService {
         return xpCommandService.logViolation(regNo, violationType, xpPenalty, appliedBy, description);
     }
 
-    public void updateStreakOnSubmission(com.spdms.entity.Student student, String activity) {
-        xpCommandService.updateStreakOnSubmission(student, activity);
-    }
 }

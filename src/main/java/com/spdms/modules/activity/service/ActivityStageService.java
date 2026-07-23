@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.annotation.PostConstruct;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,6 +33,9 @@ public class ActivityStageService {
     private final ActivityStageMapper activityStageMapper;
     private final StudentRepository studentRepository;
     private final com.spdms.repository.StageTeamRepository stageTeamRepository;
+    private final com.spdms.repository.ActivityAssignmentRepository assignmentRepo;
+    private final com.spdms.modules.student.repository.StudentActivityXpRepository xpRepo;
+    private final com.spdms.repository.XpTransactionRepository txRepo;
 
     public ActivityStageService(ActivityStageRepository activityStageRepository,
                                 ActivitySubgroupRepository activitySubgroupRepository,
@@ -39,7 +43,10 @@ public class ActivityStageService {
                                 DisciplineLogRepository disciplineLogRepository,
                                 ActivityStageMapper activityStageMapper,
                                 StudentRepository studentRepository,
-                                com.spdms.repository.StageTeamRepository stageTeamRepository) {
+                                com.spdms.repository.StageTeamRepository stageTeamRepository,
+                                com.spdms.repository.ActivityAssignmentRepository assignmentRepo,
+                                com.spdms.modules.student.repository.StudentActivityXpRepository xpRepo,
+                                com.spdms.repository.XpTransactionRepository txRepo) {
         this.activityStageRepository = activityStageRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityRepository = activityRepository;
@@ -47,6 +54,53 @@ public class ActivityStageService {
         this.activityStageMapper = activityStageMapper;
         this.studentRepository = studentRepository;
         this.stageTeamRepository = stageTeamRepository;
+        this.assignmentRepo = assignmentRepo;
+        this.xpRepo = xpRepo;
+        this.txRepo = txRepo;
+    }
+
+    @PostConstruct
+    @Transactional
+    public void cleanupDuplicateSubgroups() {
+        log.info("Starting cleanup of duplicate subgroups...");
+        List<ActivityStage> allStages = activityStageRepository.findAll();
+        for (ActivityStage stage : allStages) {
+            List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
+            Map<String, ActivitySubgroup> uniqueCategories = new HashMap<>();
+            
+            for (ActivitySubgroup sub : subgroups) {
+                String cat = sub.getCategory() != null ? sub.getCategory().toLowerCase() : sub.getName().toLowerCase();
+                
+                // If it's a known category
+                if (cat.contains("must") || cat.contains("individual") || cat.contains("group")) {
+                    String baseCat = cat.contains("must") ? "must" : (cat.contains("individual") ? "individual" : "group");
+                    
+                    if (uniqueCategories.containsKey(baseCat)) {
+                        // Found a duplicate! Delete it if it has no activities.
+                        List<Activity> activities = activityRepository.findBySubgroupId(sub.getId());
+                        if (activities.isEmpty()) {
+                            log.info("Deleting empty duplicate subgroup: {} for stage {}", sub.getName(), stage.getName());
+                            activitySubgroupRepository.delete(sub);
+                        } else {
+                            // If it has activities, move them to the primary subgroup, then delete
+                            ActivitySubgroup primary = uniqueCategories.get(baseCat);
+                            for(Activity act : activities) {
+                                act.setSubgroup(primary);
+                                activityRepository.save(act);
+                            }
+                            log.info("Merged activities and deleting duplicate subgroup: {} for stage {}", sub.getName(), stage.getName());
+                            activitySubgroupRepository.delete(sub);
+                        }
+                    } else {
+                        // Mark as the primary for this category
+                        sub.setCategory(baseCat);
+                        activitySubgroupRepository.save(sub);
+                        uniqueCategories.put(baseCat, sub);
+                    }
+                }
+            }
+        }
+        log.info("Finished cleanup of duplicate subgroups.");
     }
 
     @Transactional
@@ -54,7 +108,7 @@ public class ActivityStageService {
         List<ActivityStage> stages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
 
         List<ActivityStageResponse> responses = stages.stream().map(stage -> {
-            ensureMandatorySubgroups(stage);
+
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             
             // Map subgroups
@@ -106,7 +160,6 @@ public class ActivityStageService {
     @Transactional
     public Optional<ActivityStageResponse> getStageById(Long id) {
         return activityStageRepository.findById(id).map(stage -> {
-            ensureMandatorySubgroups(stage);
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
             List<com.spdms.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
@@ -192,8 +245,18 @@ public class ActivityStageService {
         }
         
         List<Activity> activities = activityRepository.findByStageId(id);
+        
+        // Resolve Activity Dependencies
         for (Activity act : activities) {
             disciplineLogRepository.nullifyActivityReferences(act.getId());
+            xpRepo.deleteByActivityId(act.getId());
+            
+            // For XpTransaction, there is no deleteByActivityId out of the box, we may need to iterate or fetch
+            List<com.spdms.entity.XpTransaction> txs = txRepo.findAll().stream().filter(t -> t.getActivity() != null && t.getActivity().getId().equals(act.getId())).collect(Collectors.toList());
+            txRepo.deleteAll(txs);
+            
+            List<com.spdms.entity.ActivityAssignment> assignments = assignmentRepo.findByActivityId(act.getId());
+            assignmentRepo.deleteAll(assignments);
         }
         
         // 2. Delete all Activity records referencing this stage

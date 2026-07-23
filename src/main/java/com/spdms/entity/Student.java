@@ -112,6 +112,9 @@ public class Student {
     @Transient
     private int currentStage = 1;
 
+    @Transient
+    private Long currentStageId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;
@@ -235,6 +238,9 @@ public class Student {
         this.currentStage = currentStage;
     }
 
+    public Long getCurrentStageId() { return currentStageId; }
+    public void setCurrentStageId(Long currentStageId) { this.currentStageId = currentStageId; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
@@ -289,6 +295,10 @@ public class Student {
             s.currentStage = v; 
             s.stage = v;
             return this; 
+        }
+        public Builder currentStageId(Long v) {
+            s.currentStageId = v;
+            return this;
         }
         public Student build() { return s; }
     }

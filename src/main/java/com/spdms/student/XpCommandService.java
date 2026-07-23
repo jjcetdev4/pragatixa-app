@@ -7,7 +7,7 @@ import com.spdms.entity.Student;
 import com.spdms.entity.XpTransaction;
 import com.spdms.modules.activity.repository.ActivityRepository;
 import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.repository.StreakRepository;
+import com.spdms.modules.student.service.XpEngineService;
 import com.spdms.repository.XpTransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,21 +20,21 @@ import java.util.Optional;
 public class XpCommandService {
 
     private final XpTransactionRepository xpTransactionRepository;
-    private final StreakRepository streakRepository;
     private final StudentRepository studentRepository;
     private final ActivityRepository activityRepository;
     private final XpCalculationService xpCalculationService;
+    private final XpEngineService xpEngineService;
 
     public XpCommandService(XpTransactionRepository xpTransactionRepository,
-                            StreakRepository streakRepository,
                             StudentRepository studentRepository,
                             ActivityRepository activityRepository,
-                            XpCalculationService xpCalculationService) {
+                            XpCalculationService xpCalculationService,
+                            XpEngineService xpEngineService) {
         this.xpTransactionRepository = xpTransactionRepository;
-        this.streakRepository = streakRepository;
         this.studentRepository = studentRepository;
         this.activityRepository = activityRepository;
         this.xpCalculationService = xpCalculationService;
+        this.xpEngineService = xpEngineService;
     }
 
     @Transactional
@@ -63,7 +63,7 @@ public class XpCommandService {
         XpTransaction claim = XpTransaction.builder()
                 .student(student)
                 .activity(resolvedActivity)
-                .category(resolvedCategory.toUpperCase())
+                .category(resolvedCategory != null ? resolvedCategory.toUpperCase() : "SKILL")
                 .activityName(activityName)
                 .xpPoints(allowedPoints)
                 .evidenceUrl(evidenceUrl)
@@ -74,7 +74,7 @@ public class XpCommandService {
                 .build();
 
         XpTransaction saved = xpTransactionRepository.save(claim);
-        updateStreakOnSubmission(student, activityName);
+        xpEngineService.updateStreakOnSubmission(student, activityName);
 
         return ApiResponse.ok("XP Claim submitted successfully", saved);
     }
@@ -90,13 +90,14 @@ public class XpCommandService {
             return ApiResponse.error("Transaction is already processed");
         }
 
-        tx.setStatus("APPROVED");
+        tx.setStatus("APPROVED_AND_PROCESSED");
         tx.setApprovedBy(approvedBy);
         XpTransaction saved = xpTransactionRepository.save(tx);
 
         Student student = tx.getStudent();
-        student.setTotalXp(student.getTotalXp() + tx.getXpPoints());
-        studentRepository.save(student);
+        
+        // Let XpEngineService handle the actual categorization and promotion
+        xpEngineService.awardXp(student, tx.getActivity(), null, null, tx.getXpPoints(), "Approved Claim");
 
         return ApiResponse.ok("XP transaction approved successfully", saved);
     }
@@ -127,75 +128,9 @@ public class XpCommandService {
         }
         Student student = studentOpt.get();
 
-        XpTransaction violationTx = XpTransaction.builder()
-                .student(student)
-                .category("DISCIPLINE")
-                .activityName("Violation: " + violationType)
-                .xpPoints(-Math.abs(xpPenalty))
-                .evidenceUrl(description)
-                .submittedAt(LocalDateTime.now())
-                .status("APPROVED")
-                .approvedBy(appliedBy)
-                .isPenalty(true)
-                .capApplied(false)
-                .build();
+        xpEngineService.awardXp(student, null, null, null, -Math.abs(xpPenalty), "Violation: " + violationType + " - " + description);
 
-        XpTransaction saved = xpTransactionRepository.save(violationTx);
-
-        student.setTotalXp(Math.max(-9999, student.getTotalXp() - Math.abs(xpPenalty)));
-        studentRepository.save(student);
-
-        return ApiResponse.ok("Violation logged successfully. Points deducted.", saved);
+        return ApiResponse.ok("Violation logged successfully. Points deducted.", null);
     }
 
-    public void updateStreakOnSubmission(Student student, String activity) {
-        String type = null;
-        int penalty = 0;
-
-        if (activity.toLowerCase().contains("journal")) {
-            type = "MONDAY_JOURNAL";
-            penalty = student.getStage() == 1 ? 10 : (student.getStage() == 2 ? 30 : 50);
-        } else if (activity.toLowerCase().contains("diary")) {
-            type = "ENGLISH_DIARY";
-            penalty = 20; 
-        } else if (activity.toLowerCase().contains("c programming") || activity.toLowerCase().contains("c coding")) {
-            type = "C_CODING";
-            penalty = 30;
-        } else if (activity.toLowerCase().contains("python")) {
-            type = "PYTHON_CODING";
-            penalty = 30;
-        } else if (activity.toLowerCase().contains("library")) {
-            type = "LIBRARY";
-            penalty = 20;
-        } else if (activity.toLowerCase().contains("coe lab") || activity.toLowerCase().contains("d2p lab")) {
-            type = "COE_LAB";
-            penalty = 20;
-        }
-
-        if (type != null) {
-            Optional<Streak> streakOpt = streakRepository.findByStudentRegNoAndStreakType(student.getRegNo(), type);
-            Streak streak;
-            if (streakOpt.isEmpty()) {
-                streak = Streak.builder()
-                        .student(student)
-                        .regNo(student.getRegNo())
-                        .streakType(type)
-                        .currentStreak(1)
-                        .lastUpdated(LocalDateTime.now())
-                        .isBroken(false)
-                        .penaltyPerBreak(penalty)
-                        .build();
-            } else {
-                streak = streakOpt.get();
-                if (streak.getLastUpdated() != null && streak.getLastUpdated().isAfter(LocalDateTime.now().minusHours(36))) {
-                    streak.setCurrentStreak(streak.getCurrentStreak() + 1);
-                } else {
-                    streak.setCurrentStreak(1); 
-                }
-                streak.setBroken(false);
-                streak.setLastUpdated(LocalDateTime.now());
-            }
-            streakRepository.save(streak);
-        }
-    }
 }

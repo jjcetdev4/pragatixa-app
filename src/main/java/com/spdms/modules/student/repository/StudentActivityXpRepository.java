@@ -22,4 +22,7 @@ public interface StudentActivityXpRepository extends JpaRepository<StudentActivi
     void deleteByAssignmentId(Long assignmentId);
 
     boolean existsByAssignmentAndStudentIn(com.spdms.entity.ActivityAssignment assignment, java.util.Collection<com.spdms.entity.Student> students);
+
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(x.xpAwarded) FROM StudentActivityXp x WHERE x.student.id = :studentId AND x.activity.subgroup.id = :subgroupId AND x.result != 'FAIL'")
+    Integer calculateXpBySubgroup(@org.springframework.data.repository.query.Param("studentId") Long studentId, @org.springframework.data.repository.query.Param("subgroupId") Long subgroupId);
 }

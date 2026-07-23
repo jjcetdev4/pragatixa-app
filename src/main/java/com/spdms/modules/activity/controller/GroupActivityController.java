@@ -6,9 +6,9 @@ import com.spdms.dto.TeamResponse;
 import com.spdms.entity.*;
 import com.spdms.repository.*;
 import com.spdms.modules.activity.repository.*;
-import com.spdms.modules.faculty.repository.*;
 import com.spdms.modules.student.repository.*;
 import com.spdms.modules.authentication.repository.UserRepository;
+import com.spdms.modules.student.service.XpEngineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +21,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,39 +36,20 @@ public class GroupActivityController {
 
     private final TeamRepository teamRepository;
     private final ActivityAssignmentRepository activityAssignmentRepository;
-    private final StudentActivityXpRepository studentActivityXpRepository;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
-    private final XpTransactionRepository xpTransactionRepository;
-
-    private final com.spdms.admin.service.CaptainSelectionService captainSelectionService;
-    private final com.spdms.modules.activity.repository.ActivityStageRepository activityStageRepository;
-    private final com.spdms.modules.activity.service.StageValidationService stageValidationService;
-    private final com.spdms.modules.student.service.TeamAssignmentService teamAssignmentService;
-    private final com.spdms.student.XpCommandService xpCommandService;
+    private final XpEngineService xpEngineService;
 
     public GroupActivityController(TeamRepository teamRepository,
                                    ActivityAssignmentRepository activityAssignmentRepository,
-                                   StudentActivityXpRepository studentActivityXpRepository,
                                    StudentRepository studentRepository,
                                    UserRepository userRepository,
-                                   XpTransactionRepository xpTransactionRepository,
-                                   com.spdms.admin.service.CaptainSelectionService captainSelectionService,
-                                   com.spdms.modules.activity.repository.ActivityStageRepository activityStageRepository,
-                                   com.spdms.modules.activity.service.StageValidationService stageValidationService,
-                                   com.spdms.modules.student.service.TeamAssignmentService teamAssignmentService,
-                                   com.spdms.student.XpCommandService xpCommandService) {
+                                   XpEngineService xpEngineService) {
         this.teamRepository = teamRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
-        this.studentActivityXpRepository = studentActivityXpRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
-        this.xpTransactionRepository = xpTransactionRepository;
-        this.captainSelectionService = captainSelectionService;
-        this.activityStageRepository = activityStageRepository;
-        this.stageValidationService = stageValidationService;
-        this.teamAssignmentService = teamAssignmentService;
-        this.xpCommandService = xpCommandService;
+        this.xpEngineService = xpEngineService;
     }
 
     @GetMapping("/assignments/{assignmentId}/teams")
@@ -173,13 +153,7 @@ public class GroupActivityController {
             return ResponseEntity.badRequest().body(ApiResponse.error("Cannot award XP for an activity in a non-active stage."));
         }
         
-        // Parsing the payload: expects a list of objects like { "regNo": "...", "xp": 10, "remarks": "..." }
-        // OR an equal distribution: { "equalDistribution": true, "xp": 10, "remarks": "..." }
         boolean equalDistribution = body.containsKey("equalDistribution") && Boolean.parseBoolean(body.get("equalDistribution").toString());
-        
-        List<StudentActivityXp> activityXpsToSave = new ArrayList<>();
-        List<XpTransaction> txsToSave = new ArrayList<>();
-        List<Student> studentsToUpdate = new ArrayList<>();
 
         if (equalDistribution) {
             int xp = Integer.parseInt(body.get("xp").toString());
@@ -191,7 +165,7 @@ public class GroupActivityController {
             }
 
             for (Student member : studentsToAward) {
-                applyXpToStudent(member, activity, teacher, assignment, xp, remarks, activityXpsToSave, txsToSave, studentsToUpdate);
+                xpEngineService.awardXp(member, activity, teacher, assignment, xp, remarks);
             }
         } else {
             List<Map<String, Object>> studentsData = (List<Map<String, Object>>) body.get("students");
@@ -210,52 +184,12 @@ public class GroupActivityController {
                 
                 Student student = studentMap.get(regNo);
                 if (student != null) {
-                    applyXpToStudent(student, activity, teacher, assignment, xp, remarks, activityXpsToSave, txsToSave, studentsToUpdate);
+                    xpEngineService.awardXp(student, activity, teacher, assignment, xp, remarks);
                 }
             }
         }
 
-        if (!activityXpsToSave.isEmpty()) {
-            studentActivityXpRepository.saveAll(activityXpsToSave);
-            xpTransactionRepository.saveAll(txsToSave);
-            studentRepository.saveAll(studentsToUpdate);
-        }
-
         return ResponseEntity.ok(ApiResponse.ok("XP awarded successfully", null));
-    }
-
-    private void applyXpToStudent(Student student, Activity activity, User teacher, ActivityAssignment assignment, int xpToAward, String remarks, List<StudentActivityXp> activityXpsToSave, List<XpTransaction> txsToSave, List<Student> studentsToUpdate) {
-        // Record history log
-        StudentActivityXp record = new StudentActivityXp(
-                student, activity, teacher, assignment, xpToAward, remarks != null ? remarks : "", LocalDateTime.now());
-        activityXpsToSave.add(record);
-
-        // Update streaks
-        xpCommandService.updateStreakOnSubmission(student, activity.getName());
-
-        // Update student scores directly
-        student.setTotalXp(student.getTotalXp() + xpToAward);
-        student.setScore(student.getScore() + xpToAward);
-        
-        captainSelectionService.evaluateCaptainPromotion(student);
-        evaluateStagePromotion(student);
-
-        studentsToUpdate.add(student);
-
-        // Create XpTransaction ledger entry
-        XpTransaction tx = XpTransaction.builder()
-                .student(student)
-                .activity(activity)
-                .category(activity.getXpCategory() != null ? activity.getXpCategory().toUpperCase() : "SKILL")
-                .activityName(activity.getName() + " (Group XP - Awarded by " + teacher.getFullName() + ")")
-                .xpPoints(xpToAward)
-                .submittedAt(LocalDateTime.now())
-                .status("APPROVED")
-                .approvedBy(teacher.getFullName())
-                .isPenalty(xpToAward < 0)
-                .capApplied(false)
-                .build();
-        txsToSave.add(tx);
     }
 
     private StudentResponse toStudentResponse(Student student) {
@@ -265,26 +199,5 @@ public class GroupActivityController {
         s.setDepartmentName(student.getDepartment() != null ? student.getDepartment().getName() : null);
         s.setSection(student.getSection() != null ? student.getSection().getSectionName() : null);
         return s;
-    }
-
-    private void evaluateStagePromotion(Student student) {
-        com.spdms.entity.ActivityStage currentStage = activityStageRepository.findByDisplayOrder(student.getCurrentStage()).orElse(null);
-        if (currentStage == null || currentStage.getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
-            return;
-        }
-
-        com.spdms.modules.activity.dto.response.StageValidationResponse validation = stageValidationService.validateStage(student.getId(), currentStage.getId());
-        boolean thresholdsMet = stageValidationService.isStageThresholdsMet(student.getId(), currentStage.getId());
-        
-        if ("UNLOCKED".equals(validation.getStageStatus()) || thresholdsMet) {
-            com.spdms.entity.ActivityStage nextStage = activityStageRepository.findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(student.getCurrentStage()).orElse(null);
-            if (nextStage != null) {
-                student.setCurrentStage(nextStage.getDisplayOrder());
-                student.setStage(nextStage.getDisplayOrder());
-                student.setScore(0);
-                
-                teamAssignmentService.assignTeamOnPromotion(student, nextStage);
-            }
-        }
     }
 }
