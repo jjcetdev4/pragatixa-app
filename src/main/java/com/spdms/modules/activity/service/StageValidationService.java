@@ -2,14 +2,18 @@ package com.spdms.modules.activity.service;
 
 import com.spdms.modules.activity.dto.response.StageValidationResponse;
 import com.spdms.entity.ActivityStage;
+import com.spdms.entity.ActivitySubgroup;
 import com.spdms.entity.Student;
 import com.spdms.modules.activity.repository.ActivityStageRepository;
+import com.spdms.modules.activity.repository.ActivitySubgroupRepository;
 import com.spdms.modules.student.repository.StudentRepository;
+import com.spdms.modules.student.repository.StudentActivityXpRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class StageValidationService {
@@ -17,11 +21,17 @@ public class StageValidationService {
 
     private final ActivityStageRepository activityStageRepository;
     private final StudentRepository studentRepository;
+    private final ActivitySubgroupRepository activitySubgroupRepository;
+    private final StudentActivityXpRepository studentActivityXpRepository;
 
     public StageValidationService(ActivityStageRepository activityStageRepository,
-                                  StudentRepository studentRepository) {
+                                  StudentRepository studentRepository,
+                                  ActivitySubgroupRepository activitySubgroupRepository,
+                                  StudentActivityXpRepository studentActivityXpRepository) {
         this.activityStageRepository = activityStageRepository;
         this.studentRepository = studentRepository;
+        this.activitySubgroupRepository = activitySubgroupRepository;
+        this.studentActivityXpRepository = studentActivityXpRepository;
     }
 
     public StageValidationResponse validateStage(Student student, ActivityStage stage) {
@@ -96,27 +106,59 @@ public class StageValidationService {
         if (stage == null || student == null) return false;
 
         System.out.println("=====================================================");
-        System.out.println("STAGE ENGINE - EVALUATING THRESHOLDS");
+        System.out.println("STAGE ENGINE - EVALUATING THRESHOLDS DYNAMICALLY");
         System.out.println("Student ID    : " + student.getId());
         System.out.println("Stage Target  : " + stage.getDisplayOrder() + " (" + stage.getName() + ")");
         System.out.println("--- XP Values vs Thresholds ---");
         
-        int mustThresh = stage.getMustThreshold() != null ? stage.getMustThreshold() : 0;
-        int indThresh = stage.getIndividualThreshold() != null ? stage.getIndividualThreshold() : 0;
-        int grpThresh = stage.getGroupThreshold() != null ? stage.getGroupThreshold() : 0;
         int expectedXp = stage.getExpectedXp() != null ? stage.getExpectedXp() : 0;
-
         boolean expectedXpMet = student.getTotalXp() >= expectedXp;
-        boolean mustMet = student.getMustXp() >= mustThresh;
-        boolean indMet = student.getIndividualXp() >= indThresh;
-        boolean grpMet = student.getGroupXp() >= grpThresh;
-
         System.out.println("Total XP      : " + student.getTotalXp() + " >= " + expectedXp + " -> " + expectedXpMet);
-        System.out.println("Must XP       : " + student.getMustXp() + " >= " + mustThresh + " -> " + mustMet);
-        System.out.println("Individual XP : " + student.getIndividualXp() + " >= " + indThresh + " -> " + indMet);
-        System.out.println("Group XP      : " + student.getGroupXp() + " >= " + grpThresh + " -> " + grpMet);
 
-        boolean allMet = expectedXpMet && mustMet && indMet && grpMet;
+        List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
+        boolean allSubgroupsMet = true;
+
+        if (subgroups.isEmpty()) {
+            // Fallback to static validation if no subgroups are defined
+            int mustThresh = stage.getMustThreshold() != null ? stage.getMustThreshold() : 0;
+            int indThresh = stage.getIndividualThreshold() != null ? stage.getIndividualThreshold() : 0;
+            int grpThresh = stage.getGroupThreshold() != null ? stage.getGroupThreshold() : 0;
+
+            boolean mustMet = student.getMustXp() >= mustThresh;
+            boolean indMet = student.getIndividualXp() >= indThresh;
+            boolean grpMet = student.getGroupXp() >= grpThresh;
+
+            System.out.println("Must XP       : " + student.getMustXp() + " >= " + mustThresh + " -> " + mustMet);
+            System.out.println("Individual XP : " + student.getIndividualXp() + " >= " + indThresh + " -> " + indMet);
+            System.out.println("Group XP      : " + student.getGroupXp() + " >= " + grpThresh + " -> " + grpMet);
+
+            allSubgroupsMet = mustMet && indMet && grpMet;
+        } else {
+            for (ActivitySubgroup subgroup : subgroups) {
+                int threshold = subgroup.getThreshold();
+                if (threshold > 0) {
+                    Integer xpObj = studentActivityXpRepository.calculateXpBySubgroup(student.getId(), subgroup.getId());
+                    int actualXp = xpObj != null ? xpObj : 0;
+                    
+                    // Fallback to static fields if this is a legacy subgroup with no direct XP records
+                    // but we still want backward compatibility with must/individual/group tracking
+                    if (actualXp == 0) {
+                        String sName = subgroup.getName() != null ? subgroup.getName().toLowerCase() : "";
+                        if (sName.contains("must") || sName.contains("mandatory")) actualXp = student.getMustXp();
+                        else if (sName.contains("individual")) actualXp = student.getIndividualXp();
+                        else if (sName.contains("group") || sName.contains("team")) actualXp = student.getGroupXp();
+                    }
+
+                    boolean met = actualXp >= threshold;
+                    System.out.println("Subgroup '" + subgroup.getName() + "' XP: " + actualXp + " >= " + threshold + " -> " + met);
+                    if (!met) {
+                        allSubgroupsMet = false;
+                    }
+                }
+            }
+        }
+
+        boolean allMet = expectedXpMet && allSubgroupsMet;
         
         System.out.println("Final Decision: " + (allMet ? "PROMOTED (All thresholds met)" : "PENDING (Thresholds not met)"));
         System.out.println("=====================================================");

@@ -207,15 +207,12 @@ public class ActivityCrudService {
                  return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Stage not found"));
             }
             subgroup.setCategory(subgroupName);
-            // Default Name Capitalization
-            String displayName = subgroupName.substring(0, 1).toUpperCase() + subgroupName.substring(1);
+            String displayName = subgroupName.substring(0, 1).toUpperCase() + subgroupName.substring(1).toLowerCase();
             if (subgroupName.equalsIgnoreCase("must")) {
-                displayName = "Must (Individual)";
                 subgroup.setThreshold(subgroup.getStage().getMustThreshold() != null ? subgroup.getStage().getMustThreshold() : 0);
             } else if (subgroupName.equalsIgnoreCase("individual")) {
                 subgroup.setThreshold(subgroup.getStage().getIndividualThreshold() != null ? subgroup.getStage().getIndividualThreshold() : 0);
             } else if (subgroupName.equalsIgnoreCase("group")) {
-                displayName = "Groups";
                 subgroup.setThreshold(subgroup.getStage().getGroupThreshold() != null ? subgroup.getStage().getGroupThreshold() : 0);
             } else {
                 subgroup.setThreshold(0);
@@ -224,9 +221,44 @@ public class ActivityCrudService {
             subgroup = activitySubgroupRepository.save(subgroup);
         }
 
-        activity.setStage(subgroup.getStage());
-        activity.setSubgroup(subgroup);
-        activityRepository.save(activity);
+        Activity clonedActivity = new Activity();
+        
+        // Copy basic fields
+        clonedActivity.setName(activity.getName());
+        clonedActivity.setActivityName(activity.getActivityName());
+        clonedActivity.setDescription(activity.getDescription());
+        clonedActivity.setActivityDescription(activity.getActivityDescription());
+        clonedActivity.setModeType(activity.getModeType());
+        clonedActivity.setAwardXp(activity.getAwardXp());
+        clonedActivity.setAwardEnabled(activity.getAwardEnabled());
+        clonedActivity.setPenaltyEnabled(activity.getPenaltyEnabled());
+        clonedActivity.setPenaltyXp(activity.getPenaltyXp());
+        clonedActivity.setAwardType(activity.getAwardType());
+        clonedActivity.setRepeatAllowed(activity.isRepeatAllowed());
+        clonedActivity.setResetPeriod(activity.getResetPeriod());
+        clonedActivity.setMandatory(activity.isMandatory());
+        clonedActivity.setEvidenceRequired(activity.isEvidenceRequired());
+        clonedActivity.setCategory(activity.getCategory());
+        clonedActivity.setEvidence(activity.getEvidence());
+        clonedActivity.setJustification(activity.getJustification());
+        clonedActivity.setOwnerDepartment(activity.getOwnerDepartment());
+        clonedActivity.setOwnerSubrole(activity.getOwnerSubrole());
+        clonedActivity.setType(activity.getType());
+        clonedActivity.setXpCategory(activity.getXpCategory());
+        clonedActivity.setXpType(activity.getXpType());
+        clonedActivity.setMaximumAwards(activity.getMaximumAwards());
+        clonedActivity.setAwardFrequency(activity.getAwardFrequency());
+        clonedActivity.setAwardDays(activity.getAwardDays());
+        clonedActivity.setDisplayOrder(activity.getDisplayOrder());
+        clonedActivity.setStatus(activity.getStatus());
+        clonedActivity.setAssignmentMode(activity.getAssignmentMode());
+        clonedActivity.setActivityCategory(activity.getActivityCategory());
+        clonedActivity.setMaxPoints(activity.getMaxPoints());
+
+        clonedActivity.setStage(subgroup.getStage());
+        clonedActivity.setSubgroup(subgroup);
+        
+        activityRepository.save(clonedActivity);
         
         return ResponseEntity.ok(ApiResponse.ok("Activity mapped successfully", null));
     }

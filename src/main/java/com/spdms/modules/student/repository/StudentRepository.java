@@ -104,4 +104,16 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
            "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(s.sprNo) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<Student> searchActiveStudentsForTeam(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT COUNT(s) FROM Student s WHERE s.active = true AND " +
+           "(s.department.id = :deptId OR (s.department IS NULL AND :deptId IS NULL)) AND " +
+           "(s.year = :year OR (s.year IS NULL AND :year IS NULL)) AND " +
+           "(s.section.id = :secId OR (s.section IS NULL AND :secId IS NULL))")
+    long countByDepartmentIdAndYearAndSectionId(@Param("deptId") Long deptId, @Param("year") String year, @Param("secId") Long secId);
+
+    @Query("SELECT COUNT(s) FROM Student s WHERE s.active = true AND s.stage >= :stageOrder AND s.promotionOrder IS NOT NULL AND " +
+           "(s.department.id = :deptId OR (s.department IS NULL AND :deptId IS NULL)) AND " +
+           "(s.year = :year OR (s.year IS NULL AND :year IS NULL)) AND " +
+           "(s.section.id = :secId OR (s.section IS NULL AND :secId IS NULL))")
+    Integer countPromotedStudents(@Param("stageOrder") int stageOrder, @Param("deptId") Long deptId, @Param("year") String year, @Param("secId") Long secId);
 }

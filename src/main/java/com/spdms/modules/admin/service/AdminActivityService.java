@@ -4,6 +4,7 @@ import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.Activity;
 import com.spdms.entity.CustomFrequency;
 import com.spdms.modules.activity.dto.response.MyActivityResponse;
+import com.spdms.modules.activity.dto.response.GroupedActivityResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -34,12 +35,16 @@ public class AdminActivityService {
         return queryService.getActivitiesBySubgroup(subgroupId);
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId) {
-        return queryService.getActivitiesByStage(stageId);
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup) {
+        return queryService.getActivitiesByStage(stageId, subgroup);
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities() {
-        return queryService.getAllActivities();
+    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup) {
+        return queryService.getAllActivities(subgroup);
+    }
+
+    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup) {
+        return queryService.getGroupedActivities(subgroup);
     }
 
     public ResponseEntity<ApiResponse<Activity>> createActivity(Long subgroupId, Map<String, Object> body) {

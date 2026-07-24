@@ -25,6 +25,7 @@ public class AuthResponse {
     private int stage;
     @JsonProperty("isCaptain")
     private boolean isCaptain;
+    private String teamName;
 
     public AuthResponse() {}
 
@@ -69,6 +70,9 @@ public class AuthResponse {
     public boolean isCaptain() { return isCaptain; }
     public void setCaptain(boolean captain) { isCaptain = captain; }
 
+    public String getTeamName() { return teamName; }
+    public void setTeamName(String teamName) { this.teamName = teamName; }
+
     public static Builder builder() { return new Builder(); }
     public static class Builder {
         private final AuthResponse r = new AuthResponse();
@@ -92,6 +96,7 @@ public class AuthResponse {
         public Builder totalXp(int v) { r.totalXp = v; return this; }
         public Builder stage(int v) { r.stage = v; return this; }
         public Builder isCaptain(boolean v) { r.isCaptain = v; return this; }
+        public Builder teamName(String v) { r.teamName = v; return this; }
         public AuthResponse build() { return r; }
     }
 }

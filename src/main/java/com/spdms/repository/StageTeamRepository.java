@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface StageTeamRepository extends JpaRepository<StageTeam, Long> {
     Optional<StageTeam> findByStageIdAndTeamId(Long stageId, Long teamId);
     List<StageTeam> findByStageId(Long stageId);
+    List<StageTeam> findByTeamId(Long teamId);
 }

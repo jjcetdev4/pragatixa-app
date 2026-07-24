@@ -61,115 +61,79 @@ public class StudentStageAssembler {
                 studentGroupXp = 0;
             }
 
-            List<ActivityResponse> mustActivities = new ArrayList<>();
-            List<ActivityResponse> individualActivities = new ArrayList<>();
-            List<ActivityResponse> groupActivities = new ArrayList<>();
+            int overallTotalSubgroups = 0;
+            int overallCompletedSubgroups = 0;
+            double totalProgressPercentage = 0;
+
+            List<ActivitySubgroupResponse> dynamicSubgroups = new ArrayList<>();
 
             if (stage.getSubgroups() != null) {
                 for (ActivitySubgroupResponse subgroup : stage.getSubgroups()) {
                     Long subId = subgroup.getId();
                     List<Activity> activities = activitiesBySubgroup.getOrDefault(subId, java.util.Collections.emptyList());
+                    List<ActivityResponse> enrichedActs = activityAssembler.enrichActivities(student, activities, assignmentsByActivity, aggregatedXp);
+
+                    // Use the subgroup's name directly, with Title Case on the frontend
+                    // Here we just map its properties
+                    int thresh = subgroup.getThreshold() != null ? subgroup.getThreshold() : 0;
                     
-                    List<ActivityResponse> enrichedActs = activityAssembler.enrichActivities(
-                            student, activities, assignmentsByActivity, aggregatedXp);
-
-                    // Categorize Activities only
+                    // Since studentXP properties are hardcoded in the Student table for now (MustXp, IndividualXp, GroupXp),
+                    // We must match subgroup name to determine which student XP to use.
+                    // If subgroup name does not match, we'll calculate from completed activities.
+                    int studentCategoryXp = 0;
                     String subName = subgroup.getName() != null ? subgroup.getName().toLowerCase() : "";
-                    String subCat = "";
-                    String fullCat = subCat + " " + subName;
-
-                    for (int i = 0; i < activities.size(); i++) {
-                        Activity act = activities.get(i);
-                        ActivityResponse res = enrichedActs.get(i);
-                        
-                        String actCat = act.getXpCategory() != null ? act.getXpCategory().toLowerCase() : "";
-                        String finalCat = fullCat + " " + actCat;
-
-                        if (finalCat.contains("must") || finalCat.contains("mandatory")) {
-                            mustActivities.add(res);
-                        } else if (finalCat.contains("individual")) {
-                            individualActivities.add(res);
-                        } else if (finalCat.contains("group") || finalCat.contains("team")) {
-                            groupActivities.add(res);
+                    
+                    if (subName.contains("must") || subName.contains("mandatory")) {
+                        studentCategoryXp = studentMustXp;
+                        stage.setStudentMustXp(studentCategoryXp);
+                        stage.setMustThreshold(thresh);
+                        stage.setMustCompleted(thresh > 0 && studentCategoryXp >= thresh);
+                        stage.setMustRemaining(Math.max(0, thresh - studentCategoryXp));
+                    } else if (subName.contains("individual")) {
+                        studentCategoryXp = studentIndividualXp;
+                        stage.setStudentIndividualXp(studentCategoryXp);
+                        stage.setIndividualThreshold(thresh);
+                        stage.setIndividualCompleted(thresh > 0 && studentCategoryXp >= thresh);
+                        stage.setIndividualRemaining(Math.max(0, thresh - studentCategoryXp));
+                    } else if (subName.contains("group") || subName.contains("team")) {
+                        studentCategoryXp = studentGroupXp;
+                        stage.setStudentGroupXp(studentCategoryXp);
+                        stage.setGroupThreshold(thresh);
+                        stage.setGroupCompleted(thresh > 0 && studentCategoryXp >= thresh);
+                        stage.setGroupRemaining(Math.max(0, thresh - studentCategoryXp));
+                    } else {
+                        // For any future subgroup name, calculate xp directly from enriched activities
+                        for (ActivityResponse act : enrichedActs) {
+                            if ("COMPLETED".equals(act.getStatus()) && act.getAwardedXp() != null) {
+                                studentCategoryXp += act.getAwardedXp();
+                            }
                         }
+                    }
+
+                    boolean subCompleted = thresh > 0 && studentCategoryXp >= thresh;
+                    
+                    if (thresh > 0 || !enrichedActs.isEmpty()) {
+                        overallTotalSubgroups++;
+                        if (subCompleted) overallCompletedSubgroups++;
+                        totalProgressPercentage += thresh > 0 ? Math.min(1.0, (double) studentCategoryXp / thresh) : 0;
+
+                        ActivitySubgroupResponse resSub = new ActivitySubgroupResponse();
+                        resSub.setId(subId);
+                        resSub.setName(subgroup.getName()); // Do not modify, frontend will title case
+                        resSub.setThreshold(thresh);
+                        resSub.setActivities(enrichedActs);
+                        dynamicSubgroups.add(resSub);
                     }
                 }
             }
 
-            int mustThresh = stage.getMustThreshold() != null ? stage.getMustThreshold() : 0;
-            int indThresh = stage.getIndividualThreshold() != null ? stage.getIndividualThreshold() : 0;
-            int grpThresh = stage.getGroupThreshold() != null ? stage.getGroupThreshold() : 0;
-
-            stage.setMustThreshold(mustThresh);
-            stage.setIndividualThreshold(indThresh);
-            stage.setGroupThreshold(grpThresh);
-
-            stage.setStudentMustXp(studentMustXp);
-            stage.setStudentIndividualXp(studentIndividualXp);
-            stage.setStudentGroupXp(studentGroupXp);
-
-            boolean mustCompleted = mustThresh > 0 && studentMustXp >= mustThresh;
-            boolean indCompleted = indThresh > 0 && studentIndividualXp >= indThresh;
-            boolean grpCompleted = grpThresh > 0 && studentGroupXp >= grpThresh;
-
-            stage.setMustCompleted(mustCompleted);
-            stage.setIndividualCompleted(indCompleted);
-            stage.setGroupCompleted(grpCompleted);
-
-            stage.setMustRemaining(Math.max(0, mustThresh - studentMustXp));
-            stage.setIndividualRemaining(Math.max(0, indThresh - studentIndividualXp));
-            stage.setGroupRemaining(Math.max(0, grpThresh - studentGroupXp));
-
-            int overallTotalSubgroups = 0;
-            int overallCompletedSubgroups = 0;
-
-            // Reconstruct Subgroups into exactly 3 unified categories
-            List<ActivitySubgroupResponse> unifiedCategories = new ArrayList<>();
-            
-            if (mustThresh > 0 || !mustActivities.isEmpty()) {
-                overallTotalSubgroups++;
-                if (mustCompleted) overallCompletedSubgroups++;
-                
-                ActivitySubgroupResponse mustSub = new ActivitySubgroupResponse();
-                mustSub.setName("Must Activities");
-                mustSub.setThreshold(mustThresh);
-                mustSub.setActivities(mustActivities);
-                unifiedCategories.add(mustSub);
-            }
-            
-            if (indThresh > 0 || !individualActivities.isEmpty()) {
-                overallTotalSubgroups++;
-                if (indCompleted) overallCompletedSubgroups++;
-                
-                ActivitySubgroupResponse indSub = new ActivitySubgroupResponse();
-                indSub.setName("Individual Activities");
-                indSub.setThreshold(indThresh);
-                indSub.setActivities(individualActivities);
-                unifiedCategories.add(indSub);
-            }
-            
-            if (grpThresh > 0 || !groupActivities.isEmpty()) {
-                overallTotalSubgroups++;
-                if (grpCompleted) overallCompletedSubgroups++;
-                
-                ActivitySubgroupResponse grpSub = new ActivitySubgroupResponse();
-                grpSub.setName("Group Activities");
-                grpSub.setThreshold(grpThresh);
-                grpSub.setActivities(groupActivities);
-                unifiedCategories.add(grpSub);
-            }
-
-            stage.setSubgroups(unifiedCategories);
-
+            stage.setSubgroups(dynamicSubgroups);
             stage.setOverallTotalSubgroups(overallTotalSubgroups);
             stage.setOverallCompletedSubgroups(overallCompletedSubgroups);
 
             double percentage = 0.0;
             if (overallTotalSubgroups > 0) {
-                double mustProg = mustThresh > 0 ? Math.min(1.0, (double) studentMustXp / mustThresh) : 0;
-                double indProg = indThresh > 0 ? Math.min(1.0, (double) studentIndividualXp / indThresh) : 0;
-                double grpProg = grpThresh > 0 ? Math.min(1.0, (double) studentGroupXp / grpThresh) : 0;
-                percentage = ((mustProg + indProg + grpProg) / overallTotalSubgroups) * 100.0;
+                percentage = (totalProgressPercentage / overallTotalSubgroups) * 100.0;
             }
             stage.setOverallPercentage(percentage);
         }

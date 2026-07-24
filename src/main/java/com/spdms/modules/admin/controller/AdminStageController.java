@@ -78,4 +78,11 @@ public class AdminStageController {
         return adminStageService.deleteStage(id);
     }
 
+    @PostMapping("/stages/evaluate-promotions")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Force evaluate stage promotions for all students")
+    public ResponseEntity<ApiResponse<Void>> evaluatePromotions() {
+        return adminStageService.evaluatePromotions();
+    }
+
 }

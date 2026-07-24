@@ -3,6 +3,7 @@ package com.spdms.modules.admin.controller;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.entity.Activity;
 import com.spdms.modules.activity.dto.response.MyActivityResponse;
+import com.spdms.modules.activity.dto.response.GroupedActivityResponse;
 import com.spdms.modules.activity.dto.request.AssignmentRequest;
 import com.spdms.modules.activity.dto.response.ActivityAssignmentResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,15 +54,26 @@ public class AdminActivityController {
     @GetMapping("/stages/{stageId}/activities")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "Get all activities of a stage")
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(@PathVariable Long stageId) {
-        return adminActivityService.getActivitiesByStage(stageId);
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(
+            @PathVariable Long stageId,
+            @RequestParam(required = false) String subgroup) {
+        return adminActivityService.getActivitiesByStage(stageId, subgroup);
     }
 
     @GetMapping("/activities")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all activities globally")
-    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities() {
-        return adminActivityService.getAllActivities();
+    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(
+            @RequestParam(required = false) String subgroup) {
+        return adminActivityService.getAllActivities(subgroup);
+    }
+
+    @GetMapping("/activities/grouped")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get all activities grouped by subgroup")
+    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(
+            @RequestParam(required = false) String subgroup) {
+        return adminActivityService.getGroupedActivities(subgroup);
     }
 
     @PostMapping("/subgroups/{subgroupId}/activities")

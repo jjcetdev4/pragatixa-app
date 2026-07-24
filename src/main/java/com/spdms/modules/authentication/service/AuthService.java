@@ -198,6 +198,7 @@ public class AuthService {
             .totalXp(student.getTotalXp())
             .stage(student.getStage())
             .isCaptain(isCap)
+            .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
             .build();
 
         log.debug("[Student Login] Authentication SUCCESS. Student: {} logged in.", student.getRegNo());
@@ -268,6 +269,7 @@ public class AuthService {
                     .totalXp(student.getTotalXp())
                     .stage(student.getStage())
                     .isCaptain(isCap)
+                    .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
                     .build();
             return ApiResponse.ok("Profile loaded", response);
         }

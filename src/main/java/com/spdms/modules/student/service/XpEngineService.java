@@ -139,7 +139,8 @@ public class XpEngineService {
         return student;
     }
 
-    private void evaluateStagePromotion(Student student) {
+    @Transactional
+    public void evaluateStagePromotion(Student student) {
         System.out.println("STAGE ENGINE: Evaluating Stage for Student: " + student.getId());
         System.out.println("Current Stage: " + student.getStage());
 
@@ -160,10 +161,6 @@ public class XpEngineService {
                 student.setStage(nextStage.getDisplayOrder());
                 student.setCurrentStage(nextStage.getDisplayOrder()); // Backward compatibility
                 student.setCurrentStageId(nextStage.getId());
-                student.setScore(0);
-                student.setMustXp(0);
-                student.setIndividualXp(0);
-                student.setGroupXp(0);
                 student.setPromotionTimestamp(LocalDateTime.now());
                 System.out.println("Student Promoted to Stage: " + nextStage.getDisplayOrder());
                 

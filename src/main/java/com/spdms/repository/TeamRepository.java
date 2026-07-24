@@ -15,4 +15,13 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     
     @org.springframework.data.jpa.repository.Query("SELECT t FROM Team t LEFT JOIN FETCH t.members LEFT JOIN FETCH t.captain LEFT JOIN FETCH t.department LEFT JOIN FETCH t.section WHERE t.id = :id")
     Optional<Team> findByIdWithMembers(@org.springframework.data.repository.query.Param("id") Long id);
+
+    @org.springframework.data.jpa.repository.Query("SELECT t FROM Team t WHERE t.name = :name AND " +
+           "(t.department.id = :deptId OR (t.department IS NULL AND :deptId IS NULL)) AND " +
+           "(t.year = :year OR (t.year IS NULL AND :year IS NULL)) AND " +
+           "(t.section.id = :secId OR (t.section IS NULL AND :secId IS NULL))")
+    Optional<Team> findExactTeam(@org.springframework.data.repository.query.Param("name") String name,
+                                 @org.springframework.data.repository.query.Param("deptId") Long deptId,
+                                 @org.springframework.data.repository.query.Param("secId") Long secId,
+                                 @org.springframework.data.repository.query.Param("year") String year);
 }
