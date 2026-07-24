@@ -44,4 +44,23 @@ public class TeamValidationService {
         
         return isAdmin || isAssignedFaculty || matchesDeptAndSection;
     }
+
+    public boolean validateTeamAccess(User user, com.spdms.entity.Team team) {
+        boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        if (isAdmin) return true;
+
+        boolean isCc = user.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+        if (isCc) {
+            boolean matchesDept = team.getDepartment() != null && user.getDepartment() != null 
+                && team.getDepartment().getId().equals(user.getDepartment().getId());
+            boolean matchesSection = team.getSection() != null && user.getSection() != null 
+                && team.getSection().getId().equals(user.getSection().getId());
+            
+            if (matchesDept && matchesSection) {
+                return true;
+            }
+        }
+        
+        throw new org.springframework.security.access.AccessDeniedException("You do not have permission to manage this team.");
+    }
 }

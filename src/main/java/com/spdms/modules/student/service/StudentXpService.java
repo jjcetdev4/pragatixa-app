@@ -147,6 +147,7 @@ public class StudentXpService {
         int successCount = 0;
 
         for (Long regNo : studentIds) {
+            System.out.println("SERVICE DEBUG: Processing studentId: " + regNo);
             Student student = studentMap.get(regNo);
             if (student == null) {
                 errors.add("Student " + regNo + " not found");

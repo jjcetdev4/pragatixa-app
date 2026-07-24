@@ -14,13 +14,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import org.apache.poi.ss.usermodel.*;
-
-
+import java.util.List;
 
 @Service
 public class StudentMapper {
     private static final Logger log = LoggerFactory.getLogger(StudentMapper.class);
+
+    private final com.spdms.repository.StageTeamRepository stageTeamRepository;
+
+    public StudentMapper(com.spdms.repository.StageTeamRepository stageTeamRepository) {
+        this.stageTeamRepository = stageTeamRepository;
+    }
 
     public StudentResponse toResponse(Student student) {
         return toResponse(student, null);
@@ -29,7 +33,8 @@ public class StudentMapper {
     public StudentResponse toResponse(Student student, StudentGuardian guardian) {
         Long teamId = student.getTeam() != null ? student.getTeam().getId() : null;
         String teamName = student.getTeam() != null ? student.getTeam().getName() : null;
-        boolean isCap = student.isCaptain();
+        boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null 
+                && student.getTeam().getCaptain().getId().equals(student.getId());
 
         return StudentResponse.builder()
             .id(student.getId())
@@ -58,9 +63,26 @@ public class StudentMapper {
             .score(student.getScore())
             .teamId(teamId)
             .teamName(teamName)
-            .isCaptain(isCap)
+            .teamRole(resolveTeamRole(student))
             .guardian(guardian != null ? mapGuardianToDto(guardian) : null)
             .build();
+    }
+
+    private String resolveTeamRole(Student student) {
+        if (student.getTeam() == null) return "MEMBER";
+        
+        if (student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId())) {
+            return "CAPTAIN";
+        }
+
+        List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
+        for (StageTeam st : stageTeams) {
+            if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                return "VICE_CAPTAIN";
+            }
+        }
+        
+        return "MEMBER";
     }
 
     private GuardianDTO mapGuardianToDto(StudentGuardian guardian) {

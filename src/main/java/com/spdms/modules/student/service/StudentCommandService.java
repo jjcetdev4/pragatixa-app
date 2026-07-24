@@ -33,8 +33,9 @@ public class StudentCommandService {
     private final StudentLookupService studentLookupService;
     private final StudentMapper studentMapper;
     private final StudentGuardianRepository studentGuardianRepository;
+    private final com.spdms.admin.service.TeamCleanupService teamCleanupService;
 
-    public StudentCommandService(PasswordEncoder passwordEncoder, StudentRepository studentRepository, TeamRepository teamRepository, UserRepository userRepository, StudentLookupService studentLookupService, StudentMapper studentMapper, StudentGuardianRepository studentGuardianRepository) {
+    public StudentCommandService(PasswordEncoder passwordEncoder, StudentRepository studentRepository, TeamRepository teamRepository, UserRepository userRepository, StudentLookupService studentLookupService, StudentMapper studentMapper, StudentGuardianRepository studentGuardianRepository, com.spdms.admin.service.TeamCleanupService teamCleanupService) {
         this.passwordEncoder = passwordEncoder;
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
@@ -42,6 +43,7 @@ public class StudentCommandService {
         this.studentLookupService = studentLookupService;
         this.studentMapper = studentMapper;
         this.studentGuardianRepository = studentGuardianRepository;
+        this.teamCleanupService = teamCleanupService;
     }
 
     @Transactional
@@ -217,6 +219,9 @@ public class StudentCommandService {
         if (student == null) {
             return ApiResponse.error("Student not found with ID: " + id);
         }
+        
+        com.spdms.entity.Team oldTeam = student.getTeam();
+        Long oldTeamId = oldTeam != null ? oldTeam.getId() : null;
 
         entityManager.createNativeQuery("DELETE FROM student_guardians WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
         entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
@@ -235,6 +240,13 @@ public class StudentCommandService {
             entityManager.createNativeQuery("DELETE FROM user_roles WHERE user_id = :uid").setParameter("uid", user.getId()).executeUpdate();
             entityManager.createNativeQuery("DELETE FROM user_sub_roles WHERE user_id = :uid").setParameter("uid", user.getId()).executeUpdate();
             userRepository.delete(user);
+        }
+        
+        entityManager.flush();
+        entityManager.clear();
+        
+        if (oldTeamId != null) {
+            teamRepository.findById(oldTeamId).ifPresent(teamCleanupService::autoDeleteEmptyTeam);
         }
 
         return ApiResponse.ok("Student deleted successfully", null);

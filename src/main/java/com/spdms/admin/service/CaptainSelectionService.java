@@ -52,7 +52,6 @@ public class CaptainSelectionService {
         if (eligibleMembers.isEmpty()) {
             if (team.getCaptain() != null) {
                 Student oldCaptain = team.getCaptain();
-                oldCaptain.setCaptain(false);
                 studentRepository.save(oldCaptain);
                 team.setCaptain(null);
                 teamRepository.save(team);
@@ -69,10 +68,8 @@ public class CaptainSelectionService {
         
         if (oldCaptain == null || !oldCaptain.getId().equals(newCaptain.getId())) {
             if (oldCaptain != null) {
-                oldCaptain.setCaptain(false);
                 studentRepository.save(oldCaptain);
             }
-            newCaptain.setCaptain(true);
             team.setCaptain(newCaptain);
             studentRepository.save(newCaptain);
             teamRepository.save(team);

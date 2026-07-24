@@ -125,9 +125,6 @@ public class Student {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "is_captain", nullable = false)
-    private boolean isCaptain = false;
-
     @Column(name = "promotion_timestamp")
     private LocalDateTime promotionTimestamp;
 
@@ -243,9 +240,6 @@ public class Student {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
-
-    public boolean isCaptain() { return isCaptain; }
-    public void setCaptain(boolean captain) { isCaptain = captain; }
 
     public LocalDateTime getPromotionTimestamp() { return promotionTimestamp; }
     public void setPromotionTimestamp(LocalDateTime promotionTimestamp) { this.promotionTimestamp = promotionTimestamp; }

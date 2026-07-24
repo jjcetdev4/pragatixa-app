@@ -93,14 +93,14 @@ public class TeamController {
     @DeleteMapping("/{id}/members/{regNo}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Remove Team Member by Team ID", description = "Removes a student from a team by team ID.")
-    public ResponseEntity<ApiResponse<Void>> removeMemberFromTeam(@PathVariable Long id, @PathVariable String regNo) {
+    public ResponseEntity<ApiResponse<TeamResponse>> removeMemberFromTeam(@PathVariable Long id, @PathVariable String regNo) {
         return teamMemberService.removeMemberFromTeam(id, regNo);
     }
 
     @PostMapping("/{id}/captain")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Assign Team Captain", description = "Assigns/promotes a student to captain of a team.")
-    public ResponseEntity<ApiResponse<Void>> assignTeamCaptain(@PathVariable Long id, @RequestParam String regNo) {
+    public ResponseEntity<ApiResponse<TeamResponse>> assignTeamCaptain(@PathVariable Long id, @RequestParam String regNo) {
         return teamMemberService.assignTeamCaptain(id, regNo);
     }
 
@@ -130,7 +130,7 @@ public class TeamController {
     @PostMapping("/{id}/remove-member")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @Operation(summary = "Remove Team Member (CC)", description = "Removes a student from a specific team (CC/Admin only).")
-    public ResponseEntity<ApiResponse<Void>> removeMemberByCC(@PathVariable Long id, @RequestParam String regNo) {
+    public ResponseEntity<ApiResponse<TeamResponse>> removeMemberByCC(@PathVariable Long id, @RequestParam String regNo) {
         return teamMemberService.removeMemberByCC(id, regNo);
     }
 

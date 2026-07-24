@@ -197,7 +197,7 @@ public class AuthService {
             .score(student.getScore())
             .totalXp(student.getTotalXp())
             .stage(student.getStage())
-            .isCaptain(isCap)
+            .teamRole(isCap ? "CAPTAIN" : "MEMBER")
             .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
             .build();
 
@@ -268,7 +268,7 @@ public class AuthService {
                     .score(student.getScore())
                     .totalXp(student.getTotalXp())
                     .stage(student.getStage())
-                    .isCaptain(isCap)
+                    .teamRole(isCap ? "CAPTAIN" : "MEMBER")
                     .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
                     .build();
             return ApiResponse.ok("Profile loaded", response);

@@ -12,6 +12,7 @@ import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.repository.GroupDeletionAuditLogRepository;
 import com.spdms.repository.TeamRemovalRequestRepository;
 import com.spdms.repository.TeamRepository;
+import com.spdms.repository.StageTeamRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,7 @@ public class TeamCrudService {
     private final TeamRemovalRequestRepository teamRemovalRequestRepository;
     private final TeamValidationService validationService;
     private final TeamMapper mapper;
+    private final StageTeamRepository stageTeamRepository;
 
     public TeamCrudService(TeamRepository teamRepository,
                            UserRepository userRepository,
@@ -45,7 +47,8 @@ public class TeamCrudService {
                            GroupDeletionAuditLogRepository auditLogRepository,
                            TeamRemovalRequestRepository teamRemovalRequestRepository,
                            TeamValidationService validationService,
-                           TeamMapper mapper) {
+                           TeamMapper mapper,
+                           StageTeamRepository stageTeamRepository) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -55,6 +58,7 @@ public class TeamCrudService {
         this.teamRemovalRequestRepository = teamRemovalRequestRepository;
         this.validationService = validationService;
         this.mapper = mapper;
+        this.stageTeamRepository = stageTeamRepository;
     }
 
     @Transactional
@@ -148,6 +152,16 @@ public class TeamCrudService {
         Team team = teamRepository.findById(id).orElse(null);
         if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
 
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser != null) {
+            try {
+                validationService.validateTeamAccess(currentUser, team);
+            } catch (org.springframework.security.access.AccessDeniedException e) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+            }
+        }
+
         if (!team.getName().equalsIgnoreCase(request.getName()) && teamRepository.existsByName(request.getName())) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Team name '" + request.getName() + "' already exists."));
         }
@@ -171,6 +185,16 @@ public class TeamCrudService {
         Team team = teamRepository.findById(id).orElse(null);
         if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
 
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser != null) {
+            try {
+                validationService.validateTeamAccess(currentUser, team);
+            } catch (org.springframework.security.access.AccessDeniedException e) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+            }
+        }
+
         long currentMembersCount = team.getMembers().size();
         boolean captainInMembers = team.getCaptain() != null && team.getMembers().stream().anyMatch(m -> m.getId().equals(team.getCaptain().getId()));
         long totalSize = currentMembersCount + (captainInMembers ? 0 : 1);
@@ -191,34 +215,30 @@ public class TeamCrudService {
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
 
-        if (!validationService.canDeleteTeam(currentUser, null)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: Only Admin, Assigned Faculty, or Class Coordinators of the section can delete this team."));
+        try {
+            validationService.validateTeamAccess(currentUser, team);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
         }
 
-        List<Student> allMembers = new ArrayList<>(team.getMembers());
-        if (team.getCaptain() != null && !allMembers.contains(team.getCaptain())) allMembers.add(team.getCaptain());
+        boolean isOnlyCaptain = team.getMembers().isEmpty() && team.getCaptain() != null;
+        boolean isEmpty = team.getMembers().isEmpty() && team.getCaptain() == null;
 
-        // Check if the team has any XP records in any assignment (can't easily do this globally here, so we skip or do a broader check)
-        // Ignoring activity check since team is now global for the section
+        if (!isEmpty && !isOnlyCaptain) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error("Cannot delete team because it still contains students."));
+        }
 
-        List<Student> studentsToUpdate = new ArrayList<>();
-        if (team.getCaptain() != null) {
+        if (isOnlyCaptain) {
             Student captain = team.getCaptain();
+            team.getMembers().remove(captain);
             captain.setTeam(null);
-            studentsToUpdate.add(captain);
+            studentRepository.save(captain);
+            team.setCaptain(null);
         }
 
-        for (Student member : team.getMembers()) {
-            member.setTeam(null);
-            studentsToUpdate.add(member);
-        }
-        
-        if (!studentsToUpdate.isEmpty()) {
-            studentRepository.saveAll(studentsToUpdate);
-        }
-        
-        team.getMembers().clear();
-        team.setCaptain(null);
+        // Remove StageTeam mappings
+        List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(teamId);
+        stageTeamRepository.deleteAll(stageTeams);
 
         teamRemovalRequestRepository.deleteAll(teamRemovalRequestRepository.findByTeamId(teamId));
 

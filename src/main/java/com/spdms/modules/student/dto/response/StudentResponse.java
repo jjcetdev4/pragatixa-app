@@ -32,13 +32,13 @@ public class StudentResponse {
     private int score;
     private Long teamId;
     private String teamName;
-    private boolean isCaptain;
+    private String teamRole;
     private GuardianDTO guardian;
 
     public StudentResponse() {}
 
-    public boolean isCaptain() { return isCaptain; }
-    public void setCaptain(boolean isCaptain) { this.isCaptain = isCaptain; }
+    public String getTeamRole() { return teamRole; }
+    public void setTeamRole(String teamRole) { this.teamRole = teamRole; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -124,7 +124,7 @@ public class StudentResponse {
         public Builder score(int v) { r.score = v; return this; }
         public Builder teamId(Long v) { r.teamId = v; return this; }
         public Builder teamName(String v) { r.teamName = v; return this; }
-        public Builder isCaptain(boolean v) { r.isCaptain = v; return this; }
+        public Builder teamRole(String v) { r.teamRole = v; return this; }
         public Builder guardian(GuardianDTO v) { r.guardian = v; return this; }
         public StudentResponse build() { return r; }
     }

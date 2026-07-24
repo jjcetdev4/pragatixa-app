@@ -141,6 +141,7 @@ public class XpEngineService {
 
     @Transactional
     public void evaluateStagePromotion(Student student) {
+        System.out.println("PROMOTION DEBUG: Promoting studentId: " + student.getId());
         System.out.println("STAGE ENGINE: Evaluating Stage for Student: " + student.getId());
         System.out.println("Current Stage: " + student.getStage());
 

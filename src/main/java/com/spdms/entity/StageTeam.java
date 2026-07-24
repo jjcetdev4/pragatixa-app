@@ -24,6 +24,10 @@ public class StageTeam {
     @JoinColumn(name = "captain_id")
     private Student captain;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vice_captain_id")
+    private Student viceCaptain;
+
     public StageTeam() {}
 
     public Long getId() { return id; }
@@ -37,4 +41,7 @@ public class StageTeam {
 
     public Student getCaptain() { return captain; }
     public void setCaptain(Student captain) { this.captain = captain; }
+
+    public Student getViceCaptain() { return viceCaptain; }
+    public void setViceCaptain(Student viceCaptain) { this.viceCaptain = viceCaptain; }
 }

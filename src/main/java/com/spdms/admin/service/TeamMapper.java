@@ -10,9 +10,17 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.spdms.repository.StageTeamRepository;
+import com.spdms.entity.StageTeam;
 
 @Component
 public class TeamMapper {
+
+    private final StageTeamRepository stageTeamRepository;
+
+    public TeamMapper(StageTeamRepository stageTeamRepository) {
+        this.stageTeamRepository = stageTeamRepository;
+    }
 
     public StudentResponse toStudentResponse(Student student) {
         Long teamId = student.getTeam() != null ? student.getTeam().getId() : null;
@@ -38,8 +46,25 @@ public class TeamMapper {
                 .score(student.getScore())
                 .teamId(teamId)
                 .teamName(teamName)
-                .isCaptain(isCap)
+                .teamRole(resolveTeamRole(student))
                 .build();
+    }
+
+    private String resolveTeamRole(Student student) {
+        if (student.getTeam() == null) return "MEMBER";
+        
+        if (student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId())) {
+            return "CAPTAIN";
+        }
+
+        List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
+        for (StageTeam st : stageTeams) {
+            if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                return "VICE_CAPTAIN";
+            }
+        }
+        
+        return "MEMBER";
     }
 
     public TeamResponse toTeamResponse(Team team) {

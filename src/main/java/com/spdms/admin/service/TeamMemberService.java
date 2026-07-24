@@ -5,6 +5,7 @@ import com.spdms.entity.Student;
 import com.spdms.entity.Team;
 import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.repository.TeamRepository;
+import com.spdms.enums.TeamRole;
 import com.spdms.entity.User;
 import com.spdms.modules.authentication.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -19,21 +20,30 @@ public class TeamMemberService {
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
 
-    public TeamMemberService(TeamRepository teamRepository, StudentRepository studentRepository, UserRepository userRepository) {
+    private final TeamValidationService validationService;
+    private final com.spdms.admin.service.CaptainSelectionService captainSelectionService;
+    private final com.spdms.admin.service.TeamMapper teamMapper;
+    private final com.spdms.repository.StageTeamRepository stageTeamRepository;
+    private final com.spdms.admin.service.TeamCleanupService teamCleanupService;
+
+    public TeamMemberService(TeamRepository teamRepository, 
+                             StudentRepository studentRepository, 
+                             UserRepository userRepository, 
+                             TeamValidationService validationService,
+                             com.spdms.admin.service.CaptainSelectionService captainSelectionService,
+                             com.spdms.admin.service.TeamMapper teamMapper,
+                             com.spdms.repository.StageTeamRepository stageTeamRepository,
+                             com.spdms.admin.service.TeamCleanupService teamCleanupService) {
         this.teamRepository = teamRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
+        this.validationService = validationService;
+        this.captainSelectionService = captainSelectionService;
+        this.teamMapper = teamMapper;
+        this.stageTeamRepository = stageTeamRepository;
+        this.teamCleanupService = teamCleanupService;
     }
 
-    private boolean isAuthorizedForTeam(User currentUser, Team team, boolean isCC, boolean isAdmin) {
-        if (isAdmin) return true;
-        if (isCC) {
-            return team.getDepartment() != null && currentUser.getDepartment() != null && team.getDepartment().getId().equals(currentUser.getDepartment().getId()) &&
-                   team.getYear() != null && currentUser.getYear() != null && team.getYear().equals(currentUser.getYear()) &&
-                   team.getSection() != null && currentUser.getSection() != null && team.getSection().getId().equals(currentUser.getSection().getId());
-        }
-        return false;
-    }
 
     @Transactional
     public ResponseEntity<ApiResponse<Void>> addMemberToTeam(Long id, String regNo) {
@@ -41,14 +51,13 @@ public class TeamMemberService {
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
         
-        boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
-        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-
         Team team = teamRepository.findById(id).orElse(null);
         if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
-
-        if (!isAuthorizedForTeam(currentUser, team, isCC, isAdmin)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You can only manage teams in your assigned class."));
+        
+        try {
+            validationService.validateTeamAccess(currentUser, team);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
         }
 
         Student member = studentRepository.findByRegNo(regNo).orElse(null);
@@ -64,49 +73,80 @@ public class TeamMemberService {
 
         member.setTeam(team);
         studentRepository.save(member);
+        
         return ResponseEntity.ok(ApiResponse.ok("Member added successfully", null));
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> removeMemberFromTeam(Long id, String regNo) {
+    public ResponseEntity<ApiResponse<com.spdms.dto.TeamResponse>> removeMemberFromTeam(Long id, String regNo) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
         
-        boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
-        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-
         Team team = teamRepository.findById(id).orElse(null);
         if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
-
-        if (!isAuthorizedForTeam(currentUser, team, isCC, isAdmin)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You can only manage teams in your assigned class."));
+        
+        try {
+            validationService.validateTeamAccess(currentUser, team);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
         }
 
         Student member = studentRepository.findByRegNo(regNo).orElse(null);
         if (member == null) return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
         if (member.getTeam() == null || !member.getTeam().getId().equals(team.getId())) return ResponseEntity.badRequest().body(ApiResponse.error("Student is not a member of this team"));
-        if (team.getCaptain() != null && member.getId().equals(team.getCaptain().getId())) return ResponseEntity.badRequest().body(ApiResponse.error("You cannot remove the captain from the team this way"));
+        if (team.getCaptain() != null && member.getId().equals(team.getCaptain().getId())) {
+            long nonCaptainMembers = team.getMembers().stream()
+                    .filter(m -> !m.getId().equals(team.getCaptain().getId()))
+                    .count();
+            if (nonCaptainMembers > 0) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiResponse.error("Assign another Captain before removing the current Captain."));
+            } else {
+                team.getMembers().remove(member);
+                member.setTeam(null);
+                studentRepository.save(member);
+                
+                team.setCaptain(null);
+                
+                if (teamCleanupService.autoDeleteEmptyTeam(team)) {
+                    return ResponseEntity.ok(ApiResponse.ok("Member removed successfully and empty team auto-deleted", null));
+                }
+                
+                teamRepository.save(team);
+                
+                return ResponseEntity.ok(ApiResponse.ok("Member removed successfully", teamMapper.toTeamResponse(team)));
+            }
+        }
 
+        team.getMembers().remove(member);
         member.setTeam(null);
         studentRepository.save(member);
-        return ResponseEntity.ok(ApiResponse.ok("Member removed successfully", null));
+        
+        if (teamCleanupService.autoDeleteEmptyTeam(team)) {
+            return ResponseEntity.ok(ApiResponse.ok("Member removed successfully and empty team auto-deleted", null));
+        }
+        
+        teamRepository.save(team);
+        
+        return ResponseEntity.ok(ApiResponse.ok("Member removed successfully", teamMapper.toTeamResponse(team)));
     }
 
+
+
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> assignTeamCaptain(Long id, String regNo) {
+    public ResponseEntity<ApiResponse<com.spdms.dto.TeamResponse>> assignTeamCaptain(Long id, String regNo) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
         
-        boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
-        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-
         Team team = teamRepository.findById(id).orElse(null);
         if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
-
-        if (!isAuthorizedForTeam(currentUser, team, isCC, isAdmin)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: You can only manage teams in your assigned class."));
+        
+        try {
+            validationService.validateTeamAccess(currentUser, team);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
         }
 
         Student captain = studentRepository.findByRegNo(regNo).orElse(null);
@@ -117,7 +157,7 @@ public class TeamMemberService {
         studentRepository.save(captain);
         team.setCaptain(captain);
         teamRepository.save(team);
-        return ResponseEntity.ok(ApiResponse.ok("Student assigned as Team Captain successfully", null));
+        return ResponseEntity.ok(ApiResponse.ok("Student assigned as Team Captain successfully", teamMapper.toTeamResponse(team)));
     }
 
     @Transactional
@@ -149,7 +189,7 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> removeMemberByCC(Long id, String regNo) {
+    public ResponseEntity<ApiResponse<com.spdms.dto.TeamResponse>> removeMemberByCC(Long id, String regNo) {
         return removeMemberFromTeam(id, regNo);
     }
 

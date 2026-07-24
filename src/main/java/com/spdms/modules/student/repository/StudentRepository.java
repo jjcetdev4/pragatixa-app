@@ -116,4 +116,10 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
            "(s.year = :year OR (s.year IS NULL AND :year IS NULL)) AND " +
            "(s.section.id = :secId OR (s.section IS NULL AND :secId IS NULL))")
     Integer countPromotedStudents(@Param("stageOrder") int stageOrder, @Param("deptId") Long deptId, @Param("year") String year, @Param("secId") Long secId);
+
+    @Query("SELECT COUNT(s) FROM Student s WHERE s.active = true AND s.stage >= :stageOrder AND s.promotionOrder IS NOT NULL AND s.id != :studentId AND " +
+           "(s.department.id = :deptId OR (s.department IS NULL AND :deptId IS NULL)) AND " +
+           "(s.year = :year OR (s.year IS NULL AND :year IS NULL)) AND " +
+           "(s.section.id = :secId OR (s.section IS NULL AND :secId IS NULL))")
+    Integer countPromotedStudentsExcluding(@Param("stageOrder") int stageOrder, @Param("deptId") Long deptId, @Param("year") String year, @Param("secId") Long secId, @Param("studentId") Long studentId);
 }

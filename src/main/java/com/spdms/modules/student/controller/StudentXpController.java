@@ -81,6 +81,7 @@ public class StudentXpController {
     @PreAuthorize("hasRole('TEACHER')")
     @Operation(summary = "Award XP points to multiple students for a specific activity")
     public ResponseEntity<?> awardStudentXpBatch(@RequestBody AwardXpRequest request) {
+        System.out.println("CONTROLLER DEBUG: Received studentIds: " + request.getStudentIds());
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return studentXpService.awardStudentXpBatch(request, username);
     }

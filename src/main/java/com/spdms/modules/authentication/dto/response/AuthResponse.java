@@ -23,8 +23,8 @@ public class AuthResponse {
     private int score;
     private int totalXp;
     private int stage;
-    @JsonProperty("isCaptain")
-    private boolean isCaptain;
+    @JsonProperty("teamRole")
+    private String teamRole;
     private String teamName;
 
     public AuthResponse() {}
@@ -67,8 +67,8 @@ public class AuthResponse {
     public void setTotalXp(int totalXp) { this.totalXp = totalXp; }
     public int getStage() { return stage; }
     public void setStage(int stage) { this.stage = stage; }
-    public boolean isCaptain() { return isCaptain; }
-    public void setCaptain(boolean captain) { isCaptain = captain; }
+    public String getTeamRole() { return teamRole; }
+    public void setTeamRole(String teamRole) { this.teamRole = teamRole; }
 
     public String getTeamName() { return teamName; }
     public void setTeamName(String teamName) { this.teamName = teamName; }
@@ -95,7 +95,7 @@ public class AuthResponse {
         public Builder score(int v) { r.score = v; return this; }
         public Builder totalXp(int v) { r.totalXp = v; return this; }
         public Builder stage(int v) { r.stage = v; return this; }
-        public Builder isCaptain(boolean v) { r.isCaptain = v; return this; }
+        public Builder teamRole(String v) { r.teamRole = v; return this; }
         public Builder teamName(String v) { r.teamName = v; return this; }
         public AuthResponse build() { return r; }
     }
