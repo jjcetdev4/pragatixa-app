@@ -69,6 +69,14 @@ public class TeamController {
         return teamQueryService.getMyTeam(student);
     }
 
+    @GetMapping("/my-team/details")
+    @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Get My Team Details (Leaderboard)", description = "Returns the team details for the logged-in student with XP sorting.")
+    public ResponseEntity<ApiResponse<com.spdms.dto.StudentTeamDetailsResponse>> getMyTeamDetails() {
+        Student student = studentAuthResolver.getLoggedInStudent();
+        return teamQueryService.getMyTeamDetails(student);
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER') or hasRole('STUDENT')")
     @Operation(summary = "Get Team by ID")

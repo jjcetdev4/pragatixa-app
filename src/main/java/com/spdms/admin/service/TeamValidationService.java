@@ -61,6 +61,18 @@ public class TeamValidationService {
             }
         }
         
+        boolean isStudent = user.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_STUDENT"));
+        if (isStudent) {
+            boolean isCaptain = team.getCaptain() != null && team.getCaptain().getRegNo().equalsIgnoreCase(user.getUsername());
+            boolean isMember = team.getMembers() != null && team.getMembers().stream()
+                    .anyMatch(member -> member.getRegNo().equalsIgnoreCase(user.getUsername()));
+            if (isCaptain || isMember) {
+                return true;
+            } else {
+                throw new org.springframework.security.access.AccessDeniedException("You do not have permission to view this team's details.");
+            }
+        }
+        
         throw new org.springframework.security.access.AccessDeniedException("You do not have permission to manage this team.");
     }
 }

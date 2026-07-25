@@ -65,15 +65,17 @@ public class XpEngineService {
             resolvedCategory = resolvedCategory.toUpperCase();
         }
 
+        // ====================================================
+        // DEBUG: Before processing
+        // ====================================================
+        System.out.println("Activity ID: " + (activity != null ? activity.getId() : "N/A"));
         System.out.println("Activity Name: " + activityName);
-        System.out.println("Category Resolved: " + resolvedCategory);
-        System.out.println("XP Awarded: " + xpToAward);
+        System.out.println("Activity Type: " + resolvedCategory);
+        System.out.println("Configured XP: " + (activity != null ? (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled() ? activity.getPenaltyXp() : activity.getAwardXp()) : "N/A"));
+        System.out.println("Penalty Flag: " + (activity != null ? activity.getPenaltyEnabled() : "false"));
+        System.out.println("Received XP: " + xpToAward);
         
-        // Log Old Values
-        System.out.println("Old Must XP: " + student.getMustXp());
-        System.out.println("Old Individual XP: " + student.getIndividualXp());
-        System.out.println("Old Group XP: " + student.getGroupXp());
-        System.out.println("Old Total XP: " + student.getTotalXp());
+        int oldTotalXp = student.getTotalXp();
 
         // 2. Update Category XP & Total XP
         if (resolvedCategory.contains("MUST") || resolvedCategory.contains("MANDATORY") || resolvedCategory.contains(" M ")) {
@@ -85,19 +87,16 @@ public class XpEngineService {
         }
         
         // Update total
-        if (xpToAward >= 0) {
-            student.setTotalXp(student.getTotalXp() + xpToAward);
-            student.setScore(student.getScore() + xpToAward);
-        } else {
-            // Penalty
-            student.setTotalXp(student.getTotalXp() + xpToAward);
-            student.setScore(student.getScore() + xpToAward);
-        }
+        student.setTotalXp(student.getTotalXp() + xpToAward);
+        student.setScore(student.getScore() + xpToAward);
 
-        System.out.println("New Must XP: " + student.getMustXp());
-        System.out.println("New Individual XP: " + student.getIndividualXp());
-        System.out.println("New Group XP: " + student.getGroupXp());
+        // ====================================================
+        // DEBUG: After processing
+        // ====================================================
+        System.out.println("Old Total XP: " + oldTotalXp);
+        System.out.println("Applied XP: " + xpToAward);
         System.out.println("New Total XP: " + student.getTotalXp());
+        System.out.println("Saved Total XP: " + student.getTotalXp());
 
         // 3. Save XP History
         if (activity != null && authorizedUser != null) {

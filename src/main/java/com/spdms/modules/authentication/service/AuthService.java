@@ -1,5 +1,8 @@
 package com.spdms.modules.authentication.service;
 
+import com.spdms.repository.StageTeamRepository;
+import com.spdms.entity.StageTeam;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spdms.common.response.ApiResponse;
 import com.spdms.modules.authentication.dto.response.AuthResponse;
 import com.spdms.modules.authentication.dto.request.LoginRequest;
@@ -43,19 +46,22 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;                           // Generates Secure JWT Tokens
     private final PasswordEncoder passwordEncoder;             // Used to check raw password vs hashed password
+    private final StageTeamRepository stageTeamRepository;
 
     public AuthService(AuthenticationManager authenticationManager,
                        UserDetailsService userDetailsService,
                        StudentRepository studentRepository,
                        UserRepository userRepository,
                        JwtUtil jwtUtil,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       StageTeamRepository stageTeamRepository) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+        this.stageTeamRepository = stageTeamRepository;
     }
 
     // ====================================================================================
@@ -248,6 +254,21 @@ public class AuthService {
         }
         if (student != null) {
             boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
+            boolean isViceCap = false;
+            
+            if (student.getTeam() != null) {
+                List<StageTeam> sts = stageTeamRepository.findByTeamId(student.getTeam().getId());
+                for(StageTeam st : sts) {
+                    if(st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                        isViceCap = true;
+                        break;
+                    }
+                }
+            }
+            
+            boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
+            int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
+
             AuthResponse response = AuthResponse.builder()
                     .token(null)
                     .type("Bearer")
@@ -256,7 +277,7 @@ public class AuthService {
                     .email(student.getEmail())
                     .roles(List.of("ROLE_STUDENT"))
                     .subRoles(isCap ? List.of("CAPTAIN") : new ArrayList<>())
-                    .userType(isCap ? "CAPTAIN" : "STUDENT")
+                    .userType(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "STUDENT"))
                     .section(student.getSection() != null ? student.getSection().getSectionName() : null)
                     .sectionId(student.getSection() != null ? student.getSection().getId() : null)
                     .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
@@ -268,8 +289,20 @@ public class AuthService {
                     .score(student.getScore())
                     .totalXp(student.getTotalXp())
                     .stage(student.getStage())
-                    .teamRole(isCap ? "CAPTAIN" : "MEMBER")
+                    .teamRole(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "MEMBER"))
                     .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
+                    .academicYear(student.getAcademicYearRef() != null ? student.getAcademicYearRef().getAcademicYear() : student.getAcademicYear())
+                    .currentStage(student.getStage())
+                    .currentLevel(student.getStage()) // If level == stage
+                    .groupXP(student.getGroupXp())
+                    .individualXP(student.getIndividualXp())
+                    .mustXP(student.getMustXp())
+                    .rank(rank)
+                    .teamId(student.getTeam() != null ? student.getTeam().getId() : null)
+                    .memberCount(student.getTeam() != null ? student.getTeam().getMembers().size() : 0)
+                    .isCaptain(isCap)
+                    .isViceCaptain(isViceCap)
+                    .isMember(isMem)
                     .build();
             return ApiResponse.ok("Profile loaded", response);
         }

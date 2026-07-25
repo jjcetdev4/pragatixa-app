@@ -26,7 +26,21 @@ public class AuthResponse {
     @JsonProperty("teamRole")
     private String teamRole;
     private String teamName;
-
+    private String academicYear;
+    private int currentStage;
+    private int currentLevel;
+    private int groupXP;
+    private int individualXP;
+    private int mustXP;
+    private int rank;
+    private Long teamId;
+    private int memberCount;
+    @JsonProperty("isCaptain")
+    private boolean isCaptain;
+    @JsonProperty("isViceCaptain")
+    private boolean isViceCaptain;
+    @JsonProperty("isMember")
+    private boolean isMember;
     public AuthResponse() {}
 
     public String getToken() { return token; }
@@ -72,6 +86,31 @@ public class AuthResponse {
 
     public String getTeamName() { return teamName; }
     public void setTeamName(String teamName) { this.teamName = teamName; }
+    
+    public String getAcademicYear() { return academicYear; }
+    public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
+    public int getCurrentStage() { return currentStage; }
+    public void setCurrentStage(int currentStage) { this.currentStage = currentStage; }
+    public int getCurrentLevel() { return currentLevel; }
+    public void setCurrentLevel(int currentLevel) { this.currentLevel = currentLevel; }
+    public int getGroupXP() { return groupXP; }
+    public void setGroupXP(int groupXP) { this.groupXP = groupXP; }
+    public int getIndividualXP() { return individualXP; }
+    public void setIndividualXP(int individualXP) { this.individualXP = individualXP; }
+    public int getMustXP() { return mustXP; }
+    public void setMustXP(int mustXP) { this.mustXP = mustXP; }
+    public int getRank() { return rank; }
+    public void setRank(int rank) { this.rank = rank; }
+    public Long getTeamId() { return teamId; }
+    public void setTeamId(Long teamId) { this.teamId = teamId; }
+    public int getMemberCount() { return memberCount; }
+    public void setMemberCount(int memberCount) { this.memberCount = memberCount; }
+    public boolean isCaptain() { return isCaptain; }
+    public void setCaptain(boolean isCaptain) { this.isCaptain = isCaptain; }
+    public boolean isViceCaptain() { return isViceCaptain; }
+    public void setViceCaptain(boolean isViceCaptain) { this.isViceCaptain = isViceCaptain; }
+    public boolean isMember() { return isMember; }
+    public void setMember(boolean isMember) { this.isMember = isMember; }
 
     public static Builder builder() { return new Builder(); }
     public static class Builder {
@@ -97,6 +136,18 @@ public class AuthResponse {
         public Builder stage(int v) { r.stage = v; return this; }
         public Builder teamRole(String v) { r.teamRole = v; return this; }
         public Builder teamName(String v) { r.teamName = v; return this; }
+        public Builder academicYear(String v) { r.academicYear = v; return this; }
+        public Builder currentStage(int v) { r.currentStage = v; return this; }
+        public Builder currentLevel(int v) { r.currentLevel = v; return this; }
+        public Builder groupXP(int v) { r.groupXP = v; return this; }
+        public Builder individualXP(int v) { r.individualXP = v; return this; }
+        public Builder mustXP(int v) { r.mustXP = v; return this; }
+        public Builder rank(int v) { r.rank = v; return this; }
+        public Builder teamId(Long v) { r.teamId = v; return this; }
+        public Builder memberCount(int v) { r.memberCount = v; return this; }
+        public Builder isCaptain(boolean v) { r.isCaptain = v; return this; }
+        public Builder isViceCaptain(boolean v) { r.isViceCaptain = v; return this; }
+        public Builder isMember(boolean v) { r.isMember = v; return this; }
         public AuthResponse build() { return r; }
     }
 }

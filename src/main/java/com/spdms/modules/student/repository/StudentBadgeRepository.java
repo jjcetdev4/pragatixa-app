@@ -8,7 +8,7 @@ import java.util.List;
 @Repository
 public interface StudentBadgeRepository extends JpaRepository<StudentBadge, Long> {
     List<StudentBadge> findByStudentId(Long studentId);
-    List<StudentBadge> findByStudentIdAndBadgeId(Long regNo, Long badgeId);
-    boolean existsByStudentIdAndBadgeId(Long regNo, Long badgeId);
+    List<StudentBadge> findByStudentIdAndBadgeId(Long studentId, Long badgeId);
+    boolean existsByStudentIdAndBadgeId(Long studentId, Long badgeId);
     List<StudentBadge> findByStatus(String status);
 }

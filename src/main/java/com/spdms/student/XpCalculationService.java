@@ -20,6 +20,10 @@ public class XpCalculationService {
     }
 
     public int applyCapsAndLimits(Student student, String activity, int points) {
+        if (points < 0) {
+            return points;
+        }
+
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startOfWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).withHour(0).withMinute(0);
         LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0);

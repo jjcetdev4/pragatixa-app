@@ -44,19 +44,9 @@ public class StudentAuthResolver {
         if (user != null) {
             // 1. Try to find by direct User relationship
             student = studentRepository.findByUserId(user.getId()).orElse(null);
-            
-            // 2. Try email matching if user exists but no direct relationship
-            if (student == null && user.getEmail() != null) {
-                student = studentRepository.findByEmail(user.getEmail()).orElse(null);
-            }
         }
 
-        // 3. Try to find by stable identifiers matching the JWT subject (username)
-        if (student == null) {
-            student = studentRepository.findByRegNo(username).orElse(null);
-        }
-
-        // 2. Try to find by stable identifiers matching the username
+        // 2. Try to find by stable identifiers matching the JWT subject (username)
         if (student == null) {
             student = studentRepository.findByRegNo(username).orElse(null);
         }
@@ -64,9 +54,8 @@ public class StudentAuthResolver {
             student = studentRepository.findBySprNo(username).orElse(null);
         }
 
-
         // 3. Fallback: email matching
-        if (student == null && user.getEmail() != null) {
+        if (student == null && user != null && user.getEmail() != null) {
             student = studentRepository.findByEmail(user.getEmail()).orElse(null);
         }
 

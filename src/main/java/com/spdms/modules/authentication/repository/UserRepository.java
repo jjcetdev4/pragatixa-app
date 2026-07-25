@@ -38,4 +38,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
         "AND u.active = true"
     )
     java.util.List<User> findAllClassCoordinators();
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT COUNT(DISTINCT u) FROM User u JOIN u.roles r " +
+        "WHERE r.name = 'ROLE_TEACHER' AND u.active = true " +
+        "AND NOT EXISTS (SELECT 1 FROM u.roles r2 WHERE r2.name IN ('ROLE_ADMIN', 'ROLE_STUDENT'))"
+    )
+    long countActiveGenuineTeachers();
 }

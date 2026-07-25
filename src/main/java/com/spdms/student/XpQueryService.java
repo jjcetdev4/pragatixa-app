@@ -6,6 +6,8 @@ import com.spdms.entity.Streak;
 import com.spdms.entity.XpTransaction;
 import com.spdms.repository.StreakRepository;
 import com.spdms.repository.XpTransactionRepository;
+import com.spdms.modules.student.repository.StudentRepository;
+import com.spdms.entity.Student;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,32 +27,24 @@ public class XpQueryService {
 
     private final XpTransactionRepository xpTransactionRepository;
     private final StreakRepository streakRepository;
+    private final StudentRepository studentRepository;
 
-    public XpQueryService(XpTransactionRepository xpTransactionRepository, StreakRepository streakRepository) {
+    public XpQueryService(XpTransactionRepository xpTransactionRepository, StreakRepository streakRepository, StudentRepository studentRepository) {
         this.xpTransactionRepository = xpTransactionRepository;
         this.streakRepository = streakRepository;
+        this.studentRepository = studentRepository;
     }
 
     public Map<String, Integer> getXpSummary(String regNo) {
-        List<XpTransaction> txs = xpTransactionRepository.findByStudentRegNo(regNo);
-        Map<String, Integer> summary = new HashMap<>();
-        summary.put("ACADEMIC", 0);
-        summary.put("SKILL", 0);
-        summary.put("COMMUNICATION", 0);
-        summary.put("LEADERSHIP", 0);
-        summary.put("INNOVATION", 0);
-        summary.put("PLACEMENT", 0);
-        summary.put("DISCIPLINE", 0);
-        summary.put("COMMUNITY", 0);
-        summary.put("SPORTS", 0);
-        summary.put("CULTURAL", 0);
+        Student student = studentRepository.findByRegNo(regNo)
+            .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        for (XpTransaction tx : txs) {
-            if ("APPROVED".equalsIgnoreCase(tx.getStatus())) {
-                String cat = tx.getCategory().toUpperCase();
-                summary.put(cat, summary.getOrDefault(cat, 0) + tx.getXpPoints());
-            }
-        }
+        Map<String, Integer> summary = new HashMap<>();
+        summary.put("totalXp", student.getTotalXp());
+        summary.put("groupXp", student.getGroupXp());
+        summary.put("individualXp", student.getIndividualXp());
+        summary.put("mustXp", student.getMustXp());
+        
         return summary;
     }
 
