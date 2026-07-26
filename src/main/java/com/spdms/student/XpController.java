@@ -30,6 +30,7 @@ public class XpController {
     @GetMapping("/{regNo}/summary")
     @Operation(summary = "Get XP Summary", description = "Returns total XP points earned by category.")
     public ResponseEntity<ApiResponse<Map<String, Integer>>> getXpSummary(@PathVariable String regNo) {
+        System.out.println("Received Student ID: " + regNo);
         return ResponseEntity.ok(ApiResponse.ok(xpService.getXpSummary(regNo)));
     }
 

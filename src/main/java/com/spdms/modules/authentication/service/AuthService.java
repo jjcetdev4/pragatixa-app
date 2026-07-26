@@ -183,6 +183,7 @@ public class AuthService {
         log.debug("[Student Login] JWT successfully generated for student: {}", student.getRegNo());
 
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
+        int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
         AuthResponse response = AuthResponse.builder()
             .token(token)
             .type("Bearer")
@@ -195,8 +196,8 @@ public class AuthService {
             .section(student.getSection() != null ? student.getSection().getSectionName() : null)
             .sectionId(student.getSection() != null ? student.getSection().getId() : null)
             .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
-            .year(student.getYear())
-            .department(student.getDepartment() != null ? student.getDepartment().getDeptName() : "")
+            .year(student.getYearRef() != null ? student.getYearRef().getYearName() : student.getYear())
+            .department(student.getDepartment() != null ? (student.getDepartment().getName() != null ? student.getDepartment().getName() : student.getDepartment().getDeptName()) : "")
             .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
             .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName() : student.getSemester())
             .sprNo(student.getSprNo())
@@ -205,7 +206,12 @@ public class AuthService {
             .stage(student.getStage())
             .teamRole(isCap ? "CAPTAIN" : "MEMBER")
             .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
+            .rank(rank)
             .build();
+
+        System.out.println("Returned Rank: " + response.getRank());
+        System.out.println("Returned Year: " + response.getYear());
+        System.out.println("Returned Section: " + response.getSection());
 
         log.debug("[Student Login] Authentication SUCCESS. Student: {} logged in.", student.getRegNo());
         return ApiResponse.ok("Student login successful", response);
@@ -278,11 +284,11 @@ public class AuthService {
                     .roles(List.of("ROLE_STUDENT"))
                     .subRoles(isCap ? List.of("CAPTAIN") : new ArrayList<>())
                     .userType(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "STUDENT"))
-                    .section(student.getSection() != null ? student.getSection().getSectionName() : null)
+                    .section(student.getSection() != null ? student.getSection().getSectionName() : "")
                     .sectionId(student.getSection() != null ? student.getSection().getId() : null)
                     .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
-                    .year(student.getYear())
-                    .department(student.getDepartment() != null ? student.getDepartment().getDeptName() : "")
+                    .year(student.getYearRef() != null ? student.getYearRef().getYearName() : student.getYear())
+                    .department(student.getDepartment() != null ? (student.getDepartment().getName() != null ? student.getDepartment().getName() : student.getDepartment().getDeptName()) : "")
                     .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
                     .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName() : student.getSemester())
                     .sprNo(student.getSprNo())
@@ -304,6 +310,11 @@ public class AuthService {
                     .isViceCaptain(isViceCap)
                     .isMember(isMem)
                     .build();
+            
+            System.out.println("Returned Rank: " + response.getRank());
+            System.out.println("Returned Year: " + response.getYear());
+            System.out.println("Returned Section: " + response.getSection());
+
             return ApiResponse.ok("Profile loaded", response);
         }
 
