@@ -2,8 +2,10 @@ package com.spdms.modules.student.service;
 
 import com.spdms.entity.Activity;
 import com.spdms.entity.ActivityAssignment;
+import com.spdms.entity.ActivityCompletionRequest;
 import com.spdms.entity.Student;
 import com.spdms.modules.activity.dto.response.ActivityResponse;
+import com.spdms.repository.ActivityCompletionRequestRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,9 +16,15 @@ import java.util.Map;
 public class StudentActivityAssembler {
 
     private final StudentAssignmentResolver assignmentResolver;
+    private final ActivityCompletionRequestRepository requestRepository;
+    private final StudentXpValidator studentXpValidator;
 
-    public StudentActivityAssembler(StudentAssignmentResolver assignmentResolver) {
+    public StudentActivityAssembler(StudentAssignmentResolver assignmentResolver,
+                                    ActivityCompletionRequestRepository requestRepository,
+                                    StudentXpValidator studentXpValidator) {
         this.assignmentResolver = assignmentResolver;
+        this.requestRepository = requestRepository;
+        this.studentXpValidator = studentXpValidator;
     }
 
     public List<ActivityResponse> enrichActivities(
@@ -26,7 +34,9 @@ public class StudentActivityAssembler {
             StudentXpAggregator.AggregatedXp aggregatedXp) {
 
         List<ActivityResponse> enrichedActivities = new ArrayList<>();
-
+        
+        List<ActivityCompletionRequest> studentRequests = requestRepository.findMyRequests(student.getId());
+        
         for (Activity act : activities) {
             ActivityResponse actMap = new ActivityResponse();
             actMap.setActivityId(act.getId());
@@ -90,7 +100,47 @@ public class StudentActivityAssembler {
             actMap.setCompleted(completed);
             actMap.setStatus(status);
             actMap.setAllowStudentRequest(act.getAllowStudentRequest());
-
+            
+            // Populate Button Logic
+            actMap.setActivityCompleted(completed);
+            
+            ActivityCompletionRequest latestReq = studentRequests.stream()
+                .filter(r -> r.getActivity().getId().equals(act.getId()))
+                .findFirst().orElse(null);
+                
+            String reqStatus = latestReq != null ? latestReq.getStatus() : null;
+            actMap.setRequestStatus(reqStatus);
+            
+            String limitError = studentXpValidator.checkAwardLimit(student, act);
+            boolean isCapReached = limitError != null;
+            actMap.setCategoryCapReached(isCapReached);
+            
+            boolean canReq = Boolean.TRUE.equals(act.getAllowStudentRequest());
+            actMap.setCanRequest(canReq);
+            
+            if (!canReq) {
+                actMap.setButtonEnabled(false);
+                actMap.setButtonText("Not Requestable");
+            } else if (isCapReached && !"REJECTED".equals(reqStatus) && !"PENDING".equals(reqStatus)) {
+                actMap.setButtonEnabled(false);
+                actMap.setButtonText("Category Cap Reached");
+            } else if ("PENDING".equals(reqStatus)) {
+                actMap.setButtonEnabled(false);
+                actMap.setButtonText("Request Submitted");
+            } else if ("REJECTED".equals(reqStatus)) {
+                actMap.setButtonEnabled(true);
+                actMap.setButtonText("Rejected - Submit Again");
+            } else if ("APPROVED".equals(reqStatus)) {
+                actMap.setButtonEnabled(false);
+                actMap.setButtonText("Already Completed");
+            } else if (completed) {
+                actMap.setButtonEnabled(false);
+                actMap.setButtonText("Already Completed");
+            } else {
+                actMap.setButtonEnabled(true);
+                actMap.setButtonText("Request Completion");
+            }
+            
             enrichedActivities.add(actMap);
         }
 

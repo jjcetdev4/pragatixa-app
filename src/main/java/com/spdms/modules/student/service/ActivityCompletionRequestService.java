@@ -9,6 +9,9 @@ import com.spdms.modules.student.dto.response.ActivityCompletionRequestDto;
 import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.repository.TeamRepository;
 import com.spdms.repository.ActivityCompletionRequestRepository;
+import com.spdms.modules.student.service.StudentAssignmentResolver;
+import com.spdms.modules.student.service.StudentXpValidator;
+import com.spdms.modules.student.service.XpEngineService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,19 +29,25 @@ public class ActivityCompletionRequestService {
     private final ActivityRepository activityRepository;
     private final TeamRepository teamRepository;
     private final StudentAssignmentResolver studentAssignmentResolver;
+    private final StudentXpValidator studentXpValidator;
+    private final XpEngineService xpEngineService;
 
     public ActivityCompletionRequestService(ActivityCompletionRequestRepository repository,
                                             StudentRepository studentRepository,
                                             UserRepository userRepository,
                                             ActivityRepository activityRepository,
                                             TeamRepository teamRepository,
-                                            StudentAssignmentResolver studentAssignmentResolver) {
+                                            StudentAssignmentResolver studentAssignmentResolver,
+                                            StudentXpValidator studentXpValidator,
+                                            XpEngineService xpEngineService) {
         this.repository = repository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.teamRepository = teamRepository;
         this.studentAssignmentResolver = studentAssignmentResolver;
+        this.studentXpValidator = studentXpValidator;
+        this.xpEngineService = xpEngineService;
     }
 
     private User findCcForStudent(Student student) {
@@ -214,12 +223,50 @@ public class ActivityCompletionRequestService {
         }
         User teacher = teacherOpt.get();
 
+        String limitError = studentXpValidator.checkAwardLimit(request.getStudent(), request.getActivity());
+        int xpToAward = 0;
+        String message = "Request approved";
+
+        if (limitError == null) {
+            Activity activity = request.getActivity();
+            int configuredXp = 0;
+            
+            Boolean isAward = activity.getAwardEnabled();
+            Boolean isPenalty = activity.getPenaltyEnabled();
+            
+            if (isAward == null && isPenalty == null) {
+                if ("Penalty".equalsIgnoreCase(activity.getXpType())) {
+                    isAward = false;
+                    isPenalty = true;
+                } else {
+                    isAward = true;
+                    isPenalty = false;
+                }
+            }
+            
+            boolean awardable = Boolean.TRUE.equals(isAward);
+            boolean penalizable = Boolean.TRUE.equals(isPenalty);
+            
+            if (penalizable && !awardable) {
+                int px = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : (activity.getAwardXp() != null ? activity.getAwardXp() : 0);
+                configuredXp = -Math.abs(px);
+            } else {
+                configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : activity.getMaxPoints();
+                configuredXp = Math.abs(configuredXp);
+            }
+            
+            xpToAward = configuredXp;
+            xpEngineService.awardXp(request.getStudent(), request.getActivity(), teacher, null, xpToAward, "Approved Completion Request: " + request.getActivity().getName());
+        } else {
+            message = "Request approved, 0 XP awarded, Category cap reached";
+        }
+
         request.setStatus("APPROVED");
         request.setApprovedAt(LocalDateTime.now());
         request.setApprovedBy(teacher.getFullName());
 
         ActivityCompletionRequest saved = repository.save(request);
-        return ApiResponse.ok("Request approved", mapToDto(saved));
+        return ApiResponse.ok(message, mapToDto(saved));
     }
 
     @Transactional

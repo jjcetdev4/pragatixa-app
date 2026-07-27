@@ -15,6 +15,17 @@ public class ActivityResponse {
     private Integer remainingXp;
     private Boolean completed;
     private Boolean allowStudentRequest;
+    
+    // Request Button Fields
+    private String requestStatus;
+    private Boolean canRequest;
+    private Integer remainingCategoryCap;
+    private Boolean categoryCapReached;
+    private Integer awardableXP;
+    private Boolean activityCompleted;
+    private Boolean allowResubmit;
+    private String buttonText;
+    private Boolean buttonEnabled;
 
     public ActivityResponse() {}
 
@@ -59,4 +70,31 @@ public class ActivityResponse {
 
     public Boolean getAllowStudentRequest() { return allowStudentRequest; }
     public void setAllowStudentRequest(Boolean allowStudentRequest) { this.allowStudentRequest = allowStudentRequest; }
+    
+    public String getRequestStatus() { return requestStatus; }
+    public void setRequestStatus(String requestStatus) { this.requestStatus = requestStatus; }
+    
+    public Boolean getCanRequest() { return canRequest; }
+    public void setCanRequest(Boolean canRequest) { this.canRequest = canRequest; }
+    
+    public Integer getRemainingCategoryCap() { return remainingCategoryCap; }
+    public void setRemainingCategoryCap(Integer remainingCategoryCap) { this.remainingCategoryCap = remainingCategoryCap; }
+    
+    public Boolean getCategoryCapReached() { return categoryCapReached; }
+    public void setCategoryCapReached(Boolean categoryCapReached) { this.categoryCapReached = categoryCapReached; }
+    
+    public Integer getAwardableXP() { return awardableXP; }
+    public void setAwardableXP(Integer awardableXP) { this.awardableXP = awardableXP; }
+    
+    public Boolean getActivityCompleted() { return activityCompleted; }
+    public void setActivityCompleted(Boolean activityCompleted) { this.activityCompleted = activityCompleted; }
+    
+    public Boolean getAllowResubmit() { return allowResubmit; }
+    public void setAllowResubmit(Boolean allowResubmit) { this.allowResubmit = allowResubmit; }
+    
+    public String getButtonText() { return buttonText; }
+    public void setButtonText(String buttonText) { this.buttonText = buttonText; }
+    
+    public Boolean getButtonEnabled() { return buttonEnabled; }
+    public void setButtonEnabled(Boolean buttonEnabled) { this.buttonEnabled = buttonEnabled; }
 }
