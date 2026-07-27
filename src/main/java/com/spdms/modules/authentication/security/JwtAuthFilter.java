@@ -83,6 +83,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             log.warn("JWT validation failed: {}", e.getMessage());
         }
 
+        // STEP 2 - DEBUG LOGS
+        if (request.getRequestURI().contains("/api/activity-requests") && SecurityContextHolder.getContext().getAuthentication() != null) {
+            System.out.println("----- MASTER PROMPT STEP 2 DEBUG -----");
+            System.out.println("Authenticated Username : " + SecurityContextHolder.getContext().getAuthentication().getName());
+            System.out.println("Authorities : " + SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+            System.out.println("--------------------------------------");
+        }
+
         filterChain.doFilter(request, response);
     }
 }

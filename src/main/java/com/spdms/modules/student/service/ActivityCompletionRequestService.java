@@ -268,7 +268,19 @@ public class ActivityCompletionRequestService {
             }
             
             xpToAward = configuredXp;
-            xpEngineService.awardXp(request.getStudent(), request.getActivity(), teacher, null, xpToAward, "Approved Completion Request: " + request.getActivity().getName());
+            
+            // Resolve the correct assignment for the student
+            java.util.Map<Long, List<ActivityAssignment>> assignmentsByActivity = studentAssignmentResolver.fetchAssignmentsByActivity(java.util.List.of(request.getActivity().getId()));
+            List<ActivityAssignment> assignments = assignmentsByActivity.getOrDefault(request.getActivity().getId(), java.util.Collections.emptyList());
+            ActivityAssignment bestAssignment = studentAssignmentResolver.resolveBestAssignment(request.getStudent(), assignments);
+            
+            // Fallback: If no assignment is resolved but the teacher approving is the assigned faculty of the subgroup, we might need a fallback,
+            // but the database requires an assignment. If bestAssignment is null, we can try to use any assignment or the first one if we must.
+            if (bestAssignment == null && !assignments.isEmpty()) {
+                bestAssignment = assignments.get(0);
+            }
+            
+            xpEngineService.awardXp(request.getStudent(), request.getActivity(), teacher, bestAssignment, xpToAward, "Approved Completion Request: " + request.getActivity().getName());
         } else {
             message = "Request approved, 0 XP awarded, Category cap reached";
         }
