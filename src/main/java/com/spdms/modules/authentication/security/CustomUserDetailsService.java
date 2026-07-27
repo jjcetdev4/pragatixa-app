@@ -32,6 +32,16 @@ public class CustomUserDetailsService implements UserDetailsService {
         var authorities = user.getRoles().stream()
             .map(role -> new SimpleGrantedAuthority(role.getName()))
             .collect(Collectors.toList());
+            
+        if (user.getSubRoles() != null) {
+            user.getSubRoles().forEach(subRole -> {
+                String roleName = subRole.getName().trim().toUpperCase();
+                if (!roleName.startsWith("ROLE_")) {
+                    roleName = "ROLE_" + roleName;
+                }
+                authorities.add(new SimpleGrantedAuthority(roleName));
+            });
+        }
 
         return org.springframework.security.core.userdetails.User.builder()
             .username(user.getUsername())

@@ -39,7 +39,7 @@ public class ActivityCompletionRequestController {
     }
 
     @GetMapping("/inbox")
-    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN', 'ROLE_CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN', 'ROLE_CLASS_COORDINATOR', 'ROLE_CC')")
     public ResponseEntity<ApiResponse<List<ActivityCompletionRequestDto>>> getInbox(
             @RequestParam(required = false) String status,
             Authentication authentication) {
@@ -48,7 +48,7 @@ public class ActivityCompletionRequestController {
     }
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN', 'ROLE_CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN', 'ROLE_CLASS_COORDINATOR', 'ROLE_CC')")
     public ResponseEntity<ApiResponse<ActivityCompletionRequestDto>> approveRequest(
             @PathVariable Long id,
             Authentication authentication) {
@@ -57,7 +57,7 @@ public class ActivityCompletionRequestController {
     }
 
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN', 'ROLE_CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN', 'ROLE_CLASS_COORDINATOR', 'ROLE_CC')")
     public ResponseEntity<ApiResponse<ActivityCompletionRequestDto>> rejectRequest(
             @PathVariable Long id,
             @RequestBody Map<String, String> body,
@@ -67,3 +67,4 @@ public class ActivityCompletionRequestController {
         return ResponseEntity.ok(service.rejectRequest(id, username, reason));
     }
 }
+

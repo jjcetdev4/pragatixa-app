@@ -153,6 +153,17 @@ public class ActivityCompletionRequestService {
         System.out.println("Authenticated Department: " + (teacher.getDepartment() != null ? teacher.getDepartment().getName() : "None"));
         System.out.println("Authenticated Section: " + (teacher.getSection() != null ? teacher.getSection().getSectionName() : "None"));
 
+        // Admin Bypass
+        if (teacher.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()))) {
+            List<ActivityCompletionRequest> allRequests = repository.findAll();
+            if (status != null) {
+                allRequests = allRequests.stream().filter(r -> r.getStatus().equals(status)).collect(Collectors.toList());
+            }
+            allRequests.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+            List<ActivityCompletionRequestDto> dtos = allRequests.stream().map(this::mapToDto).collect(Collectors.toList());
+            return ApiResponse.ok("Fetched inbox for Admin", dtos);
+        }
+
         // 1. Fetch potential requests where teacher might be assigned or is CC
         List<ActivityCompletionRequest> possibleRequests = repository.findPossibleRequestsForTeacher(teacher.getId(), status);
         
