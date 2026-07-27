@@ -27,6 +27,7 @@ public class AuthResponse {
     private String teamRole;
     private String teamName;
     private String academicYear;
+    private String assignedAcademicYear;
     private int currentStage;
     private int currentLevel;
     private int groupXP;
@@ -89,6 +90,8 @@ public class AuthResponse {
     
     public String getAcademicYear() { return academicYear; }
     public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
+    public String getAssignedAcademicYear() { return assignedAcademicYear; }
+    public void setAssignedAcademicYear(String assignedAcademicYear) { this.assignedAcademicYear = assignedAcademicYear; }
     public int getCurrentStage() { return currentStage; }
     public void setCurrentStage(int currentStage) { this.currentStage = currentStage; }
     public int getCurrentLevel() { return currentLevel; }
@@ -137,6 +140,7 @@ public class AuthResponse {
         public Builder teamRole(String v) { r.teamRole = v; return this; }
         public Builder teamName(String v) { r.teamName = v; return this; }
         public Builder academicYear(String v) { r.academicYear = v; return this; }
+        public Builder assignedAcademicYear(String v) { r.assignedAcademicYear = v; return this; }
         public Builder currentStage(int v) { r.currentStage = v; return this; }
         public Builder currentLevel(int v) { r.currentLevel = v; return this; }
         public Builder groupXP(int v) { r.groupXP = v; return this; }

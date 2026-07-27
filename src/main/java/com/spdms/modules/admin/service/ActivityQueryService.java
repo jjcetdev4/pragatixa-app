@@ -23,11 +23,18 @@ public class ActivityQueryService {
     private final ActivityRepository activityRepository;
     private final ActivitySubgroupRepository activitySubgroupRepository;
     private final AdminAssignmentService adminAssignmentService;
+    private final com.spdms.modules.authentication.repository.UserRepository userRepository;
 
-    public ActivityQueryService(ActivityRepository activityRepository, ActivitySubgroupRepository activitySubgroupRepository, AdminAssignmentService adminAssignmentService) {
+    public ActivityQueryService(ActivityRepository activityRepository, ActivitySubgroupRepository activitySubgroupRepository, AdminAssignmentService adminAssignmentService, com.spdms.modules.authentication.repository.UserRepository userRepository) {
         this.activityRepository = activityRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.adminAssignmentService = adminAssignmentService;
+        this.userRepository = userRepository;
+    }
+
+    private com.spdms.entity.User getCurrentUser() {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username).orElse(null);
     }
 
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(Long subgroupId) {
@@ -45,6 +52,10 @@ public class ActivityQueryService {
 
     public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup) {
         List<Activity> activities = activityRepository.findAll();
+        com.spdms.entity.User u = getCurrentUser();
+        if (u != null) {
+            activities = adminAssignmentService.filterActivitiesForUser(activities, u);
+        }
         
         if (subgroup != null && !subgroup.trim().isEmpty()) {
             final String lowerSubgroup = subgroup.toLowerCase();
@@ -61,6 +72,10 @@ public class ActivityQueryService {
 
     public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup) {
         List<Activity> activities = activityRepository.findAll();
+        com.spdms.entity.User u = getCurrentUser();
+        if (u != null) {
+            activities = adminAssignmentService.filterActivitiesForUser(activities, u);
+        }
         
         if (subgroup != null && !subgroup.trim().isEmpty()) {
             final String lowerSubgroup = subgroup.toLowerCase();
@@ -122,6 +137,10 @@ public class ActivityQueryService {
 
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup) {
         List<Activity> activities = activityRepository.findByStageId(stageId);
+        com.spdms.entity.User u = getCurrentUser();
+        if (u != null) {
+            activities = adminAssignmentService.filterActivitiesForUser(activities, u);
+        }
         
         if (subgroup != null && !subgroup.trim().isEmpty()) {
             final String lowerSubgroup = subgroup.toLowerCase();

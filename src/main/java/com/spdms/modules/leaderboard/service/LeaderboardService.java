@@ -52,6 +52,8 @@ public class LeaderboardService {
 
         boolean isAdmin = currentUser != null && currentUser.getRoles().stream()
                 .anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        boolean isSuperAdmin = currentUser != null && currentUser.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN"));
         boolean isTeacher = currentUser != null && currentUser.getRoles().stream()
                 .anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_TEACHER"));
         boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
@@ -61,7 +63,10 @@ public class LeaderboardService {
         Long targetYearId = yearId;
         Long targetSectionId = sectionId;
 
-        if (isTeacher && !isAdmin) {
+        if (isAdmin && !isSuperAdmin && currentUser.getAssignedAcademicYear() != null) {
+            String adminYear = getYearNoString(currentUser.getAssignedAcademicYear());
+            targetYearId = resolveYearId(adminYear);
+        } else if (isTeacher && !isAdmin) {
             // Teacher gets scoped down to their assigned class if CC
             if (isCc) {
                 targetDeptId = currentUser.getDepartment() != null ? currentUser.getDepartment().getId() : null;
@@ -113,12 +118,25 @@ public class LeaderboardService {
         return null;
     }
 
+    private String getYearNoString(com.spdms.entity.AssignedAcademicYear assignedYear) {
+        if (assignedYear == null) return null;
+        switch (assignedYear) {
+            case FIRST_YEAR: return "1";
+            case SECOND_YEAR: return "2";
+            case THIRD_YEAR: return "3";
+            case FOURTH_YEAR: return "4";
+        }
+        return null;
+    }
+
     public ApiResponse<FilterOptionsDto> getFilters(Long yearId, Long departmentId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
 
         boolean isAdmin = currentUser != null && currentUser.getRoles().stream()
                 .anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        boolean isSuperAdmin = currentUser != null && currentUser.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN"));
         boolean isTeacher = currentUser != null && currentUser.getRoles().stream()
                 .anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_TEACHER"));
         boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
@@ -128,7 +146,14 @@ public class LeaderboardService {
         List<FilterOptionsDto.FilterItem> deptFilters = new ArrayList<>();
         List<FilterOptionsDto.FilterItem> sectionFilters = new ArrayList<>();
 
-        if (isTeacher && !isAdmin && isCc) {
+        if (isAdmin && !isSuperAdmin && currentUser.getAssignedAcademicYear() != null) {
+            String adminYear = getYearNoString(currentUser.getAssignedAcademicYear());
+            Long yId = resolveYearId(adminYear);
+            if (yId != null) {
+                Year y = yearRepository.findById(yId).orElse(null);
+                if (y != null) yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName()));
+            }
+        } else if (isTeacher && !isAdmin && isCc) {
             // Scoped purely to assigned class, no global filters
             if (currentUser.getYear() != null) {
                 Long yId = resolveYearId(currentUser.getYear());
@@ -144,7 +169,9 @@ public class LeaderboardService {
         }
 
         // Global/Admin access
-        yearRepository.findAll().forEach(y -> yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName())));
+        if (yearFilters.isEmpty()) {
+            yearRepository.findAll().forEach(y -> yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName())));
+        }
         
         List<Department> depts = departmentRepository.findAll();
         depts.forEach(d -> deptFilters.add(new FilterOptionsDto.FilterItem(d.getId().toString(), d.getName())));

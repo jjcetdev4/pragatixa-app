@@ -61,6 +61,10 @@ public class User {
     @Column(name = "year", length = 10)
     private String year;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "assigned_academic_year")
+    private AssignedAcademicYear assignedAcademicYear;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -111,6 +115,9 @@ public class User {
     public String getYear() { return year; }
     public void setYear(String year) { this.year = year; }
 
+    public AssignedAcademicYear getAssignedAcademicYear() { return assignedAcademicYear; }
+    public void setAssignedAcademicYear(AssignedAcademicYear assignedAcademicYear) { this.assignedAcademicYear = assignedAcademicYear; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
@@ -129,6 +136,7 @@ public class User {
         public Builder active(boolean v) { user.active = v; return this; }
         public Builder section(Section v) { user.section = v; return this; }
         public Builder year(String v) { user.year = v; return this; }
+        public Builder assignedAcademicYear(AssignedAcademicYear v) { user.assignedAcademicYear = v; return this; }
         public User build() { return user; }
     }
 }

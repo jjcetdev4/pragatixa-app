@@ -155,7 +155,25 @@ public class ActivityCompletionRequestService {
 
         // Admin Bypass
         if (teacher.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()))) {
+            boolean isSuperAdmin = teacher.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
             List<ActivityCompletionRequest> allRequests = repository.findAll();
+            
+            if (!isSuperAdmin && teacher.getAssignedAcademicYear() != null) {
+                String adminYear = getYearNoString(teacher.getAssignedAcademicYear());
+                allRequests = allRequests.stream()
+                        .filter(r -> {
+                             String sy = r.getStudent().getYear();
+                             if (sy == null) return false;
+                             String yTrim = sy.trim().toUpperCase();
+                             return yTrim.equals(adminYear) || 
+                                   (adminYear.equals("1") && yTrim.equals("I")) ||
+                                   (adminYear.equals("2") && yTrim.equals("II")) ||
+                                   (adminYear.equals("3") && yTrim.equals("III")) ||
+                                   (adminYear.equals("4") && yTrim.equals("IV"));
+                        })
+                        .collect(Collectors.toList());
+            }
+
             if (status != null) {
                 allRequests = allRequests.stream().filter(r -> r.getStatus().equals(status)).collect(Collectors.toList());
             }
@@ -352,7 +370,23 @@ public class ActivityCompletionRequestService {
     }
 
     private boolean isTeacherAuthorizedForRequest(User teacher, ActivityCompletionRequest request) {
-        if (teacher.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()))) {
+        boolean isAdmin = teacher.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
+        boolean isSuperAdmin = teacher.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
+        if (isAdmin) {
+            if (!isSuperAdmin && teacher.getAssignedAcademicYear() != null) {
+                String adminYear = getYearNoString(teacher.getAssignedAcademicYear());
+                String sy = request.getStudent().getYear();
+                if (sy == null) return false;
+                String yTrim = sy.trim().toUpperCase();
+                boolean matches = yTrim.equals(adminYear) || 
+                                   (adminYear.equals("1") && yTrim.equals("I")) ||
+                                   (adminYear.equals("2") && yTrim.equals("II")) ||
+                                   (adminYear.equals("3") && yTrim.equals("III")) ||
+                                   (adminYear.equals("4") && yTrim.equals("IV"));
+                if (!matches) {
+                    return false;
+                }
+            }
             return true;
         }
         
@@ -371,5 +405,15 @@ public class ActivityCompletionRequestService {
         }
         return false;
     }
-}
 
+    private String getYearNoString(AssignedAcademicYear assignedYear) {
+        if (assignedYear == null) return null;
+        switch (assignedYear) {
+            case FIRST_YEAR: return "1";
+            case SECOND_YEAR: return "2";
+            case THIRD_YEAR: return "3";
+            case FOURTH_YEAR: return "4";
+        }
+        return null;
+    }
+}

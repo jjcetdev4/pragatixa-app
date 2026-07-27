@@ -65,7 +65,19 @@ public class AdminAssignmentService {
     }
 
     public boolean isAssignmentMatching(ActivityAssignment a, User u) {
-        if (u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))) {
+        boolean isAdmin = u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        boolean isSuperAdmin = u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN"));
+
+        if (isAdmin && !isSuperAdmin && u.getAssignedAcademicYear() != null) {
+            String adminYear = u.getAssignedAcademicYear().name();
+            // If assignment has a year and it doesn't match, it's not for this admin
+            if (a.getYear() != null && !a.getYear().equalsIgnoreCase(adminYear)) {
+                return false;
+            }
+            return true;
+        }
+
+        if (isAdmin || isSuperAdmin) {
             return true;
         }
         
@@ -92,6 +104,30 @@ public class AdminAssignmentService {
             if (a.getAssignmentScope() == AssignmentScope.GLOBAL) return a;
         }
         return matches.get(0);
+    }
+
+    public List<Activity> filterActivitiesForUser(List<Activity> activities, User u) {
+        boolean isAdmin = u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        boolean isSuperAdmin = u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN"));
+
+        if (!isAdmin || isSuperAdmin) {
+            return activities;
+        }
+
+        List<ActivityAssignment> allAssignments = activityAssignmentRepository.findAll();
+        Map<Long, List<ActivityAssignment>> assignmentsByActivity = allAssignments.stream()
+                .collect(java.util.stream.Collectors.groupingBy(a -> a.getActivity().getId()));
+
+        return activities.stream().filter(activity -> {
+            List<ActivityAssignment> activityAssignments = assignmentsByActivity.getOrDefault(activity.getId(), new ArrayList<>());
+            if (activityAssignments.isEmpty()) {
+                // If no assignments exist, assume it's global and allow it?
+                // Or maybe year admins shouldn't see unassigned activities? Let's say yes for now, or match it against their year.
+                // Wait, if it's completely unassigned, it has no Year. Year Admin sees it if they see Global.
+                return true; 
+            }
+            return activityAssignments.stream().anyMatch(a -> isAssignmentMatching(a, u));
+        }).collect(java.util.stream.Collectors.toList());
     }
 
 }

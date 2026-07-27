@@ -100,7 +100,9 @@ public class AuthService {
             .collect(Collectors.toList());
 
         String userType = "USER";
-        if (roles.contains("ROLE_ADMIN")) {
+        if (roles.contains("ROLE_SUPER_ADMIN")) {
+            userType = "SUPER_ADMIN";
+        } else if (roles.contains("ROLE_ADMIN")) {
             userType = "ADMIN";
         } else if (roles.contains("ROLE_TEACHER")) {
             userType = "TEACHER";
@@ -122,6 +124,7 @@ public class AuthService {
             .sectionId(user.getSection() != null ? user.getSection().getId() : null)
             .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
             .year(user.getYear())
+            .assignedAcademicYear(user.getAssignedAcademicYear() != null ? user.getAssignedAcademicYear().name() : null)
             .build();
 
         log.debug("Teacher/Admin logged in successfully: {}", request.getUsername());
@@ -226,7 +229,9 @@ public class AuthService {
                     .collect(java.util.stream.Collectors.toList());
 
             String userType = "USER";
-            if (rolesList.contains("ROLE_ADMIN")) {
+            if (rolesList.contains("ROLE_SUPER_ADMIN")) {
+                userType = "SUPER_ADMIN";
+            } else if (rolesList.contains("ROLE_ADMIN")) {
                 userType = "ADMIN";
             } else if (rolesList.contains("ROLE_TEACHER")) {
                 userType = "TEACHER";
@@ -250,6 +255,7 @@ public class AuthService {
                     .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
                     .year(user.getYear())
                     .department(user.getDepartment() != null ? user.getDepartment().getName() : "")
+                    .assignedAcademicYear(user.getAssignedAcademicYear() != null ? user.getAssignedAcademicYear().name() : null)
                     .build();
             return ApiResponse.ok("Profile loaded", response);
         }

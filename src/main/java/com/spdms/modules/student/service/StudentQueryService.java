@@ -2,6 +2,7 @@ package com.spdms.modules.student.service;
 
 import com.spdms.dto.*;
 import com.spdms.entity.*;
+import com.spdms.entity.AssignedAcademicYear;
 import com.spdms.modules.student.dto.response.StudentResponse;
 import com.spdms.modules.student.repository.StudentRepository;
 import com.spdms.repository.YearRepository;
@@ -100,6 +101,19 @@ public class StudentQueryService {
                 return ApiResponse.ok(Page.empty(pageable));
             }
         }
+        boolean isAdmin = currentUser != null && currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
+        boolean isSuperAdmin = currentUser != null && currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"));
+
+        if (isAdmin && !isSuperAdmin && currentUser.getAssignedAcademicYear() != null) {
+            Byte yearNo = getYearNo(currentUser.getAssignedAcademicYear());
+            Year yearRef = yearNo != null ? yearRepository.findByYearNo(yearNo).orElse(null) : null;
+            if (yearRef != null) {
+                Page<StudentResponse> result = mapWithGuardians(studentRepository.findByYearRefId(yearRef.getId(), pageable));
+                return ApiResponse.ok(result);
+            } else {
+                 return ApiResponse.ok(Page.empty(pageable));
+            }
+        }
         
         Page<StudentResponse> result = mapWithGuardians(studentRepository.findAll(pageable));
         return ApiResponse.ok(result);
@@ -143,6 +157,19 @@ public class StudentQueryService {
                 return ApiResponse.ok(Page.empty(pageable));
             }
         }
+        boolean isAdmin = currentUser != null && currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
+        boolean isSuperAdmin = currentUser != null && currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"));
+
+        if (isAdmin && !isSuperAdmin && currentUser.getAssignedAcademicYear() != null) {
+            Byte yearNo = getYearNo(currentUser.getAssignedAcademicYear());
+            Year yearRef = yearNo != null ? yearRepository.findByYearNo(yearNo).orElse(null) : null;
+            if (yearRef != null) {
+                Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudentsByYear(keyword, yearRef.getId(), pageable));
+                return ApiResponse.ok(result);
+            } else {
+                 return ApiResponse.ok(Page.empty(pageable));
+            }
+        }
         
         Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudents(keyword, pageable));
         return ApiResponse.ok(result);
@@ -168,5 +195,16 @@ public class StudentQueryService {
         }).collect(java.util.stream.Collectors.toList());
 
         return ApiResponse.ok(results);
+    }
+
+    private Byte getYearNo(AssignedAcademicYear assignedYear) {
+        if (assignedYear == null) return null;
+        switch (assignedYear) {
+            case FIRST_YEAR: return 1;
+            case SECOND_YEAR: return 2;
+            case THIRD_YEAR: return 3;
+            case FOURTH_YEAR: return 4;
+        }
+        return null;
     }
 }

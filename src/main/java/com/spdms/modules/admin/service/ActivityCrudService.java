@@ -12,6 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.spdms.modules.authentication.repository.UserRepository;
+import com.spdms.entity.User;
+import com.spdms.entity.ActivityAssignment;
+import com.spdms.entity.AssignmentScope;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -44,7 +50,8 @@ public class ActivityCrudService {
             StudentActivityXpRepository studentActivityXpRepository,
             ActivityValidationService validationService, 
             ActivityRequestMapper requestMapper,
-            AdminAssignmentService adminAssignmentService) {
+            AdminAssignmentService adminAssignmentService,
+            UserRepository userRepository) {
         this.activityRepository = activityRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityStageRepository = activityStageRepository;
@@ -54,6 +61,7 @@ public class ActivityCrudService {
         this.validationService = validationService;
         this.requestMapper = requestMapper;
         this.adminAssignmentService = adminAssignmentService;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -103,6 +111,24 @@ public class ActivityCrudService {
         log.debug("Entity before save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                  activity.getAwardEnabled(), activity.getAwardXp(), activity.getPenaltyEnabled(), activity.getPenaltyXp());
         Activity saved = activityRepository.save(activity);
+        
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser != null) {
+            boolean isYearAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"))
+                               && currentUser.getRoles().stream().noneMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))
+                               && currentUser.getAssignedAcademicYear() != null;
+            if (isYearAdmin) {
+                ActivityAssignment aa = new ActivityAssignment();
+                aa.setActivity(saved);
+                aa.setAssignedBy(currentUser);
+                aa.setAssignedAt(LocalDateTime.now());
+                aa.setAssignmentScope(AssignmentScope.GLOBAL); // Global for that year
+                aa.setYear(currentUser.getAssignedAcademicYear().name());
+                activityAssignmentRepository.save(aa);
+            }
+        }
+
         log.debug("Entity after save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                  saved.getAwardEnabled(), saved.getAwardXp(), saved.getPenaltyEnabled(), saved.getPenaltyXp());
         adminAssignmentService.populateActivityTransientFields(saved);
