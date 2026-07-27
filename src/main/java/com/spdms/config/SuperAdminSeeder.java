@@ -55,7 +55,14 @@ public class SuperAdminSeeder implements CommandLineRunner {
                 admin.getRoles().add(superAdminRole);
                 userRepository.save(admin);
             } else {
-                log.info("Super Admin already exists. Skipping creation.");
+                log.info("Super Admin already exists. Skipping role creation.");
+            }
+
+            // Enforce password to be "admin"
+            if (!passwordEncoder.matches("admin", admin.getPassword())) {
+                log.info("Existing Super Admin password does not match 'admin'. Updating password...");
+                admin.setPassword(passwordEncoder.encode("admin"));
+                userRepository.save(admin);
             }
         } else {
             log.info("Super Admin not found. Creating default Super Admin...");
