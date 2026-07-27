@@ -45,4 +45,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
         "AND NOT EXISTS (SELECT 1 FROM u.roles r2 WHERE r2.name IN ('ROLE_ADMIN', 'ROLE_STUDENT'))"
     )
     long countActiveGenuineTeachers();
+
+    @org.springframework.data.jpa.repository.Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
+    java.util.List<User> findAllByRoleName(@org.springframework.data.repository.query.Param("roleName") String roleName);
 }

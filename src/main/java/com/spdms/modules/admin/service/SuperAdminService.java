@@ -28,10 +28,7 @@ public class SuperAdminService {
 
     @Transactional(readOnly = true)
     public List<User> getAllYearAdmins() {
-        return userRepository.findAll().stream()
-                .filter(u -> u.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN")) 
-                          && u.getRoles().stream().noneMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN")))
-                .collect(Collectors.toList());
+        return userRepository.findAllByRoleName("ROLE_ADMIN");
     }
 
     @Transactional
