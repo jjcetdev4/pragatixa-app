@@ -23,7 +23,7 @@ public class ActivityCompletionRequestController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<ApiResponse<ActivityCompletionRequestDto>> submitRequest(
             @RequestBody CreateActivityCompletionRequestDto dto,
             Authentication authentication) {
@@ -32,14 +32,14 @@ public class ActivityCompletionRequestController {
     }
 
     @GetMapping("/my-requests")
-    @PreAuthorize("hasAnyRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<ApiResponse<List<ActivityCompletionRequestDto>>> getMyRequests(Authentication authentication) {
         String username = authentication.getName();
         return ResponseEntity.ok(service.getStudentRequests(username));
     }
 
     @GetMapping("/inbox")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN', 'ROLE_CLASS_COORDINATOR')")
     public ResponseEntity<ApiResponse<List<ActivityCompletionRequestDto>>> getInbox(
             @RequestParam(required = false) String status,
             Authentication authentication) {
@@ -48,7 +48,7 @@ public class ActivityCompletionRequestController {
     }
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN', 'ROLE_CLASS_COORDINATOR')")
     public ResponseEntity<ApiResponse<ActivityCompletionRequestDto>> approveRequest(
             @PathVariable Long id,
             Authentication authentication) {
@@ -57,7 +57,7 @@ public class ActivityCompletionRequestController {
     }
 
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN', 'ROLE_CLASS_COORDINATOR')")
     public ResponseEntity<ApiResponse<ActivityCompletionRequestDto>> rejectRequest(
             @PathVariable Long id,
             @RequestBody Map<String, String> body,

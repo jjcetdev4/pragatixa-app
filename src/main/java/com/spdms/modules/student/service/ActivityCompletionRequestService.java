@@ -92,21 +92,18 @@ public class ActivityCompletionRequestService {
             }
 
             // Check duplicates for team
-            List<ActivityCompletionRequest> existing = repository.findByTeamIdAndActivityIdOrderByCreatedAtDesc(team.getId(), activity.getId());
-            if (existing.stream().anyMatch(r -> "PENDING".equals(r.getStatus()))) {
-                return ApiResponse.error("A request is already pending for this team");
-            }
-            if (existing.stream().anyMatch(r -> "APPROVED".equals(r.getStatus()))) {
-                return ApiResponse.error("This team has already completed this activity");
+            boolean teamExists = repository.findByTeamIdAndActivityIdOrderByCreatedAtDesc(team.getId(), activity.getId())
+                .stream().anyMatch(r -> "PENDING".equals(r.getStatus()) || "APPROVED".equals(r.getStatus()));
+            if (teamExists) {
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT, "Team already has a pending or approved request");
             }
         } else {
             // Check duplicates for student
-            List<ActivityCompletionRequest> existing = repository.findByStudentIdAndActivityIdOrderByCreatedAtDesc(student.getId(), activity.getId());
-            if (existing.stream().anyMatch(r -> "PENDING".equals(r.getStatus()))) {
-                return ApiResponse.error("A request is already pending");
-            }
-            if (existing.stream().anyMatch(r -> "APPROVED".equals(r.getStatus()))) {
-                return ApiResponse.error("You have already completed this activity");
+            boolean studentExists = repository.existsByStudentIdAndActivityIdAndStatusIn(
+                student.getId(), activity.getId(), java.util.List.of("PENDING", "APPROVED"));
+            
+            if (studentExists) {
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT, "Student already has a pending or approved request");
             }
         }
 
@@ -223,6 +220,10 @@ public class ActivityCompletionRequestService {
         }
         User teacher = teacherOpt.get();
 
+        if (!isTeacherAuthorizedForRequest(teacher, request)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "You are not assigned to this activity for this student");
+        }
+
         String limitError = studentXpValidator.checkAwardLimit(request.getStudent(), request.getActivity());
         int xpToAward = 0;
         String message = "Request approved";
@@ -286,6 +287,10 @@ public class ActivityCompletionRequestService {
         }
         User teacher = teacherOpt.get();
 
+        if (!isTeacherAuthorizedForRequest(teacher, request)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "You are not assigned to this activity for this student");
+        }
+
         request.setStatus("REJECTED");
         request.setApprovedAt(LocalDateTime.now());
         request.setApprovedBy(teacher.getFullName());
@@ -322,4 +327,26 @@ public class ActivityCompletionRequestService {
         dto.setRejectedReason(r.getRejectedReason());
         return dto;
     }
+
+    private boolean isTeacherAuthorizedForRequest(User teacher, ActivityCompletionRequest request) {
+        if (teacher.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()))) {
+            return true;
+        }
+        
+        if (request.getCc() != null && request.getCc().getId().equals(teacher.getId())) {
+            return true;
+        }
+
+        java.util.Map<Long, List<ActivityAssignment>> assignmentsByActivity = studentAssignmentResolver.fetchAssignmentsByActivity(java.util.List.of(request.getActivity().getId()));
+        List<ActivityAssignment> assignments = assignmentsByActivity.getOrDefault(request.getActivity().getId(), java.util.Collections.emptyList());
+        List<ActivityAssignment> validAssignments = studentAssignmentResolver.resolveAllValidAssignments(request.getStudent(), assignments);
+        
+        if (!validAssignments.isEmpty()) {
+            return validAssignments.stream().anyMatch(a -> a.getTeacher() != null && a.getTeacher().getId().equals(teacher.getId()));
+        } else if (request.getActivity().getSubgroup() != null && request.getActivity().getSubgroup().getAssignedFaculty() != null) {
+            return request.getActivity().getSubgroup().getAssignedFaculty().getId().equals(teacher.getId());
+        }
+        return false;
+    }
 }
+

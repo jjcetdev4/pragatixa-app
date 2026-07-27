@@ -15,6 +15,8 @@ public interface ActivityCompletionRequestRepository extends JpaRepository<Activ
     @Query("SELECT r FROM ActivityCompletionRequest r WHERE r.student.id = :studentId AND r.activity.id = :activityId ORDER BY r.createdAt DESC")
     List<ActivityCompletionRequest> findByStudentIdAndActivityIdOrderByCreatedAtDesc(@Param("studentId") Long studentId, @Param("activityId") Long activityId);
 
+    boolean existsByStudentIdAndActivityIdAndStatusIn(Long studentId, Long activityId, List<String> statuses);
+
     @Query("SELECT r FROM ActivityCompletionRequest r WHERE r.team.id = :teamId AND r.activity.id = :activityId ORDER BY r.createdAt DESC")
     List<ActivityCompletionRequest> findByTeamIdAndActivityIdOrderByCreatedAtDesc(@Param("teamId") Long teamId, @Param("activityId") Long activityId);
 
