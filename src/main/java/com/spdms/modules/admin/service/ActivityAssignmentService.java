@@ -64,8 +64,7 @@ public class ActivityAssignmentService {
                 .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
 
-        // Delete all existing assignments and their dependent XP records
-        studentActivityXpRepository.deleteByActivityId(id);
+        // Delete all existing assignments before replacing them
         activityAssignmentRepository.deleteByActivityId(id);
 
         boolean ccEnabled = Boolean.TRUE.equals(body.get("ccEnabled"));
@@ -171,6 +170,12 @@ public class ActivityAssignmentService {
                         if (sec != null) aa.setDepartment(sec.getDepartment());
                     }
 
+                    if (item.containsKey("teacherId") && item.get("teacherId") != null) {
+                        Long teacherId = ((Number) item.get("teacherId")).longValue();
+                        User teacher = userRepository.findById(teacherId).orElse(null);
+                        aa.setTeacher(teacher);
+                    }
+
                     assignmentsToSave.add(aa);
                 }
             }
@@ -223,10 +228,12 @@ public class ActivityAssignmentService {
         List<ActivityAssignment> existing = activityAssignmentRepository.findByActivityId(activityId);
         ActivityAssignment aa = existing.stream().filter(a -> {
             boolean deptMatch = (a.getDepartment() == null && request.getDepartmentId() == null) || 
-                                (a.getDepartment() != null && a.getDepartment().getId().equals(request.getDepartmentId()));
+                                (a.getDepartment() != null && request.getDepartmentId() != null && a.getDepartment().getId().equals(request.getDepartmentId()));
             boolean secMatch = (a.getSection() == null && request.getSectionId() == null) || 
-                               (a.getSection() != null && a.getSection().getId().equals(request.getSectionId()));
-            return deptMatch && secMatch;
+                               (a.getSection() != null && request.getSectionId() != null && a.getSection().getId().equals(request.getSectionId()));
+            boolean teacherMatch = (a.getTeacher() == null && request.getTeacherId() == null) || 
+                                   (a.getTeacher() != null && request.getTeacherId() != null && a.getTeacher().getId().equals(request.getTeacherId()));
+            return deptMatch && secMatch && teacherMatch;
         }).findFirst().orElse(new ActivityAssignment());
 
         aa.setActivity(activity);

@@ -248,6 +248,7 @@ public class ActivityCrudService {
         clonedActivity.setXpType(activity.getXpType());
         clonedActivity.setMaximumAwards(activity.getMaximumAwards());
         clonedActivity.setAwardFrequency(activity.getAwardFrequency());
+        clonedActivity.setAllowStudentRequest(activity.getAllowStudentRequest());
         clonedActivity.setAwardDays(activity.getAwardDays());
         clonedActivity.setDisplayOrder(activity.getDisplayOrder());
         clonedActivity.setStatus(activity.getStatus());

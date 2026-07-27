@@ -41,6 +41,15 @@ public class ActivityRequestMapper {
             xpType = body.get("xpType").toString().trim();
         }
         activity.setXpType(xpType);
+
+        if (body.containsKey("allowStudentRequest") && body.get("allowStudentRequest") != null) {
+            Object val = body.get("allowStudentRequest");
+            if (val instanceof Boolean) {
+                activity.setAllowStudentRequest((Boolean) val);
+            } else if (val instanceof String) {
+                activity.setAllowStudentRequest(Boolean.parseBoolean((String) val));
+            }
+        }
     }
     
     public String extractXpCategory(Map<String, Object> body) {

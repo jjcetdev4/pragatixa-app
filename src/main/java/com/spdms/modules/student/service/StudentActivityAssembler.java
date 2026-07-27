@@ -89,6 +89,7 @@ public class StudentActivityAssembler {
 
             actMap.setCompleted(completed);
             actMap.setStatus(status);
+            actMap.setAllowStudentRequest(act.getAllowStudentRequest());
 
             enrichedActivities.add(actMap);
         }

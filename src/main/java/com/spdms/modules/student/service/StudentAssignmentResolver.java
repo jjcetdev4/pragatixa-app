@@ -33,17 +33,22 @@ public class StudentAssignmentResolver {
     }
 
     public ActivityAssignment resolveBestAssignment(Student student, List<ActivityAssignment> assignments) {
-        ActivityAssignment bestAssignment = null;
+        List<ActivityAssignment> allValid = resolveAllValidAssignments(student, assignments);
+        return allValid.isEmpty() ? null : allValid.get(0);
+    }
+
+    public List<ActivityAssignment> resolveAllValidAssignments(Student student, List<ActivityAssignment> assignments) {
+        List<ActivityAssignment> validAssignments = new ArrayList<>();
+        
         for (ActivityAssignment assignment : assignments) {
             if (student.getSection() != null && assignment.getSection() != null && assignment.getSection().getId().equals(student.getSection().getId())) {
-                bestAssignment = assignment;
-                break;
+                validAssignments.add(assignment);
             } else if (student.getSection() != null && student.getSection().getDepartment() != null && assignment.getDepartment() != null && assignment.getDepartment().getId().equals(student.getSection().getDepartment().getId())) {
-                bestAssignment = assignment;
-            } else if (bestAssignment == null) {
-                bestAssignment = assignment;
+                validAssignments.add(assignment);
+            } else if (assignment.getSection() == null && assignment.getDepartment() == null) {
+                validAssignments.add(assignment);
             }
         }
-        return bestAssignment;
+        return validAssignments;
     }
 }

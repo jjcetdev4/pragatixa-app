@@ -14,6 +14,7 @@ public class ActivityResponse {
     private Integer requiredXp;
     private Integer remainingXp;
     private Boolean completed;
+    private Boolean allowStudentRequest;
 
     public ActivityResponse() {}
 
@@ -55,4 +56,7 @@ public class ActivityResponse {
 
     public Boolean getCompleted() { return completed; }
     public void setCompleted(Boolean completed) { this.completed = completed; }
+
+    public Boolean getAllowStudentRequest() { return allowStudentRequest; }
+    public void setAllowStudentRequest(Boolean allowStudentRequest) { this.allowStudentRequest = allowStudentRequest; }
 }

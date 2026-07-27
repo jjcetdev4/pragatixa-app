@@ -42,7 +42,7 @@ public class XpEngineService {
     }
 
     @Transactional
-    public Student awardXp(Student student, Activity activity, User authorizedUser, ActivityAssignment assignment, int xpToAward, String remarks) {
+    public Student awardXp(Student student, Activity activity, User authorizedUser, ActivityAssignment assignment, int requestXp, String remarks) {
         
         System.out.println("=====================================================");
         System.out.println("XP ENGINE: Processing Award for Student: " + student.getId());
@@ -68,40 +68,60 @@ public class XpEngineService {
         // ====================================================
         // DEBUG: Before processing
         // ====================================================
-        System.out.println("Activity ID: " + (activity != null ? activity.getId() : "N/A"));
-        System.out.println("Activity Name: " + activityName);
-        System.out.println("Activity Type: " + resolvedCategory);
-        System.out.println("Configured XP: " + (activity != null ? (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled() ? activity.getPenaltyXp() : activity.getAwardXp()) : "N/A"));
-        System.out.println("Penalty Flag: " + (activity != null ? activity.getPenaltyEnabled() : "false"));
-        System.out.println("Received XP: " + xpToAward);
+        int configuredXp = 0;
+        boolean penaltyFlag = false;
+
+        if (activity != null) {
+            penaltyFlag = (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled()) || "Penalty".equalsIgnoreCase(activity.getXpType());
+            if (penaltyFlag) {
+                configuredXp = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : 0;
+                if (configuredXp == 0) configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+            } else {
+                configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+            }
+        } else {
+            configuredXp = Math.abs(requestXp);
+            penaltyFlag = requestXp < 0;
+        }
+
+        int appliedXp = 0;
+        if (penaltyFlag) {
+            appliedXp = -Math.abs(configuredXp);
+        } else {
+            // For regular rewards, allow partial points if valid, otherwise use configured. But if strict rule:
+            appliedXp = Math.abs(configuredXp);
+            if (requestXp > 0 && requestXp < configuredXp) {
+                appliedXp = requestXp; // Allow partial grading for awards, but never for penalties.
+            }
+        }
+
+        System.out.println("Configured XP: " + configuredXp);
+        System.out.println("Penalty: " + penaltyFlag);
+        System.out.println("Calculated Applied XP: " + appliedXp);
         
         int oldTotalXp = student.getTotalXp();
 
         // 2. Update Category XP & Total XP
         if (resolvedCategory.contains("MUST") || resolvedCategory.contains("MANDATORY") || resolvedCategory.contains(" M ")) {
-            student.setMustXp(student.getMustXp() + xpToAward);
+            student.setMustXp(student.getMustXp() + appliedXp);
         } else if (resolvedCategory.contains("INDIVIDUAL") || resolvedCategory.contains(" I ")) {
-            student.setIndividualXp(student.getIndividualXp() + xpToAward);
+            student.setIndividualXp(student.getIndividualXp() + appliedXp);
         } else if (resolvedCategory.contains("GROUP") || resolvedCategory.contains("TEAM") || resolvedCategory.contains(" G ")) {
-            student.setGroupXp(student.getGroupXp() + xpToAward);
+            student.setGroupXp(student.getGroupXp() + appliedXp);
         }
         
         // Update total
-        student.setTotalXp(student.getTotalXp() + xpToAward);
-        student.setScore(student.getScore() + xpToAward);
-
-        // ====================================================
-        // DEBUG: After processing
-        // ====================================================
+        student.setTotalXp(oldTotalXp + appliedXp);
+        student.setScore(student.getScore() + appliedXp);
+        
+        int newTotalXp = student.getTotalXp();
         System.out.println("Old Total XP: " + oldTotalXp);
-        System.out.println("Applied XP: " + xpToAward);
-        System.out.println("New Total XP: " + student.getTotalXp());
-        System.out.println("Saved Total XP: " + student.getTotalXp());
+        System.out.println("New Total XP: " + newTotalXp);
 
         // 3. Save XP History
         if (activity != null && authorizedUser != null) {
             StudentActivityXp record = new StudentActivityXp(
-                    student, activity, authorizedUser, assignment, xpToAward, remarks != null ? remarks : "", LocalDateTime.now());
+                    student, activity, authorizedUser, assignment, appliedXp, remarks != null ? remarks : "", LocalDateTime.now());
             studentActivityXpRepository.save(record);
         }
 
@@ -112,11 +132,11 @@ public class XpEngineService {
                 .activity(activity)
                 .category(resolvedCategory)
                 .activityName(activityName + (remarks != null && !remarks.isEmpty() ? " - " + remarks : ""))
-                .xpPoints(xpToAward)
+                .xpPoints(appliedXp)
                 .submittedAt(LocalDateTime.now())
                 .status("APPROVED")
                 .approvedBy(approverName)
-                .isPenalty(xpToAward < 0)
+                .isPenalty(appliedXp < 0)
                 .capApplied(false)
                 .build();
         xpTransactionRepository.save(tx);

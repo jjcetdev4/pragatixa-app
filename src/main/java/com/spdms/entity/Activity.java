@@ -62,6 +62,9 @@ public class Activity {
     @Column(name = "evidence_required", nullable = false)
     private boolean evidenceRequired = true;
 
+    @Column(name = "allow_student_request")
+    private Boolean allowStudentRequest = false;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -198,6 +201,9 @@ public class Activity {
 
     public Boolean getPenaltyEnabled() { return penaltyEnabled != null ? penaltyEnabled : false; }
     public void setPenaltyEnabled(Boolean penaltyEnabled) { this.penaltyEnabled = penaltyEnabled; }
+
+    public Boolean getAllowStudentRequest() { return allowStudentRequest; }
+    public void setAllowStudentRequest(Boolean allowStudentRequest) { this.allowStudentRequest = allowStudentRequest; }
 
     public Integer getPenaltyXp() { return penaltyXp != null ? penaltyXp : 0; }
     public void setPenaltyXp(Integer penaltyXp) { this.penaltyXp = penaltyXp; }
