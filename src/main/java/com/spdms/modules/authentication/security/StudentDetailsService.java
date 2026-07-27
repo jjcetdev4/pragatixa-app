@@ -26,7 +26,6 @@ public class StudentDetailsService implements UserDetailsService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("[StudentDetailsService] Loading student details for identifier: {}", username);
         
