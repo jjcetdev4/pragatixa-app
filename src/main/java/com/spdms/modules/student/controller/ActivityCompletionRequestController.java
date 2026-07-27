@@ -44,6 +44,11 @@ public class ActivityCompletionRequestController {
             @RequestParam(required = false) String status,
             Authentication authentication) {
         String username = authentication.getName();
+        
+        System.out.println("----- Entered ActivityCompletionRequestController.getInbox() -----");
+        System.out.println("Logged-in Username: " + username);
+        System.out.println("Roles: " + authentication.getAuthorities());
+        
         return ResponseEntity.ok(service.getInbox(username, status));
     }
 
