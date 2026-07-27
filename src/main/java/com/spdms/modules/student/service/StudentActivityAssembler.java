@@ -4,13 +4,16 @@ import com.spdms.entity.Activity;
 import com.spdms.entity.ActivityAssignment;
 import com.spdms.entity.ActivityCompletionRequest;
 import com.spdms.entity.Student;
+import com.spdms.entity.StudentActivityXp;
 import com.spdms.modules.activity.dto.response.ActivityResponse;
 import com.spdms.repository.ActivityCompletionRequestRepository;
+import com.spdms.modules.student.repository.StudentActivityXpRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentActivityAssembler {
@@ -18,13 +21,16 @@ public class StudentActivityAssembler {
     private final StudentAssignmentResolver assignmentResolver;
     private final ActivityCompletionRequestRepository requestRepository;
     private final StudentXpValidator studentXpValidator;
+    private final StudentActivityXpRepository studentActivityXpRepository;
 
     public StudentActivityAssembler(StudentAssignmentResolver assignmentResolver,
                                     ActivityCompletionRequestRepository requestRepository,
-                                    StudentXpValidator studentXpValidator) {
+                                    StudentXpValidator studentXpValidator,
+                                    StudentActivityXpRepository studentActivityXpRepository) {
         this.assignmentResolver = assignmentResolver;
         this.requestRepository = requestRepository;
         this.studentXpValidator = studentXpValidator;
+        this.studentActivityXpRepository = studentActivityXpRepository;
     }
 
     public List<ActivityResponse> enrichActivities(
@@ -36,25 +42,24 @@ public class StudentActivityAssembler {
         List<ActivityResponse> enrichedActivities = new ArrayList<>();
         
         List<ActivityCompletionRequest> studentRequests = requestRepository.findMyRequests(student.getId());
+        List<StudentActivityXp> studentXps = studentActivityXpRepository.findByStudentId(student.getId());
+        
+        Map<Long, Integer> exactXpByActivityId = studentXps.stream()
+            .filter(x -> !"FAIL".equals(x.getResult()) && x.getActivity() != null)
+            .collect(Collectors.groupingBy(x -> x.getActivity().getId(), Collectors.summingInt(StudentActivityXp::getXpAwarded)));
         
         for (Activity act : activities) {
             ActivityResponse actMap = new ActivityResponse();
             actMap.setActivityId(act.getId());
 
             String currentActivityName = act.getActivityName() != null ? act.getActivityName() : act.getName();
-            String normalizedActName = currentActivityName != null ? currentActivityName.trim().toLowerCase().replaceAll("\\s+", " ").replaceAll("^\\p{Punct}+|\\p{Punct}+$", "") : null;
 
             actMap.setActivityName(currentActivityName);
             actMap.setDescription(act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
             int rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp() : act.getMaxPoints();
             actMap.setRewardXp(rewardXp);
 
-            int sumXp = 0;
-            if (aggregatedXp.xpByActivityId.containsKey(act.getId())) {
-                sumXp = aggregatedXp.xpByActivityId.get(act.getId());
-            } else if (normalizedActName != null && aggregatedXp.xpByActivityName.containsKey(normalizedActName)) {
-                sumXp = aggregatedXp.xpByActivityName.get(normalizedActName);
-            }
+            int sumXp = exactXpByActivityId.getOrDefault(act.getId(), 0);
 
             Integer cap = act.getCap();
             int awardedXp = sumXp;
