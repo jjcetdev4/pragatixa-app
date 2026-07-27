@@ -170,4 +170,8 @@ public class ActivityStageResponse {
 
     public Double getOverallPercentage() { return overallPercentage; }
     public void setOverallPercentage(Double overallPercentage) { this.overallPercentage = overallPercentage; }
+
+    private com.spdms.entity.AssignedAcademicYear academicYear;
+    public com.spdms.entity.AssignedAcademicYear getAcademicYear() { return academicYear; }
+    public void setAcademicYear(com.spdms.entity.AssignedAcademicYear academicYear) { this.academicYear = academicYear; }
 }

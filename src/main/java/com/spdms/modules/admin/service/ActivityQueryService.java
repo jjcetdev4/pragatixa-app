@@ -37,12 +37,28 @@ public class ActivityQueryService {
         return userRepository.findByUsername(username).orElse(null);
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(Long subgroupId) {
+    private com.spdms.entity.AssignedAcademicYear resolveAcademicYear(com.spdms.entity.AssignedAcademicYear requestedYear, com.spdms.entity.User user) {
+        if (user != null && user.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"))
+            && user.getRoles().stream().noneMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))) {
+            return user.getAssignedAcademicYear(); // Override for Year Admin
+        }
+        return requestedYear;
+    }
+
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(Long subgroupId, com.spdms.entity.AssignedAcademicYear academicYear) {
         if (!activitySubgroupRepository.existsById(subgroupId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<List<Activity>>error("Subgroup not found"));
         }
 
-        List<Activity> activities = activityRepository.findBySubgroupId(subgroupId);
+        com.spdms.entity.User u = getCurrentUser();
+        com.spdms.entity.AssignedAcademicYear effectiveYear = resolveAcademicYear(academicYear, u);
+
+        List<Activity> activities;
+        if (effectiveYear != null) {
+            activities = activityRepository.findBySubgroupIdAndAssignedAcademicYear(subgroupId, effectiveYear);
+        } else {
+            activities = activityRepository.findBySubgroupId(subgroupId);
+        }
 
         for (Activity activity : activities) {
             adminAssignmentService.populateActivityTransientFields(activity);
@@ -50,9 +66,17 @@ public class ActivityQueryService {
         return ResponseEntity.ok(ApiResponse.ok(activities));
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup) {
-        List<Activity> activities = activityRepository.findAll();
+    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup, com.spdms.entity.AssignedAcademicYear academicYear) {
         com.spdms.entity.User u = getCurrentUser();
+        com.spdms.entity.AssignedAcademicYear effectiveYear = resolveAcademicYear(academicYear, u);
+
+        List<Activity> activities;
+        if (effectiveYear != null) {
+            activities = activityRepository.findByAssignedAcademicYear(effectiveYear);
+        } else {
+            activities = activityRepository.findAll();
+        }
+
         if (u != null) {
             activities = adminAssignmentService.filterActivitiesForUser(activities, u);
         }
@@ -70,9 +94,17 @@ public class ActivityQueryService {
         return ResponseEntity.ok(ApiResponse.ok(activities));
     }
 
-    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup) {
-        List<Activity> activities = activityRepository.findAll();
+    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup, com.spdms.entity.AssignedAcademicYear academicYear) {
         com.spdms.entity.User u = getCurrentUser();
+        com.spdms.entity.AssignedAcademicYear effectiveYear = resolveAcademicYear(academicYear, u);
+
+        List<Activity> activities;
+        if (effectiveYear != null) {
+            activities = activityRepository.findByAssignedAcademicYear(effectiveYear);
+        } else {
+            activities = activityRepository.findAll();
+        }
+
         if (u != null) {
             activities = adminAssignmentService.filterActivitiesForUser(activities, u);
         }
@@ -135,9 +167,17 @@ public class ActivityQueryService {
         return ResponseEntity.ok(ApiResponse.ok(responseList));
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup) {
-        List<Activity> activities = activityRepository.findByStageId(stageId);
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup, com.spdms.entity.AssignedAcademicYear academicYear) {
         com.spdms.entity.User u = getCurrentUser();
+        com.spdms.entity.AssignedAcademicYear effectiveYear = resolveAcademicYear(academicYear, u);
+
+        List<Activity> activities;
+        if (effectiveYear != null) {
+            activities = activityRepository.findByStageIdAndAssignedAcademicYear(stageId, effectiveYear);
+        } else {
+            activities = activityRepository.findByStageId(stageId);
+        }
+
         if (u != null) {
             activities = adminAssignmentService.filterActivitiesForUser(activities, u);
         }

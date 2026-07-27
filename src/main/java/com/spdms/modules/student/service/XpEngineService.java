@@ -164,7 +164,8 @@ public class XpEngineService {
         System.out.println("STAGE ENGINE: Evaluating Stage for Student: " + student.getId());
         System.out.println("Current Stage: " + student.getStage());
 
-        ActivityStage currentStage = activityStageRepository.findByDisplayOrder(student.getStage()).orElse(null);
+        AssignedAcademicYear studentYear = getStudentAssignedYear(student);
+        ActivityStage currentStage = activityStageRepository.findByDisplayOrderAndAssignedAcademicYear(student.getStage(), studentYear).orElse(null);
         if (currentStage == null || currentStage.getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
             System.out.println("Stage Engine: Current stage not found or inactive.");
             return;
@@ -175,7 +176,7 @@ public class XpEngineService {
         if (thresholdsMet) {
             System.out.println("Promotion Result: SUCCESS (Thresholds Met)");
             
-            ActivityStage nextStage = activityStageRepository.findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(student.getStage()).orElse(null);
+            ActivityStage nextStage = activityStageRepository.findFirstByDisplayOrderGreaterThanAndAssignedAcademicYearOrderByDisplayOrderAsc(student.getStage(), studentYear).orElse(null);
             if (nextStage != null) {
                 // Complete & Lock Current, Unlock & Activate Next
                 student.setStage(nextStage.getDisplayOrder());
@@ -192,11 +193,26 @@ public class XpEngineService {
                     System.out.println("Team Assignment Result: SKIPPED (Stage < 2)");
                 }
             } else {
-                System.out.println("Promotion Result: BLOCKED (No Next Stage)");
+                System.out.println("Promotion Result: BLOCKED (No Next Stage in Year)");
             }
         } else {
             System.out.println("Promotion Result: PENDING (Thresholds not met)");
         }
+    }
+
+    private AssignedAcademicYear getStudentAssignedYear(Student student) {
+        if (student.getYearRef() != null) {
+            Byte yearNo = student.getYearRef().getYearNo();
+            if (yearNo != null) {
+                switch (yearNo) {
+                    case 1: return AssignedAcademicYear.FIRST_YEAR;
+                    case 2: return AssignedAcademicYear.SECOND_YEAR;
+                    case 3: return AssignedAcademicYear.THIRD_YEAR;
+                    case 4: return AssignedAcademicYear.FOURTH_YEAR;
+                }
+            }
+        }
+        return AssignedAcademicYear.FIRST_YEAR; // Fallback
     }
 
     public void updateStreakOnSubmission(Student student, String activity) {

@@ -109,12 +109,29 @@ public class ActivityCrudService {
 
         requestMapper.mapRemainingConfiguration(activity, body, matchedCategory, awardEnabled, awardXp, penaltyEnabled, penaltyXp, awardType, matchedFrequency, cap, awardDays);
 
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser != null) {
+            boolean isYearAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"))
+                               && currentUser.getRoles().stream().noneMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))
+                               && currentUser.getAssignedAcademicYear() != null;
+            if (isYearAdmin) {
+                activity.setAssignedAcademicYear(currentUser.getAssignedAcademicYear());
+            } else if (body.containsKey("academicYear") && body.get("academicYear") != null) {
+                try {
+                    activity.setAssignedAcademicYear(com.spdms.entity.AssignedAcademicYear.valueOf(body.get("academicYear").toString()));
+                } catch (IllegalArgumentException ignored) {}
+            }
+        } else if (body.containsKey("academicYear") && body.get("academicYear") != null) {
+            try {
+                activity.setAssignedAcademicYear(com.spdms.entity.AssignedAcademicYear.valueOf(body.get("academicYear").toString()));
+            } catch (IllegalArgumentException ignored) {}
+        }
+
         log.debug("Entity before save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                  activity.getAwardEnabled(), activity.getAwardXp(), activity.getPenaltyEnabled(), activity.getPenaltyXp());
         Activity saved = activityRepository.save(activity);
         
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser != null) {
             boolean isYearAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"))
                                && currentUser.getRoles().stream().noneMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))

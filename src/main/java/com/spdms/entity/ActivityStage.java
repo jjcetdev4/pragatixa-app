@@ -3,11 +3,12 @@ package com.spdms.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import com.spdms.enums.StageStatus;
+import com.spdms.entity.AssignedAcademicYear;
 
 @Entity
 @Table(name = "activity_stages", uniqueConstraints = {
-    @UniqueConstraint(name = "uq_stage_name", columnNames = {"stage_name"}),
-    @UniqueConstraint(name = "UK94qv2sd8jwbxsmdv8r4aibi7v", columnNames = {"name"})
+    @UniqueConstraint(name = "uq_stage_name_year", columnNames = {"stage_name", "academic_year"}),
+    @UniqueConstraint(name = "uq_name_year", columnNames = {"name", "academic_year"})
 })
 public class ActivityStage {
 
@@ -66,6 +67,10 @@ public class ActivityStage {
 
     @Column(name = "group_threshold", nullable = false)
     private Integer groupThreshold = 0;
+
+    @Column(name = "academic_year")
+    @Enumerated(EnumType.STRING)
+    private AssignedAcademicYear assignedAcademicYear;
 
     public ActivityStage() {}
 
@@ -129,6 +134,9 @@ public class ActivityStage {
     public Integer getGroupThreshold() { return groupThreshold; }
     public void setGroupThreshold(Integer groupThreshold) { this.groupThreshold = groupThreshold; }
 
+    public AssignedAcademicYear getAssignedAcademicYear() { return assignedAcademicYear; }
+    public void setAssignedAcademicYear(AssignedAcademicYear assignedAcademicYear) { this.assignedAcademicYear = assignedAcademicYear; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
@@ -152,6 +160,7 @@ public class ActivityStage {
         public Builder mustThreshold(Integer v) { stage.mustThreshold = v; return this; }
         public Builder individualThreshold(Integer v) { stage.individualThreshold = v; return this; }
         public Builder groupThreshold(Integer v) { stage.groupThreshold = v; return this; }
+        public Builder assignedAcademicYear(AssignedAcademicYear v) { stage.assignedAcademicYear = v; return this; }
         public ActivityStage build() { return stage; }
     }
 }

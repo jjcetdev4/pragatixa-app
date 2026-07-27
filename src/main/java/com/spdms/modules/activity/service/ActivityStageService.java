@@ -104,8 +104,8 @@ public class ActivityStageService {
     }
 
     @Transactional
-    public List<ActivityStageResponse> getAllStages() {
-        List<ActivityStage> stages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
+    public List<ActivityStageResponse> getAllStages(com.spdms.entity.AssignedAcademicYear year) {
+        List<ActivityStage> stages = activityStageRepository.findAllByAssignedAcademicYearOrderByDisplayOrderAsc(year);
 
         List<ActivityStageResponse> responses = stages.stream().map(stage -> {
 
@@ -203,10 +203,11 @@ public class ActivityStageService {
     }
 
     @Transactional
-    public ActivityStageResponse createStage(ActivityStageRequest request) {
-        validateStage(request, null);
+    public ActivityStageResponse createStage(ActivityStageRequest request, com.spdms.entity.AssignedAcademicYear year) {
+        validateStage(request, null, year);
         
         ActivityStage stage = activityStageMapper.toEntity(request);
+        stage.setAssignedAcademicYear(year);
         ActivityStage saved = activityStageRepository.save(stage);
         
         ensureMandatorySubgroups(saved);
@@ -215,11 +216,15 @@ public class ActivityStageService {
     }
 
     @Transactional
-    public ActivityStageResponse updateStage(Long id, ActivityStageRequest request) {
+    public ActivityStageResponse updateStage(Long id, ActivityStageRequest request, com.spdms.entity.AssignedAcademicYear year) {
         ActivityStage stage = activityStageRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Stage not found"));
         
-        validateStage(request, id);
+        if (stage.getAssignedAcademicYear() != year) {
+             throw new SecurityException("Not authorized to edit a stage outside of your assigned academic year");
+        }
+        
+        validateStage(request, id, year);
         
         activityStageMapper.updateEntity(request, stage);
         ActivityStage saved = activityStageRepository.save(stage);
@@ -271,22 +276,22 @@ public class ActivityStageService {
         log.debug("Admin deleted stage and its subgroups, activities, and teams: {}", id);
     }
 
-    private void validateStage(ActivityStageRequest request, Long existingId) {
+    private void validateStage(ActivityStageRequest request, Long existingId, com.spdms.entity.AssignedAcademicYear year) {
         if (request.getExpectedXp() != null && request.getExpectedXp() < 0) {
             throw new IllegalArgumentException("Expected XP cannot be negative");
         }
         
         if (existingId == null) {
-            if (activityStageRepository.existsByName(request.getName())) {
-                throw new IllegalArgumentException("Stage name already exists");
+            if (activityStageRepository.existsByNameAndAssignedAcademicYear(request.getName(), year)) {
+                throw new IllegalArgumentException("Stage name already exists for this academic year");
             }
         } else {
-            if (activityStageRepository.existsByNameAndIdNot(request.getName(), existingId)) {
-                throw new IllegalArgumentException("Stage name already exists");
+            if (activityStageRepository.existsByNameAndIdNotAndAssignedAcademicYear(request.getName(), existingId, year)) {
+                throw new IllegalArgumentException("Stage name already exists for this academic year");
             }
         }
         
-        List<ActivityStage> allStages = activityStageRepository.findAll();
+        List<ActivityStage> allStages = activityStageRepository.findAllByAssignedAcademicYearOrderByDisplayOrderAsc(year);
         for (ActivityStage other : allStages) {
             if (existingId != null && other.getId().equals(existingId)) {
                 continue;

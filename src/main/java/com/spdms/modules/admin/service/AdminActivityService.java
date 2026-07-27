@@ -31,20 +31,20 @@ public class AdminActivityService {
         return myActivityService.getMyActivities();
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(Long subgroupId) {
-        return queryService.getActivitiesBySubgroup(subgroupId);
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(Long subgroupId, com.spdms.entity.AssignedAcademicYear academicYear) {
+        return queryService.getActivitiesBySubgroup(subgroupId, academicYear);
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup) {
-        return queryService.getActivitiesByStage(stageId, subgroup);
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup, com.spdms.entity.AssignedAcademicYear academicYear) {
+        return queryService.getActivitiesByStage(stageId, subgroup, academicYear);
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup) {
-        return queryService.getAllActivities(subgroup);
+    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup, com.spdms.entity.AssignedAcademicYear academicYear) {
+        return queryService.getAllActivities(subgroup, academicYear);
     }
 
-    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup) {
-        return queryService.getGroupedActivities(subgroup);
+    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup, com.spdms.entity.AssignedAcademicYear academicYear) {
+        return queryService.getGroupedActivities(subgroup, academicYear);
     }
 
     public ResponseEntity<ApiResponse<Activity>> createActivity(Long subgroupId, Map<String, Object> body) {

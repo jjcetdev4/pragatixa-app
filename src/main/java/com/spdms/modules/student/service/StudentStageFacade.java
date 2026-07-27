@@ -41,7 +41,8 @@ public class StudentStageFacade {
     @Transactional(readOnly = true)
     public ResponseEntity<?> getStudentStages(Student student) {
         try {
-            List<ActivityStageResponse> stages = activityStageService.getAllStages();
+            com.spdms.entity.AssignedAcademicYear studentYear = getStudentAssignedYear(student);
+            List<ActivityStageResponse> stages = activityStageService.getAllStages(studentYear);
 
             if (stages != null && !stages.isEmpty()) {
                 List<Long> subgroupIds = new ArrayList<>();
@@ -74,5 +75,20 @@ public class StudentStageFacade {
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch student stages", e);
         }
+    }
+
+    private com.spdms.entity.AssignedAcademicYear getStudentAssignedYear(Student student) {
+        if (student.getYearRef() != null) {
+            Byte yearNo = student.getYearRef().getYearNo();
+            if (yearNo != null) {
+                switch (yearNo) {
+                    case 1: return com.spdms.entity.AssignedAcademicYear.FIRST_YEAR;
+                    case 2: return com.spdms.entity.AssignedAcademicYear.SECOND_YEAR;
+                    case 3: return com.spdms.entity.AssignedAcademicYear.THIRD_YEAR;
+                    case 4: return com.spdms.entity.AssignedAcademicYear.FOURTH_YEAR;
+                }
+            }
+        }
+        return com.spdms.entity.AssignedAcademicYear.FIRST_YEAR;
     }
 }

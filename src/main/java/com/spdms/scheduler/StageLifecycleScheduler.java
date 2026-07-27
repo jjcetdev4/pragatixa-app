@@ -53,14 +53,14 @@ public class StageLifecycleScheduler {
                 updated = true;
 
                 if (newStatus == StageStatus.ACTIVE) {
-                    notifyStudents("New Stage Started", "Welcome to " + stage.getName() + "! New activities are now available.");
+                    notifyStudents("New Stage Started", "Welcome to " + stage.getName() + "! New activities are now available.", stage.getAssignedAcademicYear());
                 } else if (newStatus == StageStatus.COMPLETED) {
-                    notifyStudents("Stage Locked", "Stage " + stage.getName() + " has ended. Activities are now locked.");
+                    notifyStudents("Stage Locked", "Stage " + stage.getName() + " has ended. Activities are now locked.", stage.getAssignedAcademicYear());
                 }
             } else if (newStatus == StageStatus.ACTIVE && stage.getEndDateTime() != null) {
                 LocalDateTime tomorrow = now.plusHours(24);
                 if (tomorrow.isAfter(stage.getEndDateTime()) && tomorrow.minusMinutes(1).isBefore(stage.getEndDateTime())) {
-                    notifyStudents("Stage Ending Soon", "Stage " + stage.getName() + " is ending in 24 hours!");
+                    notifyStudents("Stage Ending Soon", "Stage " + stage.getName() + " is ending in 24 hours!", stage.getAssignedAcademicYear());
                 }
             }
         }
@@ -70,10 +70,14 @@ public class StageLifecycleScheduler {
         }
     }
 
-    private void notifyStudents(String title, String message) {
+    private void notifyStudents(String title, String message, com.spdms.entity.AssignedAcademicYear assignedAcademicYear) {
         List<Student> activeStudents = studentRepository.findByActiveTrue();
         List<Notification> notifications = new java.util.ArrayList<>();
         for (Student student : activeStudents) {
+            // Check if student belongs to the stage's year
+            if (getStudentAssignedYear(student) != assignedAcademicYear) {
+                continue;
+            }
             Notification notification = Notification.builder()
                     .title(title)
                     .message(message)
@@ -87,5 +91,20 @@ public class StageLifecycleScheduler {
         if (!notifications.isEmpty()) {
             notificationRepository.saveAll(notifications);
         }
+    }
+
+    private com.spdms.entity.AssignedAcademicYear getStudentAssignedYear(Student student) {
+        if (student.getYearRef() != null) {
+            Byte yearNo = student.getYearRef().getYearNo();
+            if (yearNo != null) {
+                switch (yearNo) {
+                    case 1: return com.spdms.entity.AssignedAcademicYear.FIRST_YEAR;
+                    case 2: return com.spdms.entity.AssignedAcademicYear.SECOND_YEAR;
+                    case 3: return com.spdms.entity.AssignedAcademicYear.THIRD_YEAR;
+                    case 4: return com.spdms.entity.AssignedAcademicYear.FOURTH_YEAR;
+                }
+            }
+        }
+        return com.spdms.entity.AssignedAcademicYear.FIRST_YEAR;
     }
 }

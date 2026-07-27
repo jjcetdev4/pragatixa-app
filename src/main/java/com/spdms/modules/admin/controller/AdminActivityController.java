@@ -47,8 +47,10 @@ public class AdminActivityController {
     @GetMapping("/subgroups/{subgroupId}/activities")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "Get all activities of a subgroup")
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(@PathVariable Long subgroupId) {
-        return adminActivityService.getActivitiesBySubgroup(subgroupId);
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(
+            @PathVariable Long subgroupId,
+            @RequestParam(required = false) com.spdms.entity.AssignedAcademicYear academicYear) {
+        return adminActivityService.getActivitiesBySubgroup(subgroupId, academicYear);
     }
 
     @GetMapping("/stages/{stageId}/activities")
@@ -56,24 +58,27 @@ public class AdminActivityController {
     @Operation(summary = "Get all activities of a stage")
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(
             @PathVariable Long stageId,
-            @RequestParam(required = false) String subgroup) {
-        return adminActivityService.getActivitiesByStage(stageId, subgroup);
+            @RequestParam(required = false) String subgroup,
+            @RequestParam(required = false) com.spdms.entity.AssignedAcademicYear academicYear) {
+        return adminActivityService.getActivitiesByStage(stageId, subgroup, academicYear);
     }
 
     @GetMapping("/activities")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all activities globally")
     public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(
-            @RequestParam(required = false) String subgroup) {
-        return adminActivityService.getAllActivities(subgroup);
+            @RequestParam(required = false) String subgroup,
+            @RequestParam(required = false) com.spdms.entity.AssignedAcademicYear academicYear) {
+        return adminActivityService.getAllActivities(subgroup, academicYear);
     }
 
     @GetMapping("/activities/grouped")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all activities grouped by subgroup")
     public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(
-            @RequestParam(required = false) String subgroup) {
-        return adminActivityService.getGroupedActivities(subgroup);
+            @RequestParam(required = false) String subgroup,
+            @RequestParam(required = false) com.spdms.entity.AssignedAcademicYear academicYear) {
+        return adminActivityService.getGroupedActivities(subgroup, academicYear);
     }
 
     @PostMapping("/subgroups/{subgroupId}/activities")

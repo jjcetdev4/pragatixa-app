@@ -34,34 +34,37 @@ public class AdminStageController {
     }
 
     @GetMapping("/stages")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'SUPER_ADMIN')")
     @Operation(summary = "Get all activity stages with subgroups")
-    public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages() {
-        return adminStageService.getAllStages();
+    public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages(
+            @RequestParam(required = false) String academicYear) {
+        return adminStageService.getAllStages(academicYear);
     }
 
     @PostMapping("/stages")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Create a new stage")
     public ResponseEntity<ApiResponse<ActivityStageResponse>> createStage(
-                @Valid @RequestBody ActivityStageRequest request) {
-        return adminStageService.createStage(request);
+            @Valid @RequestBody ActivityStageRequest request,
+            @RequestParam(required = false) String academicYear) {
+        return adminStageService.createStage(request, academicYear);
     }
 
     @GetMapping("/stages/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'SUPER_ADMIN')")
     @Operation(summary = "Get activity stage by ID")
     public ResponseEntity<ApiResponse<ActivityStageResponse>> getStage(@PathVariable Long id) {
         return adminStageService.getStage(id);
     }
 
     @PutMapping("/stages/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Update an existing stage")
     public ResponseEntity<ApiResponse<ActivityStageResponse>> editStage(
-                @PathVariable Long id,
-                @Valid @RequestBody ActivityStageRequest request) {
-        return adminStageService.editStage(id, request);
+            @PathVariable Long id,
+            @Valid @RequestBody ActivityStageRequest request,
+            @RequestParam(required = false) String academicYear) {
+        return adminStageService.editStage(id, request, academicYear);
     }
 
     @GetMapping("/stages/{id}/report")

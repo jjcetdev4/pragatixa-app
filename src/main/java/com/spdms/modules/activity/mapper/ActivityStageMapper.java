@@ -71,6 +71,7 @@ public class ActivityStageMapper {
         response.setMustThreshold(entity.getMustThreshold());
         response.setIndividualThreshold(entity.getIndividualThreshold());
         response.setGroupThreshold(entity.getGroupThreshold());
+        response.setAcademicYear(entity.getAssignedAcademicYear());
         
         // Dynamically calculate time remaining but use true database status
         StageStatus calculatedStatus = entity.getStatus();
