@@ -40,6 +40,7 @@ public class ActivityCrudService {
     private final ActivityValidationService validationService;
     private final ActivityRequestMapper requestMapper;
     private final AdminAssignmentService adminAssignmentService;
+    private final UserRepository userRepository;
 
     public ActivityCrudService(
             ActivityRepository activityRepository, 
