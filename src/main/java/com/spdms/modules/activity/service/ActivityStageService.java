@@ -105,6 +105,9 @@ public class ActivityStageService {
 
     @Transactional
     public List<ActivityStageResponse> getAllStages(com.spdms.entity.AssignedAcademicYear year) {
+        if (year == null) {
+            throw new IllegalArgumentException("Academic Year is required to fetch stages");
+        }
         List<ActivityStage> stages = activityStageRepository.findAllByAssignedAcademicYearOrderByDisplayOrderAsc(year);
 
         List<ActivityStageResponse> responses = stages.stream().map(stage -> {
@@ -220,8 +223,30 @@ public class ActivityStageService {
         ActivityStage stage = activityStageRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Stage not found"));
         
-        if (stage.getAssignedAcademicYear() != year) {
-             throw new SecurityException("Not authorized to edit a stage outside of your assigned academic year");
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String actualRole = "USER";
+        boolean isSuperAdmin = false;
+        
+        if (auth != null) {
+            actualRole = auth.getAuthorities().stream()
+                .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                .findFirst().orElse("USER");
+            isSuperAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+        }
+        
+        log.info("Role : {}", actualRole);
+        log.info("Stage Year : {}", stage.getAssignedAcademicYear());
+        log.info("Requested Year : {}", year);
+
+        if (isSuperAdmin) {
+            log.info("Validation Skipped : TRUE");
+            stage.setAssignedAcademicYear(year);
+        } else {
+            if (stage.getAssignedAcademicYear() != year) {
+                 log.info("Validation Failed");
+                 throw new org.springframework.security.access.AccessDeniedException("Not authorized to edit a stage outside of your assigned academic year");
+            }
         }
         
         validateStage(request, id, year);

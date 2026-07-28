@@ -56,6 +56,12 @@ public class AdminStageService {
 
     public ResponseEntity<ApiResponse<ActivityStageResponse>> createStage(
             @Valid @RequestBody ActivityStageRequest request, String academicYear) {
+        if (academicYear == null || academicYear.trim().isEmpty()) {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"))) {
+                throw new IllegalArgumentException("Academic Year is required for Super Admin.");
+            }
+        }
         com.spdms.entity.AssignedAcademicYear resolvedYear = resolveYear(academicYear);
         ActivityStageResponse saved = activityStageService.createStage(request, resolvedYear);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Stage created successfully", saved));
@@ -71,6 +77,12 @@ public class AdminStageService {
     public ResponseEntity<ApiResponse<ActivityStageResponse>> editStage(
             @PathVariable Long id,
             @Valid @RequestBody ActivityStageRequest request, String academicYear) {
+        if (academicYear == null || academicYear.trim().isEmpty()) {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"))) {
+                throw new IllegalArgumentException("Academic Year is required for Super Admin.");
+            }
+        }
         com.spdms.entity.AssignedAcademicYear resolvedYear = resolveYear(academicYear);
         ActivityStageResponse updated = activityStageService.updateStage(id, request, resolvedYear);
         return ResponseEntity.ok(ApiResponse.ok("Stage updated successfully", updated));
@@ -89,8 +101,8 @@ public class AdminStageService {
         boolean isAdmin = user.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
 
         if (isSuperAdmin) {
-            if (requestedYearStr == null || requestedYearStr.isEmpty()) {
-                throw new IllegalArgumentException("Super Admin must specify an academicYear");
+            if (requestedYearStr == null || requestedYearStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Academic Year is required for Super Admin.");
             }
             return com.spdms.entity.AssignedAcademicYear.valueOf(requestedYearStr);
         } else if (isAdmin) {

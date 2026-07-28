@@ -28,6 +28,8 @@ public class ActivityStageRequest {
     private Integer mustThreshold = 0;
     private Integer individualThreshold = 0;
     private Integer groupThreshold = 0;
+    
+    private String academicYear;
 
     // Getters and Setters
     public String getName() { return name; }
@@ -65,4 +67,7 @@ public class ActivityStageRequest {
 
     public Integer getGroupThreshold() { return groupThreshold; }
     public void setGroupThreshold(Integer groupThreshold) { this.groupThreshold = groupThreshold; }
+    
+    public String getAcademicYear() { return academicYear; }
+    public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
 }

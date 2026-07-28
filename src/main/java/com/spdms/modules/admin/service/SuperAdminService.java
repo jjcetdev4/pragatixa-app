@@ -28,7 +28,9 @@ public class SuperAdminService {
 
     @Transactional(readOnly = true)
     public List<User> getAllYearAdmins() {
-        return userRepository.findAllByRoleName("ROLE_ADMIN");
+        return userRepository.findAllByRoleName("ROLE_ADMIN").stream()
+                .filter(u -> u.getRoles().stream().noneMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN")))
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -56,15 +58,22 @@ public class SuperAdminService {
     }
 
     @Transactional
-    public User updateYearAdmin(Long id, String fullName, String password, String email, String phone, AssignedAcademicYear assignedAcademicYear, boolean active) {
+    public User updateYearAdmin(Long id, String fullName, String username, String password, String email, String phone, AssignedAcademicYear assignedAcademicYear, boolean active) {
         User existingAdmin = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Year Admin not found with ID: " + id));
+
+        if (existingAdmin.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))) {
+            throw new org.springframework.security.access.AccessDeniedException("Super Admin cannot be edited through Year Admin Management.");
+        }
 
         if (active && (existingAdmin.getAssignedAcademicYear() != assignedAcademicYear || !existingAdmin.isActive())) {
             deactivateExistingYearAdmins(assignedAcademicYear);
         }
 
         existingAdmin.setFullName(fullName);
+        if (username != null && !username.trim().isEmpty()) {
+            existingAdmin.setUsername(username.trim());
+        }
         if (password != null && !password.isEmpty()) {
             existingAdmin.setPassword(passwordEncoder.encode(password));
         }
@@ -74,6 +83,22 @@ public class SuperAdminService {
         existingAdmin.setActive(active);
 
         return userRepository.save(existingAdmin);
+    }
+
+    @Transactional
+    public void deleteYearAdmin(Long id, String loggedInUsername) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Year Admin not found with ID: " + id));
+
+        if (user.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))) {
+            throw new org.springframework.security.access.AccessDeniedException("Super Admin cannot be deleted.");
+        }
+
+        if (user.getUsername().equals(loggedInUsername)) {
+            throw new IllegalArgumentException("You cannot delete your own account.");
+        }
+
+        userRepository.delete(user);
     }
 
     private void deactivateExistingYearAdmins(AssignedAcademicYear academicYear) {

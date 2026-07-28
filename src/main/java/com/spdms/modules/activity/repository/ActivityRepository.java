@@ -13,9 +13,9 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
     List<Activity> findBySubgroupIdIn(List<Long> subgroupIds);
     List<Activity> findByActivityName(String activityName);
 
-    List<Activity> findByAssignedAcademicYear(com.spdms.entity.AssignedAcademicYear assignedAcademicYear);
-    List<Activity> findBySubgroupIdAndAssignedAcademicYear(Long subgroupId, com.spdms.entity.AssignedAcademicYear assignedAcademicYear);
-    List<Activity> findByStageIdAndAssignedAcademicYear(Long stageId, com.spdms.entity.AssignedAcademicYear assignedAcademicYear);
+    List<Activity> findByStageAssignedAcademicYear(com.spdms.entity.AssignedAcademicYear assignedAcademicYear);
+    List<Activity> findBySubgroupIdAndStageAssignedAcademicYear(Long subgroupId, com.spdms.entity.AssignedAcademicYear assignedAcademicYear);
+    List<Activity> findByStageIdAndStageAssignedAcademicYear(Long stageId, com.spdms.entity.AssignedAcademicYear assignedAcademicYear);
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT act FROM Activity act JOIN ActivityAssignment a ON a.activity.id = act.id " +
             "WHERE a.department.id = :departmentId AND a.year = :year AND a.section.id = :sectionId AND (a.teacher IS NULL OR a.teacher.id = :teacherId)")
     List<Activity> findDistinctActivitiesForCC(

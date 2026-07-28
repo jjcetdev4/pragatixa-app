@@ -41,6 +41,7 @@ public class ActivityCrudService {
     private final ActivityRequestMapper requestMapper;
     private final AdminAssignmentService adminAssignmentService;
     private final UserRepository userRepository;
+    private final com.spdms.modules.activity.repository.StageActivityMappingRepository stageActivityMappingRepository;
 
     public ActivityCrudService(
             ActivityRepository activityRepository, 
@@ -49,10 +50,11 @@ public class ActivityCrudService {
             ActivityAssignmentRepository activityAssignmentRepository,
             DisciplineLogRepository disciplineLogRepository,
             StudentActivityXpRepository studentActivityXpRepository,
-            ActivityValidationService validationService, 
+            ActivityValidationService validationService,
             ActivityRequestMapper requestMapper,
             AdminAssignmentService adminAssignmentService,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            com.spdms.modules.activity.repository.StageActivityMappingRepository stageActivityMappingRepository) {
         this.activityRepository = activityRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityStageRepository = activityStageRepository;
@@ -63,6 +65,7 @@ public class ActivityCrudService {
         this.requestMapper = requestMapper;
         this.adminAssignmentService = adminAssignmentService;
         this.userRepository = userRepository;
+        this.stageActivityMappingRepository = stageActivityMappingRepository;
     }
 
     @Transactional
@@ -112,25 +115,20 @@ public class ActivityCrudService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser != null) {
-            boolean isYearAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"))
-                               && currentUser.getRoles().stream().noneMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))
-                               && currentUser.getAssignedAcademicYear() != null;
-            if (isYearAdmin) {
-                activity.setAssignedAcademicYear(currentUser.getAssignedAcademicYear());
-            } else if (body.containsKey("academicYear") && body.get("academicYear") != null) {
-                try {
-                    activity.setAssignedAcademicYear(com.spdms.entity.AssignedAcademicYear.valueOf(body.get("academicYear").toString()));
-                } catch (IllegalArgumentException ignored) {}
-            }
-        } else if (body.containsKey("academicYear") && body.get("academicYear") != null) {
-            try {
-                activity.setAssignedAcademicYear(com.spdms.entity.AssignedAcademicYear.valueOf(body.get("academicYear").toString()));
-            } catch (IllegalArgumentException ignored) {}
+
         }
 
         log.debug("Entity before save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                  activity.getAwardEnabled(), activity.getAwardXp(), activity.getPenaltyEnabled(), activity.getPenaltyXp());
         Activity saved = activityRepository.save(activity);
+        
+        // Insert mapping since the new architecture relies on the mapping table as the single source of truth
+        com.spdms.entity.StageActivityMapping mapping = new com.spdms.entity.StageActivityMapping();
+        mapping.setActivity(saved);
+        mapping.setStage(subgroup.getStage());
+        mapping.setSubgroupType(subgroup.getName().trim().toUpperCase());
+        mapping.setDisplayOrder(saved.getDisplayOrder());
+        stageActivityMappingRepository.save(mapping);
         
         if (currentUser != null) {
             boolean isYearAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"))
@@ -193,6 +191,10 @@ public class ActivityCrudService {
 
         requestMapper.mapRemainingConfiguration(activity, body, matchedCategory, awardEnabled, awardXp, penaltyEnabled, penaltyXp, awardType, matchedFrequency, cap, awardDays);
 
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+
+
         log.debug("Entity before save [Update] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                  activity.getAwardEnabled(), activity.getAwardXp(), activity.getPenaltyEnabled(), activity.getPenaltyXp());
         Activity saved = activityRepository.save(activity);
@@ -241,86 +243,33 @@ public class ActivityCrudService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Activity not found"));
         }
 
-        ActivitySubgroup subgroup = activitySubgroupRepository.findByStageIdAndCategoryIgnoreCase(stageId, subgroupName)
-            .orElseGet(() -> activitySubgroupRepository.findByStageIdAndNameIgnoreCase(stageId, subgroupName).orElse(null));
+        ActivityStage stage = activityStageRepository.findById(stageId).orElse(null);
+        if (stage == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Stage not found"));
+        }
         
-        if (subgroup == null) {
-            subgroup = new ActivitySubgroup();
-            subgroup.setStage(activity.getStage() != null ? activity.getStage() : activityStageRepository.findById(stageId).orElse(null));
-            if (subgroup.getStage() == null) {
-                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Stage not found"));
-            }
-            subgroup.setCategory(subgroupName);
-            String displayName = subgroupName.substring(0, 1).toUpperCase() + subgroupName.substring(1).toLowerCase();
-            if (subgroupName.equalsIgnoreCase("must")) {
-                subgroup.setThreshold(subgroup.getStage().getMustThreshold() != null ? subgroup.getStage().getMustThreshold() : 0);
-            } else if (subgroupName.equalsIgnoreCase("individual")) {
-                subgroup.setThreshold(subgroup.getStage().getIndividualThreshold() != null ? subgroup.getStage().getIndividualThreshold() : 0);
-            } else if (subgroupName.equalsIgnoreCase("group")) {
-                subgroup.setThreshold(subgroup.getStage().getGroupThreshold() != null ? subgroup.getStage().getGroupThreshold() : 0);
-            } else {
-                subgroup.setThreshold(0);
-            }
-            subgroup.setName(displayName);
-            subgroup = activitySubgroupRepository.save(subgroup);
+        if (stageActivityMappingRepository.existsByStageIdAndActivityId(stageId, activityId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<Void>error("Activity is already mapped to this stage"));
         }
 
-        Activity clonedActivity = new Activity();
-        
-        // Copy basic fields
-        clonedActivity.setName(activity.getName());
-        clonedActivity.setActivityName(activity.getActivityName());
-        clonedActivity.setDescription(activity.getDescription());
-        clonedActivity.setActivityDescription(activity.getActivityDescription());
-        clonedActivity.setModeType(activity.getModeType());
-        clonedActivity.setAwardXp(activity.getAwardXp());
-        clonedActivity.setAwardEnabled(activity.getAwardEnabled());
-        clonedActivity.setPenaltyEnabled(activity.getPenaltyEnabled());
-        clonedActivity.setPenaltyXp(activity.getPenaltyXp());
-        clonedActivity.setAwardType(activity.getAwardType());
-        clonedActivity.setRepeatAllowed(activity.isRepeatAllowed());
-        clonedActivity.setResetPeriod(activity.getResetPeriod());
-        clonedActivity.setMandatory(activity.isMandatory());
-        clonedActivity.setEvidenceRequired(activity.isEvidenceRequired());
-        clonedActivity.setCategory(activity.getCategory());
-        clonedActivity.setEvidence(activity.getEvidence());
-        clonedActivity.setJustification(activity.getJustification());
-        clonedActivity.setOwnerDepartment(activity.getOwnerDepartment());
-        clonedActivity.setOwnerSubrole(activity.getOwnerSubrole());
-        clonedActivity.setType(activity.getType());
-        clonedActivity.setXpCategory(activity.getXpCategory());
-        clonedActivity.setXpType(activity.getXpType());
-        clonedActivity.setMaximumAwards(activity.getMaximumAwards());
-        clonedActivity.setAwardFrequency(activity.getAwardFrequency());
-        clonedActivity.setAllowStudentRequest(activity.getAllowStudentRequest());
-        clonedActivity.setAwardDays(activity.getAwardDays());
-        clonedActivity.setDisplayOrder(activity.getDisplayOrder());
-        clonedActivity.setStatus(activity.getStatus());
-        clonedActivity.setAssignmentMode(activity.getAssignmentMode());
-        clonedActivity.setActivityCategory(activity.getActivityCategory());
-        clonedActivity.setMaxPoints(activity.getMaxPoints());
+        com.spdms.entity.StageActivityMapping mapping = new com.spdms.entity.StageActivityMapping();
+        mapping.setActivity(activity);
+        mapping.setStage(stage);
+        mapping.setSubgroupType(subgroupName.trim().toUpperCase());
+        mapping.setDisplayOrder(0);
 
-        clonedActivity.setStage(subgroup.getStage());
-        clonedActivity.setSubgroup(subgroup);
-        
-        activityRepository.save(clonedActivity);
+        stageActivityMappingRepository.save(mapping);
         
         return ResponseEntity.ok(ApiResponse.ok("Activity mapped successfully", null));
     }
 
     @Transactional
     public ResponseEntity<ApiResponse<Void>> unmapActivityFromStage(Long stageId, Long activityId) {
-        Activity activity = activityRepository.findById(activityId).orElse(null);
-        if (activity == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Activity not found"));
-        }
-
-        if (activity.getStage() == null || !activity.getStage().getId().equals(stageId)) {
+        if (!stageActivityMappingRepository.existsByStageIdAndActivityId(stageId, activityId)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<Void>error("Activity is not mapped to this stage"));
         }
 
-        activity.setStage(null);
-        activityRepository.save(activity);
+        stageActivityMappingRepository.deleteByStageIdAndActivityId(stageId, activityId);
 
         return ResponseEntity.ok(ApiResponse.ok("Activity removed from stage successfully", null));
     }

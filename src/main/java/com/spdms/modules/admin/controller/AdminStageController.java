@@ -45,9 +45,8 @@ public class AdminStageController {
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Create a new stage")
     public ResponseEntity<ApiResponse<ActivityStageResponse>> createStage(
-            @Valid @RequestBody ActivityStageRequest request,
-            @RequestParam(required = false) String academicYear) {
-        return adminStageService.createStage(request, academicYear);
+            @Valid @RequestBody ActivityStageRequest request) {
+        return adminStageService.createStage(request, request.getAcademicYear());
     }
 
     @GetMapping("/stages/{id}")
@@ -62,9 +61,8 @@ public class AdminStageController {
     @Operation(summary = "Update an existing stage")
     public ResponseEntity<ApiResponse<ActivityStageResponse>> editStage(
             @PathVariable Long id,
-            @Valid @RequestBody ActivityStageRequest request,
-            @RequestParam(required = false) String academicYear) {
-        return adminStageService.editStage(id, request, academicYear);
+            @Valid @RequestBody ActivityStageRequest request) {
+        return adminStageService.editStage(id, request, request.getAcademicYear());
     }
 
     @GetMapping("/stages/{id}/report")

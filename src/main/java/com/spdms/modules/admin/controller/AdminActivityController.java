@@ -76,9 +76,10 @@ public class AdminActivityController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all activities grouped by subgroup")
     public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(
+            @RequestParam(required = false) Long stageId,
             @RequestParam(required = false) String subgroup,
             @RequestParam(required = false) com.spdms.entity.AssignedAcademicYear academicYear) {
-        return adminActivityService.getGroupedActivities(subgroup, academicYear);
+        return adminActivityService.getGroupedActivities(stageId, subgroup, academicYear);
     }
 
     @PostMapping("/subgroups/{subgroupId}/activities")

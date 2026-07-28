@@ -43,8 +43,8 @@ public class AdminActivityService {
         return queryService.getAllActivities(subgroup, academicYear);
     }
 
-    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup, com.spdms.entity.AssignedAcademicYear academicYear) {
-        return queryService.getGroupedActivities(subgroup, academicYear);
+    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(Long stageId, String subgroup, com.spdms.entity.AssignedAcademicYear academicYear) {
+        return queryService.getGroupedActivities(stageId, subgroup, academicYear);
     }
 
     public ResponseEntity<ApiResponse<Activity>> createActivity(Long subgroupId, Map<String, Object> body) {

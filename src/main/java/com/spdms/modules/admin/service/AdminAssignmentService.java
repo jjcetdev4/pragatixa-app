@@ -71,8 +71,15 @@ public class AdminAssignmentService {
         if (isAdmin && !isSuperAdmin && u.getAssignedAcademicYear() != null) {
             String adminYear = u.getAssignedAcademicYear().name();
             // If assignment has a year and it doesn't match, it's not for this admin
-            if (a.getYear() != null && !a.getYear().equalsIgnoreCase(adminYear)) {
-                return false;
+            if (a.getYear() != null) {
+                String actYear = a.getYear();
+                if (actYear.equals("1") && adminYear.equals("FIRST_YEAR")) return true;
+                if (actYear.equals("2") && adminYear.equals("SECOND_YEAR")) return true;
+                if (actYear.equals("3") && adminYear.equals("THIRD_YEAR")) return true;
+                if (actYear.equals("4") && adminYear.equals("FOURTH_YEAR")) return true;
+                if (!actYear.equalsIgnoreCase(adminYear)) {
+                    return false;
+                }
             }
             return true;
         }

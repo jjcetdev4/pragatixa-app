@@ -65,9 +65,6 @@ public class Activity {
     @Column(name = "allow_student_request")
     private Boolean allowStudentRequest = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "assigned_academic_year")
-    private AssignedAcademicYear assignedAcademicYear;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -230,8 +227,6 @@ public class Activity {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
-    public AssignedAcademicYear getAssignedAcademicYear() { return assignedAcademicYear; }
-    public void setAssignedAcademicYear(AssignedAcademicYear assignedAcademicYear) { this.assignedAcademicYear = assignedAcademicYear; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
@@ -323,7 +318,6 @@ public class Activity {
         public Builder displayOrder(int v) { a.displayOrder = v; return this; }
         public Builder status(String v) { a.status = v; return this; }
         public Builder assignmentMode(String v) { a.assignmentMode = v; return this; }
-        public Builder assignedAcademicYear(AssignedAcademicYear v) { a.assignedAcademicYear = v; return this; }
         public Activity build() { return a; }
     }
 }

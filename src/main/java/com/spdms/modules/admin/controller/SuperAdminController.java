@@ -49,6 +49,7 @@ public class SuperAdminController {
         User user = superAdminService.updateYearAdmin(
                 id,
                 request.getFullName(),
+                request.getUsername(),
                 request.getPassword(),
                 request.getEmail(),
                 request.getPhone(),
@@ -56,6 +57,12 @@ public class SuperAdminController {
                 request.isActive()
         );
         return ApiResponse.ok("Year Admin updated successfully", mapToResponse(user));
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> deleteYearAdmin(@PathVariable Long id, java.security.Principal principal) {
+        superAdminService.deleteYearAdmin(id, principal.getName());
+        return ApiResponse.ok("Year Admin deleted successfully", null);
     }
 
     private YearAdminResponse mapToResponse(User user) {

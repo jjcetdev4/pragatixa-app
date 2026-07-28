@@ -32,7 +32,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ApiResponse<Void> handleAccessDenied(AccessDeniedException ex) {
-        return ApiResponse.error("Access denied: You do not have permission to perform this action");
+        String msg = ex.getMessage();
+        if (msg == null || msg.trim().isEmpty() || msg.equals("Access is denied")) {
+            return ApiResponse.error("Access denied: You do not have permission to perform this action");
+        }
+        return ApiResponse.error(msg);
     }
 
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
