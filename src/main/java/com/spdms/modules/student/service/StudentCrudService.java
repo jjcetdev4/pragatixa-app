@@ -1,15 +1,15 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.dto.*;
-import com.spdms.modules.student.dto.request.*;
-import com.spdms.modules.student.dto.response.StudentResponse;
-import com.spdms.common.response.ApiResponse;
+import com.pragatix.dto.*;
+import com.pragatix.modules.student.dto.request.*;
+import com.pragatix.modules.student.dto.response.StudentResponse;
+import com.pragatix.common.response.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Service
 public class StudentCrudService {
-    
+
     private final StudentCommandService studentCommandService;
     private final StudentQueryService studentQueryService;
 
@@ -42,7 +42,8 @@ public class StudentCrudService {
         return studentQueryService.searchStudents(keyword, page, size);
     }
 
-    public ApiResponse<java.util.List<com.spdms.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(String keyword) {
+    public ApiResponse<java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(
+            String keyword) {
         return studentQueryService.searchActiveStudentsForTeam(keyword);
     }
 }

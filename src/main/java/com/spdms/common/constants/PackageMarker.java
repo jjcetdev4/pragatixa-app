@@ -1,4 +1,4 @@
-package com.spdms.common.constants;
+package com.pragatix.common.constants;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

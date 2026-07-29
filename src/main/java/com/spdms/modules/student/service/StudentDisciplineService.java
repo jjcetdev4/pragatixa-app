@@ -1,17 +1,17 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.dto.*;
-import com.spdms.modules.activity.dto.request.*;
-import com.spdms.modules.activity.dto.response.*;
-import com.spdms.modules.student.dto.request.*;
-import com.spdms.modules.student.dto.response.*;
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.*;
-import com.spdms.repository.*;
-import com.spdms.modules.activity.repository.*;
-import com.spdms.modules.faculty.repository.*;
-import com.spdms.modules.student.repository.*;
-import com.spdms.modules.authentication.repository.UserRepository;
+import com.pragatix.dto.*;
+import com.pragatix.modules.activity.dto.request.*;
+import com.pragatix.modules.activity.dto.response.*;
+import com.pragatix.modules.student.dto.request.*;
+import com.pragatix.modules.student.dto.response.*;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.*;
+import com.pragatix.repository.*;
+import com.pragatix.modules.activity.repository.*;
+import com.pragatix.modules.faculty.repository.*;
+import com.pragatix.modules.student.repository.*;
+import com.pragatix.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-
 @Service
 public class StudentDisciplineService {
     private static final Logger log = LoggerFactory.getLogger(StudentDisciplineService.class);
@@ -37,12 +36,12 @@ public class StudentDisciplineService {
     private final StudentMapper studentMapper;
     private final XpEngineService xpEngineService;
 
-    public StudentDisciplineService(ActivitySubgroupRepository activitySubgroupRepository, 
-                                    DisciplineLogRepository disciplineLogRepository, 
-                                    StudentRepository studentRepository, 
-                                    UserRepository userRepository, 
-                                    StudentMapper studentMapper,
-                                    XpEngineService xpEngineService) {
+    public StudentDisciplineService(ActivitySubgroupRepository activitySubgroupRepository,
+            DisciplineLogRepository disciplineLogRepository,
+            StudentRepository studentRepository,
+            UserRepository userRepository,
+            StudentMapper studentMapper,
+            XpEngineService xpEngineService) {
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.studentRepository = studentRepository;
@@ -72,11 +71,14 @@ public class StudentDisciplineService {
 
             // Verify assignment:
             if (subgroup.getAssignedFaculty() != null) {
-                // If it is assigned to a specific faculty, verify that the logged-in user matches the assignee
+                // If it is assigned to a specific faculty, verify that the logged-in user
+                // matches the assignee
                 if (!subgroup.getAssignedFaculty().getId().equals(creator.getId())) {
                     boolean isAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
                     if (!isAdmin) {
-                        return ApiResponse.error("Access Denied: Only the assigned faculty (" + subgroup.getAssignedFaculty().getFullName() + ") can award points for this activity.");
+                        return ApiResponse.error("Access Denied: Only the assigned faculty ("
+                                + subgroup.getAssignedFaculty().getFullName()
+                                + ") can award points for this activity.");
                     }
                 }
             }
@@ -96,7 +98,8 @@ public class StudentDisciplineService {
                 .build();
         disciplineLogRepository.save(logEntry);
 
-        log.debug("Teacher {} adjusted student {} points by {}. Reason: {}", creator.getUsername(), saved.getRegNo(), request.getPoints(), request.getReason());
+        log.debug("Teacher {} adjusted student {} points by {}. Reason: {}", creator.getUsername(), saved.getRegNo(),
+                request.getPoints(), request.getReason());
         return ApiResponse.ok("Points updated successfully", studentMapper.toResponse(saved));
     }
 
@@ -117,7 +120,8 @@ public class StudentDisciplineService {
         }
 
         boolean isHodOrAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
-                || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
+                || creator.getSubRoles().stream().map(SubRole::getName)
+                        .anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
 
         if (!isHodOrAdmin) {
             return ApiResponse.error("Access Denied: Only Head of Department (HOD) can see department performance.");
@@ -140,15 +144,13 @@ public class StudentDisciplineService {
                 .collect(Collectors.groupingBy(
                         Student::getAcademicYear,
                         TreeMap::new,
-                        Collectors.averagingDouble(Student::getScore)
-                ));
+                        Collectors.averagingDouble(Student::getScore)));
 
         DepartmentPerformanceResponse response = new DepartmentPerformanceResponse(
                 department.getName(),
                 overallAverage,
                 totalStudents,
-                yearWiseAverage
-        );
+                yearWiseAverage);
 
         return ApiResponse.ok("Department performance metrics loaded", response);
     }

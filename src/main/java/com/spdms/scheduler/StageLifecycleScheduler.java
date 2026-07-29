@@ -1,12 +1,12 @@
-package com.spdms.scheduler;
+package com.pragatix.scheduler;
 
-import com.spdms.entity.ActivityStage;
-import com.spdms.enums.StageStatus;
-import com.spdms.modules.activity.repository.ActivityStageRepository;
-import com.spdms.entity.Notification;
-import com.spdms.entity.Student;
-import com.spdms.repository.NotificationRepository;
-import com.spdms.modules.student.repository.StudentRepository;
+import com.pragatix.entity.ActivityStage;
+import com.pragatix.enums.StageStatus;
+import com.pragatix.modules.activity.repository.ActivityStageRepository;
+import com.pragatix.entity.Notification;
+import com.pragatix.entity.Student;
+import com.pragatix.repository.NotificationRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,8 +25,8 @@ public class StageLifecycleScheduler {
     private final NotificationRepository notificationRepository;
 
     public StageLifecycleScheduler(ActivityStageRepository activityStageRepository,
-                                   StudentRepository studentRepository,
-                                   NotificationRepository notificationRepository) {
+            StudentRepository studentRepository,
+            NotificationRepository notificationRepository) {
         this.activityStageRepository = activityStageRepository;
         this.studentRepository = studentRepository;
         this.notificationRepository = notificationRepository;
@@ -53,18 +53,21 @@ public class StageLifecycleScheduler {
                 updated = true;
 
                 if (newStatus == StageStatus.ACTIVE) {
-                    notifyStudents("New Stage Started", "Welcome to " + stage.getName() + "! New activities are now available.");
+                    notifyStudents("New Stage Started",
+                            "Welcome to " + stage.getName() + "! New activities are now available.");
                 } else if (newStatus == StageStatus.COMPLETED) {
-                    notifyStudents("Stage Locked", "Stage " + stage.getName() + " has ended. Activities are now locked.");
+                    notifyStudents("Stage Locked",
+                            "Stage " + stage.getName() + " has ended. Activities are now locked.");
                 }
             } else if (newStatus == StageStatus.ACTIVE && stage.getEndDateTime() != null) {
                 LocalDateTime tomorrow = now.plusHours(24);
-                if (tomorrow.isAfter(stage.getEndDateTime()) && tomorrow.minusMinutes(1).isBefore(stage.getEndDateTime())) {
+                if (tomorrow.isAfter(stage.getEndDateTime())
+                        && tomorrow.minusMinutes(1).isBefore(stage.getEndDateTime())) {
                     notifyStudents("Stage Ending Soon", "Stage " + stage.getName() + " is ending in 24 hours!");
                 }
             }
         }
-        
+
         if (updated) {
             log.debug("Stage lifecycle statuses updated successfully.");
         }

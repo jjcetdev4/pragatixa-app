@@ -1,4 +1,4 @@
-package com.spdms.modules.student.dto.response;
+package com.pragatix.modules.student.dto.response;
 
 import java.time.LocalDateTime;
 
@@ -21,54 +21,139 @@ public class ActivityCompletionRequestDto {
     private String approvedBy;
     private String rejectedReason;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getRegNo() { return regNo; }
-    public void setRegNo(String regNo) { this.regNo = regNo; }
+    public String getStudentName() {
+        return studentName;
+    }
 
-    public String getDepartment() { return department; }
-    public void setDepartment(String department) { this.department = department; }
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
 
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public String getRegNo() {
+        return regNo;
+    }
 
-    public String getSection() { return section; }
-    public void setSection(String section) { this.section = section; }
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
+    }
 
-    public Long getActivityId() { return activityId; }
-    public void setActivityId(Long activityId) { this.activityId = activityId; }
+    public String getDepartment() {
+        return department;
+    }
 
-    public String getActivityName() { return activityName; }
-    public void setActivityName(String activityName) { this.activityName = activityName; }
+    public void setDepartment(String department) {
+        this.department = department;
+    }
 
-    public Long getTeamId() { return teamId; }
-    public void setTeamId(Long teamId) { this.teamId = teamId; }
+    public String getYear() {
+        return year;
+    }
 
-    public String getTeamName() { return teamName; }
-    public void setTeamName(String teamName) { this.teamName = teamName; }
+    public void setYear(String year) {
+        this.year = year;
+    }
 
-    public String getProofUrl() { return proofUrl; }
-    public void setProofUrl(String proofUrl) { this.proofUrl = proofUrl; }
+    public String getSection() {
+        return section;
+    }
 
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
+    public void setSection(String section) {
+        this.section = section;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public Long getActivityId() {
+        return activityId;
+    }
 
-    public LocalDateTime getRequestedDate() { return requestedDate; }
-    public void setRequestedDate(LocalDateTime requestedDate) { this.requestedDate = requestedDate; }
+    public void setActivityId(Long activityId) {
+        this.activityId = activityId;
+    }
 
-    public LocalDateTime getApprovedDate() { return approvedDate; }
-    public void setApprovedDate(LocalDateTime approvedDate) { this.approvedDate = approvedDate; }
+    public String getActivityName() {
+        return activityName;
+    }
 
-    public String getApprovedBy() { return approvedBy; }
-    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
+    }
 
-    public String getRejectedReason() { return rejectedReason; }
-    public void setRejectedReason(String rejectedReason) { this.rejectedReason = rejectedReason; }
+    public Long getTeamId() {
+        return teamId;
+    }
+
+    public void setTeamId(Long teamId) {
+        this.teamId = teamId;
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
+    public void setTeamName(String teamName) {
+        this.teamName = teamName;
+    }
+
+    public String getProofUrl() {
+        return proofUrl;
+    }
+
+    public void setProofUrl(String proofUrl) {
+        this.proofUrl = proofUrl;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getRequestedDate() {
+        return requestedDate;
+    }
+
+    public void setRequestedDate(LocalDateTime requestedDate) {
+        this.requestedDate = requestedDate;
+    }
+
+    public LocalDateTime getApprovedDate() {
+        return approvedDate;
+    }
+
+    public void setApprovedDate(LocalDateTime approvedDate) {
+        this.approvedDate = approvedDate;
+    }
+
+    public String getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(String approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
+    }
 }

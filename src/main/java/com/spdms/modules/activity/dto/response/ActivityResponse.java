@@ -1,4 +1,4 @@
-package com.spdms.modules.activity.dto.response;
+package com.pragatix.modules.activity.dto.response;
 
 public class ActivityResponse {
     private Long activityId;
@@ -16,47 +16,118 @@ public class ActivityResponse {
     private Boolean completed;
     private Boolean allowStudentRequest;
 
-    public ActivityResponse() {}
+    public ActivityResponse() {
+    }
 
-    public Long getActivityId() { return activityId; }
-    public void setActivityId(Long activityId) { this.activityId = activityId; }
+    public Long getActivityId() {
+        return activityId;
+    }
 
-    public String getActivityName() { return activityName; }
-    public void setActivityName(String activityName) { this.activityName = activityName; }
+    public void setActivityId(Long activityId) {
+        this.activityId = activityId;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getActivityName() {
+        return activityName;
+    }
 
-    public Integer getRewardXp() { return rewardXp; }
-    public void setRewardXp(Integer rewardXp) { this.rewardXp = rewardXp; }
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
+    }
 
-    public String getFacultyName() { return facultyName; }
-    public void setFacultyName(String facultyName) { this.facultyName = facultyName; }
+    public String getDescription() {
+        return description;
+    }
 
-    public Long getFacultyId() { return facultyId; }
-    public void setFacultyId(Long facultyId) { this.facultyId = facultyId; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public String getFrequency() { return frequency; }
-    public void setFrequency(String frequency) { this.frequency = frequency; }
+    public Integer getRewardXp() {
+        return rewardXp;
+    }
 
-    public String getEvidence() { return evidence; }
-    public void setEvidence(String evidence) { this.evidence = evidence; }
+    public void setRewardXp(Integer rewardXp) {
+        this.rewardXp = rewardXp;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getFacultyName() {
+        return facultyName;
+    }
 
-    public Integer getAwardedXp() { return awardedXp; }
-    public void setAwardedXp(Integer awardedXp) { this.awardedXp = awardedXp; }
+    public void setFacultyName(String facultyName) {
+        this.facultyName = facultyName;
+    }
 
-    public Integer getRequiredXp() { return requiredXp; }
-    public void setRequiredXp(Integer requiredXp) { this.requiredXp = requiredXp; }
+    public Long getFacultyId() {
+        return facultyId;
+    }
 
-    public Integer getRemainingXp() { return remainingXp; }
-    public void setRemainingXp(Integer remainingXp) { this.remainingXp = remainingXp; }
+    public void setFacultyId(Long facultyId) {
+        this.facultyId = facultyId;
+    }
 
-    public Boolean getCompleted() { return completed; }
-    public void setCompleted(Boolean completed) { this.completed = completed; }
+    public String getFrequency() {
+        return frequency;
+    }
 
-    public Boolean getAllowStudentRequest() { return allowStudentRequest; }
-    public void setAllowStudentRequest(Boolean allowStudentRequest) { this.allowStudentRequest = allowStudentRequest; }
+    public void setFrequency(String frequency) {
+        this.frequency = frequency;
+    }
+
+    public String getEvidence() {
+        return evidence;
+    }
+
+    public void setEvidence(String evidence) {
+        this.evidence = evidence;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Integer getAwardedXp() {
+        return awardedXp;
+    }
+
+    public void setAwardedXp(Integer awardedXp) {
+        this.awardedXp = awardedXp;
+    }
+
+    public Integer getRequiredXp() {
+        return requiredXp;
+    }
+
+    public void setRequiredXp(Integer requiredXp) {
+        this.requiredXp = requiredXp;
+    }
+
+    public Integer getRemainingXp() {
+        return remainingXp;
+    }
+
+    public void setRemainingXp(Integer remainingXp) {
+        this.remainingXp = remainingXp;
+    }
+
+    public Boolean getCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(Boolean completed) {
+        this.completed = completed;
+    }
+
+    public Boolean getAllowStudentRequest() {
+        return allowStudentRequest;
+    }
+
+    public void setAllowStudentRequest(Boolean allowStudentRequest) {
+        this.allowStudentRequest = allowStudentRequest;
+    }
 }

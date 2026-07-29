@@ -1,14 +1,14 @@
-package com.spdms.modules.activity.controller;
+package com.pragatix.modules.activity.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.student.dto.response.StudentResponse;
-import com.spdms.dto.TeamResponse;
-import com.spdms.entity.*;
-import com.spdms.repository.*;
-import com.spdms.modules.activity.repository.*;
-import com.spdms.modules.student.repository.*;
-import com.spdms.modules.authentication.repository.UserRepository;
-import com.spdms.modules.student.service.XpEngineService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.student.dto.response.StudentResponse;
+import com.pragatix.dto.TeamResponse;
+import com.pragatix.entity.*;
+import com.pragatix.repository.*;
+import com.pragatix.modules.activity.repository.*;
+import com.pragatix.modules.student.repository.*;
+import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.modules.student.service.XpEngineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,10 +41,10 @@ public class GroupActivityController {
     private final XpEngineService xpEngineService;
 
     public GroupActivityController(TeamRepository teamRepository,
-                                   ActivityAssignmentRepository activityAssignmentRepository,
-                                   StudentRepository studentRepository,
-                                   UserRepository userRepository,
-                                   XpEngineService xpEngineService) {
+            ActivityAssignmentRepository activityAssignmentRepository,
+            StudentRepository studentRepository,
+            UserRepository userRepository,
+            XpEngineService xpEngineService) {
         this.teamRepository = teamRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.studentRepository = studentRepository;
@@ -64,17 +64,20 @@ public class GroupActivityController {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
-        
+
         boolean canDelete = false;
         if (currentUser != null) {
             boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-            boolean isCc = currentUser.getSubRoles().stream().map(com.spdms.entity.SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
-            boolean isAssignedFaculty = assignment.getTeacher() != null && assignment.getTeacher().getUsername().equals(username);
-            
+            boolean isCc = currentUser.getSubRoles().stream().map(com.pragatix.entity.SubRole::getName)
+                    .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+            boolean isAssignedFaculty = assignment.getTeacher() != null
+                    && assignment.getTeacher().getUsername().equals(username);
+
             boolean matchesDeptAndSection = false;
             if (isCc && assignment.getDepartment() != null && currentUser.getDepartment() != null) {
                 if (assignment.getDepartment().getId().equals(currentUser.getDepartment().getId())) {
-                    if (assignment.getSection() == null || (currentUser.getSection() != null && assignment.getSection().getId().equals(currentUser.getSection().getId()))) {
+                    if (assignment.getSection() == null || (currentUser.getSection() != null
+                            && assignment.getSection().getId().equals(currentUser.getSection().getId()))) {
                         matchesDeptAndSection = true;
                     }
                 }
@@ -84,12 +87,19 @@ public class GroupActivityController {
         final boolean finalCanDelete = canDelete;
 
         List<Team> teams = teamRepository.findAll().stream().filter(t -> {
-            if (assignment.getAssignmentScope() == AssignmentScope.GLOBAL) return true;
-            if (t.getDepartment() == null || assignment.getDepartment() == null) return false;
-            if (!t.getDepartment().getId().equals(assignment.getDepartment().getId())) return false;
-            if (assignment.getAssignmentScope() == AssignmentScope.DEPARTMENT) return true;
-            if (t.getYear() == null || assignment.getYear() == null || !t.getYear().equals(assignment.getYear())) return false;
-            if (t.getSection() == null || assignment.getSection() == null || !t.getSection().getId().equals(assignment.getSection().getId())) return false;
+            if (assignment.getAssignmentScope() == AssignmentScope.GLOBAL)
+                return true;
+            if (t.getDepartment() == null || assignment.getDepartment() == null)
+                return false;
+            if (!t.getDepartment().getId().equals(assignment.getDepartment().getId()))
+                return false;
+            if (assignment.getAssignmentScope() == AssignmentScope.DEPARTMENT)
+                return true;
+            if (t.getYear() == null || assignment.getYear() == null || !t.getYear().equals(assignment.getYear()))
+                return false;
+            if (t.getSection() == null || assignment.getSection() == null
+                    || !t.getSection().getId().equals(assignment.getSection().getId()))
+                return false;
             return true;
         }).collect(Collectors.toList());
         List<TeamResponse> responses = teams.stream().map(g -> {
@@ -127,7 +137,8 @@ public class GroupActivityController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Transactional
     @Operation(summary = "Award XP to Team", description = "Awards XP to all or selected members of a team with remarks.")
-    public ResponseEntity<ApiResponse<String>> awardXpToTeam(@PathVariable Long teamId, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<ApiResponse<String>> awardXpToTeam(@PathVariable Long teamId,
+            @RequestBody Map<String, Object> body) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User teacher = userRepository.findByUsername(username).orElse(null);
         if (teacher == null) {
@@ -140,7 +151,8 @@ public class GroupActivityController {
         }
 
         if (!body.containsKey("assignmentId")) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("assignmentId must be provided in the request body"));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("assignmentId must be provided in the request body"));
         }
         Long assignmentId = Long.valueOf(body.get("assignmentId").toString());
         ActivityAssignment assignment = activityAssignmentRepository.findById(assignmentId).orElse(null);
@@ -149,16 +161,18 @@ public class GroupActivityController {
         }
 
         Activity activity = assignment.getActivity();
-        if (activity.getStage() != null && activity.getStage().getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot award XP for an activity in a non-active stage."));
+        if (activity.getStage() != null && activity.getStage().getStatus() != com.pragatix.enums.StageStatus.ACTIVE) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Cannot award XP for an activity in a non-active stage."));
         }
-        
-        boolean equalDistribution = body.containsKey("equalDistribution") && Boolean.parseBoolean(body.get("equalDistribution").toString());
+
+        boolean equalDistribution = body.containsKey("equalDistribution")
+                && Boolean.parseBoolean(body.get("equalDistribution").toString());
 
         if (equalDistribution) {
             int xp = Integer.parseInt(body.get("xp").toString());
             String remarks = body.containsKey("remarks") ? body.get("remarks").toString() : null;
-            
+
             List<Student> studentsToAward = new ArrayList<>(team.getMembers());
             if (team.getCaptain() != null && !studentsToAward.contains(team.getCaptain())) {
                 studentsToAward.add(team.getCaptain());
@@ -172,16 +186,18 @@ public class GroupActivityController {
             if (studentsData == null || studentsData.isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("No student data provided"));
             }
-            
-            List<String> studentIds = studentsData.stream().map(s -> s.get("regNo").toString()).collect(Collectors.toList());
+
+            List<String> studentIds = studentsData.stream().map(s -> s.get("regNo").toString())
+                    .collect(Collectors.toList());
             List<Student> fetchedStudents = studentRepository.findByRegNoIn(studentIds);
-            Map<String, Student> studentMap = fetchedStudents.stream().collect(Collectors.toMap(Student::getRegNo, s -> s));
+            Map<String, Student> studentMap = fetchedStudents.stream()
+                    .collect(Collectors.toMap(Student::getRegNo, s -> s));
 
             for (Map<String, Object> sData : studentsData) {
                 String regNo = sData.get("regNo").toString();
                 int xp = Integer.parseInt(sData.get("xp").toString());
                 String remarks = sData.containsKey("remarks") ? sData.get("remarks").toString() : null;
-                
+
                 Student student = studentMap.get(regNo);
                 if (student != null) {
                     xpEngineService.awardXp(student, activity, teacher, assignment, xp, remarks);

@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -13,7 +13,7 @@ public class XpTransaction {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "student_id", nullable = false)
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"team"})
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({ "team" })
     private Student student;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -47,59 +47,169 @@ public class XpTransaction {
     @Column(name = "cap_applied", nullable = false)
     private boolean capApplied;
 
-    public XpTransaction() {}
+    public XpTransaction() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Activity getActivity() { return activity; }
-    public void setActivity(Activity activity) { this.activity = activity; }
+    public Student getStudent() {
+        return student;
+    }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public void setStudent(Student student) {
+        this.student = student;
+    }
 
-    public String getActivityName() { return activityName; }
-    public void setActivityName(String activityName) { this.activityName = activityName; }
+    public Activity getActivity() {
+        return activity;
+    }
 
-    public int getXpPoints() { return xpPoints; }
-    public void setXpPoints(int xpPoints) { this.xpPoints = xpPoints; }
+    public void setActivity(Activity activity) {
+        this.activity = activity;
+    }
 
-    public String getEvidenceUrl() { return evidenceUrl; }
-    public void setEvidenceUrl(String evidenceUrl) { this.evidenceUrl = evidenceUrl; }
+    public String getCategory() {
+        return category;
+    }
 
-    public LocalDateTime getSubmittedAt() { return submittedAt; }
-    public void setSubmittedAt(LocalDateTime submittedAt) { this.submittedAt = submittedAt; }
+    public void setCategory(String category) {
+        this.category = category;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getActivityName() {
+        return activityName;
+    }
 
-    public String getApprovedBy() { return approvedBy; }
-    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
+    }
 
-    public boolean isPenalty() { return isPenalty; }
-    public void setPenalty(boolean penalty) { isPenalty = penalty; }
+    public int getXpPoints() {
+        return xpPoints;
+    }
 
-    public boolean isCapApplied() { return capApplied; }
-    public void setCapApplied(boolean capApplied) { this.capApplied = capApplied; }
+    public void setXpPoints(int xpPoints) {
+        this.xpPoints = xpPoints;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public String getEvidenceUrl() {
+        return evidenceUrl;
+    }
+
+    public void setEvidenceUrl(String evidenceUrl) {
+        this.evidenceUrl = evidenceUrl;
+    }
+
+    public LocalDateTime getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public void setSubmittedAt(LocalDateTime submittedAt) {
+        this.submittedAt = submittedAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(String approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public boolean isPenalty() {
+        return isPenalty;
+    }
+
+    public void setPenalty(boolean penalty) {
+        isPenalty = penalty;
+    }
+
+    public boolean isCapApplied() {
+        return capApplied;
+    }
+
+    public void setCapApplied(boolean capApplied) {
+        this.capApplied = capApplied;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final XpTransaction x = new XpTransaction();
-        public Builder student(Student v) { x.student = v; return this; }
-        public Builder activity(Activity v) { x.activity = v; return this; }
-        public Builder category(String v) { x.category = v; return this; }
-        public Builder activityName(String v) { x.activityName = v; return this; }
-        public Builder xpPoints(int v) { x.xpPoints = v; return this; }
-        public Builder evidenceUrl(String v) { x.evidenceUrl = v; return this; }
-        public Builder submittedAt(LocalDateTime v) { x.submittedAt = v; return this; }
-        public Builder status(String v) { x.status = v; return this; }
-        public Builder approvedBy(String v) { x.approvedBy = v; return this; }
-        public Builder isPenalty(boolean v) { x.isPenalty = v; return this; }
-        public Builder capApplied(boolean v) { x.capApplied = v; return this; }
-        public XpTransaction build() { return x; }
+
+        public Builder student(Student v) {
+            x.student = v;
+            return this;
+        }
+
+        public Builder activity(Activity v) {
+            x.activity = v;
+            return this;
+        }
+
+        public Builder category(String v) {
+            x.category = v;
+            return this;
+        }
+
+        public Builder activityName(String v) {
+            x.activityName = v;
+            return this;
+        }
+
+        public Builder xpPoints(int v) {
+            x.xpPoints = v;
+            return this;
+        }
+
+        public Builder evidenceUrl(String v) {
+            x.evidenceUrl = v;
+            return this;
+        }
+
+        public Builder submittedAt(LocalDateTime v) {
+            x.submittedAt = v;
+            return this;
+        }
+
+        public Builder status(String v) {
+            x.status = v;
+            return this;
+        }
+
+        public Builder approvedBy(String v) {
+            x.approvedBy = v;
+            return this;
+        }
+
+        public Builder isPenalty(boolean v) {
+            x.isPenalty = v;
+            return this;
+        }
+
+        public Builder capApplied(boolean v) {
+            x.capApplied = v;
+            return this;
+        }
+
+        public XpTransaction build() {
+            return x;
+        }
     }
 }

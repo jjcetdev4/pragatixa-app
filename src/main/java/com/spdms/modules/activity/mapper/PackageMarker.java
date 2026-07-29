@@ -1,4 +1,4 @@
-package com.spdms.modules.activity.mapper;
+package com.pragatix.modules.activity.mapper;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

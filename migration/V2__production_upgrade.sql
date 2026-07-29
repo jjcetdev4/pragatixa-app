@@ -774,7 +774,7 @@ ON DUPLICATE KEY UPDATE name = VALUES(name), code = VALUES(code), description = 
 
 -- Seed default Administrator credentials (Password '12345' BCrypt hash)
 INSERT INTO `users` (id, username, password, full_name, email, active, department_id) VALUES
-(1, 'admin', '$2a$10$tZ261jH4J4T7Yw8xU43uReL1Y/D19Q59Z0bUoH7hL8.z5R0Wd231e', 'System Administrator', 'admin@spdms.com', TRUE, 1)
+(1, 'admin', '$2a$10$tZ261jH4J4T7Yw8xU43uReL1Y/D19Q59Z0bUoH7hL8.z5R0Wd231e', 'System Administrator', 'admin@pragatix.com', TRUE, 1)
 ON DUPLICATE KEY UPDATE username = VALUES(username), password = VALUES(password), full_name = VALUES(full_name), email = VALUES(email), department_id = VALUES(department_id);
 
 -- Assign ROLE_ADMIN to default admin user

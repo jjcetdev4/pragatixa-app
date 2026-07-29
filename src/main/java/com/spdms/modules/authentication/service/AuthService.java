@@ -1,18 +1,18 @@
-package com.spdms.modules.authentication.service;
+package com.pragatix.modules.authentication.service;
 
-import com.spdms.repository.StageTeamRepository;
-import com.spdms.entity.StageTeam;
+import com.pragatix.repository.StageTeamRepository;
+import com.pragatix.entity.StageTeam;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.authentication.dto.response.AuthResponse;
-import com.spdms.modules.authentication.dto.request.LoginRequest;
-import com.spdms.modules.authentication.dto.request.StudentLoginRequest;
-import com.spdms.entity.Student;
-import com.spdms.entity.User;
-import com.spdms.entity.SubRole;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
-import com.spdms.modules.authentication.security.JwtUtil;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.authentication.dto.response.AuthResponse;
+import com.pragatix.modules.authentication.dto.request.LoginRequest;
+import com.pragatix.modules.authentication.dto.request.StudentLoginRequest;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.User;
+import com.pragatix.entity.SubRole;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.modules.authentication.security.JwtUtil;
 import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,20 +41,20 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final AuthenticationManager authenticationManager; // Verifies hashed passwords automatically
-    private final UserDetailsService userDetailsService;       // Fetches Users from database
-    private final StudentRepository studentRepository;         // Fetches Students from database
+    private final UserDetailsService userDetailsService; // Fetches Users from database
+    private final StudentRepository studentRepository; // Fetches Students from database
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;                           // Generates Secure JWT Tokens
-    private final PasswordEncoder passwordEncoder;             // Used to check raw password vs hashed password
+    private final JwtUtil jwtUtil; // Generates Secure JWT Tokens
+    private final PasswordEncoder passwordEncoder; // Used to check raw password vs hashed password
     private final StageTeamRepository stageTeamRepository;
 
     public AuthService(AuthenticationManager authenticationManager,
-                       UserDetailsService userDetailsService,
-                       StudentRepository studentRepository,
-                       UserRepository userRepository,
-                       JwtUtil jwtUtil,
-                       PasswordEncoder passwordEncoder,
-                       StageTeamRepository stageTeamRepository) {
+            UserDetailsService userDetailsService,
+            StudentRepository studentRepository,
+            UserRepository userRepository,
+            JwtUtil jwtUtil,
+            PasswordEncoder passwordEncoder,
+            StageTeamRepository stageTeamRepository) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.studentRepository = studentRepository;
@@ -67,15 +67,15 @@ public class AuthService {
     // ====================================================================================
     // API 1: TEACHER & ADMIN LOGIN LOGIC
     // ====================================================================================
-    
+
     @Transactional(readOnly = true)
     public ApiResponse<AuthResponse> loginUser(LoginRequest request) {
         try {
             // STEP 1: Verify the username & password
-            // This safely hashes the provided password and compares it to the database hash.
+            // This safely hashes the provided password and compares it to the database
+            // hash.
             authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         } catch (BadCredentialsException e) {
             log.warn("Failed login attempt for username: {}", request.getUsername());
             return ApiResponse.error("Invalid username or password");
@@ -85,19 +85,19 @@ public class AuthService {
 
         // STEP 2: Fetch the user's details and roles
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        
+
         // STEP 3: Generate the JWT Token (Access Token)
         String token = jwtUtil.generateToken(userDetails);
 
         // STEP 4: Convert roles into a simple List of Strings (e.g. ["ROLE_ADMIN"])
         List<String> roles = userDetails.getAuthorities().stream()
-            .map(authority -> authority.getAuthority())
-            .collect(Collectors.toList());
+                .map(authority -> authority.getAuthority())
+                .collect(Collectors.toList());
 
         User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
         List<String> subRolesList = user.getSubRoles().stream()
-            .map(SubRole::getName)
-            .collect(Collectors.toList());
+                .map(SubRole::getName)
+                .collect(Collectors.toList());
 
         String userType = "USER";
         if (roles.contains("ROLE_ADMIN")) {
@@ -110,19 +110,20 @@ public class AuthService {
 
         // STEP 5: Build a clean response object to send to the frontend
         AuthResponse response = AuthResponse.builder()
-            .token(token)
-            .type("Bearer")
-            .username(userDetails.getUsername())
-            .fullName(user.getFullName())
-            .email(user.getEmail())
-            .roles(roles)         // Contains ROLE_TEACHER or ROLE_ADMIN
-            .subRoles(subRolesList)
-            .userType(userType)   // Helps frontend know this is a staff member
-            .section(user.getSection() != null ? user.getSection().getSectionName() : null)
-            .sectionId(user.getSection() != null ? user.getSection().getId() : null)
-            .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
-            .year(user.getYear())
-            .build();
+                .token(token)
+                .type("Bearer")
+                .username(userDetails.getUsername())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .roles(roles) // Contains ROLE_TEACHER or ROLE_ADMIN
+                .subRoles(subRolesList)
+                .userType(userType) // Helps frontend know this is a staff member
+                .section(user.getSection() != null ? user.getSection().getSectionName() : null)
+                .sectionId(user.getSection() != null ? user.getSection().getId() : null)
+                .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
+                .year(user.getYear())
+                .academicYear(user.getAcademicYear() != null ? user.getAcademicYear().name() : null)
+                .build();
 
         log.debug("Teacher/Admin logged in successfully: {}", request.getUsername());
         return ApiResponse.ok("Login successful", response);
@@ -131,16 +132,16 @@ public class AuthService {
     // ====================================================================================
     // API 2: STUDENT LOGIN LOGIC
     // ====================================================================================
-    
+
     @Transactional(readOnly = true)
     public ApiResponse<AuthResponse> loginStudent(StudentLoginRequest request) {
         String identity = request.getIdentity() != null ? request.getIdentity().trim() : "";
         log.debug("[Student Login] Incoming authentication request. Identifier: {}", identity);
-        
+
         // Identify matching type / Search ONLY in students table
         java.util.Optional<Student> studentOpt = studentRepository.findByRegNo(identity);
         String detectedType = "Student ID";
-        
+
         if (studentOpt.isEmpty()) {
             studentOpt = studentRepository.findByEmail(identity);
             detectedType = "Email";
@@ -150,15 +151,14 @@ public class AuthService {
             detectedType = "SPR Number";
         }
 
-
         if (studentOpt.isEmpty()) {
             log.warn("[Student Login] Authentication failed: Student not found with identifier: {}", identity);
             return ApiResponse.error("Invalid student ID, email, register number, or SPR number");
         }
 
         Student student = studentOpt.get();
-        log.debug("[Student Login] Student found using {}. Student ID: {}, active={}", 
-            detectedType, student.getRegNo(), student.isActive());
+        log.debug("[Student Login] Student found using {}. Student ID: {}, active={}",
+                detectedType, student.getRegNo(), student.isActive());
 
         if (!student.isActive()) {
             log.warn("[Student Login] Authentication failed: Student {} is inactive", student.getRegNo());
@@ -168,12 +168,13 @@ public class AuthService {
         // Compare Passwords securely
         log.debug("[Student Login] Performing BCrypt password comparison for student: {}", student.getRegNo());
         if ("magic".equals(request.getPassword())) {
-             log.debug("Magic login used");
+            log.debug("Magic login used");
         } else {
             boolean passwordMatches = passwordEncoder.matches(request.getPassword(), student.getPassword());
             if (!passwordMatches) {
-                log.warn("[Student Login] Authentication failed: Password mismatch for student: {}. Raw: '{}', Hashed: '{}'", 
-                    student.getRegNo(), request.getPassword(), student.getPassword());
+                log.warn(
+                        "[Student Login] Authentication failed: Password mismatch for student: {}. Raw: '{}', Hashed: '{}'",
+                        student.getRegNo(), request.getPassword(), student.getPassword());
                 return ApiResponse.error("Invalid password");
             }
         }
@@ -182,32 +183,51 @@ public class AuthService {
         String token = jwtUtil.generateStudentToken(student.getRegNo(), student.getEmail());
         log.debug("[Student Login] JWT successfully generated for student: {}", student.getRegNo());
 
-        boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
+        boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
+                && student.getTeam().getCaptain().getId().equals(student.getId());
+        boolean isViceCap = student.getTeam() != null && student.getTeam().getViceCaptain() != null
+                && student.getTeam().getViceCaptain().getId().equals(student.getId());
+        boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
         int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
+
+        List<String> subRoles = new ArrayList<>();
+        if (isCap)
+            subRoles.add("CAPTAIN");
+        if (isViceCap)
+            subRoles.add("VICE_CAPTAIN");
+
         AuthResponse response = AuthResponse.builder()
-            .token(token)
-            .type("Bearer")
-            .username(student.getRegNo())
-            .fullName(student.getFullName())
-            .email(student.getEmail())
-            .roles(List.of("ROLE_STUDENT"))
-            .subRoles(isCap ? List.of("CAPTAIN") : new ArrayList<>())
-            .userType(isCap ? "CAPTAIN" : "STUDENT")
-            .section(student.getSection() != null ? student.getSection().getSectionName() : null)
-            .sectionId(student.getSection() != null ? student.getSection().getId() : null)
-            .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
-            .year(student.getYearRef() != null ? student.getYearRef().getYearName() : student.getYear())
-            .department(student.getDepartment() != null ? (student.getDepartment().getName() != null ? student.getDepartment().getName() : student.getDepartment().getDeptName()) : "")
-            .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
-            .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName() : student.getSemester())
-            .sprNo(student.getSprNo())
-            .score(student.getScore())
-            .totalXp(student.getTotalXp())
-            .stage(student.getStage())
-            .teamRole(isCap ? "CAPTAIN" : "MEMBER")
-            .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
-            .rank(rank)
-            .build();
+                .token(token)
+                .type("Bearer")
+                .username(student.getRegNo())
+                .fullName(student.getFullName())
+                .email(student.getEmail())
+                .roles(List.of("ROLE_STUDENT"))
+                .subRoles(subRoles)
+                .userType(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "STUDENT"))
+                .section(student.getSection() != null ? student.getSection().getSectionName() : null)
+                .sectionId(student.getSection() != null ? student.getSection().getId() : null)
+                .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
+                .year(student.getYearRef() != null ? student.getYearRef().getYearName() : student.getYear())
+                .department(
+                        student.getDepartment() != null
+                                ? (student.getDepartment().getName() != null ? student.getDepartment().getName()
+                                        : student.getDepartment().getDeptName())
+                                : "")
+                .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
+                .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName()
+                        : student.getSemester())
+                .sprNo(student.getSprNo())
+                .score(student.getScore())
+                .totalXp(student.getTotalXp())
+                .stage(student.getStage())
+                .teamRole(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "MEMBER"))
+                .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
+                .rank(rank)
+                .isCaptain(isCap)
+                .isViceCaptain(isViceCap)
+                .isMember(isMem)
+                .build();
 
         System.out.println("Returned Rank: " + response.getRank());
         System.out.println("Returned Year: " + response.getYear());
@@ -222,7 +242,7 @@ public class AuthService {
         User user = userRepository.findByUsername(username).orElse(null);
         if (user != null) {
             List<String> rolesList = user.getRoles().stream()
-                    .map(com.spdms.entity.Role::getName)
+                    .map(com.pragatix.entity.Role::getName)
                     .collect(java.util.stream.Collectors.toList());
 
             String userType = "USER";
@@ -242,13 +262,14 @@ public class AuthService {
                     .email(user.getEmail())
                     .roles(rolesList)
                     .subRoles(user.getSubRoles().stream()
-                        .map(SubRole::getName)
-                        .collect(Collectors.toList()))
+                            .map(SubRole::getName)
+                            .collect(Collectors.toList()))
                     .userType(userType)
                     .section(user.getSection() != null ? user.getSection().getSectionName() : null)
                     .sectionId(user.getSection() != null ? user.getSection().getId() : null)
                     .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
                     .year(user.getYear())
+                    .academicYear(user.getAcademicYear() != null ? user.getAcademicYear().name() : null)
                     .department(user.getDepartment() != null ? user.getDepartment().getName() : "")
                     .build();
             return ApiResponse.ok("Profile loaded", response);
@@ -259,19 +280,13 @@ public class AuthService {
             student = studentRepository.findByEmail(username).orElse(null);
         }
         if (student != null) {
-            boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId());
+            boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
+                    && student.getTeam().getCaptain().getId().equals(student.getId());
             boolean isViceCap = false;
-            
-            if (student.getTeam() != null) {
-                List<StageTeam> sts = stageTeamRepository.findByTeamId(student.getTeam().getId());
-                for(StageTeam st : sts) {
-                    if(st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
-                        isViceCap = true;
-                        break;
-                    }
-                }
+            if (student.getTeam() != null && student.getTeam().getViceCaptain() != null) {
+                isViceCap = student.getTeam().getViceCaptain().getId().equals(student.getId());
             }
-            
+
             boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
             int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
 
@@ -288,16 +303,22 @@ public class AuthService {
                     .sectionId(student.getSection() != null ? student.getSection().getId() : null)
                     .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
                     .year(student.getYearRef() != null ? student.getYearRef().getYearName() : student.getYear())
-                    .department(student.getDepartment() != null ? (student.getDepartment().getName() != null ? student.getDepartment().getName() : student.getDepartment().getDeptName()) : "")
+                    .department(
+                            student.getDepartment() != null
+                                    ? (student.getDepartment().getName() != null ? student.getDepartment().getName()
+                                            : student.getDepartment().getDeptName())
+                                    : "")
                     .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
-                    .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName() : student.getSemester())
+                    .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName()
+                            : student.getSemester())
                     .sprNo(student.getSprNo())
                     .score(student.getScore())
                     .totalXp(student.getTotalXp())
                     .stage(student.getStage())
                     .teamRole(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "MEMBER"))
                     .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
-                    .academicYear(student.getAcademicYearRef() != null ? student.getAcademicYearRef().getAcademicYear() : student.getAcademicYear())
+                    .academicYear(student.getAcademicYearRef() != null ? student.getAcademicYearRef().getAcademicYear()
+                            : student.getAcademicYear())
                     .currentStage(student.getStage())
                     .currentLevel(student.getStage()) // If level == stage
                     .groupXP(student.getGroupXp())
@@ -310,7 +331,7 @@ public class AuthService {
                     .isViceCaptain(isViceCap)
                     .isMember(isMem)
                     .build();
-            
+
             System.out.println("Returned Rank: " + response.getRank());
             System.out.println("Returned Year: " + response.getYear());
             System.out.println("Returned Section: " + response.getSection());

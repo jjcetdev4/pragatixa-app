@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -85,11 +85,8 @@ public class Student {
     @Column(nullable = false)
     private int score = 100;
 
-
-
     @Column(length = 20)
     private String semester;
-
 
     @Column(length = 10)
     private String year;
@@ -131,169 +128,457 @@ public class Student {
     @Column(name = "promotion_order")
     private Integer promotionOrder;
 
-    public Student() {}
+    public Student() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getRegNo() { return regNo; }
-    public void setRegNo(String regNo) { this.regNo = regNo; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getSprNo() { return sprNo; }
-    public void setSprNo(String sprNo) { this.sprNo = sprNo; }
+    public String getRegNo() {
+        return regNo;
+    }
 
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
+    }
 
-    public Section getSection() { return section; }
-    public void setSection(Section section) { this.section = section; }
+    public String getSprNo() {
+        return sprNo;
+    }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public void setSprNo(String sprNo) {
+        this.sprNo = sprNo;
+    }
 
-    public LocalDate getDobField() { return dobField; }
-    public void setDobField(LocalDate dobField) { this.dobField = dobField; }
+    public Department getDepartment() {
+        return department;
+    }
 
-    public Gender getGenderRef() { return genderRef; }
-    public void setGenderRef(Gender genderRef) { this.genderRef = genderRef; }
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
 
-    public String getPhoneNo() { return phoneNo; }
-    public void setPhoneNo(String phoneNo) { this.phoneNo = phoneNo; }
+    public Section getSection() {
+        return section;
+    }
 
-    public AcademicYear getAcademicYearRef() { return academicYearRef; }
-    public void setAcademicYearRef(AcademicYear academicYearRef) { this.academicYearRef = academicYearRef; }
+    public void setSection(Section section) {
+        this.section = section;
+    }
 
-    public Year getYearRef() { return yearRef; }
-    public void setYearRef(Year yearRef) { this.yearRef = yearRef; }
+    public User getUser() {
+        return user;
+    }
 
-    public Semester getSemesterRef() { return semesterRef; }
-    public void setSemesterRef(Semester semesterRef) { this.semesterRef = semesterRef; }
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-    public String getAcademicYear() { return academicYear; }
-    public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
+    public LocalDate getDobField() {
+        return dobField;
+    }
 
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    public void setDobField(LocalDate dobField) {
+        this.dobField = dobField;
+    }
 
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public Gender getGenderRef() {
+        return genderRef;
+    }
 
-    public LocalDate getDateOfBirth() { return dateOfBirth; }
-    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+    public void setGenderRef(Gender genderRef) {
+        this.genderRef = genderRef;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getPhoneNo() {
+        return phoneNo;
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public void setPhoneNo(String phoneNo) {
+        this.phoneNo = phoneNo;
+    }
 
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    public AcademicYear getAcademicYearRef() {
+        return academicYearRef;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setAcademicYearRef(AcademicYear academicYearRef) {
+        this.academicYearRef = academicYearRef;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public Year getYearRef() {
+        return yearRef;
+    }
 
-    public int getScore() { return score; }
-    public void setScore(int score) { this.score = score; }
+    public void setYearRef(Year yearRef) {
+        this.yearRef = yearRef;
+    }
 
+    public Semester getSemesterRef() {
+        return semesterRef;
+    }
 
+    public void setSemesterRef(Semester semesterRef) {
+        this.semesterRef = semesterRef;
+    }
 
-    public String getSemester() { return semester; }
-    public void setSemester(String semester) { this.semester = semester; }
+    public String getAcademicYear() {
+        return academicYear;
+    }
 
+    public void setAcademicYear(String academicYear) {
+        this.academicYear = academicYear;
+    }
 
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public boolean isActive() {
+        return active;
+    }
 
-    public Team getTeam() { return team; }
-    public void setTeam(Team team) { this.team = team; }
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 
-    public int getTotalXp() { return totalXp; }
-    public void setTotalXp(int totalXp) { this.totalXp = totalXp; }
+    public String getAddress() {
+        return address;
+    }
 
-    public int getGroupXp() { return groupXp; }
-    public void setGroupXp(int groupXp) { this.groupXp = groupXp; }
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
-    public int getIndividualXp() { return individualXp; }
-    public void setIndividualXp(int individualXp) { this.individualXp = individualXp; }
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
 
-    public int getMustXp() { return mustXp; }
-    public void setMustXp(int mustXp) { this.mustXp = mustXp; }
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
 
-    public int getStage() { return stage; }
-    public void setStage(int stage) { 
-        this.stage = stage; 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
+    }
+
+    public String getSemester() {
+        return semester;
+    }
+
+    public void setSemester(String semester) {
+        this.semester = semester;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public Team getTeam() {
+        return team;
+    }
+
+    public void setTeam(Team team) {
+        this.team = team;
+    }
+
+    public int getTotalXp() {
+        return totalXp;
+    }
+
+    public void setTotalXp(int totalXp) {
+        this.totalXp = totalXp;
+    }
+
+    public int getGroupXp() {
+        return groupXp;
+    }
+
+    public void setGroupXp(int groupXp) {
+        this.groupXp = groupXp;
+    }
+
+    public int getIndividualXp() {
+        return individualXp;
+    }
+
+    public void setIndividualXp(int individualXp) {
+        this.individualXp = individualXp;
+    }
+
+    public int getMustXp() {
+        return mustXp;
+    }
+
+    public void setMustXp(int mustXp) {
+        this.mustXp = mustXp;
+    }
+
+    public int getStage() {
+        return stage;
+    }
+
+    public void setStage(int stage) {
+        this.stage = stage;
         this.currentStage = stage;
     }
 
-    public int getCurrentStage() { return stage; }
-    public void setCurrentStage(int currentStage) { 
+    public int getCurrentStage() {
+        return stage;
+    }
+
+    public void setCurrentStage(int currentStage) {
         this.stage = currentStage;
         this.currentStage = currentStage;
     }
 
-    public Long getCurrentStageId() { return currentStageId; }
-    public void setCurrentStageId(Long currentStageId) { this.currentStageId = currentStageId; }
+    public Long getCurrentStageId() {
+        return currentStageId;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setCurrentStageId(Long currentStageId) {
+        this.currentStageId = currentStageId;
+    }
 
-    public LocalDateTime getPromotionTimestamp() { return promotionTimestamp; }
-    public void setPromotionTimestamp(LocalDateTime promotionTimestamp) { this.promotionTimestamp = promotionTimestamp; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-    public Integer getPromotionOrder() { return promotionOrder; }
-    public void setPromotionOrder(Integer promotionOrder) { this.promotionOrder = promotionOrder; }
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public LocalDateTime getPromotionTimestamp() {
+        return promotionTimestamp;
+    }
+
+    public void setPromotionTimestamp(LocalDateTime promotionTimestamp) {
+        this.promotionTimestamp = promotionTimestamp;
+    }
+
+    public Integer getPromotionOrder() {
+        return promotionOrder;
+    }
+
+    public void setPromotionOrder(Integer promotionOrder) {
+        this.promotionOrder = promotionOrder;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final Student s = new Student();
-        public Builder regNo(String v) { s.regNo = v; return this; }
-        public Builder sprNo(String v) { s.sprNo = v; return this; }
-        public Builder department(Department v) { s.department = v; return this; }
-        public Builder section(Section v) { s.section = v; return this; }
-        public Builder user(User v) { s.user = v; return this; }
-        public Builder dobField(LocalDate v) { s.dobField = v; return this; }
-        public Builder genderRef(Gender v) { s.genderRef = v; return this; }
-        public Builder phoneNo(String v) { s.phoneNo = v; return this; }
-        public Builder academicYearRef(AcademicYear v) { s.academicYearRef = v; return this; }
-        public Builder yearRef(Year v) { s.yearRef = v; return this; }
-        public Builder semesterRef(Semester v) { s.semesterRef = v; return this; }
-        public Builder academicYear(String v) { s.academicYear = v; return this; }
-        public Builder active(boolean v) { s.active = v; return this; }
-        public Builder address(String v) { s.address = v; return this; }
-        public Builder dateOfBirth(LocalDate v) { s.dateOfBirth = v; return this; }
-        public Builder email(String v) { s.email = v; return this; }
-        public Builder fullName(String v) { s.fullName = v; return this; }
-        public Builder gender(String v) { s.gender = v; return this; }
-        public Builder password(String v) { s.password = v; return this; }
-        public Builder phone(String v) { s.phone = v; return this; }
-        public Builder score(int v) { s.score = v; return this; }
 
-        public Builder semester(String v) { s.semester = v; return this; }
-        public Builder year(String v) { s.year = v; return this; }
-        public Builder team(Team v) { s.team = v; return this; }
-        public Builder totalXp(int v) { s.totalXp = v; return this; }
-        public Builder groupXp(int v) { s.groupXp = v; return this; }
-        public Builder individualXp(int v) { s.individualXp = v; return this; }
-        public Builder mustXp(int v) { s.mustXp = v; return this; }
-        public Builder stage(int v) { 
-            s.stage = v; 
-            s.currentStage = v;
-            return this; 
+        public Builder regNo(String v) {
+            s.regNo = v;
+            return this;
         }
-        public Builder currentStage(int v) { 
-            s.currentStage = v; 
+
+        public Builder sprNo(String v) {
+            s.sprNo = v;
+            return this;
+        }
+
+        public Builder department(Department v) {
+            s.department = v;
+            return this;
+        }
+
+        public Builder section(Section v) {
+            s.section = v;
+            return this;
+        }
+
+        public Builder user(User v) {
+            s.user = v;
+            return this;
+        }
+
+        public Builder dobField(LocalDate v) {
+            s.dobField = v;
+            return this;
+        }
+
+        public Builder genderRef(Gender v) {
+            s.genderRef = v;
+            return this;
+        }
+
+        public Builder phoneNo(String v) {
+            s.phoneNo = v;
+            return this;
+        }
+
+        public Builder academicYearRef(AcademicYear v) {
+            s.academicYearRef = v;
+            return this;
+        }
+
+        public Builder yearRef(Year v) {
+            s.yearRef = v;
+            return this;
+        }
+
+        public Builder semesterRef(Semester v) {
+            s.semesterRef = v;
+            return this;
+        }
+
+        public Builder academicYear(String v) {
+            s.academicYear = v;
+            return this;
+        }
+
+        public Builder active(boolean v) {
+            s.active = v;
+            return this;
+        }
+
+        public Builder address(String v) {
+            s.address = v;
+            return this;
+        }
+
+        public Builder dateOfBirth(LocalDate v) {
+            s.dateOfBirth = v;
+            return this;
+        }
+
+        public Builder email(String v) {
+            s.email = v;
+            return this;
+        }
+
+        public Builder fullName(String v) {
+            s.fullName = v;
+            return this;
+        }
+
+        public Builder gender(String v) {
+            s.gender = v;
+            return this;
+        }
+
+        public Builder password(String v) {
+            s.password = v;
+            return this;
+        }
+
+        public Builder phone(String v) {
+            s.phone = v;
+            return this;
+        }
+
+        public Builder score(int v) {
+            s.score = v;
+            return this;
+        }
+
+        public Builder semester(String v) {
+            s.semester = v;
+            return this;
+        }
+
+        public Builder year(String v) {
+            s.year = v;
+            return this;
+        }
+
+        public Builder team(Team v) {
+            s.team = v;
+            return this;
+        }
+
+        public Builder totalXp(int v) {
+            s.totalXp = v;
+            return this;
+        }
+
+        public Builder groupXp(int v) {
+            s.groupXp = v;
+            return this;
+        }
+
+        public Builder individualXp(int v) {
+            s.individualXp = v;
+            return this;
+        }
+
+        public Builder mustXp(int v) {
+            s.mustXp = v;
+            return this;
+        }
+
+        public Builder stage(int v) {
             s.stage = v;
-            return this; 
+            s.currentStage = v;
+            return this;
         }
+
+        public Builder currentStage(int v) {
+            s.currentStage = v;
+            s.stage = v;
+            return this;
+        }
+
         public Builder currentStageId(Long v) {
             s.currentStageId = v;
             return this;
         }
-        public Student build() { return s; }
+
+        public Student build() {
+            return s;
+        }
     }
 }

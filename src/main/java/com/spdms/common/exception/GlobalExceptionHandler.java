@@ -1,6 +1,6 @@
-package com.spdms.common.exception;
+package com.pragatix.common.exception;
 
-import com.spdms.common.response.ApiResponse;
+import com.pragatix.common.response.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
@@ -24,8 +24,8 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleValidationErrors(MethodArgumentNotValidException ex) {
         String errors = ex.getBindingResult().getFieldErrors().stream()
-            .map(FieldError::getDefaultMessage)
-            .collect(Collectors.joining(", "));
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.joining(", "));
         return ApiResponse.error(errors);
     }
 
@@ -37,9 +37,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiResponse<Void> handleDataIntegrityViolationException(org.springframework.dao.DataIntegrityViolationException ex) {
+    public ApiResponse<Void> handleDataIntegrityViolationException(
+            org.springframework.dao.DataIntegrityViolationException ex) {
         log.error("Data integrity violation: {}", ex.getMessage(), ex);
-        return ApiResponse.error("Operation failed due to database constraint violation. Please verify that referencing records are removed first.");
+        return ApiResponse.error(
+                "Operation failed due to database constraint violation. Please verify that referencing records are removed first.");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

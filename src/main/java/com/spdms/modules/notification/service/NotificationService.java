@@ -1,11 +1,11 @@
-package com.spdms.modules.notification.service;
+package com.pragatix.modules.notification.service;
 
-import com.spdms.entity.SmsNotification;
-import com.spdms.entity.Student;
-import com.spdms.entity.StudentGuardian;
-import com.spdms.repository.SmsNotificationRepository;
-import com.spdms.repository.StudentGuardianRepository;
-import com.spdms.modules.student.repository.StudentRepository;
+import com.pragatix.entity.SmsNotification;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.StudentGuardian;
+import com.pragatix.repository.SmsNotificationRepository;
+import com.pragatix.repository.StudentGuardianRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -39,7 +39,7 @@ public class NotificationService {
     }
 
     /**
-     * Executes asynchronously and in a completely new transaction to ensure 
+     * Executes asynchronously and in a completely new transaction to ensure
      * it does not interfere with the calling Attendance transaction.
      */
     @Async

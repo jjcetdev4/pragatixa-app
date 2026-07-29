@@ -1,16 +1,16 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.dto.*;
-import com.spdms.modules.activity.dto.request.*;
-import com.spdms.modules.activity.dto.response.*;
-import com.spdms.modules.student.dto.request.*;
-import com.spdms.modules.student.dto.response.*;
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.*;
-import com.spdms.repository.*;
-import com.spdms.modules.activity.repository.*;
-import com.spdms.modules.faculty.repository.*;
-import com.spdms.modules.student.repository.*;
+import com.pragatix.dto.*;
+import com.pragatix.modules.activity.dto.request.*;
+import com.pragatix.modules.activity.dto.response.*;
+import com.pragatix.modules.student.dto.request.*;
+import com.pragatix.modules.student.dto.response.*;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.*;
+import com.pragatix.repository.*;
+import com.pragatix.modules.activity.repository.*;
+import com.pragatix.modules.faculty.repository.*;
+import com.pragatix.modules.student.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -48,7 +48,7 @@ public class StudentTeamService {
             if (teamRepository.existsByName(defaultTeamName)) {
                 defaultTeamName = student.getFullName().trim() + " Team " + System.currentTimeMillis();
             }
-            
+
             team = Team.builder()
                     .name(defaultTeamName)
                     .size(10) // Default max size of 10

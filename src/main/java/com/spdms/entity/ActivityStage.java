@@ -1,13 +1,13 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import com.spdms.enums.StageStatus;
+import com.pragatix.enums.StageStatus;
 
 @Entity
 @Table(name = "activity_stages", uniqueConstraints = {
-    @UniqueConstraint(name = "uq_stage_name", columnNames = {"stage_name"}),
-    @UniqueConstraint(name = "UK94qv2sd8jwbxsmdv8r4aibi7v", columnNames = {"name"})
+        @UniqueConstraint(name = "uq_stage_name", columnNames = { "stage_name" }),
+        @UniqueConstraint(name = "UK94qv2sd8jwbxsmdv8r4aibi7v", columnNames = { "name" })
 })
 public class ActivityStage {
 
@@ -67,9 +67,15 @@ public class ActivityStage {
     @Column(name = "group_threshold", nullable = false)
     private Integer groupThreshold = 0;
 
-    public ActivityStage() {}
+    @Enumerated(EnumType.STRING)
+    @Column(name = "academic_year")
+    private com.pragatix.enums.AcademicYear academicYear;
 
-    public ActivityStage(Long id, String name, String description, Integer expectedXp, LocalDateTime startDateTime, LocalDateTime endDateTime, int displayOrder, StageStatus status) {
+    public ActivityStage() {
+    }
+
+    public ActivityStage(Long id, String name, String description, Integer expectedXp, LocalDateTime startDateTime,
+            LocalDateTime endDateTime, int displayOrder, StageStatus status) {
         this.id = id;
         this.name = name;
         this.stageName = name;
@@ -81,77 +87,244 @@ public class ActivityStage {
         this.status = status;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public boolean isUseDateValidation() { return useDateValidation; }
-    public void setUseDateValidation(boolean useDateValidation) { this.useDateValidation = useDateValidation; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public boolean isUseThresholdValidation() { return useThresholdValidation; }
-    public void setUseThresholdValidation(boolean useThresholdValidation) { this.useThresholdValidation = useThresholdValidation; }
+    public boolean isUseDateValidation() {
+        return useDateValidation;
+    }
 
-    public boolean isUseCombinedValidation() { return useCombinedValidation; }
-    public void setUseCombinedValidation(boolean useCombinedValidation) { this.useCombinedValidation = useCombinedValidation; }
+    public void setUseDateValidation(boolean useDateValidation) {
+        this.useDateValidation = useDateValidation;
+    }
 
-    public String getStageName() { return stageName; }
-    public void setStageName(String stageName) { this.stageName = stageName; }
+    public boolean isUseThresholdValidation() {
+        return useThresholdValidation;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setUseThresholdValidation(boolean useThresholdValidation) {
+        this.useThresholdValidation = useThresholdValidation;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public boolean isUseCombinedValidation() {
+        return useCombinedValidation;
+    }
 
-    public Integer getExpectedXp() { return expectedXp; }
-    public void setExpectedXp(Integer expectedXp) { this.expectedXp = expectedXp; }
+    public void setUseCombinedValidation(boolean useCombinedValidation) {
+        this.useCombinedValidation = useCombinedValidation;
+    }
 
-    public LocalDateTime getStartDateTime() { return startDateTime; }
-    public void setStartDateTime(LocalDateTime startDateTime) { this.startDateTime = startDateTime; }
+    public String getStageName() {
+        return stageName;
+    }
 
-    public LocalDateTime getEndDateTime() { return endDateTime; }
-    public void setEndDateTime(LocalDateTime endDateTime) { this.endDateTime = endDateTime; }
+    public void setStageName(String stageName) {
+        this.stageName = stageName;
+    }
 
-    public int getDisplayOrder() { return displayOrder; }
-    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
+    public String getName() {
+        return name;
+    }
 
-    public StageStatus getStatus() { return status; }
-    public void setStatus(StageStatus status) { this.status = status; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
+    public String getDescription() {
+        return description;
+    }
 
-    public Integer getMustThreshold() { return mustThreshold; }
-    public void setMustThreshold(Integer mustThreshold) { this.mustThreshold = mustThreshold; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public Integer getIndividualThreshold() { return individualThreshold; }
-    public void setIndividualThreshold(Integer individualThreshold) { this.individualThreshold = individualThreshold; }
+    public Integer getExpectedXp() {
+        return expectedXp;
+    }
 
-    public Integer getGroupThreshold() { return groupThreshold; }
-    public void setGroupThreshold(Integer groupThreshold) { this.groupThreshold = groupThreshold; }
+    public void setExpectedXp(Integer expectedXp) {
+        this.expectedXp = expectedXp;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getStartDateTime() {
+        return startDateTime;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public void setStartDateTime(LocalDateTime startDateTime) {
+        this.startDateTime = startDateTime;
+    }
+
+    public LocalDateTime getEndDateTime() {
+        return endDateTime;
+    }
+
+    public void setEndDateTime(LocalDateTime endDateTime) {
+        this.endDateTime = endDateTime;
+    }
+
+    public int getDisplayOrder() {
+        return displayOrder;
+    }
+
+    public void setDisplayOrder(int displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    public StageStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(StageStatus status) {
+        this.status = status;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public Integer getMustThreshold() {
+        return mustThreshold;
+    }
+
+    public void setMustThreshold(Integer mustThreshold) {
+        this.mustThreshold = mustThreshold;
+    }
+
+    public Integer getIndividualThreshold() {
+        return individualThreshold;
+    }
+
+    public void setIndividualThreshold(Integer individualThreshold) {
+        this.individualThreshold = individualThreshold;
+    }
+
+    public Integer getGroupThreshold() {
+        return groupThreshold;
+    }
+
+    public void setGroupThreshold(Integer groupThreshold) {
+        this.groupThreshold = groupThreshold;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public com.pragatix.enums.AcademicYear getAcademicYear() {
+        return academicYear;
+    }
+
+    public void setAcademicYear(com.pragatix.enums.AcademicYear academicYear) {
+        this.academicYear = academicYear;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final ActivityStage stage = new ActivityStage();
-        public Builder id(Long v) { stage.id = v; return this; }
-        public Builder stageName(String v) { stage.stageName = v; return this; }
-        public Builder name(String v) { stage.name = v; return this; }
-        public Builder description(String v) { stage.description = v; return this; }
-        public Builder expectedXp(Integer v) { stage.expectedXp = v; return this; }
-        public Builder startDateTime(LocalDateTime v) { stage.startDateTime = v; return this; }
-        public Builder endDateTime(LocalDateTime v) { stage.endDateTime = v; return this; }
-        public Builder displayOrder(int v) { stage.displayOrder = v; return this; }
-        public Builder status(StageStatus v) { stage.status = v; return this; }
-        public Builder isActive(boolean v) { stage.isActive = v; return this; }
-        public Builder useDateValidation(boolean v) { stage.useDateValidation = v; return this; }
-        public Builder useThresholdValidation(boolean v) { stage.useThresholdValidation = v; return this; }
-        public Builder useCombinedValidation(boolean v) { stage.useCombinedValidation = v; return this; }
-        public Builder mustThreshold(Integer v) { stage.mustThreshold = v; return this; }
-        public Builder individualThreshold(Integer v) { stage.individualThreshold = v; return this; }
-        public Builder groupThreshold(Integer v) { stage.groupThreshold = v; return this; }
-        public ActivityStage build() { return stage; }
+
+        public Builder id(Long v) {
+            stage.id = v;
+            return this;
+        }
+
+        public Builder stageName(String v) {
+            stage.stageName = v;
+            return this;
+        }
+
+        public Builder name(String v) {
+            stage.name = v;
+            return this;
+        }
+
+        public Builder description(String v) {
+            stage.description = v;
+            return this;
+        }
+
+        public Builder expectedXp(Integer v) {
+            stage.expectedXp = v;
+            return this;
+        }
+
+        public Builder startDateTime(LocalDateTime v) {
+            stage.startDateTime = v;
+            return this;
+        }
+
+        public Builder endDateTime(LocalDateTime v) {
+            stage.endDateTime = v;
+            return this;
+        }
+
+        public Builder displayOrder(int v) {
+            stage.displayOrder = v;
+            return this;
+        }
+
+        public Builder status(StageStatus v) {
+            stage.status = v;
+            return this;
+        }
+
+        public Builder isActive(boolean v) {
+            stage.isActive = v;
+            return this;
+        }
+
+        public Builder useDateValidation(boolean v) {
+            stage.useDateValidation = v;
+            return this;
+        }
+
+        public Builder useThresholdValidation(boolean v) {
+            stage.useThresholdValidation = v;
+            return this;
+        }
+
+        public Builder useCombinedValidation(boolean v) {
+            stage.useCombinedValidation = v;
+            return this;
+        }
+
+        public Builder mustThreshold(Integer v) {
+            stage.mustThreshold = v;
+            return this;
+        }
+
+        public Builder individualThreshold(Integer v) {
+            stage.individualThreshold = v;
+            return this;
+        }
+
+        public Builder groupThreshold(Integer v) {
+            stage.groupThreshold = v;
+            return this;
+        }
+
+        public Builder academicYear(com.pragatix.enums.AcademicYear v) {
+            stage.academicYear = v;
+            return this;
+        }
+
+        public ActivityStage build() {
+            return stage;
+        }
     }
 }

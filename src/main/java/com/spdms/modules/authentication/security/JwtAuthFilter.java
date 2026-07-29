@@ -1,7 +1,8 @@
-package com.spdms.modules.authentication.security;
-import com.spdms.modules.authentication.security.JwtUtil;
-import com.spdms.modules.authentication.security.StudentDetailsService;
-import com.spdms.modules.authentication.security.CustomUserDetailsService;
+package com.pragatix.modules.authentication.security;
+
+import com.pragatix.modules.authentication.security.JwtUtil;
+import com.pragatix.modules.authentication.security.StudentDetailsService;
+import com.pragatix.modules.authentication.security.CustomUserDetailsService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,7 +21,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * JWT Authentication Filter – intercepts every request and validates Bearer tokens.
+ * JWT Authentication Filter – intercepts every request and validates Bearer
+ * tokens.
  */
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -31,9 +33,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
     private final StudentDetailsService studentDetailsService;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, 
-                         CustomUserDetailsService userDetailsService,
-                         StudentDetailsService studentDetailsService) {
+    public JwtAuthFilter(JwtUtil jwtUtil,
+            CustomUserDetailsService userDetailsService,
+            StudentDetailsService studentDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
         this.studentDetailsService = studentDetailsService;
@@ -43,8 +45,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
 

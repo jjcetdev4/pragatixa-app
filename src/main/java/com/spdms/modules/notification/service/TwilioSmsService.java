@@ -1,7 +1,7 @@
-package com.spdms.modules.notification.service;
+package com.pragatix.modules.notification.service;
 
-import com.spdms.modules.notification.config.TwilioConfig;
-import com.spdms.modules.notification.exception.NotificationException;
+import com.pragatix.modules.notification.config.TwilioConfig;
+import com.pragatix.modules.notification.exception.NotificationException;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import org.slf4j.Logger;
@@ -25,7 +25,8 @@ public class TwilioSmsService implements SmsService {
                 throw new NotificationException("Twilio phone number is not configured.");
             }
 
-            // Ensure phone number starts with country code, assuming India +91 if not provided
+            // Ensure phone number starts with country code, assuming India +91 if not
+            // provided
             String formattedPhone = phone;
             if (!formattedPhone.startsWith("+")) {
                 formattedPhone = "+91" + formattedPhone;
@@ -36,7 +37,7 @@ public class TwilioSmsService implements SmsService {
             int charCount = messageContent.length();
             int byteCount = messageContent.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
             int estimatedSegments = (int) Math.ceil((double) charCount / 70.0);
-            
+
             log.info("Character Count: {}", charCount);
             log.info("Byte Count (UTF-8): {}", byteCount);
             log.info("Estimated SMS Segments: {}", estimatedSegments);
@@ -47,8 +48,7 @@ public class TwilioSmsService implements SmsService {
             Message message = Message.creator(
                     new PhoneNumber(formattedPhone),
                     new PhoneNumber(twilioConfig.getPhoneNumber()),
-                    messageContent
-            ).create();
+                    messageContent).create();
 
             log.info("SMS SID: {}", message.getSid());
             log.info("SMS STATUS: {}", message.getStatus());
@@ -71,7 +71,8 @@ public class TwilioSmsService implements SmsService {
             Message fetchedMessage = Message.fetcher(message.getSid()).fetch();
             log.info("Current Status: {}", fetchedMessage.getStatus());
 
-            if (fetchedMessage.getStatus() == Message.Status.FAILED || fetchedMessage.getStatus() == Message.Status.UNDELIVERED) {
+            if (fetchedMessage.getStatus() == Message.Status.FAILED
+                    || fetchedMessage.getStatus() == Message.Status.UNDELIVERED) {
                 log.error("Error Code: {}", fetchedMessage.getErrorCode());
                 log.error("Error Message: {}", fetchedMessage.getErrorMessage());
             }

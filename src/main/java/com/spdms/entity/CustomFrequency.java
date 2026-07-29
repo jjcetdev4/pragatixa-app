@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 
@@ -32,7 +32,8 @@ public class CustomFrequency {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public CustomFrequency() {}
+    public CustomFrequency() {
+    }
 
     public CustomFrequency(String name, String capType, Integer defaultCap) {
         this.name = name;
@@ -40,21 +41,51 @@ public class CustomFrequency {
         this.defaultCap = defaultCap;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getCapType() { return capType; }
-    public void setCapType(String capType) { this.capType = capType; }
+    public String getName() {
+        return name;
+    }
 
-    public Integer getDefaultCap() { return defaultCap; }
-    public void setDefaultCap(Integer defaultCap) { this.defaultCap = defaultCap; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getCapType() {
+        return capType;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setCapType(String capType) {
+        this.capType = capType;
+    }
+
+    public Integer getDefaultCap() {
+        return defaultCap;
+    }
+
+    public void setDefaultCap(Integer defaultCap) {
+        this.defaultCap = defaultCap;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

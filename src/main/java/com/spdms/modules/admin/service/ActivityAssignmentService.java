@@ -1,19 +1,19 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Activity;
-import com.spdms.entity.ActivityAssignment;
-import com.spdms.entity.AssignmentScope;
-import com.spdms.entity.Department;
-import com.spdms.entity.Section;
-import com.spdms.entity.User;
-import com.spdms.modules.activity.repository.ActivityRepository;
-import com.spdms.repository.ActivityAssignmentRepository;
-import com.spdms.repository.DepartmentRepository;
-import com.spdms.repository.SectionRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
-import com.spdms.modules.activity.dto.request.AssignmentRequest;
-import com.spdms.modules.activity.dto.response.ActivityAssignmentResponse;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.Activity;
+import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.entity.AssignmentScope;
+import com.pragatix.entity.Department;
+import com.pragatix.entity.Section;
+import com.pragatix.entity.User;
+import com.pragatix.modules.activity.repository.ActivityRepository;
+import com.pragatix.repository.ActivityAssignmentRepository;
+import com.pragatix.repository.DepartmentRepository;
+import com.pragatix.repository.SectionRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.modules.activity.dto.request.AssignmentRequest;
+import com.pragatix.modules.activity.dto.response.ActivityAssignmentResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.spdms.modules.student.repository.StudentActivityXpRepository;
+import com.pragatix.modules.student.repository.StudentActivityXpRepository;
 
 @Service
 public class ActivityAssignmentService {
@@ -39,12 +39,12 @@ public class ActivityAssignmentService {
     private final UserRepository userRepository;
     private final StudentActivityXpRepository studentActivityXpRepository;
 
-    public ActivityAssignmentService(ActivityAssignmentRepository activityAssignmentRepository, 
-                                     ActivityRepository activityRepository, 
-                                     DepartmentRepository departmentRepository, 
-                                     SectionRepository sectionRepository, 
-                                     UserRepository userRepository,
-                                     StudentActivityXpRepository studentActivityXpRepository) {
+    public ActivityAssignmentService(ActivityAssignmentRepository activityAssignmentRepository,
+            ActivityRepository activityRepository,
+            DepartmentRepository departmentRepository,
+            SectionRepository sectionRepository,
+            UserRepository userRepository,
+            StudentActivityXpRepository studentActivityXpRepository) {
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.activityRepository = activityRepository;
         this.departmentRepository = departmentRepository;
@@ -88,15 +88,16 @@ public class ActivityAssignmentService {
 
             List<Section> allSections = sectionRepository.findAll();
             Map<Long, List<Section>> sectionsByDept = allSections.stream()
-                .filter(s -> s.getDepartment() != null)
-                .collect(java.util.stream.Collectors.groupingBy(s -> s.getDepartment().getId()));
+                    .filter(s -> s.getDepartment() != null)
+                    .collect(java.util.stream.Collectors.groupingBy(s -> s.getDepartment().getId()));
 
             for (Department dept : allDepts) {
                 List<Section> sections = sectionsByDept.getOrDefault(dept.getId(), new ArrayList<>());
                 for (Section sec : sections) {
                     User cc = ccMap.get(dept.getId() + "_" + sec.getId());
                     if (cc == null) {
-                        warnings.add("Section " + sec.getSectionName() + " (" + dept.getName() + "): No Class Coordinator assigned");
+                        warnings.add("Section " + sec.getSectionName() + " (" + dept.getName()
+                                + "): No Class Coordinator assigned");
                         continue;
                     }
                     ActivityAssignment aa = new ActivityAssignment();
@@ -116,7 +117,9 @@ public class ActivityAssignmentService {
             }
             if (!warnings.isEmpty()) {
                 log.warn("CC Assignment completed with warnings: {}", warnings);
-                return ResponseEntity.ok(ApiResponse.ok("Assigned to sections with class coordinators. Warnings: " + String.join(", ", warnings), null));
+                return ResponseEntity.ok(ApiResponse.ok(
+                        "Assigned to sections with class coordinators. Warnings: " + String.join(", ", warnings),
+                        null));
             }
             return ResponseEntity.ok(ApiResponse.ok("Class Coordinator assignments saved successfully", null));
 
@@ -145,14 +148,14 @@ public class ActivityAssignmentService {
             // MANUAL ASSIGNMENT MODE
             activity.setAssignmentMode("MANUAL");
             activityRepository.save(activity);
-            
+
             List<Map<String, Object>> assignmentsList = (List<Map<String, Object>>) body.get("assignments");
             List<ActivityAssignment> assignmentsToSave = new ArrayList<>();
             if (assignmentsList != null) {
                 for (Map<String, Object> item : assignmentsList) {
                     ActivityAssignment aa = new ActivityAssignment();
                     aa.setActivity(activity);
-                    
+
                     String scopeStr = (String) item.get("scope");
                     AssignmentScope scope = AssignmentScope.valueOf(scopeStr);
                     aa.setAssignmentScope(scope);
@@ -167,7 +170,8 @@ public class ActivityAssignmentService {
                         Long secId = ((Number) item.get("sectionId")).longValue();
                         Section sec = sectionRepository.findById(secId).orElse(null);
                         aa.setSection(sec);
-                        if (sec != null) aa.setDepartment(sec.getDepartment());
+                        if (sec != null)
+                            aa.setDepartment(sec.getDepartment());
                     }
 
                     if (item.containsKey("teacherId") && item.get("teacherId") != null) {
@@ -185,41 +189,45 @@ public class ActivityAssignmentService {
             return ResponseEntity.ok(ApiResponse.ok("Activity assignments updated successfully", null));
         }
     }
+
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<ActivityAssignmentResponse>>> getAssignments(Long activityId) {
         Activity activity = activityRepository.findById(activityId).orElse(null);
         if (activity == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<List<ActivityAssignmentResponse>>error("Activity not found"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<ActivityAssignmentResponse>>error("Activity not found"));
         }
-        
+
         List<ActivityAssignment> assignments = activityAssignmentRepository.findByActivityId(activityId);
         List<ActivityAssignmentResponse> response = assignments.stream().map(a -> new ActivityAssignmentResponse(
-            a.getId(),
-            a.getActivity().getId(),
-            a.getActivity().getName(),
-            a.getDepartment() != null ? a.getDepartment().getId() : null,
-            a.getDepartment() != null ? a.getDepartment().getName() : null,
-            a.getSection() != null ? a.getSection().getId() : null,
-            a.getSection() != null ? a.getSection().getSectionName() : null,
-            a.getTeacher() != null ? a.getTeacher().getId() : null,
-            a.getTeacher() != null ? a.getTeacher().getFullName() : null,
-            a.getTeacher() != null ? a.getTeacher().getUsername() : null,
-            a.getAssignedBy() != null ? a.getAssignedBy().getFullName() : "System",
-            a.getAssignedAt(),
-            a.getYear(),
-            a.getAssignmentScope() != null ? a.getAssignmentScope().name() : null
-        )).collect(java.util.stream.Collectors.toList());
-        
+                a.getId(),
+                a.getActivity().getId(),
+                a.getActivity().getName(),
+                a.getDepartment() != null ? a.getDepartment().getId() : null,
+                a.getDepartment() != null ? a.getDepartment().getName() : null,
+                a.getSection() != null ? a.getSection().getId() : null,
+                a.getSection() != null ? a.getSection().getSectionName() : null,
+                a.getTeacher() != null ? a.getTeacher().getId() : null,
+                a.getTeacher() != null ? a.getTeacher().getFullName() : null,
+                a.getTeacher() != null ? a.getTeacher().getUsername() : null,
+                a.getAssignedBy() != null ? a.getAssignedBy().getFullName() : "System",
+                a.getAssignedAt(),
+                a.getYear(),
+                a.getAssignmentScope() != null ? a.getAssignmentScope().name() : null))
+                .collect(java.util.stream.Collectors.toList());
+
         return ResponseEntity.ok(ApiResponse.ok("Assignments fetched successfully", response));
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<ActivityAssignmentResponse>> addAssignment(Long activityId, AssignmentRequest request) {
+    public ResponseEntity<ApiResponse<ActivityAssignmentResponse>> addAssignment(Long activityId,
+            AssignmentRequest request) {
         Activity activity = activityRepository.findById(activityId).orElse(null);
         if (activity == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<ActivityAssignmentResponse>error("Activity not found"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<ActivityAssignmentResponse>error("Activity not found"));
         }
-        
+
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
@@ -227,12 +235,15 @@ public class ActivityAssignmentService {
         // Check for existing assignment for the same department and section
         List<ActivityAssignment> existing = activityAssignmentRepository.findByActivityId(activityId);
         ActivityAssignment aa = existing.stream().filter(a -> {
-            boolean deptMatch = (a.getDepartment() == null && request.getDepartmentId() == null) || 
-                                (a.getDepartment() != null && request.getDepartmentId() != null && a.getDepartment().getId().equals(request.getDepartmentId()));
-            boolean secMatch = (a.getSection() == null && request.getSectionId() == null) || 
-                               (a.getSection() != null && request.getSectionId() != null && a.getSection().getId().equals(request.getSectionId()));
-            boolean teacherMatch = (a.getTeacher() == null && request.getTeacherId() == null) || 
-                                   (a.getTeacher() != null && request.getTeacherId() != null && a.getTeacher().getId().equals(request.getTeacherId()));
+            boolean deptMatch = (a.getDepartment() == null && request.getDepartmentId() == null) ||
+                    (a.getDepartment() != null && request.getDepartmentId() != null
+                            && a.getDepartment().getId().equals(request.getDepartmentId()));
+            boolean secMatch = (a.getSection() == null && request.getSectionId() == null) ||
+                    (a.getSection() != null && request.getSectionId() != null
+                            && a.getSection().getId().equals(request.getSectionId()));
+            boolean teacherMatch = (a.getTeacher() == null && request.getTeacherId() == null) ||
+                    (a.getTeacher() != null && request.getTeacherId() != null
+                            && a.getTeacher().getId().equals(request.getTeacherId()));
             return deptMatch && secMatch && teacherMatch;
         }).findFirst().orElse(new ActivityAssignment());
 
@@ -248,14 +259,14 @@ public class ActivityAssignmentService {
         } else {
             aa.setDepartment(null);
         }
-        
+
         if (request.getSectionId() != null) {
             Section sec = sectionRepository.findById(request.getSectionId()).orElse(null);
             aa.setSection(sec);
         } else {
             aa.setSection(null);
         }
-        
+
         if (request.getTeacherId() != null) {
             User teacher = userRepository.findById(request.getTeacherId()).orElse(null);
             aa.setTeacher(teacher);
@@ -266,21 +277,20 @@ public class ActivityAssignmentService {
         activityAssignmentRepository.save(aa);
 
         ActivityAssignmentResponse resp = new ActivityAssignmentResponse(
-            aa.getId(),
-            aa.getActivity().getId(),
-            aa.getActivity().getName(),
-            aa.getDepartment() != null ? aa.getDepartment().getId() : null,
-            aa.getDepartment() != null ? aa.getDepartment().getName() : null,
-            aa.getSection() != null ? aa.getSection().getId() : null,
-            aa.getSection() != null ? aa.getSection().getSectionName() : null,
-            aa.getTeacher() != null ? aa.getTeacher().getId() : null,
-            aa.getTeacher() != null ? aa.getTeacher().getFullName() : null,
-            aa.getTeacher() != null ? aa.getTeacher().getUsername() : null,
-            aa.getAssignedBy() != null ? aa.getAssignedBy().getFullName() : "System",
-            aa.getAssignedAt(),
-            aa.getYear(),
-            aa.getAssignmentScope() != null ? aa.getAssignmentScope().name() : null
-        );
+                aa.getId(),
+                aa.getActivity().getId(),
+                aa.getActivity().getName(),
+                aa.getDepartment() != null ? aa.getDepartment().getId() : null,
+                aa.getDepartment() != null ? aa.getDepartment().getName() : null,
+                aa.getSection() != null ? aa.getSection().getId() : null,
+                aa.getSection() != null ? aa.getSection().getSectionName() : null,
+                aa.getTeacher() != null ? aa.getTeacher().getId() : null,
+                aa.getTeacher() != null ? aa.getTeacher().getFullName() : null,
+                aa.getTeacher() != null ? aa.getTeacher().getUsername() : null,
+                aa.getAssignedBy() != null ? aa.getAssignedBy().getFullName() : "System",
+                aa.getAssignedAt(),
+                aa.getYear(),
+                aa.getAssignmentScope() != null ? aa.getAssignmentScope().name() : null);
 
         return ResponseEntity.ok(ApiResponse.ok("Assignment added successfully", resp));
     }
@@ -302,14 +312,14 @@ public class ActivityAssignmentService {
         }
         studentActivityXpRepository.deleteByActivityId(activityId);
         activityAssignmentRepository.deleteByActivityId(activityId);
-        
+
         // Reset assignment mode since all assignments are cleared
         Activity activity = activityRepository.findById(activityId).orElse(null);
         if (activity != null) {
             activity.setAssignmentMode(null);
             activityRepository.save(activity);
         }
-        
+
         return ResponseEntity.ok(ApiResponse.ok("All faculty assignments removed successfully", null));
     }
 }

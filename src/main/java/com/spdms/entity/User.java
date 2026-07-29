@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -32,19 +32,11 @@ public class User {
     private String phone;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "user_sub_roles",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "sub_role_id")
-    )
+    @JoinTable(name = "user_sub_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "sub_role_id"))
     private Set<SubRole> subRoles = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -61,6 +53,10 @@ public class User {
     @Column(name = "year", length = 10)
     private String year;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "assigned_academic_year")
+    private com.pragatix.enums.AcademicYear academicYear;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -68,67 +64,199 @@ public class User {
     private LocalDateTime updatedAt;
 
     @PrePersist
-    protected void onCreate() { this.createdAt = LocalDateTime.now(); }
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     @PreUpdate
-    protected void onUpdate() { this.updatedAt = LocalDateTime.now(); }
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
-    public User() {}
+    public User() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getPassword() {
+        return password;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-    public Set<Role> getRoles() { return roles; }
-    public void setRoles(Set<Role> roles) { this.roles = roles; }
+    public String getFullName() {
+        return fullName;
+    }
 
-    public Set<SubRole> getSubRoles() { return subRoles; }
-    public void setSubRoles(Set<SubRole> subRoles) { this.subRoles = subRoles; }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
+    public String getEmail() {
+        return email;
+    }
 
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public Section getSection() { return section; }
-    public void setSection(Section section) { this.section = section; }
+    public String getPhone() {
+        return phone;
+    }
 
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Set<Role> getRoles() {
+        return roles;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public Set<SubRole> getSubRoles() {
+        return subRoles;
+    }
+
+    public void setSubRoles(Set<SubRole> subRoles) {
+        this.subRoles = subRoles;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public Section getSection() {
+        return section;
+    }
+
+    public void setSection(Section section) {
+        this.section = section;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public com.pragatix.enums.AcademicYear getAcademicYear() {
+        return academicYear;
+    }
+
+    public void setAcademicYear(com.pragatix.enums.AcademicYear academicYear) {
+        this.academicYear = academicYear;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final User user = new User();
-        public Builder username(String v) { user.username = v; return this; }
-        public Builder password(String v) { user.password = v; return this; }
-        public Builder fullName(String v) { user.fullName = v; return this; }
-        public Builder email(String v) { user.email = v; return this; }
-        public Builder phone(String v) { user.phone = v; return this; }
-        public Builder roles(Set<Role> v) { user.roles = v; return this; }
-        public Builder subRoles(Set<SubRole> v) { user.subRoles = v; return this; }
-        public Builder department(Department v) { user.department = v; return this; }
-        public Builder active(boolean v) { user.active = v; return this; }
-        public Builder section(Section v) { user.section = v; return this; }
-        public Builder year(String v) { user.year = v; return this; }
-        public User build() { return user; }
+
+        public Builder username(String v) {
+            user.username = v;
+            return this;
+        }
+
+        public Builder password(String v) {
+            user.password = v;
+            return this;
+        }
+
+        public Builder fullName(String v) {
+            user.fullName = v;
+            return this;
+        }
+
+        public Builder email(String v) {
+            user.email = v;
+            return this;
+        }
+
+        public Builder phone(String v) {
+            user.phone = v;
+            return this;
+        }
+
+        public Builder roles(Set<Role> v) {
+            user.roles = v;
+            return this;
+        }
+
+        public Builder subRoles(Set<SubRole> v) {
+            user.subRoles = v;
+            return this;
+        }
+
+        public Builder department(Department v) {
+            user.department = v;
+            return this;
+        }
+
+        public Builder active(boolean v) {
+            user.active = v;
+            return this;
+        }
+
+        public Builder section(Section v) {
+            user.section = v;
+            return this;
+        }
+
+        public Builder year(String v) {
+            user.year = v;
+            return this;
+        }
+
+        public Builder academicYear(com.pragatix.enums.AcademicYear v) {
+            user.academicYear = v;
+            return this;
+        }
+
+        public User build() {
+            return user;
+        }
     }
 }

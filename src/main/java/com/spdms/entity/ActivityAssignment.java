@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -41,32 +41,78 @@ public class ActivityAssignment {
     @Column(name = "assigned_at", nullable = false)
     private LocalDateTime assignedAt;
 
-    public ActivityAssignment() {}
+    public ActivityAssignment() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Activity getActivity() { return activity; }
-    public void setActivity(Activity activity) { this.activity = activity; }
+    public String getYear() {
+        return year;
+    }
 
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
+    public void setYear(String year) {
+        this.year = year;
+    }
 
-    public Section getSection() { return section; }
-    public void setSection(Section section) { this.section = section; }
+    public Activity getActivity() {
+        return activity;
+    }
 
-    public User getTeacher() { return teacher; }
-    public void setTeacher(User teacher) { this.teacher = teacher; }
+    public void setActivity(Activity activity) {
+        this.activity = activity;
+    }
 
-    public AssignmentScope getAssignmentScope() { return assignmentScope; }
-    public void setAssignmentScope(AssignmentScope assignmentScope) { this.assignmentScope = assignmentScope; }
+    public Department getDepartment() {
+        return department;
+    }
 
-    public User getAssignedBy() { return assignedBy; }
-    public void setAssignedBy(User assignedBy) { this.assignedBy = assignedBy; }
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
 
-    public LocalDateTime getAssignedAt() { return assignedAt; }
-    public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
+    public Section getSection() {
+        return section;
+    }
+
+    public void setSection(Section section) {
+        this.section = section;
+    }
+
+    public User getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(User teacher) {
+        this.teacher = teacher;
+    }
+
+    public AssignmentScope getAssignmentScope() {
+        return assignmentScope;
+    }
+
+    public void setAssignmentScope(AssignmentScope assignmentScope) {
+        this.assignmentScope = assignmentScope;
+    }
+
+    public User getAssignedBy() {
+        return assignedBy;
+    }
+
+    public void setAssignedBy(User assignedBy) {
+        this.assignedBy = assignedBy;
+    }
+
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+
+    public void setAssignedAt(LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
 }

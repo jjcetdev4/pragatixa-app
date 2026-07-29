@@ -1,14 +1,14 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.*;
-import com.spdms.modules.activity.repository.ActivityRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
-import com.spdms.modules.student.dto.request.CreateActivityCompletionRequestDto;
-import com.spdms.modules.student.dto.response.ActivityCompletionRequestDto;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.repository.TeamRepository;
-import com.spdms.repository.ActivityCompletionRequestRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.*;
+import com.pragatix.modules.activity.repository.ActivityRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.modules.student.dto.request.CreateActivityCompletionRequestDto;
+import com.pragatix.modules.student.dto.response.ActivityCompletionRequestDto;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.repository.TeamRepository;
+import com.pragatix.repository.ActivityCompletionRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,11 +28,11 @@ public class ActivityCompletionRequestService {
     private final StudentAssignmentResolver studentAssignmentResolver;
 
     public ActivityCompletionRequestService(ActivityCompletionRequestRepository repository,
-                                            StudentRepository studentRepository,
-                                            UserRepository userRepository,
-                                            ActivityRepository activityRepository,
-                                            TeamRepository teamRepository,
-                                            StudentAssignmentResolver studentAssignmentResolver) {
+            StudentRepository studentRepository,
+            UserRepository userRepository,
+            ActivityRepository activityRepository,
+            TeamRepository teamRepository,
+            StudentAssignmentResolver studentAssignmentResolver) {
         this.repository = repository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
@@ -45,15 +45,18 @@ public class ActivityCompletionRequestService {
         List<User> users = userRepository.findAll();
         return users.stream()
                 .filter(u -> u.getSubRoles().stream().anyMatch(sr -> "CC".equalsIgnoreCase(sr.getName())))
-                .filter(u -> u.getSection() != null && student.getSection() != null && u.getSection().getId().equals(student.getSection().getId()))
-                .filter(u -> u.getDepartment() != null && student.getDepartment() != null && u.getDepartment().getId().equals(student.getDepartment().getId()))
+                .filter(u -> u.getSection() != null && student.getSection() != null
+                        && u.getSection().getId().equals(student.getSection().getId()))
+                .filter(u -> u.getDepartment() != null && student.getDepartment() != null
+                        && u.getDepartment().getId().equals(student.getDepartment().getId()))
                 .filter(User::isActive)
                 .findFirst()
                 .orElse(null);
     }
 
     @Transactional
-    public ApiResponse<ActivityCompletionRequestDto> submitRequest(CreateActivityCompletionRequestDto dto, String username) {
+    public ApiResponse<ActivityCompletionRequestDto> submitRequest(CreateActivityCompletionRequestDto dto,
+            String username) {
         Optional<Student> studentOpt = studentRepository.findByRegNo(username);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
@@ -83,7 +86,8 @@ public class ActivityCompletionRequestService {
             }
 
             // Check duplicates for team
-            List<ActivityCompletionRequest> existing = repository.findByTeamIdAndActivityIdOrderByCreatedAtDesc(team.getId(), activity.getId());
+            List<ActivityCompletionRequest> existing = repository
+                    .findByTeamIdAndActivityIdOrderByCreatedAtDesc(team.getId(), activity.getId());
             if (existing.stream().anyMatch(r -> "PENDING".equals(r.getStatus()))) {
                 return ApiResponse.error("A request is already pending for this team");
             }
@@ -92,7 +96,8 @@ public class ActivityCompletionRequestService {
             }
         } else {
             // Check duplicates for student
-            List<ActivityCompletionRequest> existing = repository.findByStudentIdAndActivityIdOrderByCreatedAtDesc(student.getId(), activity.getId());
+            List<ActivityCompletionRequest> existing = repository
+                    .findByStudentIdAndActivityIdOrderByCreatedAtDesc(student.getId(), activity.getId());
             if (existing.stream().anyMatch(r -> "PENDING".equals(r.getStatus()))) {
                 return ApiResponse.error("A request is already pending");
             }
@@ -143,57 +148,69 @@ public class ActivityCompletionRequestService {
         System.out.println("--- INBOX API CALLED ---");
         System.out.println("Authenticated Username: " + username);
         System.out.println("Authenticated User ID: " + teacher.getId());
-        System.out.println("Authenticated Role: " + (teacher.getRoles() != null && !teacher.getRoles().isEmpty() ? teacher.getRoles().iterator().next().getName() : "None"));
-        System.out.println("Authenticated Department: " + (teacher.getDepartment() != null ? teacher.getDepartment().getName() : "None"));
-        System.out.println("Authenticated Section: " + (teacher.getSection() != null ? teacher.getSection().getSectionName() : "None"));
+        System.out.println("Authenticated Role: " + (teacher.getRoles() != null && !teacher.getRoles().isEmpty()
+                ? teacher.getRoles().iterator().next().getName()
+                : "None"));
+        System.out.println("Authenticated Department: "
+                + (teacher.getDepartment() != null ? teacher.getDepartment().getName() : "None"));
+        System.out.println("Authenticated Section: "
+                + (teacher.getSection() != null ? teacher.getSection().getSectionName() : "None"));
 
         // 1. Fetch potential requests where teacher might be assigned or is CC
-        List<ActivityCompletionRequest> possibleRequests = repository.findPossibleRequestsForTeacher(teacher.getId(), status);
-        
+        List<ActivityCompletionRequest> possibleRequests = repository.findPossibleRequestsForTeacher(teacher.getId(),
+                status);
+
         // 2. Extract unique activity IDs
-        List<Long> activityIds = possibleRequests.stream().map(r -> r.getActivity().getId()).distinct().collect(Collectors.toList());
-        
+        List<Long> activityIds = possibleRequests.stream().map(r -> r.getActivity().getId()).distinct()
+                .collect(Collectors.toList());
+
         // 3. Fetch assignments using the resolver
-        java.util.Map<Long, List<ActivityAssignment>> assignmentsByActivity = studentAssignmentResolver.fetchAssignmentsByActivity(activityIds);
-        
+        java.util.Map<Long, List<ActivityAssignment>> assignmentsByActivity = studentAssignmentResolver
+                .fetchAssignmentsByActivity(activityIds);
+
         // 4. Filter strictly
         List<ActivityCompletionRequest> filteredRequests = new java.util.ArrayList<>();
         for (ActivityCompletionRequest r : possibleRequests) {
             boolean include = false;
             List<ActivityAssignment> validAssignments = java.util.Collections.emptyList();
-            
+
             // Check CC fallback first
             if (r.getCc() != null && r.getCc().getId().equals(teacher.getId())) {
                 include = true;
             } else {
                 // Check assignment strictly
-                List<ActivityAssignment> assignments = assignmentsByActivity.getOrDefault(r.getActivity().getId(), java.util.Collections.emptyList());
+                List<ActivityAssignment> assignments = assignmentsByActivity.getOrDefault(r.getActivity().getId(),
+                        java.util.Collections.emptyList());
                 validAssignments = studentAssignmentResolver.resolveAllValidAssignments(r.getStudent(), assignments);
-                
+
                 if (!validAssignments.isEmpty()) {
-                    include = validAssignments.stream().anyMatch(a -> a.getTeacher() != null && a.getTeacher().getId().equals(teacher.getId()));
-                } else if (r.getActivity().getSubgroup() != null && r.getActivity().getSubgroup().getAssignedFaculty() != null) {
+                    include = validAssignments.stream()
+                            .anyMatch(a -> a.getTeacher() != null && a.getTeacher().getId().equals(teacher.getId()));
+                } else if (r.getActivity().getSubgroup() != null
+                        && r.getActivity().getSubgroup().getAssignedFaculty() != null) {
                     include = r.getActivity().getSubgroup().getAssignedFaculty().getId().equals(teacher.getId());
                 }
             }
-            
+
             if (include) {
                 filteredRequests.add(r);
             }
-            
+
             // Add Debug Log per user request
             System.out.println("----- DEBUG LOG -----");
             System.out.println("Logged-in Teacher ID: " + teacher.getId());
             System.out.println("Activity ID: " + r.getActivity().getId());
-            System.out.println("Assigned Teacher IDs: " + validAssignments.stream().filter(a -> a.getTeacher() != null).map(a -> a.getTeacher().getId().toString()).collect(Collectors.joining(",")));
+            System.out.println("Assigned Teacher IDs: " + validAssignments.stream().filter(a -> a.getTeacher() != null)
+                    .map(a -> a.getTeacher().getId().toString()).collect(Collectors.joining(",")));
             System.out.println("Request ID: " + r.getId());
             System.out.println("Is Teacher Assigned = " + (include ? "TRUE" : "FALSE"));
             System.out.println("---------------------");
         }
-        
+
         System.out.println("Rows Returned: " + filteredRequests.size());
-        
-        List<ActivityCompletionRequestDto> dtos = filteredRequests.stream().map(this::mapToDto).collect(Collectors.toList());
+
+        List<ActivityCompletionRequestDto> dtos = filteredRequests.stream().map(this::mapToDto)
+                .collect(Collectors.toList());
         return ApiResponse.ok("Fetched inbox", dtos);
     }
 
@@ -254,9 +271,12 @@ public class ActivityCompletionRequestService {
         if (r.getStudent() != null) {
             dto.setStudentName(r.getStudent().getFullName());
             dto.setRegNo(r.getStudent().getRegNo());
-            if (r.getStudent().getDepartment() != null) dto.setDepartment(r.getStudent().getDepartment().getName());
-            if (r.getStudent().getYear() != null) dto.setYear(r.getStudent().getYear());
-            if (r.getStudent().getSection() != null) dto.setSection(r.getStudent().getSection().getSectionName());
+            if (r.getStudent().getDepartment() != null)
+                dto.setDepartment(r.getStudent().getDepartment().getName());
+            if (r.getStudent().getYear() != null)
+                dto.setYear(r.getStudent().getYear());
+            if (r.getStudent().getSection() != null)
+                dto.setSection(r.getStudent().getSection().getSectionName());
         }
         if (r.getActivity() != null) {
             dto.setActivityId(r.getActivity().getId());

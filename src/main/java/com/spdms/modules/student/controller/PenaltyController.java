@@ -1,9 +1,9 @@
-package com.spdms.modules.student.controller;
+package com.pragatix.modules.student.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.student.dto.request.CreatePenaltyRequestDto;
-import com.spdms.modules.student.dto.response.PenaltyRequestDto;
-import com.spdms.modules.student.service.PenaltyWorkflowService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.student.dto.request.CreatePenaltyRequestDto;
+import com.pragatix.modules.student.dto.response.PenaltyRequestDto;
+import com.pragatix.modules.student.service.PenaltyWorkflowService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

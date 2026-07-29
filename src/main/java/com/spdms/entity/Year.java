@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -23,26 +23,60 @@ public class Year {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public Year() {}
+    public Year() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Byte getYearNo() { return yearNo; }
-    public void setYearNo(Byte yearNo) { this.yearNo = yearNo; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getYearName() { return yearName; }
-    public void setYearName(String yearName) { this.yearName = yearName; }
+    public Byte getYearNo() {
+        return yearNo;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setYearNo(Byte yearNo) {
+        this.yearNo = yearNo;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public String getYearName() {
+        return yearName;
+    }
+
+    public void setYearName(String yearName) {
+        this.yearName = yearName;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final Year y = new Year();
-        public Builder yearNo(Byte v) { y.yearNo = v; return this; }
-        public Builder yearName(String v) { y.yearName = v; return this; }
-        public Year build() { return y; }
+
+        public Builder yearNo(Byte v) {
+            y.yearNo = v;
+            return this;
+        }
+
+        public Builder yearName(String v) {
+            y.yearName = v;
+            return this;
+        }
+
+        public Year build() {
+            return y;
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.pragatix.dto;
 
 import java.time.LocalDateTime;
 
@@ -19,50 +19,126 @@ public class BadgeRequestDto {
     private String remarks;
     private String proofLink;
 
-    public BadgeRequestDto() {}
+    public BadgeRequestDto() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getStudentId() { return studentId; }
-    public void setStudentId(Long studentId) { this.studentId = studentId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public Long getStudentId() {
+        return studentId;
+    }
 
-    public String getRegNo() { return regNo; }
-    public void setRegNo(String regNo) { this.regNo = regNo; }
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
+    }
 
-    public Long getBadgeId() { return badgeId; }
-    public void setBadgeId(Long badgeId) { this.badgeId = badgeId; }
+    public String getStudentName() {
+        return studentName;
+    }
 
-    public String getBadgeName() { return badgeName; }
-    public void setBadgeName(String badgeName) { this.badgeName = badgeName; }
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
 
-    public String getBadgeIcon() { return badgeIcon; }
-    public void setBadgeIcon(String badgeIcon) { this.badgeIcon = badgeIcon; }
+    public String getRegNo() {
+        return regNo;
+    }
 
-    public String getDepartmentName() { return departmentName; }
-    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
+    }
 
-    public String getSectionName() { return sectionName; }
-    public void setSectionName(String sectionName) { this.sectionName = sectionName; }
+    public Long getBadgeId() {
+        return badgeId;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setBadgeId(Long badgeId) {
+        this.badgeId = badgeId;
+    }
 
-    public LocalDateTime getRequestedAt() { return requestedAt; }
-    public void setRequestedAt(LocalDateTime requestedAt) { this.requestedAt = requestedAt; }
+    public String getBadgeName() {
+        return badgeName;
+    }
 
-    public LocalDateTime getReviewedAt() { return reviewedAt; }
-    public void setReviewedAt(LocalDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
+    public void setBadgeName(String badgeName) {
+        this.badgeName = badgeName;
+    }
 
-    public String getReviewedBy() { return reviewedBy; }
-    public void setReviewedBy(String reviewedBy) { this.reviewedBy = reviewedBy; }
+    public String getBadgeIcon() {
+        return badgeIcon;
+    }
 
-    public String getRemarks() { return remarks; }
-    public void setRemarks(String remarks) { this.remarks = remarks; }
+    public void setBadgeIcon(String badgeIcon) {
+        this.badgeIcon = badgeIcon;
+    }
 
-    public String getProofLink() { return proofLink; }
-    public void setProofLink(String proofLink) { this.proofLink = proofLink; }
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getSectionName() {
+        return sectionName;
+    }
+
+    public void setSectionName(String sectionName) {
+        this.sectionName = sectionName;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getRequestedAt() {
+        return requestedAt;
+    }
+
+    public void setRequestedAt(LocalDateTime requestedAt) {
+        this.requestedAt = requestedAt;
+    }
+
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
+    }
+
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+
+    public String getReviewedBy() {
+        return reviewedBy;
+    }
+
+    public void setReviewedBy(String reviewedBy) {
+        this.reviewedBy = reviewedBy;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public String getProofLink() {
+        return proofLink;
+    }
+
+    public void setProofLink(String proofLink) {
+        this.proofLink = proofLink;
+    }
 }

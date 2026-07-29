@@ -1,4 +1,4 @@
-package com.spdms.modules.attendance.dto.response;
+package com.pragatix.modules.attendance.dto.response;
 
 public class StudentAttendanceSummaryResponse {
     private double attendancePercentage;
@@ -6,21 +6,47 @@ public class StudentAttendanceSummaryResponse {
     private int currentStreak;
     private long totalPresentDays;
     private long totalAbsentDays;
-    
-    public StudentAttendanceSummaryResponse() {}
 
-    public double getAttendancePercentage() { return attendancePercentage; }
-    public void setAttendancePercentage(double attendancePercentage) { this.attendancePercentage = attendancePercentage; }
+    public StudentAttendanceSummaryResponse() {
+    }
 
-    public double getMonthlyAttendancePercentage() { return monthlyAttendancePercentage; }
-    public void setMonthlyAttendancePercentage(double monthlyAttendancePercentage) { this.monthlyAttendancePercentage = monthlyAttendancePercentage; }
+    public double getAttendancePercentage() {
+        return attendancePercentage;
+    }
 
-    public int getCurrentStreak() { return currentStreak; }
-    public void setCurrentStreak(int currentStreak) { this.currentStreak = currentStreak; }
+    public void setAttendancePercentage(double attendancePercentage) {
+        this.attendancePercentage = attendancePercentage;
+    }
 
-    public long getTotalPresentDays() { return totalPresentDays; }
-    public void setTotalPresentDays(long totalPresentDays) { this.totalPresentDays = totalPresentDays; }
+    public double getMonthlyAttendancePercentage() {
+        return monthlyAttendancePercentage;
+    }
 
-    public long getTotalAbsentDays() { return totalAbsentDays; }
-    public void setTotalAbsentDays(long totalAbsentDays) { this.totalAbsentDays = totalAbsentDays; }
+    public void setMonthlyAttendancePercentage(double monthlyAttendancePercentage) {
+        this.monthlyAttendancePercentage = monthlyAttendancePercentage;
+    }
+
+    public int getCurrentStreak() {
+        return currentStreak;
+    }
+
+    public void setCurrentStreak(int currentStreak) {
+        this.currentStreak = currentStreak;
+    }
+
+    public long getTotalPresentDays() {
+        return totalPresentDays;
+    }
+
+    public void setTotalPresentDays(long totalPresentDays) {
+        this.totalPresentDays = totalPresentDays;
+    }
+
+    public long getTotalAbsentDays() {
+        return totalAbsentDays;
+    }
+
+    public void setTotalAbsentDays(long totalAbsentDays) {
+        this.totalAbsentDays = totalAbsentDays;
+    }
 }

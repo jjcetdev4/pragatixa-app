@@ -1,4 +1,4 @@
-package com.spdms.modules.notification.service;
+package com.pragatix.modules.notification.service;
 
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
@@ -12,7 +12,7 @@ public class SmsTemplateService {
             "CC-ஐ தொடர்பு கொள்ளவும்.\n\n" +
             "JJ College\n\n";
 
-    public String buildAbsentStudentMessage(com.spdms.entity.Student student, LocalDate attendanceDate) {
+    public String buildAbsentStudentMessage(com.pragatix.entity.Student student, LocalDate attendanceDate) {
         String formattedDate = attendanceDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         String studentName = student != null && student.getFullName() != null ? student.getFullName() : "";
 

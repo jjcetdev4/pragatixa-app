@@ -1,8 +1,8 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Subject;
-import com.spdms.repository.SubjectRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.Subject;
+import com.pragatix.repository.SubjectRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @Service
 public class AdminSubjectService {

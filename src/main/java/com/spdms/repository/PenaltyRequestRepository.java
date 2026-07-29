@@ -1,6 +1,6 @@
-package com.spdms.repository;
+package com.pragatix.repository;
 
-import com.spdms.entity.PenaltyRequest;
+import com.pragatix.entity.PenaltyRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -29,9 +29,11 @@ public class GroupDeletionAuditLog {
     @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp;
 
-    public GroupDeletionAuditLog() {}
+    public GroupDeletionAuditLog() {
+    }
 
-    public GroupDeletionAuditLog(Long teamId, String teamName, String deletedByUserId, String deletedByRole, String reason, LocalDateTime timestamp) {
+    public GroupDeletionAuditLog(Long teamId, String teamName, String deletedByUserId, String deletedByRole,
+            String reason, LocalDateTime timestamp) {
         this.teamId = teamId;
         this.teamName = teamName;
         this.deletedByUserId = deletedByUserId;
@@ -40,24 +42,59 @@ public class GroupDeletionAuditLog {
         this.timestamp = timestamp;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getTeamId() { return teamId; }
-    public void setTeamId(Long teamId) { this.teamId = teamId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getTeamName() { return teamName; }
-    public void setTeamName(String teamName) { this.teamName = teamName; }
+    public Long getTeamId() {
+        return teamId;
+    }
 
-    public String getDeletedByUserId() { return deletedByUserId; }
-    public void setDeletedByUserId(String deletedByUserId) { this.deletedByUserId = deletedByUserId; }
+    public void setTeamId(Long teamId) {
+        this.teamId = teamId;
+    }
 
-    public String getDeletedByRole() { return deletedByRole; }
-    public void setDeletedByRole(String deletedByRole) { this.deletedByRole = deletedByRole; }
+    public String getTeamName() {
+        return teamName;
+    }
 
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
+    public void setTeamName(String teamName) {
+        this.teamName = teamName;
+    }
 
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    public String getDeletedByUserId() {
+        return deletedByUserId;
+    }
+
+    public void setDeletedByUserId(String deletedByUserId) {
+        this.deletedByUserId = deletedByUserId;
+    }
+
+    public String getDeletedByRole() {
+        return deletedByRole;
+    }
+
+    public void setDeletedByRole(String deletedByRole) {
+        this.deletedByRole = deletedByRole;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
 }

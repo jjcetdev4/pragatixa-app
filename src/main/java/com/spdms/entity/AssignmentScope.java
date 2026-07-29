@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 public enum AssignmentScope {
     GLOBAL,

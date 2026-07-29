@@ -4,7 +4,7 @@ server:
 
 spring:
   application:
-    name: spdms-backend
+    name: pragatix-backend
 
   datasource:
     url: jdbc:mysql://localhost:3307/spdms_lab?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
@@ -36,7 +36,7 @@ jwt:
   student-expiration: 43200000
 
 cors:
-  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:4200}
+  allowed-origins: ${CORS_ORIGINS:http://localhost:*}
 
 springdoc:
   api-docs:
@@ -49,7 +49,7 @@ logging:
   pattern:
     console: "%msg%n%ex"
   level:
-    com.spdms: INFO
+    com.pragatix: INFO
     org.springframework: WARN
     org.hibernate: WARN
     com.zaxxer.hikari: WARN

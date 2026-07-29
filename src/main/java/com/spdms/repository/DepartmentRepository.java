@@ -1,6 +1,6 @@
-package com.spdms.repository;
+package com.pragatix.repository;
 
-import com.spdms.entity.Department;
+import com.pragatix.entity.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
@@ -8,6 +8,8 @@ import java.util.Optional;
 @Repository
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
     Optional<Department> findByName(String name);
+
     Optional<Department> findByCode(String code);
+
     Optional<Department> findByDeptCode(String deptCode);
 }

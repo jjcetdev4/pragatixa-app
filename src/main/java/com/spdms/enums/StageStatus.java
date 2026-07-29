@@ -1,4 +1,4 @@
-package com.spdms.enums;
+package com.pragatix.enums;
 
 public enum StageStatus {
     UPCOMING,

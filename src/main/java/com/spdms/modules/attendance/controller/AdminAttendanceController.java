@@ -1,8 +1,8 @@
-package com.spdms.modules.attendance.controller;
+package com.pragatix.modules.attendance.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.attendance.dto.response.AdminAttendanceSummaryResponse;
-import com.spdms.modules.attendance.service.AdminAttendanceService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.attendance.dto.response.AdminAttendanceSummaryResponse;
+import com.pragatix.modules.attendance.service.AdminAttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +21,12 @@ public class AdminAttendanceController {
     public ResponseEntity<ApiResponse<AdminAttendanceSummaryResponse>> getSummary(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam Integer period,
-            @RequestParam Long yearId,
+            @RequestParam(required = false) Long yearId,
             @RequestParam Long departmentId,
             @RequestParam(required = false) Long sectionId) {
-            
-        AdminAttendanceSummaryResponse summary = attendanceService.getDashboardSummary(date, period, yearId, departmentId, sectionId);
+
+        AdminAttendanceSummaryResponse summary = attendanceService.getDashboardSummary(date, period, yearId,
+                departmentId, sectionId);
         return ResponseEntity.ok(ApiResponse.ok(summary));
     }
 }

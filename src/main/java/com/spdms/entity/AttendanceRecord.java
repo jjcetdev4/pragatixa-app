@@ -1,11 +1,11 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "attendance_records", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_attendance_record", columnNames = {"attendance_session_id", "student_id"})
+        @UniqueConstraint(name = "uk_attendance_record", columnNames = { "attendance_session_id", "student_id" })
 })
 public class AttendanceRecord {
 
@@ -35,23 +35,54 @@ public class AttendanceRecord {
     @Column(name = "marked_at", nullable = false)
     private LocalDateTime markedAt = LocalDateTime.now();
 
-    public AttendanceRecord() {}
+    public AttendanceRecord() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public AttendanceSession getAttendanceSession() { return attendanceSession; }
-    public void setAttendanceSession(AttendanceSession attendanceSession) { this.attendanceSession = attendanceSession; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
+    public AttendanceSession getAttendanceSession() {
+        return attendanceSession;
+    }
 
-    public AttendanceStatus getStatus() { return status; }
-    public void setStatus(AttendanceStatus status) { this.status = status; }
+    public void setAttendanceSession(AttendanceSession attendanceSession) {
+        this.attendanceSession = attendanceSession;
+    }
 
-    public String getRemarks() { return remarks; }
-    public void setRemarks(String remarks) { this.remarks = remarks; }
+    public Student getStudent() {
+        return student;
+    }
 
-    public LocalDateTime getMarkedAt() { return markedAt; }
-    public void setMarkedAt(LocalDateTime markedAt) { this.markedAt = markedAt; }
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public AttendanceStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AttendanceStatus status) {
+        this.status = status;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public LocalDateTime getMarkedAt() {
+        return markedAt;
+    }
+
+    public void setMarkedAt(LocalDateTime markedAt) {
+        this.markedAt = markedAt;
+    }
 }

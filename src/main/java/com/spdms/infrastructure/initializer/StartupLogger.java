@@ -1,4 +1,4 @@
-package com.spdms.infrastructure.initializer;
+package com.pragatix.infrastructure.initializer;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;

@@ -1,6 +1,6 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.entity.Activity;
+import com.pragatix.entity.Activity;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +19,8 @@ public class ActivityRequestMapper {
         activity.setActivityDescription(desc);
 
         activity.setFrequency((String) body.get("frequency"));
-        activity.setOwnerDepartment(""); 
-        activity.setOwnerSubrole(""); 
+        activity.setOwnerDepartment("");
+        activity.setOwnerSubrole("");
 
         Object evidenceObj = body.get("evidence");
         if (evidenceObj instanceof List) {
@@ -35,7 +35,7 @@ public class ActivityRequestMapper {
         activity.setType((String) body.get("type"));
         activity.setModeType(body.get("type") != null ? (String) body.get("type") : "Individual");
         activity.setJustification((String) body.get("justification"));
-        
+
         String xpType = "Reward";
         if (body.containsKey("xpType") && body.get("xpType") != null) {
             xpType = body.get("xpType").toString().trim();
@@ -51,7 +51,7 @@ public class ActivityRequestMapper {
             }
         }
     }
-    
+
     public String extractXpCategory(Map<String, Object> body) {
         return (String) body.get("xpCategory");
     }
@@ -60,32 +60,47 @@ public class ActivityRequestMapper {
         Boolean awardEnabled = false;
         if (body.containsKey("awardEnabled")) {
             Object val = body.get("awardEnabled");
-            if (val instanceof Boolean) awardEnabled = (Boolean) val;
-            else if (val instanceof String) awardEnabled = Boolean.parseBoolean((String) val);
+            if (val instanceof Boolean)
+                awardEnabled = (Boolean) val;
+            else if (val instanceof String)
+                awardEnabled = Boolean.parseBoolean((String) val);
         }
         Integer awardXp = 0;
         if (body.containsKey("awardXp")) {
             Object val = body.get("awardXp");
-            if (val instanceof Number) awardXp = ((Number) val).intValue();
+            if (val instanceof Number)
+                awardXp = ((Number) val).intValue();
             else if (val instanceof String) {
-                try { awardXp = Integer.parseInt((String) val); } catch (Exception ignored) {}
+                try {
+                    awardXp = Integer.parseInt((String) val);
+                } catch (Exception ignored) {
+                }
             }
         } else if (body.containsKey("xp")) {
-            try { awardXp = Integer.parseInt(body.get("xp").toString()); } catch (Exception ignored) {}
+            try {
+                awardXp = Integer.parseInt(body.get("xp").toString());
+            } catch (Exception ignored) {
+            }
         }
 
         Boolean penaltyEnabled = false;
         if (body.containsKey("penaltyEnabled")) {
             Object val = body.get("penaltyEnabled");
-            if (val instanceof Boolean) penaltyEnabled = (Boolean) val;
-            else if (val instanceof String) penaltyEnabled = Boolean.parseBoolean((String) val);
+            if (val instanceof Boolean)
+                penaltyEnabled = (Boolean) val;
+            else if (val instanceof String)
+                penaltyEnabled = Boolean.parseBoolean((String) val);
         }
         Integer penaltyXp = 0;
         if (body.containsKey("penaltyXp")) {
             Object val = body.get("penaltyXp");
-            if (val instanceof Number) penaltyXp = ((Number) val).intValue();
+            if (val instanceof Number)
+                penaltyXp = ((Number) val).intValue();
             else if (val instanceof String) {
-                try { penaltyXp = Integer.parseInt((String) val); } catch (Exception ignored) {}
+                try {
+                    penaltyXp = Integer.parseInt((String) val);
+                } catch (Exception ignored) {
+                }
             }
         }
 
@@ -93,11 +108,17 @@ public class ActivityRequestMapper {
         if (!body.containsKey("awardEnabled") && !body.containsKey("penaltyEnabled")) {
             Integer passXp = 0;
             if (body.containsKey("passXp")) {
-                try { passXp = Integer.parseInt(body.get("passXp").toString()); } catch (Exception ignored) {}
+                try {
+                    passXp = Integer.parseInt(body.get("passXp").toString());
+                } catch (Exception ignored) {
+                }
             }
             Integer failXp = 0;
             if (body.containsKey("failXp")) {
-                try { failXp = Integer.parseInt(body.get("failXp").toString()); } catch (Exception ignored) {}
+                try {
+                    failXp = Integer.parseInt(body.get("failXp").toString());
+                } catch (Exception ignored) {
+                }
             }
             if (passXp > 0 || failXp > 0) {
                 awardEnabled = passXp > 0;
@@ -105,7 +126,9 @@ public class ActivityRequestMapper {
                 penaltyEnabled = failXp > 0;
                 penaltyXp = failXp;
             } else {
-                String reqXpType = body.containsKey("xpType") && body.get("xpType") != null ? body.get("xpType").toString() : "Reward";
+                String reqXpType = body.containsKey("xpType") && body.get("xpType") != null
+                        ? body.get("xpType").toString()
+                        : "Reward";
                 if ("Penalty".equalsIgnoreCase(reqXpType) || "Discipline".equalsIgnoreCase(reqXpType)) {
                     penaltyEnabled = true;
                     penaltyXp = awardXp;
@@ -122,8 +145,8 @@ public class ActivityRequestMapper {
                 }
             }
         }
-        
-        return new Object[]{awardEnabled, awardXp, penaltyEnabled, penaltyXp};
+
+        return new Object[] { awardEnabled, awardXp, penaltyEnabled, penaltyXp };
     }
 
     public String parseAwardType(Map<String, Object> body) {
@@ -133,7 +156,7 @@ public class ActivityRequestMapper {
         }
         return awardType;
     }
-    
+
     public String parseAwardFrequency(Map<String, Object> body) {
         String awardFrequency = "One Time";
         if (body.containsKey("awardFrequency") && body.get("awardFrequency") != null) {
@@ -143,20 +166,28 @@ public class ActivityRequestMapper {
         }
         return awardFrequency;
     }
-    
+
     public Integer parseCap(Map<String, Object> body, String matchedFrequency) {
         Integer cap = 1;
         if (body.containsKey("cap") && body.get("cap") != null) {
             Object capVal = body.get("cap");
-            if (capVal instanceof Number) cap = ((Number) capVal).intValue();
+            if (capVal instanceof Number)
+                cap = ((Number) capVal).intValue();
             else {
-                try { cap = Integer.parseInt(capVal.toString()); } catch (Exception ignored) {}
+                try {
+                    cap = Integer.parseInt(capVal.toString());
+                } catch (Exception ignored) {
+                }
             }
         } else if (body.containsKey("maximumAwards") && body.get("maximumAwards") != null) {
             Object maxA = body.get("maximumAwards");
-            if (maxA instanceof Number) cap = ((Number) maxA).intValue();
+            if (maxA instanceof Number)
+                cap = ((Number) maxA).intValue();
             else {
-                try { cap = Integer.parseInt(maxA.toString()); } catch (Exception ignored) {}
+                try {
+                    cap = Integer.parseInt(maxA.toString());
+                } catch (Exception ignored) {
+                }
             }
         }
         if (matchedFrequency.equalsIgnoreCase("One Time") || matchedFrequency.equalsIgnoreCase("Manual")) {
@@ -178,27 +209,29 @@ public class ActivityRequestMapper {
         return awardDays;
     }
 
-    public void mapRemainingConfiguration(Activity activity, Map<String, Object> body, String matchedCategory, 
-        boolean awardEnabled, Integer awardXp, boolean penaltyEnabled, Integer penaltyXp, 
-        String awardType, String matchedFrequency, Integer cap, List<String> awardDays) {
-        
+    public void mapRemainingConfiguration(Activity activity, Map<String, Object> body, String matchedCategory,
+            boolean awardEnabled, Integer awardXp, boolean penaltyEnabled, Integer penaltyXp,
+            String awardType, String matchedFrequency, Integer cap, List<String> awardDays) {
+
         activity.setXpCategory(matchedCategory);
-        
-        if (!awardEnabled) awardXp = 0;
-        if (!penaltyEnabled) penaltyXp = 0;
-        
+
+        if (!awardEnabled)
+            awardXp = 0;
+        if (!penaltyEnabled)
+            penaltyXp = 0;
+
         activity.setAwardEnabled(awardEnabled);
         activity.setAwardXp(awardXp);
         activity.setPenaltyEnabled(penaltyEnabled);
         activity.setPenaltyXp(penaltyXp);
-        
+
         activity.setAwardType(awardType);
         activity.setAwardFrequency(matchedFrequency);
         activity.setResetPeriod(matchedFrequency);
         activity.setRepeatAllowed(!matchedFrequency.equalsIgnoreCase("One Time"));
         activity.setCap(cap);
-        activity.setMaximumAwards(cap); 
-        
+        activity.setMaximumAwards(cap);
+
         if (awardDays != null && !awardDays.isEmpty()) {
             activity.setAwardDays(awardDays.stream().map(String::trim).collect(Collectors.joining(",")));
         } else {
@@ -208,33 +241,43 @@ public class ActivityRequestMapper {
         Boolean isMandatory = true;
         if (body.containsKey("isMandatory")) {
             Object val = body.get("isMandatory");
-            if (val instanceof Boolean) isMandatory = (Boolean) val;
-            else if (val instanceof String) isMandatory = Boolean.parseBoolean((String) val);
+            if (val instanceof Boolean)
+                isMandatory = (Boolean) val;
+            else if (val instanceof String)
+                isMandatory = Boolean.parseBoolean((String) val);
         } else if (body.containsKey("mandatory")) {
             Object val = body.get("mandatory");
-            if (val instanceof Boolean) isMandatory = (Boolean) val;
-            else if (val instanceof String) isMandatory = Boolean.parseBoolean((String) val);
+            if (val instanceof Boolean)
+                isMandatory = (Boolean) val;
+            else if (val instanceof String)
+                isMandatory = Boolean.parseBoolean((String) val);
         }
         activity.setMandatory(isMandatory);
 
         Boolean evidenceRequired = true;
         if (body.containsKey("evidenceRequired")) {
             Object val = body.get("evidenceRequired");
-            if (val instanceof Boolean) evidenceRequired = (Boolean) val;
-            else if (val instanceof String) evidenceRequired = Boolean.parseBoolean((String) val);
+            if (val instanceof Boolean)
+                evidenceRequired = (Boolean) val;
+            else if (val instanceof String)
+                evidenceRequired = Boolean.parseBoolean((String) val);
         }
         activity.setEvidenceRequired(evidenceRequired);
 
         Integer displayOrder = 0;
         if (body.containsKey("displayOrder") && body.get("displayOrder") != null) {
             Object dispVal = body.get("displayOrder");
-            if (dispVal instanceof Number) displayOrder = ((Number) dispVal).intValue();
+            if (dispVal instanceof Number)
+                displayOrder = ((Number) dispVal).intValue();
             else {
-                try { displayOrder = Integer.parseInt(dispVal.toString()); } catch (Exception ignored) {}
+                try {
+                    displayOrder = Integer.parseInt(dispVal.toString());
+                } catch (Exception ignored) {
+                }
             }
         }
         activity.setDisplayOrder(displayOrder);
-        
+
         String status = "ACTIVE";
         if (body.containsKey("status") && body.get("status") != null) {
             status = (String) body.get("status");

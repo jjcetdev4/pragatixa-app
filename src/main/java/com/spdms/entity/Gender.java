@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -20,22 +20,47 @@ public class Gender {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public Gender() {}
+    public Gender() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getGenderName() { return genderName; }
-    public void setGenderName(String genderName) { this.genderName = genderName; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public String getGenderName() {
+        return genderName;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public void setGenderName(String genderName) {
+        this.genderName = genderName;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final Gender g = new Gender();
-        public Builder genderName(String v) { g.genderName = v; return this; }
-        public Gender build() { return g; }
+
+        public Builder genderName(String v) {
+            g.genderName = v;
+            return this;
+        }
+
+        public Gender build() {
+            return g;
+        }
     }
 }

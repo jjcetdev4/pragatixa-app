@@ -1,4 +1,4 @@
-package com.spdms.infrastructure.database;
+package com.pragatix.infrastructure.database;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

@@ -1,12 +1,16 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.repository.DepartmentRepository;
-import com.spdms.repository.BadgeRequestRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.repository.DepartmentRepository;
+import com.pragatix.repository.BadgeRequestRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.pragatix.entity.User;
+import com.pragatix.modules.authentication.security.AuthUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,8 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @Service
 public class AdminDashboardService {
@@ -24,19 +28,40 @@ public class AdminDashboardService {
     private final DepartmentRepository departmentRepository;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
-    private final com.spdms.repository.DisciplineLogRepository disciplineLogRepository;
+    private final com.pragatix.repository.DisciplineLogRepository disciplineLogRepository;
     private final BadgeRequestRepository badgeRequestRepository;
+    private final AuthUtils authUtils;
 
-    public AdminDashboardService(DepartmentRepository departmentRepository, StudentRepository studentRepository, UserRepository userRepository, com.spdms.repository.DisciplineLogRepository disciplineLogRepository, BadgeRequestRepository badgeRequestRepository) {
+    public AdminDashboardService(DepartmentRepository departmentRepository, StudentRepository studentRepository,
+            UserRepository userRepository, com.pragatix.repository.DisciplineLogRepository disciplineLogRepository,
+            BadgeRequestRepository badgeRequestRepository, AuthUtils authUtils) {
         this.departmentRepository = departmentRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.badgeRequestRepository = badgeRequestRepository;
+        this.authUtils = authUtils;
     }
 
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboardStats() {
-        long totalStudents = studentRepository.count();
+        User currentUser = authUtils.getCurrentUser();
+
+        long totalStudents;
+        if (currentUser != null && !authUtils.isSuperAdmin(currentUser) && authUtils.isAdmin(currentUser)) {
+            String adminYear = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
+            log.info("\nCurrent User Role:\nADMIN\n\nAcademic Year:\n{}\n", currentUser.getAcademicYear());
+            if (adminYear != null) {
+                totalStudents = studentRepository.countByYear(adminYear);
+                log.info("\nStudent Count:\n{}\n", totalStudents);
+            } else {
+                totalStudents = 0; // Admin with no year assigned sees 0 students
+                log.info("\nStudent Count:\n0 (No Year Assigned)\n");
+            }
+        } else {
+            totalStudents = studentRepository.count();
+            log.info("\nCurrent User Role:\nSUPER_ADMIN\n\nStudent Count Query:\nALL STUDENTS\n\nDatabase Result:\n{}\n\nReturned to Flutter:\n{}\n", totalStudents, totalStudents);
+        }
+
         long teachersCount = userRepository.countActiveGenuineTeachers();
         long totalDepartments = departmentRepository.count();
         long totalAlerts = disciplineLogRepository.count();

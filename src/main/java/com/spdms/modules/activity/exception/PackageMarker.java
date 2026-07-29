@@ -1,4 +1,4 @@
-package com.spdms.modules.activity.exception;
+package com.pragatix.modules.activity.exception;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

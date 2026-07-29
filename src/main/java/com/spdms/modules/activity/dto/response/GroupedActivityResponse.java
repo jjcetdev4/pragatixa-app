@@ -1,4 +1,4 @@
-package com.spdms.modules.activity.dto.response;
+package com.pragatix.modules.activity.dto.response;
 
 import java.util.List;
 
@@ -6,7 +6,8 @@ public class GroupedActivityResponse {
     private String subgroup;
     private List<ActivityOptionDTO> activities;
 
-    public GroupedActivityResponse() {}
+    public GroupedActivityResponse() {
+    }
 
     public GroupedActivityResponse(String subgroup, List<ActivityOptionDTO> activities) {
         this.subgroup = subgroup;

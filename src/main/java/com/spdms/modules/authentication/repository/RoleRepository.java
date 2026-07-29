@@ -1,6 +1,6 @@
-package com.spdms.modules.authentication.repository;
+package com.pragatix.modules.authentication.repository;
 
-import com.spdms.entity.Role;
+import com.pragatix.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
@@ -8,5 +8,6 @@ import java.util.Optional;
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Optional<Role> findByName(String name);
+
     boolean existsByName(String name);
 }

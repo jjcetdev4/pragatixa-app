@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 
@@ -16,18 +16,44 @@ public class Role {
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
-    public Role() {}
-    public Role(Long id, String name) { this.id = id; this.name = name; }
+    public Role() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public Role(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public static class Builder {
         private final Role role = new Role();
-        public Builder name(String v) { role.name = v; return this; }
-        public Role build() { return role; }
+
+        public Builder name(String v) {
+            role.name = v;
+            return this;
+        }
+
+        public Role build() {
+            return role;
+        }
     }
 }

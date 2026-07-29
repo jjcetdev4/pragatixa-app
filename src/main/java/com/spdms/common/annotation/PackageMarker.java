@@ -1,4 +1,4 @@
-package com.spdms.common.annotation;
+package com.pragatix.common.annotation;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

@@ -1,10 +1,10 @@
-package com.spdms.modules.attendance.controller;
+package com.pragatix.modules.attendance.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.attendance.dto.response.StudentAttendanceHistoryResponse;
-import com.spdms.modules.attendance.dto.response.StudentAttendanceSummaryResponse;
-import com.spdms.modules.attendance.service.StudentAttendanceService;
-import com.spdms.modules.authentication.security.StudentAuthResolver;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.attendance.dto.response.StudentAttendanceHistoryResponse;
+import com.pragatix.modules.attendance.dto.response.StudentAttendanceSummaryResponse;
+import com.pragatix.modules.attendance.service.StudentAttendanceService;
+import com.pragatix.modules.authentication.security.StudentAuthResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

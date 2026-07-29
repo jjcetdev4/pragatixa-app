@@ -1,6 +1,6 @@
-package com.spdms.modules.attendance.repository;
+package com.pragatix.modules.attendance.repository;
 
-import com.spdms.entity.Attendance;
+import com.pragatix.entity.Attendance;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,16 +22,21 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     long countByStudentIdAndStatus(Long studentId, Attendance.AttendanceStatus status);
 
     @Query("SELECT COUNT(a) FROM Attendance a WHERE a.attendanceDate = :date AND a.periodNo = :period AND a.student.yearRef.id = :yearId AND a.student.department.id = :deptId AND (:sectionId IS NULL OR a.student.section.id = :sectionId) AND a.status = :status")
-    long countBySessionDetailsAndStatus(@Param("date") LocalDate date, @Param("period") Integer period, @Param("yearId") Long yearId, @Param("deptId") Long deptId, @Param("sectionId") Long sectionId, @Param("status") Attendance.AttendanceStatus status);
+    long countBySessionDetailsAndStatus(@Param("date") LocalDate date, @Param("period") Integer period,
+            @Param("yearId") Long yearId, @Param("deptId") Long deptId, @Param("sectionId") Long sectionId,
+            @Param("status") Attendance.AttendanceStatus status);
 
     @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date AND a.periodNo = :period AND a.student.yearRef.id = :yearId AND a.student.department.id = :deptId AND (:sectionId IS NULL OR a.student.section.id = :sectionId) AND a.status = :status")
-    List<Attendance> findBySessionDetailsAndStatus(@Param("date") LocalDate date, @Param("period") Integer period, @Param("yearId") Long yearId, @Param("deptId") Long deptId, @Param("sectionId") Long sectionId, @Param("status") Attendance.AttendanceStatus status);
+    List<Attendance> findBySessionDetailsAndStatus(@Param("date") LocalDate date, @Param("period") Integer period,
+            @Param("yearId") Long yearId, @Param("deptId") Long deptId, @Param("sectionId") Long sectionId,
+            @Param("status") Attendance.AttendanceStatus status);
 
     @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId ORDER BY a.attendanceDate DESC, a.periodNo DESC")
     List<Attendance> findByStudentIdOrderByAttendanceDateDescPeriodNoDesc(@Param("studentId") Long studentId);
 
     @Query("SELECT COUNT(a) FROM Attendance a WHERE a.student.id = :studentId AND FUNCTION('MONTH', a.attendanceDate) = :month AND FUNCTION('YEAR', a.attendanceDate) = :year AND a.status = :status")
-    long countByStudentIdAndMonthAndYearAndStatus(@Param("studentId") Long studentId, @Param("month") int month, @Param("year") int year, @Param("status") Attendance.AttendanceStatus status);
+    long countByStudentIdAndMonthAndYearAndStatus(@Param("studentId") Long studentId, @Param("month") int month,
+            @Param("year") int year, @Param("status") Attendance.AttendanceStatus status);
 
     @Query("SELECT a.attendanceDate FROM Attendance a WHERE a.student.id = :studentId GROUP BY a.attendanceDate ORDER BY a.attendanceDate DESC")
     List<LocalDate> findDistinctAttendanceDatesByStudentId(@Param("studentId") Long studentId);

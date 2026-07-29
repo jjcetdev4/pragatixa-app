@@ -1,14 +1,14 @@
-package com.spdms.modules.student.controller;
+package com.pragatix.modules.student.controller;
 
-import com.spdms.modules.student.service.StudentService;
-import com.spdms.modules.student.service.StudentStageFacade;
+import com.pragatix.modules.student.service.StudentService;
+import com.pragatix.modules.student.service.StudentStageFacade;
 
-import com.spdms.dto.*;
-import com.spdms.modules.activity.dto.request.*;
-import com.spdms.modules.activity.dto.response.*;
-import com.spdms.modules.student.dto.request.*;
-import com.spdms.modules.student.dto.response.*;
-import com.spdms.common.response.ApiResponse;
+import com.pragatix.dto.*;
+import com.pragatix.modules.activity.dto.request.*;
+import com.pragatix.modules.activity.dto.response.*;
+import com.pragatix.modules.student.dto.request.*;
+import com.pragatix.modules.student.dto.response.*;
+import com.pragatix.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.spdms.entity.DisciplineLog;
+import com.pragatix.entity.DisciplineLog;
 import java.util.List;
 
 @RestController
@@ -32,13 +32,13 @@ public class StudentController {
 
     private final StudentService studentService;
     private final StudentStageFacade studentStageFacade;
-    private final com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver;
-    private final com.spdms.modules.activity.repository.ActivityRepository activityRepository;
+    private final com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver;
+    private final com.pragatix.modules.activity.repository.ActivityRepository activityRepository;
 
     public StudentController(StudentService studentService,
-                             StudentStageFacade studentStageFacade,
-                             com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver,
-                             com.spdms.modules.activity.repository.ActivityRepository activityRepository) {
+            StudentStageFacade studentStageFacade,
+            com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver,
+            com.pragatix.modules.activity.repository.ActivityRepository activityRepository) {
         this.studentService = studentService;
         this.studentStageFacade = studentStageFacade;
         this.studentAuthResolver = studentAuthResolver;
@@ -52,7 +52,8 @@ public class StudentController {
             @Valid @RequestBody CreateStudentRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         ApiResponse<StudentResponse> response = studentService.createStudent(request, username);
-        return response.isSuccess() ? ResponseEntity.status(HttpStatus.CREATED).body(response) : ResponseEntity.badRequest().body(response);
+        return response.isSuccess() ? ResponseEntity.status(HttpStatus.CREATED).body(response)
+                : ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping
@@ -88,7 +89,7 @@ public class StudentController {
     @GetMapping("/team-member-search")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Smart search for team members", description = "Search active students by name, reg_no, or spr_no for team selection.")
-    public ResponseEntity<ApiResponse<java.util.List<com.spdms.modules.student.dto.response.StudentSearchDTO>>> searchActiveStudentsForTeam(
+    public ResponseEntity<ApiResponse<java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO>>> searchActiveStudentsForTeam(
             @RequestParam String keyword) {
         return ResponseEntity.ok(studentService.searchActiveStudentsForTeam(keyword));
     }
@@ -98,7 +99,8 @@ public class StudentController {
     @Operation(summary = "Delete Student", description = "Deletes a student record. Requires ADMIN role.")
     public ResponseEntity<ApiResponse<Void>> deleteStudent(@PathVariable Long id) {
         ApiResponse<Void> response = studentService.deleteStudent(id);
-        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @PutMapping("/{id}")
@@ -108,7 +110,8 @@ public class StudentController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateStudentRequest request) {
         ApiResponse<StudentResponse> response = studentService.updateStudent(id, request);
-        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @PostMapping(value = "/bulk-parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -138,7 +141,8 @@ public class StudentController {
             @Valid @RequestBody PointAdjustmentRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         ApiResponse<StudentResponse> response = studentService.adjustPoints(id, request, username);
-        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @GetMapping("/{id}/discipline-logs")
@@ -154,7 +158,8 @@ public class StudentController {
     public ResponseEntity<ApiResponse<DepartmentPerformanceResponse>> getDepartmentPerformance() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         ApiResponse<DepartmentPerformanceResponse> response = studentService.getDepartmentPerformance(username);
-        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @PostMapping("/{id}/make-captain")
@@ -177,16 +182,16 @@ public class StudentController {
     @PreAuthorize("hasAnyRole('STUDENT')")
     @Operation(summary = "Get Stages Configured for Student", description = "Returns list of stages enriched with specific user validation (unlock rules).")
     public ResponseEntity<?> getStudentStages() {
-        com.spdms.entity.Student student = studentAuthResolver.getLoggedInStudent();
+        com.pragatix.entity.Student student = studentAuthResolver.getLoggedInStudent();
         return studentStageFacade.getStudentStages(student);
     }
 
     @GetMapping("/subgroups/{subgroupId}/activities")
     @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN', 'TEACHER')")
     @Operation(summary = "Get all activities of a subgroup")
-    public ResponseEntity<ApiResponse<List<com.spdms.entity.Activity>>> getActivitiesBySubgroup(
+    public ResponseEntity<ApiResponse<List<com.pragatix.entity.Activity>>> getActivitiesBySubgroup(
             @PathVariable Long subgroupId) {
-        List<com.spdms.entity.Activity> activities = activityRepository.findBySubgroupId(subgroupId);
+        List<com.pragatix.entity.Activity> activities = activityRepository.findBySubgroupId(subgroupId);
         return ResponseEntity.ok(ApiResponse.ok(activities));
     }
 }

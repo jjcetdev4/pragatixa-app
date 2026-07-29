@@ -1,8 +1,8 @@
-package com.spdms.student;
+package com.pragatix.student;
 
-import com.spdms.entity.Student;
-import com.spdms.entity.XpTransaction;
-import com.spdms.repository.XpTransactionRepository;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.XpTransaction;
+import com.pragatix.repository.XpTransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -25,7 +25,8 @@ public class XpCalculationService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).withHour(0).withMinute(0);
+        LocalDateTime startOfWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).withHour(0)
+                .withMinute(0);
         LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0);
 
         List<XpTransaction> studentTxs = xpTransactionRepository.findByStudentRegNo(student.getRegNo());
@@ -76,7 +77,7 @@ public class XpCalculationService {
             return Math.max(0, Math.min(points, 45 - currentMonthEarned));
         }
 
-        return points; 
+        return points;
     }
 
     private int sumPointsForActivityInPeriod(List<XpTransaction> txs, String activityKeyword, LocalDateTime since) {

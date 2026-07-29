@@ -1,4 +1,4 @@
-package com.spdms.modules.badge.validator;
+package com.pragatix.modules.badge.validator;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

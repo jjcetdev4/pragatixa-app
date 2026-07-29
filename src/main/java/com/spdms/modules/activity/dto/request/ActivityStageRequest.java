@@ -1,4 +1,4 @@
-package com.spdms.modules.activity.dto.request;
+package com.pragatix.modules.activity.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -30,39 +30,109 @@ public class ActivityStageRequest {
     private Integer groupThreshold = 0;
 
     // Getters and Setters
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() {
+        return name;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public Integer getExpectedXp() { return expectedXp; }
-    public void setExpectedXp(Integer expectedXp) { this.expectedXp = expectedXp; }
+    public String getDescription() {
+        return description;
+    }
 
-    public LocalDateTime getStartDateTime() { return startDateTime; }
-    public void setStartDateTime(LocalDateTime startDateTime) { this.startDateTime = startDateTime; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public LocalDateTime getEndDateTime() { return endDateTime; }
-    public void setEndDateTime(LocalDateTime endDateTime) { this.endDateTime = endDateTime; }
+    public Integer getExpectedXp() {
+        return expectedXp;
+    }
 
-    public int getDisplayOrder() { return displayOrder; }
-    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
+    public void setExpectedXp(Integer expectedXp) {
+        this.expectedXp = expectedXp;
+    }
 
-    public boolean isUseDateValidation() { return useDateValidation; }
-    public void setUseDateValidation(boolean useDateValidation) { this.useDateValidation = useDateValidation; }
+    public LocalDateTime getStartDateTime() {
+        return startDateTime;
+    }
 
-    public boolean isUseThresholdValidation() { return useThresholdValidation; }
-    public void setUseThresholdValidation(boolean useThresholdValidation) { this.useThresholdValidation = useThresholdValidation; }
+    public void setStartDateTime(LocalDateTime startDateTime) {
+        this.startDateTime = startDateTime;
+    }
 
-    public boolean isUseCombinedValidation() { return useCombinedValidation; }
-    public void setUseCombinedValidation(boolean useCombinedValidation) { this.useCombinedValidation = useCombinedValidation; }
+    public LocalDateTime getEndDateTime() {
+        return endDateTime;
+    }
 
-    public Integer getMustThreshold() { return mustThreshold; }
-    public void setMustThreshold(Integer mustThreshold) { this.mustThreshold = mustThreshold; }
+    public void setEndDateTime(LocalDateTime endDateTime) {
+        this.endDateTime = endDateTime;
+    }
 
-    public Integer getIndividualThreshold() { return individualThreshold; }
-    public void setIndividualThreshold(Integer individualThreshold) { this.individualThreshold = individualThreshold; }
+    public int getDisplayOrder() {
+        return displayOrder;
+    }
 
-    public Integer getGroupThreshold() { return groupThreshold; }
-    public void setGroupThreshold(Integer groupThreshold) { this.groupThreshold = groupThreshold; }
+    public void setDisplayOrder(int displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    public boolean isUseDateValidation() {
+        return useDateValidation;
+    }
+
+    public void setUseDateValidation(boolean useDateValidation) {
+        this.useDateValidation = useDateValidation;
+    }
+
+    public boolean isUseThresholdValidation() {
+        return useThresholdValidation;
+    }
+
+    public void setUseThresholdValidation(boolean useThresholdValidation) {
+        this.useThresholdValidation = useThresholdValidation;
+    }
+
+    public boolean isUseCombinedValidation() {
+        return useCombinedValidation;
+    }
+
+    public void setUseCombinedValidation(boolean useCombinedValidation) {
+        this.useCombinedValidation = useCombinedValidation;
+    }
+
+    public Integer getMustThreshold() {
+        return mustThreshold;
+    }
+
+    public void setMustThreshold(Integer mustThreshold) {
+        this.mustThreshold = mustThreshold;
+    }
+
+    public Integer getIndividualThreshold() {
+        return individualThreshold;
+    }
+
+    public void setIndividualThreshold(Integer individualThreshold) {
+        this.individualThreshold = individualThreshold;
+    }
+
+    public Integer getGroupThreshold() {
+        return groupThreshold;
+    }
+
+    public void setGroupThreshold(Integer groupThreshold) {
+        this.groupThreshold = groupThreshold;
+    }
+
+    private com.pragatix.enums.AcademicYear academicYear;
+
+    public com.pragatix.enums.AcademicYear getAcademicYear() {
+        return academicYear;
+    }
+
+    public void setAcademicYear(com.pragatix.enums.AcademicYear academicYear) {
+        this.academicYear = academicYear;
+    }
 }

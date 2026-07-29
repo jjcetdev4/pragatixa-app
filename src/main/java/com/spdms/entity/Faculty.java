@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -35,38 +35,99 @@ public class Faculty {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public Faculty() {}
+    public Faculty() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
+    public User getUser() {
+        return user;
+    }
 
-    public Section getSection() { return section; }
-    public void setSection(Section section) { this.section = section; }
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-    public String getDesignation() { return designation; }
-    public void setDesignation(String designation) { this.designation = designation; }
+    public Department getDepartment() {
+        return department;
+    }
 
-    public String getPhoneNo() { return phoneNo; }
-    public void setPhoneNo(String phoneNo) { this.phoneNo = phoneNo; }
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Section getSection() {
+        return section;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public void setSection(Section section) {
+        this.section = section;
+    }
+
+    public String getDesignation() {
+        return designation;
+    }
+
+    public void setDesignation(String designation) {
+        this.designation = designation;
+    }
+
+    public String getPhoneNo() {
+        return phoneNo;
+    }
+
+    public void setPhoneNo(String phoneNo) {
+        this.phoneNo = phoneNo;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final Faculty f = new Faculty();
-        public Builder user(User v) { f.user = v; return this; }
-        public Builder department(Department v) { f.department = v; return this; }
-        public Builder section(Section v) { f.section = v; return this; }
-        public Builder designation(String v) { f.designation = v; return this; }
-        public Builder phoneNo(String v) { f.phoneNo = v; return this; }
-        public Faculty build() { return f; }
+
+        public Builder user(User v) {
+            f.user = v;
+            return this;
+        }
+
+        public Builder department(Department v) {
+            f.department = v;
+            return this;
+        }
+
+        public Builder section(Section v) {
+            f.section = v;
+            return this;
+        }
+
+        public Builder designation(String v) {
+            f.designation = v;
+            return this;
+        }
+
+        public Builder phoneNo(String v) {
+            f.phoneNo = v;
+            return this;
+        }
+
+        public Faculty build() {
+            return f;
+        }
     }
 }

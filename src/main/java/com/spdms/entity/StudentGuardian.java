@@ -1,11 +1,11 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "student_guardians", uniqueConstraints = {
-    @UniqueConstraint(name = "reg_no", columnNames = {"reg_no", "relationship"})
+        @UniqueConstraint(name = "reg_no", columnNames = { "reg_no", "relationship" })
 })
 public class StudentGuardian {
 
@@ -46,46 +46,125 @@ public class StudentGuardian {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public StudentGuardian() {}
+    public StudentGuardian() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getRegNo() { return regNo; }
-    public void setRegNo(String regNo) { this.regNo = regNo; }
+    public Student getStudent() {
+        return student;
+    }
 
-    public String getGuardianName() { return guardianName; }
-    public void setGuardianName(String guardianName) { this.guardianName = guardianName; }
+    public void setStudent(Student student) {
+        this.student = student;
+    }
 
-    public RelationshipType getRelationship() { return relationship; }
-    public void setRelationship(RelationshipType relationship) { this.relationship = relationship; }
+    public String getRegNo() {
+        return regNo;
+    }
 
-    public String getPhoneNo() { return phoneNo; }
-    public void setPhoneNo(String phoneNo) { this.phoneNo = phoneNo; }
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getGuardianName() {
+        return guardianName;
+    }
 
-    public boolean isPrimary() { return isPrimary; }
-    public void setPrimary(boolean primary) { isPrimary = primary; }
+    public void setGuardianName(String guardianName) {
+        this.guardianName = guardianName;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public RelationshipType getRelationship() {
+        return relationship;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public void setRelationship(RelationshipType relationship) {
+        this.relationship = relationship;
+    }
+
+    public String getPhoneNo() {
+        return phoneNo;
+    }
+
+    public void setPhoneNo(String phoneNo) {
+        this.phoneNo = phoneNo;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public boolean isPrimary() {
+        return isPrimary;
+    }
+
+    public void setPrimary(boolean primary) {
+        isPrimary = primary;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final StudentGuardian sg = new StudentGuardian();
-        public Builder student(Student v) { sg.student = v; return this; }
-        public Builder regNo(String v) { sg.regNo = v; return this; }
-        public Builder guardianName(String v) { sg.guardianName = v; return this; }
-        public Builder relationship(RelationshipType v) { sg.relationship = v; return this; }
-        public Builder phoneNo(String v) { sg.phoneNo = v; return this; }
-        public Builder email(String v) { sg.email = v; return this; }
-        public Builder isPrimary(boolean v) { sg.isPrimary = v; return this; }
-        public StudentGuardian build() { return sg; }
+
+        public Builder student(Student v) {
+            sg.student = v;
+            return this;
+        }
+
+        public Builder regNo(String v) {
+            sg.regNo = v;
+            return this;
+        }
+
+        public Builder guardianName(String v) {
+            sg.guardianName = v;
+            return this;
+        }
+
+        public Builder relationship(RelationshipType v) {
+            sg.relationship = v;
+            return this;
+        }
+
+        public Builder phoneNo(String v) {
+            sg.phoneNo = v;
+            return this;
+        }
+
+        public Builder email(String v) {
+            sg.email = v;
+            return this;
+        }
+
+        public Builder isPrimary(boolean v) {
+            sg.isPrimary = v;
+            return this;
+        }
+
+        public StudentGuardian build() {
+            return sg;
+        }
     }
 }

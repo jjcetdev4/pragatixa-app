@@ -1,4 +1,4 @@
-package com.spdms.modules.notification.dto.request;
+package com.pragatix.modules.notification.dto.request;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

@@ -1,17 +1,17 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.admin.dto.request.CreateDepartmentRequest;
-import com.spdms.entity.Department;
-import com.spdms.entity.Section;
-import com.spdms.repository.DepartmentRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
-import com.spdms.modules.activity.repository.ActivitySubgroupRepository;
-import com.spdms.repository.SubjectRepository;
-import com.spdms.repository.SectionRepository;
-import com.spdms.modules.faculty.repository.FacultyRepository;
-import com.spdms.modules.student.repository.StudentGroupRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.admin.dto.request.CreateDepartmentRequest;
+import com.pragatix.entity.Department;
+import com.pragatix.entity.Section;
+import com.pragatix.repository.DepartmentRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
+import com.pragatix.repository.SubjectRepository;
+import com.pragatix.repository.SectionRepository;
+import com.pragatix.modules.faculty.repository.FacultyRepository;
+import com.pragatix.modules.student.repository.StudentGroupRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,10 @@ public class AdminDepartmentCommandService {
     private final SubjectRepository subjectRepository;
     private final UserRepository userRepository;
 
-    public AdminDepartmentCommandService(ActivitySubgroupRepository activitySubgroupRepository, DepartmentRepository departmentRepository, FacultyRepository facultyRepository, SectionRepository sectionRepository, StudentGroupRepository studentGroupRepository, StudentRepository studentRepository, SubjectRepository subjectRepository, UserRepository userRepository) {
+    public AdminDepartmentCommandService(ActivitySubgroupRepository activitySubgroupRepository,
+            DepartmentRepository departmentRepository, FacultyRepository facultyRepository,
+            SectionRepository sectionRepository, StudentGroupRepository studentGroupRepository,
+            StudentRepository studentRepository, SubjectRepository subjectRepository, UserRepository userRepository) {
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.departmentRepository = departmentRepository;
         this.facultyRepository = facultyRepository;
@@ -49,11 +52,11 @@ public class AdminDepartmentCommandService {
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments() {
         List<Department> depts = departmentRepository.findAll();
         List<Map<String, Object>> response = new ArrayList<>();
-        
+
         List<Section> allSections = sectionRepository.findAll();
         Map<Long, List<Section>> sectionsByDept = allSections.stream()
-            .filter(s -> s.getDepartment() != null)
-            .collect(java.util.stream.Collectors.groupingBy(s -> s.getDepartment().getId()));
+                .filter(s -> s.getDepartment() != null)
+                .collect(java.util.stream.Collectors.groupingBy(s -> s.getDepartment().getId()));
 
         for (Department d : depts) {
             Map<String, Object> map = new HashMap<>();
@@ -65,14 +68,14 @@ public class AdminDepartmentCommandService {
             map.put("departmentName", d.getName());
             map.put("deptName", d.getDeptName());
             map.put("description", d.getDescription());
-            
+
             List<Section> sections = sectionsByDept.getOrDefault(d.getId(), new ArrayList<>());
             List<Map<String, Object>> sectionMaps = new ArrayList<>();
             for (Section s : sections) {
                 Map<String, Object> secMap = new HashMap<>();
                 secMap.put("id", s.getId());
                 secMap.put("sectionName", s.getSectionName());
-                secMap.put("name", s.getSectionName()); 
+                secMap.put("name", s.getSectionName());
                 secMap.put("departmentId", d.getId());
                 sectionMaps.add(secMap);
             }
@@ -100,7 +103,7 @@ public class AdminDepartmentCommandService {
                 .description(request.getDescription())
                 .build();
         Department saved = departmentRepository.save(dept);
-        
+
         List<Section> savedSections = new ArrayList<>();
         if (request.getSections() != null) {
             List<Section> sectionsToSave = new ArrayList<>();
@@ -113,7 +116,7 @@ public class AdminDepartmentCommandService {
             savedSections = sectionRepository.saveAll(sectionsToSave);
         }
         saved.setSections(savedSections);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Department created successfully", saved));
     }
 
@@ -144,7 +147,7 @@ public class AdminDepartmentCommandService {
         dept.setDescription(request.getDescription());
 
         Department saved = departmentRepository.save(dept);
-        
+
         if (request.getSections() != null) {
             sectionRepository.deleteByDepartment_Id(saved.getId());
             List<Section> sectionsToSave = new ArrayList<>();
@@ -176,13 +179,20 @@ public class AdminDepartmentCommandService {
         long groups = studentGroupRepository.countByDepartmentId(id);
 
         java.util.List<String> deps = new java.util.ArrayList<>();
-        if (sections > 0) deps.add(sections + " Section(s)");
-        if (students > 0) deps.add(students + " Student(s)");
-        if (faculty > 0) deps.add(faculty + " Faculty Member(s)");
-        if (subjects > 0) deps.add(subjects + " Subject(s)");
-        if (subgroups > 0) deps.add(subgroups + " Activity Subgroup(s)");
-        if (users > 0) deps.add(users + " User(s)");
-        if (groups > 0) deps.add(groups + " Student Group(s)");
+        if (sections > 0)
+            deps.add(sections + " Section(s)");
+        if (students > 0)
+            deps.add(students + " Student(s)");
+        if (faculty > 0)
+            deps.add(faculty + " Faculty Member(s)");
+        if (subjects > 0)
+            deps.add(subjects + " Subject(s)");
+        if (subgroups > 0)
+            deps.add(subgroups + " Activity Subgroup(s)");
+        if (users > 0)
+            deps.add(users + " User(s)");
+        if (groups > 0)
+            deps.add(groups + " Student Group(s)");
 
         if (!deps.isEmpty()) {
             String msg = "Cannot delete Department because it contains: " + String.join(", ", deps)

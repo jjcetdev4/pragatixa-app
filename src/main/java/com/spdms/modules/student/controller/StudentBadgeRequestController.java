@@ -1,9 +1,9 @@
-package com.spdms.modules.student.controller;
+package com.pragatix.modules.student.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.dto.BadgeRequestCreateDto;
-import com.spdms.dto.BadgeRequestDto;
-import com.spdms.modules.badge.service.BadgeRequestService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.dto.BadgeRequestCreateDto;
+import com.pragatix.dto.BadgeRequestDto;
+import com.pragatix.modules.badge.service.BadgeRequestService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,8 @@ public class StudentBadgeRequestController {
             return ResponseEntity.ok(ApiResponse.ok("Badge request submitted successfully", result));
         } catch (Exception e) {
             log.error("Error submitting badge request", e);
-            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to submit badge request", e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Failed to submit badge request", e.getMessage()));
         }
     }
 

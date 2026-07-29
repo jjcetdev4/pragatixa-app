@@ -1,4 +1,4 @@
-package com.spdms.modules.authentication.dto.request;
+package com.pragatix.modules.authentication.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -26,29 +26,70 @@ public class UpdateUserRequest {
 
     private boolean active;
 
-    public UpdateUserRequest() {}
+    public UpdateUserRequest() {
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public String getFullName() {
+        return fullName;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-    public Long getDepartmentId() { return departmentId; }
-    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
+    public String getEmail() {
+        return email;
+    }
 
-    public Set<String> getRoles() { return roles; }
-    public void setRoles(Set<String> roles) { this.roles = roles; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public Set<String> getSubRoles() { return subRoles; }
-    public void setSubRoles(Set<String> subRoles) { this.subRoles = subRoles; }
+    public Long getDepartmentId() {
+        return departmentId;
+    }
 
-    public Long getSectionId() { return sectionId; }
-    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
 
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public Set<String> getRoles() {
+        return roles;
+    }
 
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    public void setRoles(Set<String> roles) {
+        this.roles = roles;
+    }
+
+    public Set<String> getSubRoles() {
+        return subRoles;
+    }
+
+    public void setSubRoles(Set<String> subRoles) {
+        this.subRoles = subRoles;
+    }
+
+    public Long getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(Long sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

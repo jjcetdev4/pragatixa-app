@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -35,34 +35,86 @@ public class AcademicYear {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public AcademicYear() {}
+    public AcademicYear() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getAcademicYear() { return academicYear; }
-    public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    public String getAcademicYear() {
+        return academicYear;
+    }
 
-    public LocalDate getEndDate() { return endDate; }
-    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    public void setAcademicYear(String academicYear) {
+        this.academicYear = academicYear;
+    }
 
-    public Status getStatus() { return status; }
-    public void setStatus(Status status) { this.status = status; }
+    public LocalDate getStartDate() {
+        return startDate;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final AcademicYear ay = new AcademicYear();
-        public Builder academicYear(String v) { ay.academicYear = v; return this; }
-        public Builder startDate(LocalDate v) { ay.startDate = v; return this; }
-        public Builder endDate(LocalDate v) { ay.endDate = v; return this; }
-        public Builder status(Status v) { ay.status = v; return this; }
-        public AcademicYear build() { return ay; }
+
+        public Builder academicYear(String v) {
+            ay.academicYear = v;
+            return this;
+        }
+
+        public Builder startDate(LocalDate v) {
+            ay.startDate = v;
+            return this;
+        }
+
+        public Builder endDate(LocalDate v) {
+            ay.endDate = v;
+            return this;
+        }
+
+        public Builder status(Status v) {
+            ay.status = v;
+            return this;
+        }
+
+        public AcademicYear build() {
+            return ay;
+        }
     }
 }

@@ -1,11 +1,11 @@
-package com.spdms.admin.service;
+package com.pragatix.admin.service;
 
-import com.spdms.entity.ActivityStage;
-import com.spdms.entity.Student;
-import com.spdms.entity.Team;
-import com.spdms.repository.TeamRepository;
-import com.spdms.modules.activity.repository.ActivityStageRepository;
-import com.spdms.modules.student.repository.StudentRepository;
+import com.pragatix.entity.ActivityStage;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.Team;
+import com.pragatix.repository.TeamRepository;
+import com.pragatix.modules.activity.repository.ActivityStageRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +19,12 @@ public class CaptainSelectionService {
     private final TeamRepository teamRepository;
     private final StudentRepository studentRepository;
     private final ActivityStageRepository activityStageRepository;
-    private final com.spdms.repository.StageTeamRepository stageTeamRepository;
+    private final com.pragatix.repository.StageTeamRepository stageTeamRepository;
 
-    public CaptainSelectionService(TeamRepository teamRepository, 
-                                   StudentRepository studentRepository,
-                                   ActivityStageRepository activityStageRepository,
-                                   com.spdms.repository.StageTeamRepository stageTeamRepository) {
+    public CaptainSelectionService(TeamRepository teamRepository,
+            StudentRepository studentRepository,
+            ActivityStageRepository activityStageRepository,
+            com.pragatix.repository.StageTeamRepository stageTeamRepository) {
         this.teamRepository = teamRepository;
         this.studentRepository = studentRepository;
         this.activityStageRepository = activityStageRepository;
@@ -44,7 +44,7 @@ public class CaptainSelectionService {
         if (team == null || team.getMembers() == null || team.getMembers().isEmpty()) {
             return;
         }
-        
+
         List<Student> eligibleMembers = team.getMembers().stream()
                 .filter(Student::isActive)
                 .collect(Collectors.toList());
@@ -62,10 +62,10 @@ public class CaptainSelectionService {
 
         eligibleMembers.sort(Comparator.comparingInt(Student::getTotalXp).reversed()
                 .thenComparing(Student::getId));
-        
+
         Student newCaptain = eligibleMembers.get(0);
         Student oldCaptain = team.getCaptain();
-        
+
         if (oldCaptain == null || !oldCaptain.getId().equals(newCaptain.getId())) {
             if (oldCaptain != null) {
                 studentRepository.save(oldCaptain);
@@ -73,17 +73,17 @@ public class CaptainSelectionService {
             team.setCaptain(newCaptain);
             studentRepository.save(newCaptain);
             teamRepository.save(team);
-            
+
             updateStageTeamCaptain(team, newCaptain);
-            
+
             System.out.println("CAPTAIN SELECTION: New Captain for " + team.getName() + " -> " + newCaptain.getRegNo());
         }
     }
-    
+
     private void updateStageTeamCaptain(Team team, Student captain) {
         // Also update the StageTeam record if it exists
-        List<com.spdms.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
-        for (com.spdms.entity.StageTeam st : stageTeams) {
+        List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
+        for (com.pragatix.entity.StageTeam st : stageTeams) {
             st.setCaptain(captain);
             stageTeamRepository.save(st);
         }

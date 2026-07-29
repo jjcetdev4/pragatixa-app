@@ -1,4 +1,4 @@
-package com.spdms.infrastructure.logging;
+package com.pragatix.infrastructure.logging;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

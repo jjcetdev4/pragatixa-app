@@ -1,6 +1,6 @@
-package com.spdms.repository;
+package com.pragatix.repository;
 
-import com.spdms.entity.Badge;
+import com.pragatix.entity.Badge;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package com.spdms.modules.notification.service;
+package com.pragatix.modules.notification.service;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

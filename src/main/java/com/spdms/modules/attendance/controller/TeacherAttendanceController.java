@@ -1,9 +1,9 @@
-package com.spdms.modules.attendance.controller;
+package com.pragatix.modules.attendance.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.attendance.dto.request.SaveAttendanceRequest;
-import com.spdms.modules.attendance.dto.response.StudentAttendanceListItemResponse;
-import com.spdms.modules.attendance.service.TeacherAttendanceService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.attendance.dto.request.SaveAttendanceRequest;
+import com.pragatix.modules.attendance.dto.response.StudentAttendanceListItemResponse;
+import com.pragatix.modules.attendance.service.TeacherAttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +24,12 @@ public class TeacherAttendanceController {
     public ResponseEntity<ApiResponse<List<StudentAttendanceListItemResponse>>> getStudentsWithAttendance(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam Integer period,
-            @RequestParam Long yearId,
+            @RequestParam(required = false) Long yearId,
             @RequestParam Long departmentId,
             @RequestParam(required = false) Long sectionId) {
-            
-        List<StudentAttendanceListItemResponse> students = attendanceService.getStudentListWithAttendance(date, period, yearId, departmentId, sectionId);
+
+        List<StudentAttendanceListItemResponse> students = attendanceService.getStudentListWithAttendance(date, period,
+                yearId, departmentId, sectionId);
         return ResponseEntity.ok(ApiResponse.ok(students));
     }
 
@@ -36,7 +37,7 @@ public class TeacherAttendanceController {
     public ResponseEntity<ApiResponse<String>> saveAttendance(
             Principal principal,
             @RequestBody SaveAttendanceRequest request) {
-            
+
         attendanceService.saveAttendance(principal.getName(), request);
         return ResponseEntity.ok(ApiResponse.ok("Attendance saved successfully"));
     }

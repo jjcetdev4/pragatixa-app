@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -20,22 +20,47 @@ public class ActivityCategory {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public ActivityCategory() {}
+    public ActivityCategory() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getActivityName() { return activityName; }
-    public void setActivityName(String activityName) { this.activityName = activityName; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public String getActivityName() {
+        return activityName;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final ActivityCategory ac = new ActivityCategory();
-        public Builder activityName(String v) { ac.activityName = v; return this; }
-        public ActivityCategory build() { return ac; }
+
+        public Builder activityName(String v) {
+            ac.activityName = v;
+            return this;
+        }
+
+        public ActivityCategory build() {
+            return ac;
+        }
     }
 }

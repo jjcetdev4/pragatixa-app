@@ -1,18 +1,18 @@
-package com.spdms.admin.service;
+package com.pragatix.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.dto.CreateTeamRequest;
-import com.spdms.dto.TeamResponse;
-import com.spdms.entity.*;
-import com.spdms.repository.ActivityAssignmentRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
-import com.spdms.modules.student.dto.response.StudentResponse;
-import com.spdms.modules.student.repository.StudentActivityXpRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.repository.GroupDeletionAuditLogRepository;
-import com.spdms.repository.TeamRemovalRequestRepository;
-import com.spdms.repository.TeamRepository;
-import com.spdms.repository.StageTeamRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.dto.CreateTeamRequest;
+import com.pragatix.dto.TeamResponse;
+import com.pragatix.entity.*;
+import com.pragatix.repository.ActivityAssignmentRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.modules.student.dto.response.StudentResponse;
+import com.pragatix.modules.student.repository.StudentActivityXpRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.repository.GroupDeletionAuditLogRepository;
+import com.pragatix.repository.TeamRemovalRequestRepository;
+import com.pragatix.repository.TeamRepository;
+import com.pragatix.repository.StageTeamRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -40,15 +40,15 @@ public class TeamCrudService {
     private final StageTeamRepository stageTeamRepository;
 
     public TeamCrudService(TeamRepository teamRepository,
-                           UserRepository userRepository,
-                           StudentRepository studentRepository,
-                           ActivityAssignmentRepository activityAssignmentRepository,
-                           StudentActivityXpRepository studentActivityXpRepository,
-                           GroupDeletionAuditLogRepository auditLogRepository,
-                           TeamRemovalRequestRepository teamRemovalRequestRepository,
-                           TeamValidationService validationService,
-                           TeamMapper mapper,
-                           StageTeamRepository stageTeamRepository) {
+            UserRepository userRepository,
+            StudentRepository studentRepository,
+            ActivityAssignmentRepository activityAssignmentRepository,
+            StudentActivityXpRepository studentActivityXpRepository,
+            GroupDeletionAuditLogRepository auditLogRepository,
+            TeamRemovalRequestRepository teamRemovalRequestRepository,
+            TeamValidationService validationService,
+            TeamMapper mapper,
+            StageTeamRepository stageTeamRepository) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -64,14 +64,16 @@ public class TeamCrudService {
     @Transactional
     public ResponseEntity<ApiResponse<TeamResponse>> createTeam(CreateTeamRequest request, String username) {
         log.debug("Creating Team with name: {}", request.getName());
-        
+
         Student studentAttempt = studentRepository.findByRegNo(username).orElse(null);
         if (studentAttempt != null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: Students are not allowed to create groups."));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access Denied: Students are not allowed to create groups."));
         }
 
         User creator = userRepository.findByUsername(username).orElse(null);
-        if (creator == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+        if (creator == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
 
         ActivityAssignment assignment = null;
         if (request.getAssignmentId() != null) {
@@ -79,7 +81,8 @@ public class TeamCrudService {
         }
 
         if (!validationService.canCreateTeam(creator, assignment)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access Denied: Only Assigned Faculty, Class Coordinators (CC), or Admins can create teams."));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(
+                    "Access Denied: Only Assigned Faculty, Class Coordinators (CC), or Admins can create teams."));
         }
 
         if (request.getCaptainStudentId() == null || request.getCaptainStudentId().trim().isEmpty()) {
@@ -87,11 +90,16 @@ public class TeamCrudService {
         }
 
         Student captain = studentRepository.findByRegNo(request.getCaptainStudentId()).orElse(null);
-        if (captain == null) return ResponseEntity.badRequest().body(ApiResponse.error("Captain student not found with ID: " + request.getCaptainStudentId()));
-        if (captain.getTeam() != null) return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName() + " is already assigned to team: " + captain.getTeam().getName()));
+        if (captain == null)
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Captain student not found with ID: " + request.getCaptainStudentId()));
+        if (captain.getTeam() != null)
+            return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName()
+                    + " is already assigned to team: " + captain.getTeam().getName()));
 
         if (teamRepository.existsByName(request.getName())) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Team name '" + request.getName() + "' already exists."));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Team name '" + request.getName() + "' already exists."));
         }
 
         List<Student> members = new ArrayList<>();
@@ -105,10 +113,13 @@ public class TeamCrudService {
             if (!validIds.isEmpty()) {
                 List<Student> fetchedMembers = studentRepository.findByRegNoIn(validIds);
                 if (fetchedMembers.size() < validIds.size()) {
-                    return ResponseEntity.badRequest().body(ApiResponse.error("One or more member students not found."));
+                    return ResponseEntity.badRequest()
+                            .body(ApiResponse.error("One or more member students not found."));
                 }
                 for (Student m : fetchedMembers) {
-                    if (m.getTeam() != null) return ResponseEntity.badRequest().body(ApiResponse.error("Student " + m.getFullName() + " is already assigned to team: " + m.getTeam().getName()));
+                    if (m.getTeam() != null)
+                        return ResponseEntity.badRequest().body(ApiResponse.error("Student " + m.getFullName()
+                                + " is already assigned to team: " + m.getTeam().getName()));
                     members.add(m);
                 }
             }
@@ -116,7 +127,8 @@ public class TeamCrudService {
 
         int totalSize = 1 + members.size();
         if (totalSize > request.getSize()) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot add " + totalSize + " members (including captain) because the team size limit is " + request.getSize() + "."));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot add " + totalSize
+                    + " members (including captain) because the team size limit is " + request.getSize() + "."));
         }
 
         Team team = Team.builder()
@@ -141,7 +153,8 @@ public class TeamCrudService {
 
         List<StudentResponse> studentResponses = new ArrayList<>();
         studentResponses.add(mapper.toStudentResponse(captain));
-        for (Student m : members) studentResponses.add(mapper.toStudentResponse(m));
+        for (Student m : members)
+            studentResponses.add(mapper.toStudentResponse(m));
 
         TeamResponse response = mapper.toTeamResponse(savedTeam);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Team created successfully", response));
@@ -150,9 +163,11 @@ public class TeamCrudService {
     @Transactional
     public ResponseEntity<ApiResponse<TeamResponse>> updateTeam(Long id, CreateTeamRequest request) {
         Team team = teamRepository.findById(id).orElse(null);
-        if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
+        if (team == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
 
-        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser != null) {
             try {
@@ -163,16 +178,19 @@ public class TeamCrudService {
         }
 
         if (!team.getName().equalsIgnoreCase(request.getName()) && teamRepository.existsByName(request.getName())) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Team name '" + request.getName() + "' already exists."));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Team name '" + request.getName() + "' already exists."));
         }
 
         team.setName(request.getName());
 
         long currentMembersCount = team.getMembers().size();
-        boolean captainInMembers = team.getMembers().stream().anyMatch(m -> team.getCaptain() != null && m.getId().equals(team.getCaptain().getId()));
+        boolean captainInMembers = team.getMembers().stream()
+                .anyMatch(m -> team.getCaptain() != null && m.getId().equals(team.getCaptain().getId()));
         long totalSize = currentMembersCount + (captainInMembers ? 0 : 1);
         if (request.getSize() < totalSize) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("New limit cannot be less than the current number of members (" + totalSize + ")"));
+            return ResponseEntity.badRequest().body(ApiResponse
+                    .error("New limit cannot be less than the current number of members (" + totalSize + ")"));
         }
 
         team.setSize(request.getSize());
@@ -183,9 +201,11 @@ public class TeamCrudService {
     @Transactional
     public ResponseEntity<ApiResponse<Void>> updateTeamLimit(Long id, int size) {
         Team team = teamRepository.findById(id).orElse(null);
-        if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
+        if (team == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
 
-        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser != null) {
             try {
@@ -196,10 +216,12 @@ public class TeamCrudService {
         }
 
         long currentMembersCount = team.getMembers().size();
-        boolean captainInMembers = team.getCaptain() != null && team.getMembers().stream().anyMatch(m -> m.getId().equals(team.getCaptain().getId()));
+        boolean captainInMembers = team.getCaptain() != null
+                && team.getMembers().stream().anyMatch(m -> m.getId().equals(team.getCaptain().getId()));
         long totalSize = currentMembersCount + (captainInMembers ? 0 : 1);
         if (size < totalSize) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("New limit cannot be less than the current number of members (" + totalSize + ")"));
+            return ResponseEntity.badRequest().body(ApiResponse
+                    .error("New limit cannot be less than the current number of members (" + totalSize + ")"));
         }
 
         team.setSize(size);
@@ -210,10 +232,12 @@ public class TeamCrudService {
     @Transactional
     public ResponseEntity<ApiResponse<Void>> deleteTeam(Long teamId, String username) {
         Team team = teamRepository.findById(teamId).orElse(null);
-        if (team == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
+        if (team == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
 
         User currentUser = userRepository.findByUsername(username).orElse(null);
-        if (currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+        if (currentUser == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
 
         try {
             validationService.validateTeamAccess(currentUser, team);
@@ -225,7 +249,8 @@ public class TeamCrudService {
         boolean isEmpty = team.getMembers().isEmpty() && team.getCaptain() == null;
 
         if (!isEmpty && !isOnlyCaptain) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error("Cannot delete team because it still contains students."));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiResponse.error("Cannot delete team because it still contains students."));
         }
 
         if (isOnlyCaptain) {
@@ -248,10 +273,9 @@ public class TeamCrudService {
         boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
         boolean isAssignedFaculty = false; // We can't determine this globally without an assignment context
         String roleStr = isAdmin ? "ADMIN" : (isAssignedFaculty ? "ASSIGNED_FACULTY" : "CC");
-        
+
         GroupDeletionAuditLog auditLog = new GroupDeletionAuditLog(
-                teamId, teamName, username, roleStr, "User initiated deletion", java.time.LocalDateTime.now()
-        );
+                teamId, teamName, username, roleStr, "User initiated deletion", java.time.LocalDateTime.now());
         auditLogRepository.save(auditLog);
         return ResponseEntity.ok(ApiResponse.ok("Group deleted successfully", null));
     }

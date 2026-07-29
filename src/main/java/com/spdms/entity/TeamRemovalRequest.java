@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -32,7 +32,8 @@ public class TeamRemovalRequest {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public TeamRemovalRequest() {}
+    public TeamRemovalRequest() {
+    }
 
     public TeamRemovalRequest(Team team, Student student, Student captain, String reason, String status) {
         this.team = team;

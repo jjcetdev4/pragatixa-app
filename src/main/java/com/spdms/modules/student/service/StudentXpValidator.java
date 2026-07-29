@@ -1,9 +1,9 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.entity.Activity;
-import com.spdms.entity.Student;
-import com.spdms.entity.StudentActivityXp;
-import com.spdms.modules.student.repository.StudentActivityXpRepository;
+import com.pragatix.entity.Activity;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.StudentActivityXp;
+import com.pragatix.modules.student.repository.StudentActivityXpRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -32,18 +32,19 @@ public class StudentXpValidator {
                 java.time.DayOfWeek today = LocalDate.now().getDayOfWeek();
                 String todayName = today.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH);
                 boolean dayAllowed = java.util.Arrays.stream(awardDays.split(","))
-                    .map(String::trim)
-                    .anyMatch(d -> d.equalsIgnoreCase(todayName));
+                        .map(String::trim)
+                        .anyMatch(d -> d.equalsIgnoreCase(todayName));
                 if (!dayAllowed) {
                     String daysFormatted = java.util.Arrays.stream(awardDays.split(","))
-                        .map(String::trim).collect(Collectors.joining(", "));
-                    return "XP can only be awarded on the configured Award Days: " + daysFormatted + ". Today is " + todayName + ".";
+                            .map(String::trim).collect(Collectors.joining(", "));
+                    return "XP can only be awarded on the configured Award Days: " + daysFormatted + ". Today is "
+                            + todayName + ".";
                 }
             }
         }
 
         List<StudentActivityXp> history = studentActivityXpRepository.findByStudentIdAndActivityId(
-            student.getId(), activity.getId());
+                student.getId(), activity.getId());
 
         if ("One Time".equalsIgnoreCase(awardFrequency)) {
             if (!history.isEmpty()) {
@@ -51,20 +52,22 @@ public class StudentXpValidator {
             }
             return null;
         }
-        
+
         if ("Per Assignment".equalsIgnoreCase(awardFrequency)) {
             return null;
         }
 
         if ("Manual".equalsIgnoreCase(awardFrequency)) {
             if (!history.isEmpty()) {
-                return "Student " + student.getFullName() + " has already been awarded XP for this manual activity. Contact the administrator to reset.";
+                return "Student " + student.getFullName()
+                        + " has already been awarded XP for this manual activity. Contact the administrator to reset.";
             }
             return null;
         }
 
         Integer cap = activity.getMaximumAwards();
-        if (cap == null || cap <= 0) cap = 1;
+        if (cap == null || cap <= 0)
+            cap = 1;
 
         LocalDate now = LocalDate.now();
         LocalDateTime windowStart;
@@ -78,7 +81,8 @@ public class StudentXpValidator {
             windowLabel = "today";
             cap = 8;
         } else if ("Weekly".equalsIgnoreCase(awardFrequency)) {
-            windowStart = now.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).atStartOfDay();
+            windowStart = now.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+                    .atStartOfDay();
             windowLabel = "this week";
         } else if ("Monthly".equalsIgnoreCase(awardFrequency)) {
             windowStart = now.withDayOfMonth(1).atStartOfDay();
@@ -88,7 +92,8 @@ public class StudentXpValidator {
                 return null;
             } else {
                 if (history.size() >= cap) {
-                    return "Student " + student.getFullName() + " has reached the maximum cap (" + cap + ") for this activity.";
+                    return "Student " + student.getFullName() + " has reached the maximum cap (" + cap
+                            + ") for this activity.";
                 }
                 return null;
             }
@@ -96,12 +101,12 @@ public class StudentXpValidator {
 
         final LocalDateTime limitStart = windowStart;
         long awardsInWindow = history.stream()
-            .filter(h -> !h.getAwardedAt().isBefore(limitStart))
-            .count();
+                .filter(h -> !h.getAwardedAt().isBefore(limitStart))
+                .count();
 
         if (awardsInWindow >= cap) {
             return "Student " + student.getFullName() + " has already reached the maximum allowed XP awards ("
-                + cap + ") for " + windowLabel + ".";
+                    + cap + ") for " + windowLabel + ".";
         }
 
         return null;

@@ -1,4 +1,4 @@
-package com.spdms.modules.admin.dto.request;
+package com.pragatix.modules.admin.dto.request;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

@@ -1,4 +1,4 @@
-package com.spdms.infrastructure.scheduler;
+package com.pragatix.infrastructure.scheduler;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

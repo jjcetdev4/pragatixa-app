@@ -1,7 +1,7 @@
-package com.spdms.modules.activity.dto.request;
+package com.pragatix.modules.activity.dto.request;
 
 import jakarta.validation.constraints.NotNull;
-import com.spdms.entity.AssignmentScope;
+import com.pragatix.entity.AssignmentScope;
 
 public class AssignmentRequest {
 
@@ -9,26 +9,51 @@ public class AssignmentRequest {
     private Long departmentId;
 
     private Long sectionId;
-    
+
     private Long teacherId;
 
     private String year;
-    
+
     @NotNull(message = "Assignment Scope is required")
     private AssignmentScope scope;
 
-    public Long getDepartmentId() { return departmentId; }
-    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
+    public Long getDepartmentId() {
+        return departmentId;
+    }
 
-    public Long getSectionId() { return sectionId; }
-    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
 
-    public Long getTeacherId() { return teacherId; }
-    public void setTeacherId(Long teacherId) { this.teacherId = teacherId; }
+    public Long getSectionId() {
+        return sectionId;
+    }
 
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public void setSectionId(Long sectionId) {
+        this.sectionId = sectionId;
+    }
 
-    public AssignmentScope getScope() { return scope; }
-    public void setScope(AssignmentScope scope) { this.scope = scope; }
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public AssignmentScope getScope() {
+        return scope;
+    }
+
+    public void setScope(AssignmentScope scope) {
+        this.scope = scope;
+    }
 }

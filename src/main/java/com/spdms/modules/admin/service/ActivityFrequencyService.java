@@ -1,8 +1,8 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.CustomFrequency;
-import com.spdms.repository.CustomFrequencyRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.CustomFrequency;
+import com.pragatix.repository.CustomFrequencyRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +31,8 @@ public class ActivityFrequencyService {
         }
 
         if (customFrequencyRepository.findByNameIgnoreCase(name).isPresent()) {
-            return ResponseEntity.badRequest().body(ApiResponse.<CustomFrequency>error("Custom frequency with this name already exists"));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.<CustomFrequency>error("Custom frequency with this name already exists"));
         }
 
         String capType = (String) payload.getOrDefault("capType", "UNLIMITED");

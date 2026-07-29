@@ -1,9 +1,9 @@
-package com.spdms.modules.leaderboard.controller;
+package com.pragatix.modules.leaderboard.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.leaderboard.service.LeaderboardService;
-import com.spdms.modules.leaderboard.dto.response.FilterOptionsDto;
-import com.spdms.modules.student.dto.response.StudentResponse;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.leaderboard.service.LeaderboardService;
+import com.pragatix.modules.leaderboard.dto.response.FilterOptionsDto;
+import com.pragatix.modules.student.dto.response.StudentResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

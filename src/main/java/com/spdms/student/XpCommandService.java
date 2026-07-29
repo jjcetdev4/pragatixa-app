@@ -1,14 +1,14 @@
-package com.spdms.student;
+package com.pragatix.student;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Activity;
-import com.spdms.entity.Streak;
-import com.spdms.entity.Student;
-import com.spdms.entity.XpTransaction;
-import com.spdms.modules.activity.repository.ActivityRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.modules.student.service.XpEngineService;
-import com.spdms.repository.XpTransactionRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.Activity;
+import com.pragatix.entity.Streak;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.XpTransaction;
+import com.pragatix.modules.activity.repository.ActivityRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.modules.student.service.XpEngineService;
+import com.pragatix.repository.XpTransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +26,10 @@ public class XpCommandService {
     private final XpEngineService xpEngineService;
 
     public XpCommandService(XpTransactionRepository xpTransactionRepository,
-                            StudentRepository studentRepository,
-                            ActivityRepository activityRepository,
-                            XpCalculationService xpCalculationService,
-                            XpEngineService xpEngineService) {
+            StudentRepository studentRepository,
+            ActivityRepository activityRepository,
+            XpCalculationService xpCalculationService,
+            XpEngineService xpEngineService) {
         this.xpTransactionRepository = xpTransactionRepository;
         this.studentRepository = studentRepository;
         this.activityRepository = activityRepository;
@@ -38,7 +38,8 @@ public class XpCommandService {
     }
 
     @Transactional
-    public ApiResponse<XpTransaction> submitXpClaim(String regNo, String category, String activityName, int xpPoints, String evidenceUrl) {
+    public ApiResponse<XpTransaction> submitXpClaim(String regNo, String category, String activityName, int xpPoints,
+            String evidenceUrl) {
         Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
@@ -95,7 +96,7 @@ public class XpCommandService {
         XpTransaction saved = xpTransactionRepository.save(tx);
 
         Student student = tx.getStudent();
-        
+
         // Let XpEngineService handle the actual categorization and promotion
         xpEngineService.awardXp(student, tx.getActivity(), null, null, tx.getXpPoints(), "Approved Claim");
 
@@ -121,14 +122,16 @@ public class XpCommandService {
     }
 
     @Transactional
-    public ApiResponse<XpTransaction> logViolation(String regNo, String violationType, int xpPenalty, String appliedBy, String description) {
+    public ApiResponse<XpTransaction> logViolation(String regNo, String violationType, int xpPenalty, String appliedBy,
+            String description) {
         Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
         }
         Student student = studentOpt.get();
 
-        xpEngineService.awardXp(student, null, null, null, -Math.abs(xpPenalty), "Violation: " + violationType + " - " + description);
+        xpEngineService.awardXp(student, null, null, null, -Math.abs(xpPenalty),
+                "Violation: " + violationType + " - " + description);
 
         return ApiResponse.ok("Violation logged successfully. Points deducted.", null);
     }

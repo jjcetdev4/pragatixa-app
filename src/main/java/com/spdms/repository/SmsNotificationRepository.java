@@ -1,6 +1,6 @@
-package com.spdms.repository;
+package com.pragatix.repository;
 
-import com.spdms.entity.SmsNotification;
+import com.pragatix.entity.SmsNotification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

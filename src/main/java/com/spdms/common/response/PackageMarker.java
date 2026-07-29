@@ -1,4 +1,4 @@
-package com.spdms.common.response;
+package com.pragatix.common.response;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

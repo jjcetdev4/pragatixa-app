@@ -1,8 +1,8 @@
-package com.spdms.modules.admin.controller;
+package com.pragatix.modules.admin.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.activity.dto.request.ActivityStageRequest;
-import com.spdms.modules.activity.dto.response.ActivityStageResponse;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.activity.dto.request.ActivityStageRequest;
+import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -36,15 +36,18 @@ public class AdminStageController {
     @GetMapping("/stages")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "Get all activity stages with subgroups")
-    public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages() {
-        return adminStageService.getAllStages();
+    public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages(
+            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+        return adminStageService.getAllStages(academicYear);
     }
 
     @PostMapping("/stages")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new stage")
     public ResponseEntity<ApiResponse<ActivityStageResponse>> createStage(
-                @Valid @RequestBody ActivityStageRequest request) {
+            @Valid @RequestBody ActivityStageRequest request) {
+        System.out.println("Controller: Incoming Academic Year - " + request.getAcademicYear());
+        System.out.println("Controller: Incoming Stage Name - " + request.getName());
         return adminStageService.createStage(request);
     }
 
@@ -59,8 +62,9 @@ public class AdminStageController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update an existing stage")
     public ResponseEntity<ApiResponse<ActivityStageResponse>> editStage(
-                @PathVariable Long id,
-                @Valid @RequestBody ActivityStageRequest request) {
+            @PathVariable Long id,
+            @Valid @RequestBody ActivityStageRequest request) {
+        System.out.println("Controller received Academic Year: " + request.getAcademicYear());
         return adminStageService.editStage(id, request);
     }
 

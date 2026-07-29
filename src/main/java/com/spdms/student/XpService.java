@@ -1,9 +1,9 @@
-package com.spdms.student;
+package com.pragatix.student;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.dto.StreakResponse;
-import com.spdms.dto.XpTransactionDto;
-import com.spdms.entity.XpTransaction;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.dto.StreakResponse;
+import com.pragatix.dto.XpTransactionDto;
+import com.pragatix.entity.XpTransaction;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +33,8 @@ public class XpService {
         return xpQueryService.getStudentStreaks(regNo);
     }
 
-    public ApiResponse<XpTransaction> submitXpClaim(String regNo, String category, String activityName, int xpPoints, String evidenceUrl) {
+    public ApiResponse<XpTransaction> submitXpClaim(String regNo, String category, String activityName, int xpPoints,
+            String evidenceUrl) {
         return xpCommandService.submitXpClaim(regNo, category, activityName, xpPoints, evidenceUrl);
     }
 
@@ -45,7 +46,8 @@ public class XpService {
         return xpCommandService.rejectXpClaim(txId, approvedBy);
     }
 
-    public ApiResponse<XpTransaction> logViolation(String regNo, String violationType, int xpPenalty, String appliedBy, String description) {
+    public ApiResponse<XpTransaction> logViolation(String regNo, String violationType, int xpPenalty, String appliedBy,
+            String description) {
         return xpCommandService.logViolation(regNo, violationType, xpPenalty, appliedBy, description);
     }
 

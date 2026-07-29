@@ -1,13 +1,13 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.ActivityStage;
-import com.spdms.entity.ActivitySubgroup;
-import com.spdms.entity.Activity;
-import com.spdms.modules.activity.repository.ActivityStageRepository;
-import com.spdms.modules.activity.repository.ActivitySubgroupRepository;
-import com.spdms.modules.activity.repository.ActivityRepository;
-import com.spdms.repository.DisciplineLogRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.ActivityStage;
+import com.pragatix.entity.ActivitySubgroup;
+import com.pragatix.entity.Activity;
+import com.pragatix.modules.activity.repository.ActivityStageRepository;
+import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
+import com.pragatix.modules.activity.repository.ActivityRepository;
+import com.pragatix.repository.DisciplineLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @Service
 public class AdminSubgroupService {
@@ -31,11 +31,34 @@ public class AdminSubgroupService {
     private final ActivitySubgroupRepository activitySubgroupRepository;
     private final DisciplineLogRepository disciplineLogRepository;
 
-    public AdminSubgroupService(ActivityRepository activityRepository, ActivityStageRepository activityStageRepository, ActivitySubgroupRepository activitySubgroupRepository, DisciplineLogRepository disciplineLogRepository) {
+    private final com.pragatix.modules.authentication.repository.UserRepository userRepository;
+
+    public AdminSubgroupService(ActivityRepository activityRepository, ActivityStageRepository activityStageRepository,
+            ActivitySubgroupRepository activitySubgroupRepository, DisciplineLogRepository disciplineLogRepository,
+            com.pragatix.modules.authentication.repository.UserRepository userRepository) {
         this.activityRepository = activityRepository;
         this.activityStageRepository = activityStageRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.disciplineLogRepository = disciplineLogRepository;
+        this.userRepository = userRepository;
+    }
+
+    private void validateAdminAcademicYearAccess(com.pragatix.enums.AcademicYear targetYear) {
+        if (targetYear == null)
+            return;
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        com.pragatix.entity.User user = userRepository.findByUsername(username).orElse(null);
+        if (user != null) {
+            boolean isSuperAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
+            boolean isAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
+            if (isAdmin && !isSuperAdmin) {
+                if (user.getAcademicYear() == null || !targetYear.equals(user.getAcademicYear())) {
+                    throw new IllegalArgumentException(
+                            "Admin account is not authorized for Academic Year: " + targetYear.name());
+                }
+            }
+        }
     }
 
     @Transactional
@@ -46,6 +69,12 @@ public class AdminSubgroupService {
         ActivityStage stage = activityStageRepository.findById(stageId).orElse(null);
         if (stage == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Stage not found"));
+        }
+
+        try {
+            validateAdminAcademicYearAccess(stage.getAcademicYear());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
 
         String name = (String) body.get("name");
@@ -76,6 +105,14 @@ public class AdminSubgroupService {
         ActivitySubgroup subgroup = activitySubgroupRepository.findById(id).orElse(null);
         if (subgroup == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Subgroup not found"));
+        }
+
+        if (subgroup.getStage() != null) {
+            try {
+                validateAdminAcademicYearAccess(subgroup.getStage().getAcademicYear());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+            }
         }
 
         if (body.get("name") != null) {

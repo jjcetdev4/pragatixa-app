@@ -1,4 +1,4 @@
-package com.spdms.modules.activity.dto.response;
+package com.pragatix.modules.activity.dto.response;
 
 public class StageValidationResponse {
     private Boolean isVisible;

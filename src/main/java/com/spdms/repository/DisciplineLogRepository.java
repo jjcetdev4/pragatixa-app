@@ -1,6 +1,6 @@
-package com.spdms.repository;
+package com.pragatix.repository;
 
-import com.spdms.entity.DisciplineLog;
+import com.pragatix.entity.DisciplineLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface DisciplineLogRepository extends JpaRepository<DisciplineLog, Long> {
     List<DisciplineLog> findByStudentIdOrderByCreatedAtDesc(Long regNo);
-    
+
     long countByActivityId(Long activityId);
 
     @Modifying

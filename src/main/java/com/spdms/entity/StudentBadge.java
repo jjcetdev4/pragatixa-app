@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -31,39 +31,104 @@ public class StudentBadge {
     @Column(name = "evidence_url", columnDefinition = "TEXT")
     private String evidenceUrl;
 
-    public StudentBadge() {}
+    public StudentBadge() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Badge getBadge() { return badge; }
-    public void setBadge(Badge badge) { this.badge = badge; }
+    public Student getStudent() {
+        return student;
+    }
 
-    public LocalDateTime getAwardedAt() { return awardedAt; }
-    public void setAwardedAt(LocalDateTime awardedAt) { this.awardedAt = awardedAt; }
+    public void setStudent(Student student) {
+        this.student = student;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public Badge getBadge() {
+        return badge;
+    }
 
-    public String getApprovedBy() { return approvedBy; }
-    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
+    public void setBadge(Badge badge) {
+        this.badge = badge;
+    }
 
-    public String getEvidenceUrl() { return evidenceUrl; }
-    public void setEvidenceUrl(String evidenceUrl) { this.evidenceUrl = evidenceUrl; }
+    public LocalDateTime getAwardedAt() {
+        return awardedAt;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public void setAwardedAt(LocalDateTime awardedAt) {
+        this.awardedAt = awardedAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(String approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public String getEvidenceUrl() {
+        return evidenceUrl;
+    }
+
+    public void setEvidenceUrl(String evidenceUrl) {
+        this.evidenceUrl = evidenceUrl;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final StudentBadge studentBadge = new StudentBadge();
-        public Builder student(Student v) { studentBadge.student = v; return this; }
-        public Builder badge(Badge v) { studentBadge.badge = v; return this; }
-        public Builder awardedAt(LocalDateTime v) { studentBadge.awardedAt = v; return this; }
-        public Builder status(String v) { studentBadge.status = v; return this; }
-        public Builder approvedBy(String v) { studentBadge.approvedBy = v; return this; }
-        public Builder evidenceUrl(String v) { studentBadge.evidenceUrl = v; return this; }
-        public StudentBadge build() { return studentBadge; }
+
+        public Builder student(Student v) {
+            studentBadge.student = v;
+            return this;
+        }
+
+        public Builder badge(Badge v) {
+            studentBadge.badge = v;
+            return this;
+        }
+
+        public Builder awardedAt(LocalDateTime v) {
+            studentBadge.awardedAt = v;
+            return this;
+        }
+
+        public Builder status(String v) {
+            studentBadge.status = v;
+            return this;
+        }
+
+        public Builder approvedBy(String v) {
+            studentBadge.approvedBy = v;
+            return this;
+        }
+
+        public Builder evidenceUrl(String v) {
+            studentBadge.evidenceUrl = v;
+            return this;
+        }
+
+        public StudentBadge build() {
+            return studentBadge;
+        }
     }
 }

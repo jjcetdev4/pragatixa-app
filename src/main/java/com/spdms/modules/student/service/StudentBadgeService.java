@@ -1,4 +1,4 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
 import org.springframework.stereotype.Service;
 

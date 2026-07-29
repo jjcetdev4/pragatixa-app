@@ -1,9 +1,9 @@
-package com.spdms.modules.activity.mapper;
+package com.pragatix.modules.activity.mapper;
 
-import com.spdms.modules.activity.dto.request.ActivityStageRequest;
-import com.spdms.modules.activity.dto.response.ActivityStageResponse;
-import com.spdms.entity.ActivityStage;
-import com.spdms.enums.StageStatus;
+import com.pragatix.modules.activity.dto.request.ActivityStageRequest;
+import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
+import com.pragatix.entity.ActivityStage;
+import com.pragatix.enums.StageStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -30,6 +30,7 @@ public class ActivityStageMapper {
                 .mustThreshold(request.getMustThreshold() != null ? request.getMustThreshold() : 0)
                 .individualThreshold(request.getIndividualThreshold() != null ? request.getIndividualThreshold() : 0)
                 .groupThreshold(request.getGroupThreshold() != null ? request.getGroupThreshold() : 0)
+                .academicYear(request.getAcademicYear())
                 .status(StageStatus.UPCOMING) // Default to UPCOMING for new stages
                 .build();
     }
@@ -51,6 +52,7 @@ public class ActivityStageMapper {
         entity.setMustThreshold(request.getMustThreshold() != null ? request.getMustThreshold() : 0);
         entity.setIndividualThreshold(request.getIndividualThreshold() != null ? request.getIndividualThreshold() : 0);
         entity.setGroupThreshold(request.getGroupThreshold() != null ? request.getGroupThreshold() : 0);
+        entity.setAcademicYear(request.getAcademicYear());
     }
 
     public ActivityStageResponse toResponse(ActivityStage entity) {
@@ -71,14 +73,15 @@ public class ActivityStageMapper {
         response.setMustThreshold(entity.getMustThreshold());
         response.setIndividualThreshold(entity.getIndividualThreshold());
         response.setGroupThreshold(entity.getGroupThreshold());
-        
+        response.setAcademicYear(entity.getAcademicYear());
+
         // Dynamically calculate time remaining but use true database status
         StageStatus calculatedStatus = entity.getStatus();
         response.setStatus(calculatedStatus);
         response.setIsActive(calculatedStatus == StageStatus.ACTIVE);
         response.setIsUpcoming(calculatedStatus == StageStatus.UPCOMING);
         response.setIsCompleted(calculatedStatus == StageStatus.COMPLETED);
-        
+
         LocalDateTime now = LocalDateTime.now();
         if (calculatedStatus == StageStatus.UPCOMING && entity.getStartDateTime() != null) {
             long days = ChronoUnit.DAYS.between(now, entity.getStartDateTime());
@@ -96,7 +99,7 @@ public class ActivityStageMapper {
             response.setCountdown("Ended");
             response.setRemainingTime("Ended");
         }
-        
+
         return response;
     }
 }

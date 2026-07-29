@@ -1,10 +1,10 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "stage_teams", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_stage_team", columnNames = {"stage_id", "team_id"})
+        @UniqueConstraint(name = "uk_stage_team", columnNames = { "stage_id", "team_id" })
 })
 public class StageTeam {
 
@@ -28,20 +28,46 @@ public class StageTeam {
     @JoinColumn(name = "vice_captain_id")
     private Student viceCaptain;
 
-    public StageTeam() {}
+    public StageTeam() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public ActivityStage getStage() { return stage; }
-    public void setStage(ActivityStage stage) { this.stage = stage; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Team getTeam() { return team; }
-    public void setTeam(Team team) { this.team = team; }
+    public ActivityStage getStage() {
+        return stage;
+    }
 
-    public Student getCaptain() { return captain; }
-    public void setCaptain(Student captain) { this.captain = captain; }
+    public void setStage(ActivityStage stage) {
+        this.stage = stage;
+    }
 
-    public Student getViceCaptain() { return viceCaptain; }
-    public void setViceCaptain(Student viceCaptain) { this.viceCaptain = viceCaptain; }
+    public Team getTeam() {
+        return team;
+    }
+
+    public void setTeam(Team team) {
+        this.team = team;
+    }
+
+    public Student getCaptain() {
+        return captain;
+    }
+
+    public void setCaptain(Student captain) {
+        this.captain = captain;
+    }
+
+    public Student getViceCaptain() {
+        return viceCaptain;
+    }
+
+    public void setViceCaptain(Student viceCaptain) {
+        this.viceCaptain = viceCaptain;
+    }
 }

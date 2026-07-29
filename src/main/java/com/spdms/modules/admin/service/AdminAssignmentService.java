@@ -1,10 +1,10 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.entity.User;
-import com.spdms.entity.Activity;
-import com.spdms.repository.ActivityAssignmentRepository;
-import com.spdms.entity.ActivityAssignment;
-import com.spdms.entity.AssignmentScope;
+import com.pragatix.entity.User;
+import com.pragatix.entity.Activity;
+import com.pragatix.repository.ActivityAssignmentRepository;
+import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.entity.AssignmentScope;
 import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @Service
 public class AdminAssignmentService {
@@ -31,7 +31,7 @@ public class AdminAssignmentService {
     public void populateActivityTransientFields(Activity activity) {
         List<ActivityAssignment> assignments = activityAssignmentRepository.findByActivityId(activity.getId());
         List<Map<String, Object>> summary = new ArrayList<>();
-        
+
         for (ActivityAssignment aa : assignments) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", aa.getId());
@@ -42,7 +42,7 @@ public class AdminAssignmentService {
             map.put("section", aa.getSection() != null ? aa.getSection().getSectionName() : null);
             map.put("sectionName", aa.getSection() != null ? aa.getSection().getSectionName() : null);
             map.put("assignmentMode", activity.getAssignmentMode());
-            
+
             if (aa.getTeacher() != null) {
                 map.put("teacherId", aa.getTeacher().getId());
                 map.put("teacherName", aa.getTeacher().getFullName());
@@ -57,7 +57,7 @@ public class AdminAssignmentService {
             summary.add(map);
         }
         activity.setAssignmentSummary(summary);
-        
+
         // Populate departmentId for backward compat if there's any department set
         if (!assignments.isEmpty() && assignments.get(0).getDepartment() != null) {
             activity.setDepartmentId(assignments.get(0).getDepartment().getId().toString());
@@ -68,7 +68,7 @@ public class AdminAssignmentService {
         if (u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))) {
             return true;
         }
-        
+
         // GLOBAL scope
         if (a.getAssignmentScope() == AssignmentScope.GLOBAL) {
             return true;
@@ -78,18 +78,23 @@ public class AdminAssignmentService {
     }
 
     public ActivityAssignment getPriorityAssignment(List<ActivityAssignment> matches) {
-        if (matches.isEmpty()) return null;
+        if (matches.isEmpty())
+            return null;
         for (ActivityAssignment a : matches) {
-            if (a.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY) return a;
+            if (a.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY)
+                return a;
         }
         for (ActivityAssignment a : matches) {
-            if (a.getAssignmentScope() == AssignmentScope.SECTION) return a;
+            if (a.getAssignmentScope() == AssignmentScope.SECTION)
+                return a;
         }
         for (ActivityAssignment a : matches) {
-            if (a.getAssignmentScope() == AssignmentScope.DEPARTMENT) return a;
+            if (a.getAssignmentScope() == AssignmentScope.DEPARTMENT)
+                return a;
         }
         for (ActivityAssignment a : matches) {
-            if (a.getAssignmentScope() == AssignmentScope.GLOBAL) return a;
+            if (a.getAssignmentScope() == AssignmentScope.GLOBAL)
+                return a;
         }
         return matches.get(0);
     }

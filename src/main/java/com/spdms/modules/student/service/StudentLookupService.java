@@ -1,22 +1,20 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.dto.*;
-import com.spdms.modules.activity.dto.request.*;
-import com.spdms.modules.activity.dto.response.*;
-import com.spdms.modules.student.dto.request.*;
-import com.spdms.modules.student.dto.response.*;
-import com.spdms.entity.*;
-import com.spdms.repository.*;
-import com.spdms.modules.activity.repository.*;
-import com.spdms.modules.faculty.repository.*;
-import com.spdms.modules.student.repository.*;
+import com.pragatix.dto.*;
+import com.pragatix.modules.activity.dto.request.*;
+import com.pragatix.modules.activity.dto.response.*;
+import com.pragatix.modules.student.dto.request.*;
+import com.pragatix.modules.student.dto.response.*;
+import com.pragatix.entity.*;
+import com.pragatix.repository.*;
+import com.pragatix.modules.activity.repository.*;
+import com.pragatix.modules.faculty.repository.*;
+import com.pragatix.modules.student.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.apache.poi.ss.usermodel.*;
-
-
 
 @Service
 public class StudentLookupService {
@@ -29,7 +27,9 @@ public class StudentLookupService {
     private final SemesterRepository semesterRepository;
     private final YearRepository yearRepository;
 
-    public StudentLookupService(AcademicYearRepository academicYearRepository, DepartmentRepository departmentRepository, GenderRepository genderRepository, SectionRepository sectionRepository, SemesterRepository semesterRepository, YearRepository yearRepository) {
+    public StudentLookupService(AcademicYearRepository academicYearRepository,
+            DepartmentRepository departmentRepository, GenderRepository genderRepository,
+            SectionRepository sectionRepository, SemesterRepository semesterRepository, YearRepository yearRepository) {
         this.academicYearRepository = academicYearRepository;
         this.departmentRepository = departmentRepository;
         this.genderRepository = genderRepository;
@@ -83,16 +83,20 @@ public class StudentLookupService {
             }
             String lower = trimmed.toLowerCase();
             byte matchNo = 0;
-            if (lower.contains("first") || lower.contains("1")) matchNo = 1;
-            else if (lower.contains("second") || lower.contains("2")) matchNo = 2;
-            else if (lower.contains("third") || lower.contains("3")) matchNo = 3;
-            else if (lower.contains("fourth") || lower.contains("4")) matchNo = 4;
-            
+            if (lower.contains("first") || lower.contains("1"))
+                matchNo = 1;
+            else if (lower.contains("second") || lower.contains("2"))
+                matchNo = 2;
+            else if (lower.contains("third") || lower.contains("3"))
+                matchNo = 3;
+            else if (lower.contains("fourth") || lower.contains("4"))
+                matchNo = 4;
+
             if (matchNo > 0) {
                 return yearRepository.findByYearNo(matchNo)
                         .orElseThrow(() -> new IllegalArgumentException("Year not found"));
             }
-            
+
             return yearRepository.findByYearName(trimmed)
                     .orElseThrow(() -> new IllegalArgumentException("Year not found"));
         } else {
@@ -153,7 +157,8 @@ public class StudentLookupService {
     }
 
     public String normalizeAcademicYear(String input) {
-        if (input == null) return "";
+        if (input == null)
+            return "";
         String cleaned = input.replaceAll("\\s+", ""); // Remove all spaces
         if (cleaned.matches("\\d{4}-\\d{2}")) { // e.g. "2024-25"
             String start = cleaned.substring(0, 4);

@@ -1,4 +1,4 @@
-package com.spdms.modules.authentication.security;
+package com.pragatix.modules.authentication.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -32,11 +32,7 @@ public class Department {
     private String description;
 
     @JsonIgnore
-    @OneToMany(
-        mappedBy="department",
-        cascade=CascadeType.ALL,
-        orphanRemoval=true
-    )
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Section> sections;
 
     @Column(name = "created_at", insertable = false, updatable = false)
@@ -45,40 +41,107 @@ public class Department {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public Department() {}
+    public Department() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getDeptCode() { return deptCode; }
-    public void setDeptCode(String deptCode) { this.deptCode = deptCode; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getDeptName() { return deptName; }
-    public void setDeptName(String deptName) { this.deptName = deptName; }
+    public String getDeptCode() {
+        return deptCode;
+    }
 
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
+    public void setDeptCode(String deptCode) {
+        this.deptCode = deptCode;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getDeptName() {
+        return deptName;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setDeptName(String deptName) {
+        this.deptName = deptName;
+    }
 
-    public List<Section> getSections() { return sections; }
-    public void setSections(List<Section> sections) { this.sections = sections; }
+    public String getCode() {
+        return code;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setCode(String code) {
+        this.code = code;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public List<Section> getSections() {
+        return sections;
+    }
+
+    public void setSections(List<Section> sections) {
+        this.sections = sections;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public static class Builder {
         private final Department dept = new Department();
-        public Builder deptCode(String v) { dept.deptCode = v; return this; }
-        public Builder deptName(String v) { dept.deptName = v; return this; }
-        public Builder code(String v) { dept.code = v; return this; }
-        public Builder name(String v) { dept.name = v; return this; }
-        public Builder description(String v) { dept.description = v; return this; }
-        public Department build() { return dept; }
+
+        public Builder deptCode(String v) {
+            dept.deptCode = v;
+            return this;
+        }
+
+        public Builder deptName(String v) {
+            dept.deptName = v;
+            return this;
+        }
+
+        public Builder code(String v) {
+            dept.code = v;
+            return this;
+        }
+
+        public Builder name(String v) {
+            dept.name = v;
+            return this;
+        }
+
+        public Builder description(String v) {
+            dept.description = v;
+            return this;
+        }
+
+        public Department build() {
+            return dept;
+        }
     }
 }

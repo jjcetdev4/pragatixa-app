@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.pragatix.dto;
 
 import java.time.LocalDateTime;
 
@@ -14,9 +14,11 @@ public class TeamRemovalRequestDto {
     private String status;
     private LocalDateTime createdAt;
 
-    public TeamRemovalRequestDto() {}
+    public TeamRemovalRequestDto() {
+    }
 
-    public TeamRemovalRequestDto(Long id, Long teamId, String teamName, String regNo, String studentName, String captainId, String captainName, String reason, String status, LocalDateTime createdAt) {
+    public TeamRemovalRequestDto(Long id, Long teamId, String teamName, String regNo, String studentName,
+            String captainId, String captainName, String reason, String status, LocalDateTime createdAt) {
         this.id = id;
         this.teamId = teamId;
         this.teamName = teamName;

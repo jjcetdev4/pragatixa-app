@@ -1,15 +1,15 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.dto.*;
-import com.spdms.modules.activity.dto.request.*;
-import com.spdms.modules.activity.dto.response.*;
-import com.spdms.modules.student.dto.request.*;
-import com.spdms.modules.student.dto.response.*;
-import com.spdms.entity.*;
-import com.spdms.repository.*;
-import com.spdms.modules.activity.repository.*;
-import com.spdms.modules.faculty.repository.*;
-import com.spdms.modules.student.repository.*;
+import com.pragatix.dto.*;
+import com.pragatix.modules.activity.dto.request.*;
+import com.pragatix.modules.activity.dto.response.*;
+import com.pragatix.modules.student.dto.request.*;
+import com.pragatix.modules.student.dto.response.*;
+import com.pragatix.entity.*;
+import com.pragatix.repository.*;
+import com.pragatix.modules.activity.repository.*;
+import com.pragatix.modules.faculty.repository.*;
+import com.pragatix.modules.student.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -19,18 +19,19 @@ import org.apache.poi.ss.usermodel.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-
 @Service
 public class ExcelStudentParser {
     private static final Logger log = LoggerFactory.getLogger(ExcelStudentParser.class);
 
     public LocalDate parseLocalDate(Cell cell) {
-        if (cell == null) return null;
+        if (cell == null)
+            return null;
         if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
             return cell.getLocalDateTimeCellValue().toLocalDate();
         } else if (cell.getCellType() == CellType.STRING) {
             String val = cell.getStringCellValue().trim();
-            if (val.isEmpty()) return null;
+            if (val.isEmpty())
+                return null;
             try {
                 return LocalDate.parse(val); // Try YYYY-MM-DD
             } catch (Exception e) {
@@ -53,7 +54,8 @@ public class ExcelStudentParser {
     }
 
     public String getCellValueAsString(Cell cell) {
-        if (cell == null) return "";
+        if (cell == null)
+            return "";
         if (cell.getCellType() == CellType.STRING) {
             return cell.getStringCellValue().trim();
         } else if (cell.getCellType() == CellType.NUMERIC) {
@@ -73,7 +75,8 @@ public class ExcelStudentParser {
         if (words.length > 1) {
             StringBuilder sb = new StringBuilder();
             for (String w : words) {
-                if (!w.isEmpty() && !w.equalsIgnoreCase("and") && !w.equalsIgnoreCase("of") && !w.equalsIgnoreCase("the")) {
+                if (!w.isEmpty() && !w.equalsIgnoreCase("and") && !w.equalsIgnoreCase("of")
+                        && !w.equalsIgnoreCase("the")) {
                     sb.append(w.charAt(0));
                 }
             }

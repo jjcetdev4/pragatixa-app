@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -7,7 +7,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "attendance_sessions", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_attendance_session", columnNames = {"attendance_date", "period_number", "department_id", "section_id", "year_id"})
+        @UniqueConstraint(name = "uk_attendance_session", columnNames = { "attendance_date", "period_number",
+                "department_id", "section_id", "year_id" })
 })
 public class AttendanceSession {
 
@@ -47,35 +48,86 @@ public class AttendanceSession {
     @OneToMany(mappedBy = "attendanceSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AttendanceRecord> records;
 
-    public AttendanceSession() {}
+    public AttendanceSession() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public LocalDate getAttendanceDate() { return attendanceDate; }
-    public void setAttendanceDate(LocalDate attendanceDate) { this.attendanceDate = attendanceDate; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Integer getPeriodNumber() { return periodNumber; }
-    public void setPeriodNumber(Integer periodNumber) { this.periodNumber = periodNumber; }
+    public LocalDate getAttendanceDate() {
+        return attendanceDate;
+    }
 
-    public AcademicYear getAcademicYear() { return academicYear; }
-    public void setAcademicYear(AcademicYear academicYear) { this.academicYear = academicYear; }
+    public void setAttendanceDate(LocalDate attendanceDate) {
+        this.attendanceDate = attendanceDate;
+    }
 
-    public Year getYear() { return year; }
-    public void setYear(Year year) { this.year = year; }
+    public Integer getPeriodNumber() {
+        return periodNumber;
+    }
 
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
+    public void setPeriodNumber(Integer periodNumber) {
+        this.periodNumber = periodNumber;
+    }
 
-    public Section getSection() { return section; }
-    public void setSection(Section section) { this.section = section; }
+    public AcademicYear getAcademicYear() {
+        return academicYear;
+    }
 
-    public Faculty getTeacher() { return teacher; }
-    public void setTeacher(Faculty teacher) { this.teacher = teacher; }
+    public void setAcademicYear(AcademicYear academicYear) {
+        this.academicYear = academicYear;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Year getYear() {
+        return year;
+    }
 
-    public List<AttendanceRecord> getRecords() { return records; }
-    public void setRecords(List<AttendanceRecord> records) { this.records = records; }
+    public void setYear(Year year) {
+        this.year = year;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public Section getSection() {
+        return section;
+    }
+
+    public void setSection(Section section) {
+        this.section = section;
+    }
+
+    public Faculty getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Faculty teacher) {
+        this.teacher = teacher;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public List<AttendanceRecord> getRecords() {
+        return records;
+    }
+
+    public void setRecords(List<AttendanceRecord> records) {
+        this.records = records;
+    }
 }

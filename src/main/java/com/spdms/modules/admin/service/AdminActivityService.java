@@ -1,10 +1,10 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Activity;
-import com.spdms.entity.CustomFrequency;
-import com.spdms.modules.activity.dto.response.MyActivityResponse;
-import com.spdms.modules.activity.dto.response.GroupedActivityResponse;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.Activity;
+import com.pragatix.entity.CustomFrequency;
+import com.pragatix.modules.activity.dto.response.MyActivityResponse;
+import com.pragatix.modules.activity.dto.response.GroupedActivityResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -19,7 +19,9 @@ public class AdminActivityService {
     private final MyActivityService myActivityService;
     private final ActivityFrequencyService frequencyService;
 
-    public AdminActivityService(ActivityCrudService crudService, ActivityAssignmentService assignmentService, ActivityQueryService queryService, MyActivityService myActivityService, ActivityFrequencyService frequencyService) {
+    public AdminActivityService(ActivityCrudService crudService, ActivityAssignmentService assignmentService,
+            ActivityQueryService queryService, MyActivityService myActivityService,
+            ActivityFrequencyService frequencyService) {
         this.crudService = crudService;
         this.assignmentService = assignmentService;
         this.queryService = queryService;
@@ -31,20 +33,24 @@ public class AdminActivityService {
         return myActivityService.getMyActivities();
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(Long subgroupId) {
-        return queryService.getActivitiesBySubgroup(subgroupId);
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(Long subgroupId,
+            com.pragatix.enums.AcademicYear academicYear) {
+        return queryService.getActivitiesBySubgroup(subgroupId, academicYear);
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup) {
-        return queryService.getActivitiesByStage(stageId, subgroup);
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup,
+            com.pragatix.enums.AcademicYear academicYear) {
+        return queryService.getActivitiesByStage(stageId, subgroup, academicYear);
     }
 
-    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup) {
-        return queryService.getAllActivities(subgroup);
+    public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup,
+            com.pragatix.enums.AcademicYear academicYear) {
+        return queryService.getAllActivities(subgroup, academicYear);
     }
 
-    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup) {
-        return queryService.getGroupedActivities(subgroup);
+    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup,
+            com.pragatix.enums.AcademicYear academicYear) {
+        return queryService.getGroupedActivities(subgroup, academicYear);
     }
 
     public ResponseEntity<ApiResponse<Activity>> createActivity(Long subgroupId, Map<String, Object> body) {

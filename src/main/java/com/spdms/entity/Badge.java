@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 
@@ -31,43 +31,117 @@ public class Badge {
     @Column(nullable = false, length = 50)
     private String rarity;
 
-    public Badge() {}
+    public Badge() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getTier() { return tier; }
-    public void setTier(String tier) { this.tier = tier; }
+    public String getName() {
+        return name;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public int getXpRequired() { return xpRequired; }
-    public void setXpRequired(int xpRequired) { this.xpRequired = xpRequired; }
+    public String getTier() {
+        return tier;
+    }
 
-    public String getIconUrl() { return iconUrl; }
-    public void setIconUrl(String iconUrl) { this.iconUrl = iconUrl; }
+    public void setTier(String tier) {
+        this.tier = tier;
+    }
 
-    public String getApprovalAuthority() { return approvalAuthority; }
-    public void setApprovalAuthority(String approvalAuthority) { this.approvalAuthority = approvalAuthority; }
+    public String getDescription() {
+        return description;
+    }
 
-    public String getRarity() { return rarity; }
-    public void setRarity(String rarity) { this.rarity = rarity; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public int getXpRequired() {
+        return xpRequired;
+    }
+
+    public void setXpRequired(int xpRequired) {
+        this.xpRequired = xpRequired;
+    }
+
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
+    }
+
+    public String getApprovalAuthority() {
+        return approvalAuthority;
+    }
+
+    public void setApprovalAuthority(String approvalAuthority) {
+        this.approvalAuthority = approvalAuthority;
+    }
+
+    public String getRarity() {
+        return rarity;
+    }
+
+    public void setRarity(String rarity) {
+        this.rarity = rarity;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final Badge badge = new Badge();
-        public Builder name(String v) { badge.name = v; return this; }
-        public Builder tier(String v) { badge.tier = v; return this; }
-        public Builder description(String v) { badge.description = v; return this; }
-        public Builder xpRequired(int v) { badge.xpRequired = v; return this; }
-        public Builder iconUrl(String v) { badge.iconUrl = v; return this; }
-        public Builder approvalAuthority(String v) { badge.approvalAuthority = v; return this; }
-        public Builder rarity(String v) { badge.rarity = v; return this; }
-        public Badge build() { return badge; }
+
+        public Builder name(String v) {
+            badge.name = v;
+            return this;
+        }
+
+        public Builder tier(String v) {
+            badge.tier = v;
+            return this;
+        }
+
+        public Builder description(String v) {
+            badge.description = v;
+            return this;
+        }
+
+        public Builder xpRequired(int v) {
+            badge.xpRequired = v;
+            return this;
+        }
+
+        public Builder iconUrl(String v) {
+            badge.iconUrl = v;
+            return this;
+        }
+
+        public Builder approvalAuthority(String v) {
+            badge.approvalAuthority = v;
+            return this;
+        }
+
+        public Builder rarity(String v) {
+            badge.rarity = v;
+            return this;
+        }
+
+        public Badge build() {
+            return badge;
+        }
     }
 }

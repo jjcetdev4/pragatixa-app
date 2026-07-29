@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -49,57 +49,159 @@ public class DisciplineLog {
     @JoinColumn(name = "subgroup_id")
     private ActivitySubgroup subgroup;
 
-    public DisciplineLog() {}
+    public DisciplineLog() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Activity getActivity() { return activity; }
-    public void setActivity(Activity activity) { this.activity = activity; }
+    public Student getStudent() {
+        return student;
+    }
 
-    public Faculty getRecordedByFaculty() { return recordedByFaculty; }
-    public void setRecordedByFaculty(Faculty recordedByFaculty) { this.recordedByFaculty = recordedByFaculty; }
+    public void setStudent(Student student) {
+        this.student = student;
+    }
 
-    public int getPoints() { return points; }
-    public void setPoints(int points) { this.points = points; }
+    public Activity getActivity() {
+        return activity;
+    }
 
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
+    public void setActivity(Activity activity) {
+        this.activity = activity;
+    }
 
-    public String getRemarks() { return remarks; }
-    public void setRemarks(String remarks) { this.remarks = remarks; }
+    public Faculty getRecordedByFaculty() {
+        return recordedByFaculty;
+    }
 
-    public LocalDateTime getIncidentDate() { return incidentDate; }
-    public void setIncidentDate(LocalDateTime incidentDate) { this.incidentDate = incidentDate; }
+    public void setRecordedByFaculty(Faculty recordedByFaculty) {
+        this.recordedByFaculty = recordedByFaculty;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public int getPoints() {
+        return points;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setPoints(int points) {
+        this.points = points;
+    }
 
-    public User getRecordedBy() { return recordedBy; }
-    public void setRecordedBy(User recordedBy) { this.recordedBy = recordedBy; }
+    public String getReason() {
+        return reason;
+    }
 
-    public ActivitySubgroup getSubgroup() { return subgroup; }
-    public void setSubgroup(ActivitySubgroup subgroup) { this.subgroup = subgroup; }
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public LocalDateTime getIncidentDate() {
+        return incidentDate;
+    }
+
+    public void setIncidentDate(LocalDateTime incidentDate) {
+        this.incidentDate = incidentDate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public User getRecordedBy() {
+        return recordedBy;
+    }
+
+    public void setRecordedBy(User recordedBy) {
+        this.recordedBy = recordedBy;
+    }
+
+    public ActivitySubgroup getSubgroup() {
+        return subgroup;
+    }
+
+    public void setSubgroup(ActivitySubgroup subgroup) {
+        this.subgroup = subgroup;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final DisciplineLog log = new DisciplineLog();
-        public Builder student(Student v) { log.student = v; return this; }
-        public Builder activity(Activity v) { log.activity = v; return this; }
-        public Builder recordedByFaculty(Faculty v) { log.recordedByFaculty = v; return this; }
-        public Builder points(int v) { log.points = v; return this; }
-        public Builder reason(String v) { log.reason = v; return this; }
-        public Builder remarks(String v) { log.remarks = v; return this; }
-        public Builder incidentDate(LocalDateTime v) { log.incidentDate = v; return this; }
-        public Builder recordedBy(User v) { log.recordedBy = v; return this; }
-        public Builder subgroup(ActivitySubgroup v) { log.subgroup = v; return this; }
-        public DisciplineLog build() { return log; }
+
+        public Builder student(Student v) {
+            log.student = v;
+            return this;
+        }
+
+        public Builder activity(Activity v) {
+            log.activity = v;
+            return this;
+        }
+
+        public Builder recordedByFaculty(Faculty v) {
+            log.recordedByFaculty = v;
+            return this;
+        }
+
+        public Builder points(int v) {
+            log.points = v;
+            return this;
+        }
+
+        public Builder reason(String v) {
+            log.reason = v;
+            return this;
+        }
+
+        public Builder remarks(String v) {
+            log.remarks = v;
+            return this;
+        }
+
+        public Builder incidentDate(LocalDateTime v) {
+            log.incidentDate = v;
+            return this;
+        }
+
+        public Builder recordedBy(User v) {
+            log.recordedBy = v;
+            return this;
+        }
+
+        public Builder subgroup(ActivitySubgroup v) {
+            log.subgroup = v;
+            return this;
+        }
+
+        public DisciplineLog build() {
+            return log;
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.spdms.infrastructure.logging;
+package com.pragatix.infrastructure.logging;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -52,17 +52,21 @@ public class ApiLoggingFilter extends OncePerRequestFilter {
                 // Attempt to retrieve exception if handled by ControllerAdvice
                 Exception ex = (Exception) request.getAttribute("jakarta.servlet.error.exception");
                 if (ex == null) {
-                    ex = (Exception) request.getAttribute("org.springframework.boot.web.servlet.error.DefaultErrorAttributes.ERROR");
+                    ex = (Exception) request
+                            .getAttribute("org.springframework.boot.web.servlet.error.DefaultErrorAttributes.ERROR");
                 }
-                
+
                 String exceptionName = (ex != null) ? ex.getClass().getSimpleName() : "UnknownException";
-                log.error("ERROR RESPONSE | Method: {} | URI: {} | Status: {} | Exception: {}", method, uri, status, exceptionName);
+                log.error("ERROR RESPONSE | Method: {} | URI: {} | Status: {} | Exception: {}", method, uri, status,
+                        exceptionName);
             } else {
-                log.info("RESPONSE | Method: {} | URI: {} | Status: {} {} | Time: {} ms", method, uri, status, statusText, duration);
+                log.info("RESPONSE | Method: {} | URI: {} | Status: {} {} | Time: {} ms", method, uri, status,
+                        statusText, duration);
             }
 
         } catch (Exception ex) {
-            log.error("ERROR | Method: {} | URI: {} | Status: 500 | Exception: {}", method, uri, ex.getClass().getSimpleName(), ex);
+            log.error("ERROR | Method: {} | URI: {} | Status: 500 | Exception: {}", method, uri,
+                    ex.getClass().getSimpleName(), ex);
             throw ex;
         }
     }

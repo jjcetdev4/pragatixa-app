@@ -1,14 +1,14 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.dto.*;
-import com.spdms.modules.student.dto.request.*;
-import com.spdms.modules.student.dto.response.StudentResponse;
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.*;
-import com.spdms.repository.*;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.repository.StudentGuardianRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
+import com.pragatix.dto.*;
+import com.pragatix.modules.student.dto.request.*;
+import com.pragatix.modules.student.dto.response.StudentResponse;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.*;
+import com.pragatix.repository.*;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.repository.StudentGuardianRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,9 +33,12 @@ public class StudentCommandService {
     private final StudentLookupService studentLookupService;
     private final StudentMapper studentMapper;
     private final StudentGuardianRepository studentGuardianRepository;
-    private final com.spdms.admin.service.TeamCleanupService teamCleanupService;
+    private final com.pragatix.admin.service.TeamCleanupService teamCleanupService;
 
-    public StudentCommandService(PasswordEncoder passwordEncoder, StudentRepository studentRepository, TeamRepository teamRepository, UserRepository userRepository, StudentLookupService studentLookupService, StudentMapper studentMapper, StudentGuardianRepository studentGuardianRepository, com.spdms.admin.service.TeamCleanupService teamCleanupService) {
+    public StudentCommandService(PasswordEncoder passwordEncoder, StudentRepository studentRepository,
+            TeamRepository teamRepository, UserRepository userRepository, StudentLookupService studentLookupService,
+            StudentMapper studentMapper, StudentGuardianRepository studentGuardianRepository,
+            com.pragatix.admin.service.TeamCleanupService teamCleanupService) {
         this.passwordEncoder = passwordEncoder;
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
@@ -49,8 +52,10 @@ public class StudentCommandService {
     @Transactional
     public ApiResponse<StudentResponse> createStudent(CreateStudentRequest request, String username) {
         User creator = userRepository.findByUsername(username).orElse(null);
-        boolean isCcOrAdmin = creator != null && (creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
-                || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
+        boolean isCcOrAdmin = creator != null
+                && (creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
+                        || creator.getSubRoles().stream().map(SubRole::getName)
+                                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC")));
         if (!isCcOrAdmin) {
             return ApiResponse.error("Access Denied: Only Class Coordinators (CC) can add students.");
         }
@@ -70,7 +75,8 @@ public class StudentCommandService {
         Section section;
         try {
             department = studentLookupService.resolveDepartment(request.getDepartmentId(), request.getDepartmentName());
-            academicYear = studentLookupService.resolveAcademicYear(request.getAcademicYearId(), request.getAcademicYear());
+            academicYear = studentLookupService.resolveAcademicYear(request.getAcademicYearId(),
+                    request.getAcademicYear());
             year = studentLookupService.resolveYear(request.getYearId(), request.getYear());
             semester = studentLookupService.resolveSemester(request.getSemesterId(), request.getSemester());
             gender = studentLookupService.resolveGender(request.getGenderId(), request.getGender());
@@ -90,29 +96,29 @@ public class StudentCommandService {
         }
 
         Student student = Student.builder()
-            .regNo(request.getRegNo().trim())
-            .fullName(request.getFullName().trim())
-            .email(request.getEmail().trim())
-            .password(passwordEncoder.encode(rawPassword))
-            .phone(request.getPhone() != null ? request.getPhone().trim() : null)
-            .phoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000")
-            .dateOfBirth(request.getDateOfBirth())
-            .address(request.getAddress())
-            .department(department)
-            .academicYearRef(academicYear)
-            .academicYear(academicYear.getAcademicYear())
-            .yearRef(year)
-            .year(String.valueOf(year.getYearNo()))
-            .semesterRef(semester)
-            .semester(String.valueOf(semester.getSemesterNo()))
-            .genderRef(gender)
-            .gender(gender.getGenderName())
-            .section(section)
-            .team(team)
-            .sprNo(request.getSprNo() != null ? request.getSprNo().trim() : null)
-            .active(true)
-            .score(100)
-            .build();
+                .regNo(request.getRegNo().trim())
+                .fullName(request.getFullName().trim())
+                .email(request.getEmail().trim())
+                .password(passwordEncoder.encode(rawPassword))
+                .phone(request.getPhone() != null ? request.getPhone().trim() : null)
+                .phoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000")
+                .dateOfBirth(request.getDateOfBirth())
+                .address(request.getAddress())
+                .department(department)
+                .academicYearRef(academicYear)
+                .academicYear(academicYear.getAcademicYear())
+                .yearRef(year)
+                .year(String.valueOf(year.getYearNo()))
+                .semesterRef(semester)
+                .semester(String.valueOf(semester.getSemesterNo()))
+                .genderRef(gender)
+                .gender(gender.getGenderName())
+                .section(section)
+                .team(team)
+                .sprNo(request.getSprNo() != null ? request.getSprNo().trim() : null)
+                .active(true)
+                .score(100)
+                .build();
 
         Student saved = studentRepository.save(student);
 
@@ -120,14 +126,14 @@ public class StudentCommandService {
         if (request.getGuardian() != null) {
             GuardianDTO gDto = request.getGuardian();
             guardian = StudentGuardian.builder()
-                .student(saved)
-                .regNo(saved.getRegNo())
-                .guardianName(gDto.getGuardianName())
-                .relationship(StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()))
-                .phoneNo(gDto.getPhoneNo())
-                .email(gDto.getEmail())
-                .isPrimary(true)
-                .build();
+                    .student(saved)
+                    .regNo(saved.getRegNo())
+                    .guardianName(gDto.getGuardianName())
+                    .relationship(StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()))
+                    .phoneNo(gDto.getPhoneNo())
+                    .email(gDto.getEmail())
+                    .isPrimary(true)
+                    .build();
             guardian = studentGuardianRepository.save(guardian);
         }
 
@@ -155,7 +161,8 @@ public class StudentCommandService {
         Section section;
         try {
             department = studentLookupService.resolveDepartment(request.getDepartmentId(), null);
-            academicYear = studentLookupService.resolveAcademicYear(request.getAcademicYearId(), request.getAcademicYear());
+            academicYear = studentLookupService.resolveAcademicYear(request.getAcademicYearId(),
+                    request.getAcademicYear());
             year = studentLookupService.resolveYear(request.getYearId(), request.getYear());
             semester = studentLookupService.resolveSemester(request.getSemesterId(), request.getSemester());
             gender = studentLookupService.resolveGender(request.getGenderId(), request.getGender());
@@ -173,7 +180,7 @@ public class StudentCommandService {
         if (request.getDob() != null) {
             student.setDateOfBirth(request.getDob());
         }
-        
+
         student.setDepartment(department);
         student.setAcademicYearRef(academicYear);
         student.setAcademicYear(academicYear.getAcademicYear());
@@ -219,32 +226,43 @@ public class StudentCommandService {
         if (student == null) {
             return ApiResponse.error("Student not found with ID: " + id);
         }
-        
-        com.spdms.entity.Team oldTeam = student.getTeam();
+
+        com.pragatix.entity.Team oldTeam = student.getTeam();
         Long oldTeamId = oldTeam != null ? oldTeam.getId() : null;
 
-        entityManager.createNativeQuery("DELETE FROM student_guardians WHERE student_id = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM discipline_logs WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM team_removal_requests WHERE reg_no = :sid OR captain_id = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM team_members WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM student_badges WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM streaks WHERE reg_no = :sid").setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("UPDATE teams SET captain_id = NULL WHERE captain_id = :sid").setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM student_guardians WHERE student_id = :sid").setParameter("sid", id)
+                .executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE reg_no = :sid").setParameter("sid", id)
+                .executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM discipline_logs WHERE reg_no = :sid").setParameter("sid", id)
+                .executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE reg_no = :sid").setParameter("sid", id)
+                .executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM team_removal_requests WHERE reg_no = :sid OR captain_id = :sid")
+                .setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM team_members WHERE reg_no = :sid").setParameter("sid", id)
+                .executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM student_badges WHERE reg_no = :sid").setParameter("sid", id)
+                .executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM streaks WHERE reg_no = :sid").setParameter("sid", id)
+                .executeUpdate();
+        entityManager.createNativeQuery("UPDATE teams SET captain_id = NULL WHERE captain_id = :sid")
+                .setParameter("sid", id).executeUpdate();
 
         User user = student.getUser();
         studentRepository.delete(student);
 
         if (user != null) {
-            entityManager.createNativeQuery("DELETE FROM user_roles WHERE user_id = :uid").setParameter("uid", user.getId()).executeUpdate();
-            entityManager.createNativeQuery("DELETE FROM user_sub_roles WHERE user_id = :uid").setParameter("uid", user.getId()).executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM user_roles WHERE user_id = :uid")
+                    .setParameter("uid", user.getId()).executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM user_sub_roles WHERE user_id = :uid")
+                    .setParameter("uid", user.getId()).executeUpdate();
             userRepository.delete(user);
         }
-        
+
         entityManager.flush();
         entityManager.clear();
-        
+
         if (oldTeamId != null) {
             teamRepository.findById(oldTeamId).ifPresent(teamCleanupService::autoDeleteEmptyTeam);
         }

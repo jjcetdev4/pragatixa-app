@@ -1,4 +1,4 @@
-package com.spdms.modules.notification.mapper;
+package com.pragatix.modules.notification.mapper;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

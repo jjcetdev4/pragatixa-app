@@ -1,9 +1,9 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.activity.dto.request.ActivityStageRequest;
-import com.spdms.modules.activity.dto.response.ActivityStageResponse;
-import com.spdms.modules.activity.service.ActivityStageService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.activity.dto.request.ActivityStageRequest;
+import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
+import com.pragatix.modules.activity.service.ActivityStageService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,37 +16,39 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @Service
 public class AdminStageService {
     private static final Logger log = LoggerFactory.getLogger(AdminStageService.class);
 
     private final ActivityStageService activityStageService;
-    private final com.spdms.modules.student.repository.StudentRepository studentRepository;
-    private final com.spdms.modules.student.service.XpEngineService xpEngineService;
+    private final com.pragatix.modules.student.repository.StudentRepository studentRepository;
+    private final com.pragatix.modules.student.service.XpEngineService xpEngineService;
 
     public AdminStageService(ActivityStageService activityStageService,
-                             com.spdms.modules.student.repository.StudentRepository studentRepository,
-                             com.spdms.modules.student.service.XpEngineService xpEngineService) {
+            com.pragatix.modules.student.repository.StudentRepository studentRepository,
+            com.pragatix.modules.student.service.XpEngineService xpEngineService) {
         this.activityStageService = activityStageService;
         this.studentRepository = studentRepository;
         this.xpEngineService = xpEngineService;
     }
 
     public ResponseEntity<ApiResponse<Void>> evaluatePromotions() {
-        List<com.spdms.entity.Student> activeStudents = studentRepository.findByActiveTrue();
+        List<com.pragatix.entity.Student> activeStudents = studentRepository.findByActiveTrue();
         int evaluated = 0;
-        for (com.spdms.entity.Student student : activeStudents) {
+        for (com.pragatix.entity.Student student : activeStudents) {
             xpEngineService.evaluateStagePromotion(student);
             evaluated++;
         }
-        return ResponseEntity.ok(ApiResponse.ok("Evaluated stage promotions for " + evaluated + " active students.", null));
+        return ResponseEntity
+                .ok(ApiResponse.ok("Evaluated stage promotions for " + evaluated + " active students.", null));
     }
 
-    public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages() {
-        List<ActivityStageResponse> stages = activityStageService.getAllStages();
+    public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages(
+            com.pragatix.enums.AcademicYear academicYear) {
+        List<ActivityStageResponse> stages = activityStageService.getAllStages(academicYear);
         return ResponseEntity.ok(ApiResponse.ok(stages));
     }
 

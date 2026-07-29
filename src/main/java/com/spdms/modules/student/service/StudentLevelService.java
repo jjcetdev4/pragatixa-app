@@ -1,10 +1,10 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.entity.Level;
-import com.spdms.entity.Student;
-import com.spdms.modules.student.dto.response.StudentProgressionDto;
-import com.spdms.repository.LevelRepository;
-import com.spdms.modules.student.repository.StudentRepository;
+import com.pragatix.entity.Level;
+import com.pragatix.entity.Student;
+import com.pragatix.modules.student.dto.response.StudentProgressionDto;
+import com.pragatix.repository.LevelRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,9 +17,10 @@ public class StudentLevelService {
 
     private final StudentRepository studentRepository;
     private final LevelRepository levelRepository;
-    private final com.spdms.student.XpQueryService xpQueryService;
+    private final com.pragatix.student.XpQueryService xpQueryService;
 
-    public StudentLevelService(StudentRepository studentRepository, LevelRepository levelRepository, com.spdms.student.XpQueryService xpQueryService) {
+    public StudentLevelService(StudentRepository studentRepository, LevelRepository levelRepository,
+            com.pragatix.student.XpQueryService xpQueryService) {
         this.studentRepository = studentRepository;
         this.levelRepository = levelRepository;
         this.xpQueryService = xpQueryService;
@@ -78,9 +79,12 @@ public class StudentLevelService {
         if (!isMax) {
             dto.setNextLevel(nextLevel.getLevelNumber());
             dto.setRemainingXp(currentLevel.getXpMax() - totalXp + 1);
-            double progress = (double) (totalXp - currentLevel.getXpMin()) / (currentLevel.getXpMax() - currentLevel.getXpMin()) * 100.0;
-            if (progress < 0) progress = 0;
-            if (progress > 100) progress = 100;
+            double progress = (double) (totalXp - currentLevel.getXpMin())
+                    / (currentLevel.getXpMax() - currentLevel.getXpMin()) * 100.0;
+            if (progress < 0)
+                progress = 0;
+            if (progress > 100)
+                progress = 100;
             dto.setProgressPercentage(progress);
         } else {
             dto.setNextLevel(null);
@@ -94,8 +98,7 @@ public class StudentLevelService {
         for (Level lvl : levels) {
             StudentProgressionDto.LevelDto lDto = new StudentProgressionDto.LevelDto(
                     lvl.getLevelNumber(), lvl.getTitle(), lvl.getXpMin(), lvl.getXpMax(),
-                    lvl.getStage(), lvl.getPrimaryObjective(), lvl.getKeyUnlocks()
-            );
+                    lvl.getStage(), lvl.getPrimaryObjective(), lvl.getKeyUnlocks());
             if (lvl.getLevelNumber() <= currentLevel.getLevelNumber()) {
                 unlocked.add(lDto);
             } else {

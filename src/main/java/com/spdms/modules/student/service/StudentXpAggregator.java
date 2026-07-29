@@ -1,7 +1,7 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.entity.XpTransaction;
-import com.spdms.repository.XpTransactionRepository;
+import com.pragatix.entity.XpTransaction;
+import com.pragatix.repository.XpTransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class StudentXpAggregator {
     public AggregatedXp aggregateXpForStudent(Long regNo) {
         Map<Long, Integer> xpByActivityId = new HashMap<>();
         Map<String, Integer> xpByActivityName = new HashMap<>();
-        
+
         List<XpTransaction> allTxs = xpTransactionRepository.findByStudentIdAndStatus(regNo, "APPROVED");
 
         for (XpTransaction tx : allTxs) {
@@ -33,7 +33,8 @@ public class StudentXpAggregator {
                 if (idx != -1 && baseName.contains("Awarded by")) {
                     baseName = baseName.substring(0, idx);
                 }
-                String normalizedTxName = baseName.trim().toLowerCase().replaceAll("\\s+", " ").replaceAll("^\\p{Punct}+|\\p{Punct}+$", "");
+                String normalizedTxName = baseName.trim().toLowerCase().replaceAll("\\s+", " ")
+                        .replaceAll("^\\p{Punct}+|\\p{Punct}+$", "");
                 xpByActivityName.merge(normalizedTxName, tx.getXpPoints(), Integer::sum);
             }
         }

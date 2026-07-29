@@ -1,4 +1,4 @@
-package com.spdms.modules.student.dto.request;
+package com.pragatix.modules.student.dto.request;
 
 public class CreatePenaltyRequestDto {
     private String regNo;
@@ -7,20 +7,46 @@ public class CreatePenaltyRequestDto {
     private int penaltyXP;
     private String reason;
 
-    public CreatePenaltyRequestDto() {}
+    public CreatePenaltyRequestDto() {
+    }
 
-    public String getRegNo() { return regNo; }
-    public void setRegNo(String regNo) { this.regNo = regNo; }
+    public String getRegNo() {
+        return regNo;
+    }
 
-    public Long getActivityId() { return activityId; }
-    public void setActivityId(Long activityId) { this.activityId = activityId; }
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
+    }
 
-    public String getActivityName() { return activityName; }
-    public void setActivityName(String activityName) { this.activityName = activityName; }
+    public Long getActivityId() {
+        return activityId;
+    }
 
-    public int getPenaltyXP() { return penaltyXP; }
-    public void setPenaltyXP(int penaltyXP) { this.penaltyXP = penaltyXP; }
+    public void setActivityId(Long activityId) {
+        this.activityId = activityId;
+    }
 
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
+    public String getActivityName() {
+        return activityName;
+    }
+
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
+    }
+
+    public int getPenaltyXP() {
+        return penaltyXP;
+    }
+
+    public void setPenaltyXP(int penaltyXP) {
+        this.penaltyXP = penaltyXP;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
 }

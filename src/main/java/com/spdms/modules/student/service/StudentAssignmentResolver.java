@@ -1,8 +1,8 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.entity.ActivityAssignment;
-import com.spdms.entity.Student;
-import com.spdms.repository.ActivityAssignmentRepository;
+import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.entity.Student;
+import com.pragatix.repository.ActivityAssignmentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,12 +21,14 @@ public class StudentAssignmentResolver {
 
     public Map<Long, List<ActivityAssignment>> fetchAssignmentsByActivity(List<Long> activityIds) {
         Map<Long, List<ActivityAssignment>> assignmentsByActivity = new HashMap<>();
-        if (activityIds.isEmpty()) return assignmentsByActivity;
+        if (activityIds.isEmpty())
+            return assignmentsByActivity;
 
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityIdIn(activityIds);
         for (ActivityAssignment assignment : allAssignments) {
             if (assignment.getActivity() != null) {
-                assignmentsByActivity.computeIfAbsent(assignment.getActivity().getId(), k -> new ArrayList<>()).add(assignment);
+                assignmentsByActivity.computeIfAbsent(assignment.getActivity().getId(), k -> new ArrayList<>())
+                        .add(assignment);
             }
         }
         return assignmentsByActivity;
@@ -39,11 +41,14 @@ public class StudentAssignmentResolver {
 
     public List<ActivityAssignment> resolveAllValidAssignments(Student student, List<ActivityAssignment> assignments) {
         List<ActivityAssignment> validAssignments = new ArrayList<>();
-        
+
         for (ActivityAssignment assignment : assignments) {
-            if (student.getSection() != null && assignment.getSection() != null && assignment.getSection().getId().equals(student.getSection().getId())) {
+            if (student.getSection() != null && assignment.getSection() != null
+                    && assignment.getSection().getId().equals(student.getSection().getId())) {
                 validAssignments.add(assignment);
-            } else if (student.getSection() != null && student.getSection().getDepartment() != null && assignment.getDepartment() != null && assignment.getDepartment().getId().equals(student.getSection().getDepartment().getId())) {
+            } else if (student.getSection() != null && student.getSection().getDepartment() != null
+                    && assignment.getDepartment() != null
+                    && assignment.getDepartment().getId().equals(student.getSection().getDepartment().getId())) {
                 validAssignments.add(assignment);
             } else if (assignment.getSection() == null && assignment.getDepartment() == null) {
                 validAssignments.add(assignment);

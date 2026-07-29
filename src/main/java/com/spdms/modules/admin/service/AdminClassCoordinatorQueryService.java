@@ -1,8 +1,8 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.User;
-import com.spdms.modules.authentication.repository.UserRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.User;
+import com.pragatix.modules.authentication.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

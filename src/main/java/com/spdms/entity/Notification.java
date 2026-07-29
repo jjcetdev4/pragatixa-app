@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -50,54 +50,151 @@ public class Notification {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public Notification() {}
+    public Notification() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public Student getStudent() {
+        return student;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public void setStudent(Student student) {
+        this.student = student;
+    }
 
-    public PriorityType getPriority() { return priority; }
-    public void setPriority(PriorityType priority) { this.priority = priority; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getReferenceType() { return referenceType; }
-    public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public Long getReferenceId() { return referenceId; }
-    public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
+    public String getMessage() {
+        return message;
+    }
 
-    public boolean isRead() { return isRead; }
-    public void setRead(boolean read) { isRead = read; }
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-    public LocalDateTime getReadAt() { return readAt; }
-    public void setReadAt(LocalDateTime readAt) { this.readAt = readAt; }
+    public PriorityType getPriority() {
+        return priority;
+    }
 
-    public LocalDateTime getIncidentDate() { return incidentDate; }
-    public void setIncidentDate(LocalDateTime incidentDate) { this.incidentDate = incidentDate; }
+    public void setPriority(PriorityType priority) {
+        this.priority = priority;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public String getReferenceType() {
+        return referenceType;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public void setReferenceType(String referenceType) {
+        this.referenceType = referenceType;
+    }
+
+    public Long getReferenceId() {
+        return referenceId;
+    }
+
+    public void setReferenceId(Long referenceId) {
+        this.referenceId = referenceId;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
+    }
+
+    public LocalDateTime getReadAt() {
+        return readAt;
+    }
+
+    public void setReadAt(LocalDateTime readAt) {
+        this.readAt = readAt;
+    }
+
+    public LocalDateTime getIncidentDate() {
+        return incidentDate;
+    }
+
+    public void setIncidentDate(LocalDateTime incidentDate) {
+        this.incidentDate = incidentDate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final Notification n = new Notification();
-        public Builder student(Student v) { n.student = v; return this; }
-        public Builder title(String v) { n.title = v; return this; }
-        public Builder message(String v) { n.message = v; return this; }
-        public Builder priority(PriorityType v) { n.priority = v; return this; }
-        public Builder referenceType(String v) { n.referenceType = v; return this; }
-        public Builder referenceId(Long v) { n.referenceId = v; return this; }
-        public Builder isRead(boolean v) { n.isRead = v; return this; }
-        public Builder readAt(LocalDateTime v) { n.readAt = v; return this; }
-        public Builder incidentDate(LocalDateTime v) { n.incidentDate = v; return this; }
-        public Notification build() { return n; }
+
+        public Builder student(Student v) {
+            n.student = v;
+            return this;
+        }
+
+        public Builder title(String v) {
+            n.title = v;
+            return this;
+        }
+
+        public Builder message(String v) {
+            n.message = v;
+            return this;
+        }
+
+        public Builder priority(PriorityType v) {
+            n.priority = v;
+            return this;
+        }
+
+        public Builder referenceType(String v) {
+            n.referenceType = v;
+            return this;
+        }
+
+        public Builder referenceId(Long v) {
+            n.referenceId = v;
+            return this;
+        }
+
+        public Builder isRead(boolean v) {
+            n.isRead = v;
+            return this;
+        }
+
+        public Builder readAt(LocalDateTime v) {
+            n.readAt = v;
+            return this;
+        }
+
+        public Builder incidentDate(LocalDateTime v) {
+            n.incidentDate = v;
+            return this;
+        }
+
+        public Notification build() {
+            return n;
+        }
     }
 }

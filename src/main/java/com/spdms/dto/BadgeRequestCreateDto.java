@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.pragatix.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
@@ -12,11 +12,22 @@ public class BadgeRequestCreateDto {
     @URL(message = "Proof Link must be a valid URL")
     private String proofLink;
 
-    public BadgeRequestCreateDto() {}
+    public BadgeRequestCreateDto() {
+    }
 
-    public Long getBadgeId() { return badgeId; }
-    public void setBadgeId(Long badgeId) { this.badgeId = badgeId; }
+    public Long getBadgeId() {
+        return badgeId;
+    }
 
-    public String getProofLink() { return proofLink; }
-    public void setProofLink(String proofLink) { this.proofLink = proofLink; }
+    public void setBadgeId(Long badgeId) {
+        this.badgeId = badgeId;
+    }
+
+    public String getProofLink() {
+        return proofLink;
+    }
+
+    public void setProofLink(String proofLink) {
+        this.proofLink = proofLink;
+    }
 }

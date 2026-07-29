@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "section", uniqueConstraints = {
-    @UniqueConstraint(name = "uq_department_section", columnNames = {"dept_id", "section_name"})
+        @UniqueConstraint(name = "uq_department_section", columnNames = { "dept_id", "section_name" })
 })
 public class Section {
 
@@ -28,28 +28,64 @@ public class Section {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public Section() {}
+    public Section() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getDepartmentId() { return department != null ? department.getId() : null; }
+    public Department getDepartment() {
+        return department;
+    }
 
-    public String getSectionName() { return sectionName; }
-    public void setSectionName(String sectionName) { this.sectionName = sectionName; }
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Long getDepartmentId() {
+        return department != null ? department.getId() : null;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public String getSectionName() {
+        return sectionName;
+    }
+
+    public void setSectionName(String sectionName) {
+        this.sectionName = sectionName;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final Section s = new Section();
-        public Builder department(Department v) { s.department = v; return this; }
-        public Builder sectionName(String v) { s.sectionName = v; return this; }
-        public Section build() { return s; }
+
+        public Builder department(Department v) {
+            s.department = v;
+            return this;
+        }
+
+        public Builder sectionName(String v) {
+            s.sectionName = v;
+            return this;
+        }
+
+        public Section build() {
+            return s;
+        }
     }
 }

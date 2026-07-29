@@ -1,9 +1,9 @@
-package com.spdms.modules.admin.controller;
+package com.pragatix.modules.admin.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.admin.dto.request.CreateDepartmentRequest;
-import com.spdms.entity.Department;
-import com.spdms.entity.Section;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.admin.dto.request.CreateDepartmentRequest;
+import com.pragatix.entity.Department;
+import com.pragatix.entity.Section;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -45,7 +45,7 @@ public class AdminDepartmentController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create Department")
     public ResponseEntity<ApiResponse<Department>> createDepartment(
-                @Valid @RequestBody CreateDepartmentRequest request) {
+            @Valid @RequestBody CreateDepartmentRequest request) {
         return adminDepartmentService.createDepartment(request);
     }
 
@@ -53,8 +53,8 @@ public class AdminDepartmentController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update Department")
     public ResponseEntity<ApiResponse<Department>> updateDepartment(
-                @PathVariable Long id,
-                @Valid @RequestBody CreateDepartmentRequest request) {
+            @PathVariable Long id,
+            @Valid @RequestBody CreateDepartmentRequest request) {
         return adminDepartmentService.updateDepartment(id, request);
     }
 
@@ -76,8 +76,8 @@ public class AdminDepartmentController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create Section for Department")
     public ResponseEntity<ApiResponse<Section>> createSection(
-                @PathVariable Long id,
-                @RequestBody Map<String, Object> body) {
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
         return adminDepartmentService.createSection(id, body);
     }
 
@@ -85,8 +85,8 @@ public class AdminDepartmentController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete Section from Department")
     public ResponseEntity<ApiResponse<Void>> deleteSection(
-                @PathVariable Long id,
-                @PathVariable Long sectionId) {
+            @PathVariable Long id,
+            @PathVariable Long sectionId) {
         return adminDepartmentService.deleteSection(id, sectionId);
     }
 

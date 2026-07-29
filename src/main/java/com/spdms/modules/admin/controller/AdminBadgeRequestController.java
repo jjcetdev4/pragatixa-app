@@ -1,9 +1,9 @@
-package com.spdms.modules.admin.controller;
+package com.pragatix.modules.admin.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.dto.BadgeRequestDto;
-import com.spdms.dto.BadgeRequestStatusUpdateDto;
-import com.spdms.modules.badge.service.BadgeRequestService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.dto.BadgeRequestDto;
+import com.pragatix.dto.BadgeRequestStatusUpdateDto;
+import com.pragatix.modules.badge.service.BadgeRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +31,8 @@ public class AdminBadgeRequestController {
             return ResponseEntity.ok(ApiResponse.ok("Fetched all badge requests successfully", results));
         } catch (Exception e) {
             log.error("Error fetching all badge requests", e);
-            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to fetch badge requests", e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Failed to fetch badge requests", e.getMessage()));
         }
     }
 
@@ -43,7 +44,8 @@ public class AdminBadgeRequestController {
             return ResponseEntity.ok(ApiResponse.ok("Badge request approved successfully", result));
         } catch (Exception e) {
             log.error("Error approving badge request id {}", id, e);
-            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to approve badge request", e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Failed to approve badge request", e.getMessage()));
         }
     }
 
@@ -57,7 +59,8 @@ public class AdminBadgeRequestController {
             return ResponseEntity.ok(ApiResponse.ok("Badge request rejected successfully", result));
         } catch (Exception e) {
             log.error("Error rejecting badge request id {}", id, e);
-            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to reject badge request", e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Failed to reject badge request", e.getMessage()));
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.spdms.common.exception;
+package com.pragatix.common.exception;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

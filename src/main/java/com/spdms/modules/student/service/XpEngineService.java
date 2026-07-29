@@ -1,11 +1,11 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.entity.*;
-import com.spdms.modules.activity.repository.ActivityStageRepository;
-import com.spdms.modules.activity.service.StageValidationService;
-import com.spdms.modules.student.repository.StudentActivityXpRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.repository.XpTransactionRepository;
+import com.pragatix.entity.*;
+import com.pragatix.modules.activity.repository.ActivityStageRepository;
+import com.pragatix.modules.activity.service.StageValidationService;
+import com.pragatix.modules.student.repository.StudentActivityXpRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.repository.XpTransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,17 +20,17 @@ public class XpEngineService {
     private final ActivityStageRepository activityStageRepository;
     private final StageValidationService stageValidationService;
     private final TeamAssignmentService teamAssignmentService;
-    private final com.spdms.admin.service.CaptainSelectionService captainSelectionService;
-    private final com.spdms.repository.StreakRepository streakRepository;
+    private final com.pragatix.admin.service.CaptainSelectionService captainSelectionService;
+    private final com.pragatix.repository.StreakRepository streakRepository;
 
     public XpEngineService(StudentRepository studentRepository,
-                           StudentActivityXpRepository studentActivityXpRepository,
-                           XpTransactionRepository xpTransactionRepository,
-                           ActivityStageRepository activityStageRepository,
-                           StageValidationService stageValidationService,
-                           TeamAssignmentService teamAssignmentService,
-                           com.spdms.admin.service.CaptainSelectionService captainSelectionService,
-                           com.spdms.repository.StreakRepository streakRepository) {
+            StudentActivityXpRepository studentActivityXpRepository,
+            XpTransactionRepository xpTransactionRepository,
+            ActivityStageRepository activityStageRepository,
+            StageValidationService stageValidationService,
+            TeamAssignmentService teamAssignmentService,
+            com.pragatix.admin.service.CaptainSelectionService captainSelectionService,
+            com.pragatix.repository.StreakRepository streakRepository) {
         this.studentRepository = studentRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
         this.xpTransactionRepository = xpTransactionRepository;
@@ -42,22 +42,23 @@ public class XpEngineService {
     }
 
     @Transactional
-    public Student awardXp(Student student, Activity activity, User authorizedUser, ActivityAssignment assignment, int requestXp, String remarks) {
-        
+    public Student awardXp(Student student, Activity activity, User authorizedUser, ActivityAssignment assignment,
+            int requestXp, String remarks) {
+
         System.out.println("=====================================================");
         System.out.println("XP ENGINE: Processing Award for Student: " + student.getId());
-        
+
         // 1. Determine Activity Category Dynamically
         String resolvedCategory = "SKILL";
         String activityName = "General XP";
-        
+
         if (activity != null) {
             resolvedCategory = "";
             activityName = activity.getName();
-            com.spdms.entity.ActivitySubgroup subgroup = activity.getSubgroup();
+            com.pragatix.entity.ActivitySubgroup subgroup = activity.getSubgroup();
             if (subgroup != null) {
                 resolvedCategory += (subgroup.getCategory() != null ? subgroup.getCategory() : "") + " " +
-                                    (subgroup.getName() != null ? subgroup.getName() : "");
+                        (subgroup.getName() != null ? subgroup.getName() : "");
             }
             if (activity.getXpCategory() != null) {
                 resolvedCategory += " " + activity.getXpCategory();
@@ -72,10 +73,12 @@ public class XpEngineService {
         boolean penaltyFlag = false;
 
         if (activity != null) {
-            penaltyFlag = (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled()) || "Penalty".equalsIgnoreCase(activity.getXpType());
+            penaltyFlag = (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled())
+                    || "Penalty".equalsIgnoreCase(activity.getXpType());
             if (penaltyFlag) {
                 configuredXp = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : 0;
-                if (configuredXp == 0) configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+                if (configuredXp == 0)
+                    configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
             } else {
                 configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
             }
@@ -88,7 +91,8 @@ public class XpEngineService {
         if (penaltyFlag) {
             appliedXp = -Math.abs(configuredXp);
         } else {
-            // For regular rewards, allow partial points if valid, otherwise use configured. But if strict rule:
+            // For regular rewards, allow partial points if valid, otherwise use configured.
+            // But if strict rule:
             appliedXp = Math.abs(configuredXp);
             if (requestXp > 0 && requestXp < configuredXp) {
                 appliedXp = requestXp; // Allow partial grading for awards, but never for penalties.
@@ -98,22 +102,24 @@ public class XpEngineService {
         System.out.println("Configured XP: " + configuredXp);
         System.out.println("Penalty: " + penaltyFlag);
         System.out.println("Calculated Applied XP: " + appliedXp);
-        
+
         int oldTotalXp = student.getTotalXp();
 
         // 2. Update Category XP & Total XP
-        if (resolvedCategory.contains("MUST") || resolvedCategory.contains("MANDATORY") || resolvedCategory.contains(" M ")) {
+        if (resolvedCategory.contains("MUST") || resolvedCategory.contains("MANDATORY")
+                || resolvedCategory.contains(" M ")) {
             student.setMustXp(student.getMustXp() + appliedXp);
         } else if (resolvedCategory.contains("INDIVIDUAL") || resolvedCategory.contains(" I ")) {
             student.setIndividualXp(student.getIndividualXp() + appliedXp);
-        } else if (resolvedCategory.contains("GROUP") || resolvedCategory.contains("TEAM") || resolvedCategory.contains(" G ")) {
+        } else if (resolvedCategory.contains("GROUP") || resolvedCategory.contains("TEAM")
+                || resolvedCategory.contains(" G ")) {
             student.setGroupXp(student.getGroupXp() + appliedXp);
         }
-        
+
         // Update total
         student.setTotalXp(oldTotalXp + appliedXp);
         student.setScore(student.getScore() + appliedXp);
-        
+
         int newTotalXp = student.getTotalXp();
         System.out.println("Old Total XP: " + oldTotalXp);
         System.out.println("New Total XP: " + newTotalXp);
@@ -121,7 +127,8 @@ public class XpEngineService {
         // 3. Save XP History
         if (activity != null && authorizedUser != null) {
             StudentActivityXp record = new StudentActivityXp(
-                    student, activity, authorizedUser, assignment, appliedXp, remarks != null ? remarks : "", LocalDateTime.now());
+                    student, activity, authorizedUser, assignment, appliedXp, remarks != null ? remarks : "",
+                    LocalDateTime.now());
             studentActivityXpRepository.save(record);
         }
 
@@ -154,7 +161,7 @@ public class XpEngineService {
         student = studentRepository.save(student);
         System.out.println("XP ENGINE: Transaction Completed and Saved.");
         System.out.println("=====================================================");
-        
+
         return student;
     }
 
@@ -165,7 +172,7 @@ public class XpEngineService {
         System.out.println("Current Stage: " + student.getStage());
 
         ActivityStage currentStage = activityStageRepository.findByDisplayOrder(student.getStage()).orElse(null);
-        if (currentStage == null || currentStage.getStatus() != com.spdms.enums.StageStatus.ACTIVE) {
+        if (currentStage == null || currentStage.getStatus() != com.pragatix.enums.StageStatus.ACTIVE) {
             System.out.println("Stage Engine: Current stage not found or inactive.");
             return;
         }
@@ -174,8 +181,9 @@ public class XpEngineService {
 
         if (thresholdsMet) {
             System.out.println("Promotion Result: SUCCESS (Thresholds Met)");
-            
-            ActivityStage nextStage = activityStageRepository.findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(student.getStage()).orElse(null);
+
+            ActivityStage nextStage = activityStageRepository
+                    .findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(student.getStage()).orElse(null);
             if (nextStage != null) {
                 // Complete & Lock Current, Unlock & Activate Next
                 student.setStage(nextStage.getDisplayOrder());
@@ -183,7 +191,7 @@ public class XpEngineService {
                 student.setCurrentStageId(nextStage.getId());
                 student.setPromotionTimestamp(LocalDateTime.now());
                 System.out.println("Student Promoted to Stage: " + nextStage.getDisplayOrder());
-                
+
                 // Assign Team if needed (Only Stage 2 and above)
                 if (nextStage.getDisplayOrder() >= 2) {
                     teamAssignmentService.assignTeamOnPromotion(student, nextStage);
@@ -208,7 +216,7 @@ public class XpEngineService {
             penalty = student.getStage() == 1 ? 10 : (student.getStage() == 2 ? 30 : 50);
         } else if (activity.toLowerCase().contains("diary")) {
             type = "ENGLISH_DIARY";
-            penalty = 20; 
+            penalty = 20;
         } else if (activity.toLowerCase().contains("c programming") || activity.toLowerCase().contains("c coding")) {
             type = "C_CODING";
             penalty = 30;
@@ -224,7 +232,8 @@ public class XpEngineService {
         }
 
         if (type != null) {
-            java.util.Optional<Streak> streakOpt = streakRepository.findByStudentRegNoAndStreakType(student.getRegNo(), type);
+            java.util.Optional<Streak> streakOpt = streakRepository.findByStudentRegNoAndStreakType(student.getRegNo(),
+                    type);
             Streak streak;
             if (streakOpt.isEmpty()) {
                 streak = Streak.builder()
@@ -238,10 +247,11 @@ public class XpEngineService {
                         .build();
             } else {
                 streak = streakOpt.get();
-                if (streak.getLastUpdated() != null && streak.getLastUpdated().isAfter(LocalDateTime.now().minusHours(36))) {
+                if (streak.getLastUpdated() != null
+                        && streak.getLastUpdated().isAfter(LocalDateTime.now().minusHours(36))) {
                     streak.setCurrentStreak(streak.getCurrentStreak() + 1);
                 } else {
-                    streak.setCurrentStreak(1); 
+                    streak.setCurrentStreak(1);
                 }
                 streak.setBroken(false);
                 streak.setLastUpdated(LocalDateTime.now());

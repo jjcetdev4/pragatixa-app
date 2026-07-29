@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -6,13 +6,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents a student team created by a Class Coordinator (CC) or for a Group Activity
+ * Represents a student team created by a Class Coordinator (CC) or for a Group
+ * Activity
  */
 @Entity
 @Table(name = "teams", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_team_name_class", columnNames = {"name", "department_id", "year", "section_id"})
+        @UniqueConstraint(name = "uk_team_name_class", columnNames = { "name", "department_id", "year", "section_id" })
 })
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Team {
 
     @Id
@@ -30,6 +31,10 @@ public class Team {
     private Student captain;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vice_captain_id")
+    private Student viceCaptain;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id")
     private Department department;
 
@@ -45,10 +50,11 @@ public class Team {
     private User createdBy;
 
     @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"team", "teams"})
+    @JsonIgnoreProperties({ "team", "teams" })
     private Set<Student> members = new HashSet<>();
 
-    public Team() {}
+    public Team() {
+    }
 
     public Team(Long id, String name, int size, Student captain) {
         this.id = id;
@@ -87,6 +93,14 @@ public class Team {
 
     public void setCaptain(Student captain) {
         this.captain = captain;
+    }
+
+    public Student getViceCaptain() {
+        return viceCaptain;
+    }
+
+    public void setViceCaptain(Student viceCaptain) {
+        this.viceCaptain = viceCaptain;
     }
 
     public Set<Student> getMembers() {
@@ -135,14 +149,54 @@ public class Team {
 
     public static class Builder {
         private final Team team = new Team();
-        public Builder name(String v) { team.name = v; return this; }
-        public Builder size(int v) { team.size = v; return this; }
-        public Builder captain(Student v) { team.captain = v; return this; }
-        public Builder department(Department v) { team.department = v; return this; }
-        public Builder year(String v) { team.year = v; return this; }
-        public Builder section(Section v) { team.section = v; return this; }
-        public Builder createdBy(User v) { team.createdBy = v; return this; }
-        public Builder members(Set<Student> v) { team.members = v; return this; }
-        public Team build() { return team; }
+
+        public Builder name(String v) {
+            team.name = v;
+            return this;
+        }
+
+        public Builder size(int v) {
+            team.size = v;
+            return this;
+        }
+
+        public Builder captain(Student v) {
+            team.captain = v;
+            return this;
+        }
+
+        public Builder viceCaptain(Student v) {
+            team.viceCaptain = v;
+            return this;
+        }
+
+        public Builder department(Department v) {
+            team.department = v;
+            return this;
+        }
+
+        public Builder year(String v) {
+            team.year = v;
+            return this;
+        }
+
+        public Builder section(Section v) {
+            team.section = v;
+            return this;
+        }
+
+        public Builder createdBy(User v) {
+            team.createdBy = v;
+            return this;
+        }
+
+        public Builder members(Set<Student> v) {
+            team.members = v;
+            return this;
+        }
+
+        public Team build() {
+            return team;
+        }
     }
 }

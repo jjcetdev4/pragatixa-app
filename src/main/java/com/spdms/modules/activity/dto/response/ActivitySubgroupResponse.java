@@ -1,7 +1,7 @@
-package com.spdms.modules.activity.dto.response;
+package com.pragatix.modules.activity.dto.response;
 
 import java.util.List;
-import com.spdms.modules.activity.dto.response.ActivityResponse;
+import com.pragatix.modules.activity.dto.response.ActivityResponse;
 
 public class ActivitySubgroupResponse {
     private Long id;
@@ -11,23 +11,54 @@ public class ActivitySubgroupResponse {
     private String assignedFacultyName;
     private List<ActivityResponse> activities;
 
-    public ActivitySubgroupResponse() {}
+    public ActivitySubgroupResponse() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Integer getThreshold() { return threshold; }
-    public void setThreshold(Integer threshold) { this.threshold = threshold; }
+    public String getName() {
+        return name;
+    }
 
-    public Long getAssignedFacultyId() { return assignedFacultyId; }
-    public void setAssignedFacultyId(Long assignedFacultyId) { this.assignedFacultyId = assignedFacultyId; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getAssignedFacultyName() { return assignedFacultyName; }
-    public void setAssignedFacultyName(String assignedFacultyName) { this.assignedFacultyName = assignedFacultyName; }
+    public Integer getThreshold() {
+        return threshold;
+    }
 
-    public List<ActivityResponse> getActivities() { return activities; }
-    public void setActivities(List<ActivityResponse> activities) { this.activities = activities; }
+    public void setThreshold(Integer threshold) {
+        this.threshold = threshold;
+    }
+
+    public Long getAssignedFacultyId() {
+        return assignedFacultyId;
+    }
+
+    public void setAssignedFacultyId(Long assignedFacultyId) {
+        this.assignedFacultyId = assignedFacultyId;
+    }
+
+    public String getAssignedFacultyName() {
+        return assignedFacultyName;
+    }
+
+    public void setAssignedFacultyName(String assignedFacultyName) {
+        this.assignedFacultyName = assignedFacultyName;
+    }
+
+    public List<ActivityResponse> getActivities() {
+        return activities;
+    }
+
+    public void setActivities(List<ActivityResponse> activities) {
+        this.activities = activities;
+    }
 }

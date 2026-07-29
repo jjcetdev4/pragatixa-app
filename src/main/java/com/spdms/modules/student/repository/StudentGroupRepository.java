@@ -1,6 +1,6 @@
-package com.spdms.modules.student.repository;
+package com.pragatix.modules.student.repository;
 
-import com.spdms.entity.StudentGroup;
+import com.pragatix.entity.StudentGroup;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,4 +1,4 @@
-package com.spdms.modules.student.dto.request;
+package com.pragatix.modules.student.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -37,68 +37,169 @@ public class UpdateStudentRequest {
     private Long genderId;
     private Long teamId;
     private String password;
-    
+
     private GuardianDTO guardian;
 
-    public UpdateStudentRequest() {}
+    public UpdateStudentRequest() {
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public String getFullName() {
+        return fullName;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public Long getDepartmentId() { return departmentId; }
-    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
+    public String getPhone() {
+        return phone;
+    }
 
-    public String getSemester() { return semester; }
-    public void setSemester(String semester) { this.semester = semester; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
-    public String getAcademicYear() { return academicYear; }
-    public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
+    public String getGender() {
+        return gender;
+    }
 
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
 
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    public Long getDepartmentId() {
+        return departmentId;
+    }
 
-    public String getSprNo() { return sprNo; }
-    public void setSprNo(String sprNo) { this.sprNo = sprNo; }
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
 
-    public LocalDate getDob() { return dob; }
-    public void setDob(LocalDate dob) { this.dob = dob; }
+    public String getSemester() {
+        return semester;
+    }
 
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public void setSemester(String semester) {
+        this.semester = semester;
+    }
 
-    public Long getAcademicYearId() { return academicYearId; }
-    public void setAcademicYearId(Long academicYearId) { this.academicYearId = academicYearId; }
+    public String getAcademicYear() {
+        return academicYear;
+    }
 
-    public Long getYearId() { return yearId; }
-    public void setYearId(Long yearId) { this.yearId = yearId; }
+    public void setAcademicYear(String academicYear) {
+        this.academicYear = academicYear;
+    }
 
-    public Long getSemesterId() { return semesterId; }
-    public void setSemesterId(Long semesterId) { this.semesterId = semesterId; }
+    public String getYear() {
+        return year;
+    }
 
-    public Long getSectionId() { return sectionId; }
-    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+    public void setYear(String year) {
+        this.year = year;
+    }
 
-    public Long getGenderId() { return genderId; }
-    public void setGenderId(Long genderId) { this.genderId = genderId; }
+    public boolean isActive() {
+        return active;
+    }
 
-    public Long getTeamId() { return teamId; }
-    public void setTeamId(Long teamId) { this.teamId = teamId; }
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getSprNo() {
+        return sprNo;
+    }
 
-    public GuardianDTO getGuardian() { return guardian; }
-    public void setGuardian(GuardianDTO guardian) { this.guardian = guardian; }
+    public void setSprNo(String sprNo) {
+        this.sprNo = sprNo;
+    }
+
+    public LocalDate getDob() {
+        return dob;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dob = dob;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Long getAcademicYearId() {
+        return academicYearId;
+    }
+
+    public void setAcademicYearId(Long academicYearId) {
+        this.academicYearId = academicYearId;
+    }
+
+    public Long getYearId() {
+        return yearId;
+    }
+
+    public void setYearId(Long yearId) {
+        this.yearId = yearId;
+    }
+
+    public Long getSemesterId() {
+        return semesterId;
+    }
+
+    public void setSemesterId(Long semesterId) {
+        this.semesterId = semesterId;
+    }
+
+    public Long getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(Long sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public Long getGenderId() {
+        return genderId;
+    }
+
+    public void setGenderId(Long genderId) {
+        this.genderId = genderId;
+    }
+
+    public Long getTeamId() {
+        return teamId;
+    }
+
+    public void setTeamId(Long teamId) {
+        this.teamId = teamId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public GuardianDTO getGuardian() {
+        return guardian;
+    }
+
+    public void setGuardian(GuardianDTO guardian) {
+        this.guardian = guardian;
+    }
 }

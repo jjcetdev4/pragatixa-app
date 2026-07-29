@@ -1,4 +1,4 @@
-package com.spdms.modules.faculty.dto.request;
+package com.pragatix.modules.faculty.dto.request;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

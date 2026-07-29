@@ -1,9 +1,9 @@
-package com.spdms.config;
+package com.pragatix.config;
 
-import com.spdms.entity.Student;
-import com.spdms.entity.Streak;
-import com.spdms.modules.student.service.XpEngineService;
-import com.spdms.repository.StreakRepository;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.Streak;
+import com.pragatix.modules.student.service.XpEngineService;
+import com.pragatix.repository.StreakRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +18,14 @@ public class XpDecayScheduler {
     private final XpEngineService xpEngineService;
 
     public XpDecayScheduler(StreakRepository streakRepository,
-                            XpEngineService xpEngineService) {
+            XpEngineService xpEngineService) {
         this.streakRepository = streakRepository;
         this.xpEngineService = xpEngineService;
     }
 
     /**
-     * Runs daily at 2:00 AM to check for broken streaks and apply carry-forward penalties
+     * Runs daily at 2:00 AM to check for broken streaks and apply carry-forward
+     * penalties
      */
     @Scheduled(cron = "0 0 2 * * *")
     @Transactional
@@ -36,9 +37,9 @@ public class XpDecayScheduler {
 
         for (Streak streak : allStreaks) {
             // If the streak is active and hasn't been updated for 36 hours
-            if (!streak.isBroken() && streak.getCurrentStreak() > 0 && 
-                (streak.getLastUpdated() == null || streak.getLastUpdated().isBefore(thresholdTime))) {
-                
+            if (!streak.isBroken() && streak.getCurrentStreak() > 0 &&
+                    (streak.getLastUpdated() == null || streak.getLastUpdated().isBefore(thresholdTime))) {
+
                 // Mark streak as broken
                 streak.setBroken(true);
                 int oldStreak = streak.getCurrentStreak();
@@ -49,10 +50,12 @@ public class XpDecayScheduler {
                 Student student = streak.getStudent();
                 int penaltyPoints = streak.getPenaltyPerBreak();
 
-                xpEngineService.awardXp(student, null, null, null, -Math.abs(penaltyPoints), "Streak broken: " + streak.getStreakType() + " (was " + oldStreak + " days)");
+                xpEngineService.awardXp(student, null, null, null, -Math.abs(penaltyPoints),
+                        "Streak broken: " + streak.getStreakType() + " (was " + oldStreak + " days)");
             }
         }
 
-        if (!streaksToSave.isEmpty()) streakRepository.saveAll(streaksToSave);
+        if (!streaksToSave.isEmpty())
+            streakRepository.saveAll(streaksToSave);
     }
 }

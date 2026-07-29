@@ -1,6 +1,6 @@
-package com.spdms.modules.authentication.repository;
+package com.pragatix.modules.authentication.repository;
 
-import com.spdms.entity.SubRole;
+import com.pragatix.entity.SubRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

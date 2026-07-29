@@ -1,13 +1,13 @@
-package com.spdms.modules.activity.service;
+package com.pragatix.modules.activity.service;
 
-import com.spdms.modules.activity.dto.response.StageValidationResponse;
-import com.spdms.entity.ActivityStage;
-import com.spdms.entity.ActivitySubgroup;
-import com.spdms.entity.Student;
-import com.spdms.modules.activity.repository.ActivityStageRepository;
-import com.spdms.modules.activity.repository.ActivitySubgroupRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.modules.student.repository.StudentActivityXpRepository;
+import com.pragatix.modules.activity.dto.response.StageValidationResponse;
+import com.pragatix.entity.ActivityStage;
+import com.pragatix.entity.ActivitySubgroup;
+import com.pragatix.entity.Student;
+import com.pragatix.modules.activity.repository.ActivityStageRepository;
+import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.modules.student.repository.StudentActivityXpRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,9 +25,9 @@ public class StageValidationService {
     private final StudentActivityXpRepository studentActivityXpRepository;
 
     public StageValidationService(ActivityStageRepository activityStageRepository,
-                                  StudentRepository studentRepository,
-                                  ActivitySubgroupRepository activitySubgroupRepository,
-                                  StudentActivityXpRepository studentActivityXpRepository) {
+            StudentRepository studentRepository,
+            ActivitySubgroupRepository activitySubgroupRepository,
+            StudentActivityXpRepository studentActivityXpRepository) {
         this.activityStageRepository = activityStageRepository;
         this.studentRepository = studentRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
@@ -36,7 +36,8 @@ public class StageValidationService {
 
     public StageValidationResponse validateStage(Student student, ActivityStage stage) {
         try {
-            if (stage == null) throw new IllegalArgumentException("Stage not found");
+            if (stage == null)
+                throw new IllegalArgumentException("Stage not found");
 
             StageValidationResponse response = new StageValidationResponse();
             response.setUseDateValidation(stage.isUseDateValidation());
@@ -49,7 +50,7 @@ public class StageValidationService {
             // Dynamic Stage Transition Sequence Evaluation
             int studentStage = student.getStage();
             int stageDisplayOrder = stage.getDisplayOrder();
-            
+
             if (stageDisplayOrder < studentStage) {
                 // Past Stage - Completed, Locked, Read Only
                 stageStatus = "COMPLETED";
@@ -67,12 +68,17 @@ public class StageValidationService {
                 response.setCompleted(false);
                 response.setActive(true);
             } else if (stageDisplayOrder == studentStage + 1) {
-                // Immediate Next Stage - Unlocked but not active? 
+                // Immediate Next Stage - Unlocked but not active?
                 // Wait, the prompt says "unlock the next stage, lock the completed stage".
-                // But usually, an unlocked stage becomes the active stage. The prompt requires returning exactly one of: LOCKED, ACTIVE, COMPLETED, UNLOCKED.
-                // If it's unlocked but not active, maybe we return UNLOCKED. But wait, if they are promoted to stage 2, stage 2 is ACTIVE.
-                // I will just use LOCKED for future stages. The prompt specifically requested: "LOCKED, ACTIVE, COMPLETED, UNLOCKED".
-                // Actually, if it's the exact next stage, maybe it's "LOCKED" until they finish the current one, but if they just finished the current one, their currentStage becomes the next stage, making it ACTIVE.
+                // But usually, an unlocked stage becomes the active stage. The prompt requires
+                // returning exactly one of: LOCKED, ACTIVE, COMPLETED, UNLOCKED.
+                // If it's unlocked but not active, maybe we return UNLOCKED. But wait, if they
+                // are promoted to stage 2, stage 2 is ACTIVE.
+                // I will just use LOCKED for future stages. The prompt specifically requested:
+                // "LOCKED, ACTIVE, COMPLETED, UNLOCKED".
+                // Actually, if it's the exact next stage, maybe it's "LOCKED" until they finish
+                // the current one, but if they just finished the current one, their
+                // currentStage becomes the next stage, making it ACTIVE.
                 // So any stage > studentStage is strictly LOCKED.
                 stageStatus = "LOCKED";
                 response.setStageStatus(stageStatus);
@@ -103,14 +109,15 @@ public class StageValidationService {
     }
 
     public boolean isStageThresholdsMet(Student student, ActivityStage stage) {
-        if (stage == null || student == null) return false;
+        if (stage == null || student == null)
+            return false;
 
         System.out.println("=====================================================");
         System.out.println("STAGE ENGINE - EVALUATING THRESHOLDS DYNAMICALLY");
         System.out.println("Student ID    : " + student.getId());
         System.out.println("Stage Target  : " + stage.getDisplayOrder() + " (" + stage.getName() + ")");
         System.out.println("--- XP Values vs Thresholds ---");
-        
+
         int expectedXp = stage.getExpectedXp() != null ? stage.getExpectedXp() : 0;
         boolean expectedXpMet = student.getTotalXp() >= expectedXp;
         System.out.println("Total XP      : " + student.getTotalXp() + " >= " + expectedXp + " -> " + expectedXpMet);
@@ -137,20 +144,26 @@ public class StageValidationService {
             for (ActivitySubgroup subgroup : subgroups) {
                 int threshold = subgroup.getThreshold();
                 if (threshold > 0) {
-                    Integer xpObj = studentActivityXpRepository.calculateXpBySubgroup(student.getId(), subgroup.getId());
+                    Integer xpObj = studentActivityXpRepository.calculateXpBySubgroup(student.getId(),
+                            subgroup.getId());
                     int actualXp = xpObj != null ? xpObj : 0;
-                    
-                    // Fallback to static fields if this is a legacy subgroup with no direct XP records
+
+                    // Fallback to static fields if this is a legacy subgroup with no direct XP
+                    // records
                     // but we still want backward compatibility with must/individual/group tracking
                     if (actualXp == 0) {
                         String sName = subgroup.getName() != null ? subgroup.getName().toLowerCase() : "";
-                        if (sName.contains("must") || sName.contains("mandatory")) actualXp = student.getMustXp();
-                        else if (sName.contains("individual")) actualXp = student.getIndividualXp();
-                        else if (sName.contains("group") || sName.contains("team")) actualXp = student.getGroupXp();
+                        if (sName.contains("must") || sName.contains("mandatory"))
+                            actualXp = student.getMustXp();
+                        else if (sName.contains("individual"))
+                            actualXp = student.getIndividualXp();
+                        else if (sName.contains("group") || sName.contains("team"))
+                            actualXp = student.getGroupXp();
                     }
 
                     boolean met = actualXp >= threshold;
-                    System.out.println("Subgroup '" + subgroup.getName() + "' XP: " + actualXp + " >= " + threshold + " -> " + met);
+                    System.out.println("Subgroup '" + subgroup.getName() + "' XP: " + actualXp + " >= " + threshold
+                            + " -> " + met);
                     if (!met) {
                         allSubgroupsMet = false;
                     }
@@ -159,8 +172,9 @@ public class StageValidationService {
         }
 
         boolean allMet = expectedXpMet && allSubgroupsMet;
-        
-        System.out.println("Final Decision: " + (allMet ? "PROMOTED (All thresholds met)" : "PENDING (Thresholds not met)"));
+
+        System.out.println(
+                "Final Decision: " + (allMet ? "PROMOTED (All thresholds met)" : "PENDING (Thresholds not met)"));
         System.out.println("=====================================================");
 
         return allMet;

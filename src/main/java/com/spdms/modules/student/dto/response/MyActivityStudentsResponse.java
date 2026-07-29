@@ -1,4 +1,4 @@
-package com.spdms.modules.student.dto.response;
+package com.pragatix.modules.student.dto.response;
 
 import java.util.List;
 
@@ -8,26 +8,48 @@ public class MyActivityStudentsResponse {
     private int xpLimit;
     private AssignmentDetail assignment;
 
-    public MyActivityStudentsResponse() {}
+    public MyActivityStudentsResponse() {
+    }
 
-    public MyActivityStudentsResponse(ActivityDetail activity, List<StudentDetail> students, int xpLimit, AssignmentDetail assignment) {
+    public MyActivityStudentsResponse(ActivityDetail activity, List<StudentDetail> students, int xpLimit,
+            AssignmentDetail assignment) {
         this.activity = activity;
         this.students = students;
         this.xpLimit = xpLimit;
         this.assignment = assignment;
     }
 
-    public ActivityDetail getActivity() { return activity; }
-    public void setActivity(ActivityDetail activity) { this.activity = activity; }
+    public ActivityDetail getActivity() {
+        return activity;
+    }
 
-    public List<StudentDetail> getStudents() { return students; }
-    public void setStudents(List<StudentDetail> students) { this.students = students; }
+    public void setActivity(ActivityDetail activity) {
+        this.activity = activity;
+    }
 
-    public int getXpLimit() { return xpLimit; }
-    public void setXpLimit(int xpLimit) { this.xpLimit = xpLimit; }
+    public List<StudentDetail> getStudents() {
+        return students;
+    }
 
-    public AssignmentDetail getAssignment() { return assignment; }
-    public void setAssignment(AssignmentDetail assignment) { this.assignment = assignment; }
+    public void setStudents(List<StudentDetail> students) {
+        this.students = students;
+    }
+
+    public int getXpLimit() {
+        return xpLimit;
+    }
+
+    public void setXpLimit(int xpLimit) {
+        this.xpLimit = xpLimit;
+    }
+
+    public AssignmentDetail getAssignment() {
+        return assignment;
+    }
+
+    public void setAssignment(AssignmentDetail assignment) {
+        this.assignment = assignment;
+    }
 
     public static class ActivityDetail {
         private Long id;
@@ -44,10 +66,13 @@ public class MyActivityStudentsResponse {
         private Integer penaltyXp;
         private Integer cap;
 
-        public ActivityDetail() {}
+        public ActivityDetail() {
+        }
 
-        public ActivityDetail(Long id, String name, String description, String department, List<String> evidence, String frequency, String type,
-                              String xpCategory, Boolean awardEnabled, Integer awardXp, Boolean penaltyEnabled, Integer penaltyXp, Integer cap) {
+        public ActivityDetail(Long id, String name, String description, String department, List<String> evidence,
+                String frequency, String type,
+                String xpCategory, Boolean awardEnabled, Integer awardXp, Boolean penaltyEnabled, Integer penaltyXp,
+                Integer cap) {
             this.id = id;
             this.name = name;
             this.description = description;
@@ -63,44 +88,109 @@ public class MyActivityStudentsResponse {
             this.cap = cap;
         }
 
-        public Long getId() { return id; }
-        public void setId(Long id) { this.id = id; }
+        public Long getId() {
+            return id;
+        }
 
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
+        public void setId(Long id) {
+            this.id = id;
+        }
 
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
+        public String getName() {
+            return name;
+        }
 
-        public String getDepartment() { return department; }
-        public void setDepartment(String department) { this.department = department; }
+        public void setName(String name) {
+            this.name = name;
+        }
 
-        public List<String> getEvidence() { return evidence; }
-        public void setEvidence(List<String> evidence) { this.evidence = evidence; }
+        public String getDescription() {
+            return description;
+        }
 
-        public String getFrequency() { return frequency; }
-        public void setFrequency(String frequency) { this.frequency = frequency; }
+        public void setDescription(String description) {
+            this.description = description;
+        }
 
-        public String getType() { return type; }
-        public void setType(String type) { this.type = type; }
+        public String getDepartment() {
+            return department;
+        }
 
-        public String getXpCategory() { return xpCategory; }
-        public void setXpCategory(String xpCategory) { this.xpCategory = xpCategory; }
+        public void setDepartment(String department) {
+            this.department = department;
+        }
 
-        public Boolean getAwardEnabled() { return awardEnabled; }
-        public void setAwardEnabled(Boolean awardEnabled) { this.awardEnabled = awardEnabled; }
+        public List<String> getEvidence() {
+            return evidence;
+        }
 
-        public Integer getAwardXp() { return awardXp; }
-        public void setAwardXp(Integer awardXp) { this.awardXp = awardXp; }
+        public void setEvidence(List<String> evidence) {
+            this.evidence = evidence;
+        }
 
-        public Boolean getPenaltyEnabled() { return penaltyEnabled; }
-        public void setPenaltyEnabled(Boolean penaltyEnabled) { this.penaltyEnabled = penaltyEnabled; }
+        public String getFrequency() {
+            return frequency;
+        }
 
-        public Integer getPenaltyXp() { return penaltyXp; }
-        public void setPenaltyXp(Integer penaltyXp) { this.penaltyXp = penaltyXp; }
+        public void setFrequency(String frequency) {
+            this.frequency = frequency;
+        }
 
-        public Integer getCap() { return cap; }
-        public void setCap(Integer cap) { this.cap = cap; }
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getXpCategory() {
+            return xpCategory;
+        }
+
+        public void setXpCategory(String xpCategory) {
+            this.xpCategory = xpCategory;
+        }
+
+        public Boolean getAwardEnabled() {
+            return awardEnabled;
+        }
+
+        public void setAwardEnabled(Boolean awardEnabled) {
+            this.awardEnabled = awardEnabled;
+        }
+
+        public Integer getAwardXp() {
+            return awardXp;
+        }
+
+        public void setAwardXp(Integer awardXp) {
+            this.awardXp = awardXp;
+        }
+
+        public Boolean getPenaltyEnabled() {
+            return penaltyEnabled;
+        }
+
+        public void setPenaltyEnabled(Boolean penaltyEnabled) {
+            this.penaltyEnabled = penaltyEnabled;
+        }
+
+        public Integer getPenaltyXp() {
+            return penaltyXp;
+        }
+
+        public void setPenaltyXp(Integer penaltyXp) {
+            this.penaltyXp = penaltyXp;
+        }
+
+        public Integer getCap() {
+            return cap;
+        }
+
+        public void setCap(Integer cap) {
+            this.cap = cap;
+        }
     }
 
     public static class StudentDetail {
@@ -113,9 +203,11 @@ public class MyActivityStudentsResponse {
         private int totalXp;
         private int score;
 
-        public StudentDetail() {}
+        public StudentDetail() {
+        }
 
-        public StudentDetail(Long id, String fullName, String regNo, String departmentName, String sectionName, String year, int totalXp, int score) {
+        public StudentDetail(Long id, String fullName, String regNo, String departmentName, String sectionName,
+                String year, int totalXp, int score) {
             this.id = id;
             this.fullName = fullName;
             this.regNo = regNo;
@@ -126,30 +218,69 @@ public class MyActivityStudentsResponse {
             this.score = score;
         }
 
-        public Long getId() { return id; }
-        public void setId(Long id) { this.id = id; }
+        public Long getId() {
+            return id;
+        }
 
-        public String getFullName() { return fullName; }
-        public void setFullName(String fullName) { this.fullName = fullName; }
+        public void setId(Long id) {
+            this.id = id;
+        }
 
-        public String getRegNo() { return regNo; }
-        public void setRegNo(String regNo) { this.regNo = regNo; }
+        public String getFullName() {
+            return fullName;
+        }
 
+        public void setFullName(String fullName) {
+            this.fullName = fullName;
+        }
 
-        public String getDepartmentName() { return departmentName; }
-        public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+        public String getRegNo() {
+            return regNo;
+        }
 
-        public String getSectionName() { return sectionName; }
-        public void setSectionName(String sectionName) { this.sectionName = sectionName; }
+        public void setRegNo(String regNo) {
+            this.regNo = regNo;
+        }
 
-        public String getYear() { return year; }
-        public void setYear(String year) { this.year = year; }
+        public String getDepartmentName() {
+            return departmentName;
+        }
 
-        public int getTotalXp() { return totalXp; }
-        public void setTotalXp(int totalXp) { this.totalXp = totalXp; }
+        public void setDepartmentName(String departmentName) {
+            this.departmentName = departmentName;
+        }
 
-        public int getScore() { return score; }
-        public void setScore(int score) { this.score = score; }
+        public String getSectionName() {
+            return sectionName;
+        }
+
+        public void setSectionName(String sectionName) {
+            this.sectionName = sectionName;
+        }
+
+        public String getYear() {
+            return year;
+        }
+
+        public void setYear(String year) {
+            this.year = year;
+        }
+
+        public int getTotalXp() {
+            return totalXp;
+        }
+
+        public void setTotalXp(int totalXp) {
+            this.totalXp = totalXp;
+        }
+
+        public int getScore() {
+            return score;
+        }
+
+        public void setScore(int score) {
+            this.score = score;
+        }
     }
 
     public static class AssignmentDetail {
@@ -159,9 +290,11 @@ public class MyActivityStudentsResponse {
         private String assignedFacultyName;
         private String assignmentMode;
 
-        public AssignmentDetail() {}
+        public AssignmentDetail() {
+        }
 
-        public AssignmentDetail(Long id, String assignedBy, String assignedAt, String assignedFacultyName, String assignmentMode) {
+        public AssignmentDetail(Long id, String assignedBy, String assignedAt, String assignedFacultyName,
+                String assignmentMode) {
             this.id = id;
             this.assignedBy = assignedBy;
             this.assignedAt = assignedAt;
@@ -169,19 +302,44 @@ public class MyActivityStudentsResponse {
             this.assignmentMode = assignmentMode;
         }
 
-        public Long getId() { return id; }
-        public void setId(Long id) { this.id = id; }
+        public Long getId() {
+            return id;
+        }
 
-        public String getAssignedBy() { return assignedBy; }
-        public void setAssignedBy(String assignedBy) { this.assignedBy = assignedBy; }
+        public void setId(Long id) {
+            this.id = id;
+        }
 
-        public String getAssignedAt() { return assignedAt; }
-        public void setAssignedAt(String assignedAt) { this.assignedAt = assignedAt; }
+        public String getAssignedBy() {
+            return assignedBy;
+        }
 
-        public String getAssignedFacultyName() { return assignedFacultyName; }
-        public void setAssignedFacultyName(String assignedFacultyName) { this.assignedFacultyName = assignedFacultyName; }
+        public void setAssignedBy(String assignedBy) {
+            this.assignedBy = assignedBy;
+        }
 
-        public String getAssignmentMode() { return assignmentMode; }
-        public void setAssignmentMode(String assignmentMode) { this.assignmentMode = assignmentMode; }
+        public String getAssignedAt() {
+            return assignedAt;
+        }
+
+        public void setAssignedAt(String assignedAt) {
+            this.assignedAt = assignedAt;
+        }
+
+        public String getAssignedFacultyName() {
+            return assignedFacultyName;
+        }
+
+        public void setAssignedFacultyName(String assignedFacultyName) {
+            this.assignedFacultyName = assignedFacultyName;
+        }
+
+        public String getAssignmentMode() {
+            return assignmentMode;
+        }
+
+        public void setAssignmentMode(String assignmentMode) {
+            this.assignmentMode = assignmentMode;
+        }
     }
 }

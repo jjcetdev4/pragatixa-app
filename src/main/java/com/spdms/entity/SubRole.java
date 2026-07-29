@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -24,7 +24,8 @@ public class SubRole {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public SubRole() {}
+    public SubRole() {
+    }
 
     public SubRole(Long id, Role role, String name) {
         this.id = id;
@@ -32,24 +33,57 @@ public class SubRole {
         this.name = name;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public Role getRole() {
+        return role;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setRole(Role role) {
+        this.role = role;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final SubRole subRole = new SubRole();
-        public Builder role(Role v) { subRole.role = v; return this; }
-        public Builder name(String v) { subRole.name = v; return this; }
-        public SubRole build() { return subRole; }
+
+        public Builder role(Role v) {
+            subRole.role = v;
+            return this;
+        }
+
+        public Builder name(String v) {
+            subRole.name = v;
+            return this;
+        }
+
+        public SubRole build() {
+            return subRole;
+        }
     }
 }

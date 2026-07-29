@@ -1,4 +1,4 @@
-package com.spdms.domain.enums;
+package com.pragatix.domain.enums;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

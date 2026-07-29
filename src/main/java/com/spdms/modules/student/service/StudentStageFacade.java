@@ -1,13 +1,13 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Activity;
-import com.spdms.entity.ActivityAssignment;
-import com.spdms.entity.Student;
-import com.spdms.modules.activity.dto.response.ActivityStageResponse;
-import com.spdms.modules.activity.dto.response.ActivitySubgroupResponse;
-import com.spdms.modules.activity.repository.ActivityRepository;
-import com.spdms.modules.activity.service.ActivityStageService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.Activity;
+import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.entity.Student;
+import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
+import com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse;
+import com.pragatix.modules.activity.repository.ActivityRepository;
+import com.pragatix.modules.activity.service.ActivityStageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +27,10 @@ public class StudentStageFacade {
     private final StudentStageAssembler stageAssembler;
 
     public StudentStageFacade(ActivityStageService activityStageService,
-                              ActivityRepository activityRepository,
-                              StudentXpAggregator xpAggregator,
-                              StudentAssignmentResolver assignmentResolver,
-                              StudentStageAssembler stageAssembler) {
+            ActivityRepository activityRepository,
+            StudentXpAggregator xpAggregator,
+            StudentAssignmentResolver assignmentResolver,
+            StudentStageAssembler stageAssembler) {
         this.activityStageService = activityStageService;
         this.activityRepository = activityRepository;
         this.xpAggregator = xpAggregator;
@@ -41,7 +41,15 @@ public class StudentStageFacade {
     @Transactional(readOnly = true)
     public ResponseEntity<?> getStudentStages(Student student) {
         try {
-            List<ActivityStageResponse> stages = activityStageService.getAllStages();
+            com.pragatix.enums.AcademicYear acYear = null;
+            if (student.getYearRef() != null && student.getYearRef().getYearName() != null) {
+                try {
+                    acYear = com.pragatix.enums.AcademicYear.valueOf(student.getYearRef().getYearName().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    // ignore if invalid
+                }
+            }
+            List<ActivityStageResponse> stages = activityStageService.getAllStages(acYear);
 
             if (stages != null && !stages.isEmpty()) {
                 List<Long> subgroupIds = new ArrayList<>();
@@ -59,16 +67,19 @@ public class StudentStageFacade {
                     List<Activity> allActivities = activityRepository.findBySubgroupIdIn(subgroupIds);
                     for (Activity act : allActivities) {
                         if (act.getSubgroup() != null) {
-                            activitiesBySubgroup.computeIfAbsent(act.getSubgroup().getId(), k -> new ArrayList<>()).add(act);
+                            activitiesBySubgroup.computeIfAbsent(act.getSubgroup().getId(), k -> new ArrayList<>())
+                                    .add(act);
                         }
                         allActivityIds.add(act.getId());
                     }
                 }
 
-                Map<Long, List<ActivityAssignment>> assignmentsByActivity = assignmentResolver.fetchAssignmentsByActivity(allActivityIds);
+                Map<Long, List<ActivityAssignment>> assignmentsByActivity = assignmentResolver
+                        .fetchAssignmentsByActivity(allActivityIds);
                 StudentXpAggregator.AggregatedXp aggregatedXp = xpAggregator.aggregateXpForStudent(student.getId());
 
-                stageAssembler.assembleStages(student, stages, activitiesBySubgroup, assignmentsByActivity, aggregatedXp);
+                stageAssembler.assembleStages(student, stages, activitiesBySubgroup, assignmentsByActivity,
+                        aggregatedXp);
             }
             return ResponseEntity.ok(ApiResponse.ok(stages));
         } catch (Exception e) {

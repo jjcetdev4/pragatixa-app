@@ -1,4 +1,4 @@
-package com.spdms.common.mapper;
+package com.pragatix.common.mapper;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

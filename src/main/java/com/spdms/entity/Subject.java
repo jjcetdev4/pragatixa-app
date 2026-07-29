@@ -1,13 +1,13 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "subjects", uniqueConstraints = {
-    @UniqueConstraint(name = "uq_subject_code", columnNames = {"dept_id", "sub_code"}),
-    @UniqueConstraint(name = "uq_subject_name", columnNames = {"dept_id", "sub_name"}),
-    @UniqueConstraint(name = "UKaodt3utnw0lsov4k9ta88dbpr", columnNames = {"name"})
+        @UniqueConstraint(name = "uq_subject_code", columnNames = { "dept_id", "sub_code" }),
+        @UniqueConstraint(name = "uq_subject_name", columnNames = { "dept_id", "sub_name" }),
+        @UniqueConstraint(name = "UKaodt3utnw0lsov4k9ta88dbpr", columnNames = { "name" })
 })
 public class Subject {
 
@@ -34,7 +34,8 @@ public class Subject {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public Subject() {}
+    public Subject() {
+    }
 
     public Subject(String name) {
         this.name = name;
@@ -45,32 +46,83 @@ public class Subject {
         this.name = name;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getSubCode() { return subCode; }
-    public void setSubCode(String subCode) { this.subCode = subCode; }
+    public Department getDepartment() {
+        return department;
+    }
 
-    public String getSubName() { return subName; }
-    public void setSubName(String subName) { this.subName = subName; }
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getSubCode() {
+        return subCode;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setSubCode(String subCode) {
+        this.subCode = subCode;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public String getSubName() {
+        return subName;
+    }
+
+    public void setSubName(String subName) {
+        this.subName = subName;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final Subject s = new Subject();
-        public Builder department(Department v) { s.department = v; return this; }
-        public Builder subCode(String v) { s.subCode = v; return this; }
-        public Builder subName(String v) { s.subName = v; return this; }
-        public Builder name(String v) { s.name = v; return this; }
-        public Subject build() { return s; }
+
+        public Builder department(Department v) {
+            s.department = v;
+            return this;
+        }
+
+        public Builder subCode(String v) {
+            s.subCode = v;
+            return this;
+        }
+
+        public Builder subName(String v) {
+            s.subName = v;
+            return this;
+        }
+
+        public Builder name(String v) {
+            s.name = v;
+            return this;
+        }
+
+        public Subject build() {
+            return s;
+        }
     }
 }

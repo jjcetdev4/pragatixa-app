@@ -1,7 +1,7 @@
-package com.spdms.modules.authentication.security;
+package com.pragatix.modules.authentication.security;
 
-import com.spdms.entity.Student;
-import com.spdms.modules.student.repository.StudentRepository;
+import com.pragatix.entity.Student;
+import com.pragatix.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,28 +29,27 @@ public class StudentDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("[StudentDetailsService] Loading student details for identifier: {}", username);
-        
+
         java.util.Optional<Student> studentOpt = studentRepository.findByRegNo(username)
-            .or(() -> studentRepository.findByEmail(username))
-            .or(() -> studentRepository.findBySprNo(username));
-
-
+                .or(() -> studentRepository.findByEmail(username))
+                .or(() -> studentRepository.findBySprNo(username));
 
         Student student = studentOpt.orElseThrow(() -> {
             log.warn("[StudentDetailsService] Student not found with identifier: {}", username);
             return new UsernameNotFoundException("Student not found with identifier: " + username);
         });
 
-        log.debug("[StudentDetailsService] Found student: reg_no={}, active={}", student.getRegNo(), student.isActive());
+        log.debug("[StudentDetailsService] Found student: reg_no={}, active={}", student.getRegNo(),
+                student.isActive());
 
         return User.builder()
-            .username(student.getRegNo())
-            .password(student.getPassword())
-            .authorities(List.of(new SimpleGrantedAuthority("ROLE_STUDENT")))
-            .accountExpired(false)
-            .accountLocked(false)
-            .credentialsExpired(false)
-            .disabled(!student.isActive())
-            .build();
+                .username(student.getRegNo())
+                .password(student.getPassword())
+                .authorities(List.of(new SimpleGrantedAuthority("ROLE_STUDENT")))
+                .accountExpired(false)
+                .accountLocked(false)
+                .credentialsExpired(false)
+                .disabled(!student.isActive())
+                .build();
     }
 }

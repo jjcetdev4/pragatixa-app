@@ -1,4 +1,4 @@
-package com.spdms.infrastructure.swagger;
+package com.pragatix.infrastructure.swagger;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

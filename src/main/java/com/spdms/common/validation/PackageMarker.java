@@ -1,4 +1,4 @@
-package com.spdms.common.validation;
+package com.pragatix.common.validation;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

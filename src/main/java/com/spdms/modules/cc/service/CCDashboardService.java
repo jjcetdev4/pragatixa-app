@@ -1,11 +1,11 @@
-package com.spdms.modules.cc.service;
+package com.pragatix.modules.cc.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.User;
-import com.spdms.modules.authentication.repository.UserRepository;
-import com.spdms.repository.BadgeRequestRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.modules.activity.repository.ActivityRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.User;
+import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.repository.BadgeRequestRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.modules.activity.repository.ActivityRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +20,10 @@ public class CCDashboardService {
     private final StudentRepository studentRepository;
     private final ActivityRepository activityRepository;
 
-    public CCDashboardService(UserRepository userRepository, 
-                              BadgeRequestRepository badgeRequestRepository,
-                              StudentRepository studentRepository,
-                              ActivityRepository activityRepository) {
+    public CCDashboardService(UserRepository userRepository,
+            BadgeRequestRepository badgeRequestRepository,
+            StudentRepository studentRepository,
+            ActivityRepository activityRepository) {
         this.userRepository = userRepository;
         this.badgeRequestRepository = badgeRequestRepository;
         this.studentRepository = studentRepository;
@@ -32,7 +32,7 @@ public class CCDashboardService {
 
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboardStats(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("CC not found"));
-        
+
         if (user.getDepartment() == null || user.getSection() == null) {
             throw new RuntimeException("CC is not assigned to a valid department and section");
         }
@@ -40,10 +40,13 @@ public class CCDashboardService {
         Long deptId = user.getDepartment().getId();
         Long sectionId = user.getSection().getId();
 
-        long pendingBadgeRequests = badgeRequestRepository.countByStatusAndDepartmentIdAndSectionId("PENDING", deptId, sectionId);
-        
-        // Scope students based on department and section if methods exist. For now using global count since user specifically asked for badge request scoped counts.
-        long totalStudents = studentRepository.count(); 
+        long pendingBadgeRequests = badgeRequestRepository.countByStatusAndDepartmentIdAndSectionId("PENDING", deptId,
+                sectionId);
+
+        // Scope students based on department and section if methods exist. For now
+        // using global count since user specifically asked for badge request scoped
+        // counts.
+        long totalStudents = studentRepository.count();
         long totalActivities = activityRepository.count();
         long totalAttendance = 120; // Example placeholder since it requires attendance queries
 

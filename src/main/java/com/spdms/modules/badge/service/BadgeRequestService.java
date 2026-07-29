@@ -1,13 +1,14 @@
-package com.spdms.modules.badge.service;
+package com.pragatix.modules.badge.service;
 
-import com.spdms.dto.BadgeRequestCreateDto;
-import com.spdms.dto.BadgeRequestDto;
-import com.spdms.dto.BadgeRequestStatusUpdateDto;
-import com.spdms.entity.*;
-import com.spdms.repository.*;
-import com.spdms.modules.student.repository.StudentBadgeRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
+import com.pragatix.dto.BadgeRequestCreateDto;
+import com.pragatix.dto.BadgeRequestDto;
+import com.pragatix.dto.BadgeRequestStatusUpdateDto;
+import com.pragatix.entity.*;
+import com.pragatix.repository.*;
+import com.pragatix.modules.student.repository.StudentBadgeRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.modules.authentication.security.AuthUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,29 +24,34 @@ public class BadgeRequestService {
     private final StudentRepository studentRepository;
     private final BadgeRepository badgeRepository;
     private final UserRepository userRepository;
+    private final AuthUtils authUtils;
 
     public BadgeRequestService(
             BadgeRequestRepository badgeRequestRepository,
             StudentBadgeRepository studentBadgeRepository,
             StudentRepository studentRepository,
             BadgeRepository badgeRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            AuthUtils authUtils) {
         this.badgeRequestRepository = badgeRequestRepository;
         this.studentBadgeRepository = studentBadgeRepository;
         this.studentRepository = studentRepository;
         this.badgeRepository = badgeRepository;
         this.userRepository = userRepository;
+        this.authUtils = authUtils;
     }
 
     @Transactional
     public BadgeRequestDto createRequest(BadgeRequestCreateDto dto, String username) {
-        Student student = studentRepository.findByRegNo(username).orElseThrow(() -> new RuntimeException("Student not found"));
-        Badge badge = badgeRepository.findById(dto.getBadgeId()).orElseThrow(() -> new RuntimeException("Badge not found"));
+        Student student = studentRepository.findByRegNo(username)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Badge badge = badgeRepository.findById(dto.getBadgeId())
+                .orElseThrow(() -> new RuntimeException("Badge not found"));
 
         if (studentBadgeRepository.existsByStudentIdAndBadgeId(student.getId(), badge.getId())) {
             throw new RuntimeException("Student already has this badge");
         }
-        
+
         List<BadgeRequest> existing = badgeRequestRepository.findByStudentIdAndBadgeId(student.getId(), badge.getId());
         if (existing.stream().anyMatch(r -> "PENDING".equals(r.getStatus()))) {
             throw new RuntimeException("A pending request already exists for this badge");
@@ -67,7 +73,8 @@ public class BadgeRequestService {
 
     @Transactional(readOnly = true)
     public List<BadgeRequestDto> getMyRequests(String username) {
-        Student student = studentRepository.findByRegNo(username).orElseThrow(() -> new RuntimeException("Student not found"));
+        Student student = studentRepository.findByRegNo(username)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
         return badgeRequestRepository.findByStudentId(student.getId()).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -75,7 +82,21 @@ public class BadgeRequestService {
 
     @Transactional(readOnly = true)
     public List<BadgeRequestDto> getAllRequests() {
-        return badgeRequestRepository.findAll().stream()
+        User currentUser = authUtils.getCurrentUser();
+        List<BadgeRequest> requests = badgeRequestRepository.findAll();
+
+        if (currentUser != null && authUtils.isAdmin(currentUser) && !authUtils.isSuperAdmin(currentUser)) {
+            String adminYear = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
+            if (adminYear != null) {
+                requests = requests.stream()
+                        .filter(r -> r.getStudent() != null && adminYear.equals(r.getStudent().getYear()))
+                        .collect(Collectors.toList());
+            } else {
+                requests = java.util.Collections.emptyList();
+            }
+        }
+
+        return requests.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -86,7 +107,8 @@ public class BadgeRequestService {
         if (user.getDepartment() == null || user.getSection() == null) {
             throw new RuntimeException("CC is not assigned to a valid department and section");
         }
-        return badgeRequestRepository.findByDepartmentIdAndSectionId(user.getDepartment().getId(), user.getSection().getId())
+        return badgeRequestRepository
+                .findByDepartmentIdAndSectionId(user.getDepartment().getId(), user.getSection().getId())
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -94,7 +116,8 @@ public class BadgeRequestService {
 
     @Transactional
     public BadgeRequestDto approveRequest(Long id, String username) {
-        BadgeRequest request = badgeRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        BadgeRequest request = badgeRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Request not found"));
         if (!"PENDING".equals(request.getStatus())) {
             throw new RuntimeException("Request is not pending");
         }
@@ -104,7 +127,8 @@ public class BadgeRequestService {
         request.setReviewedAt(LocalDateTime.now());
         badgeRequestRepository.save(request);
 
-        if (!studentBadgeRepository.existsByStudentIdAndBadgeId(request.getStudent().getId(), request.getBadge().getId())) {
+        if (!studentBadgeRepository.existsByStudentIdAndBadgeId(request.getStudent().getId(),
+                request.getBadge().getId())) {
             StudentBadge sb = new StudentBadge();
             sb.setStudent(request.getStudent());
             sb.setBadge(request.getBadge());
@@ -119,7 +143,8 @@ public class BadgeRequestService {
 
     @Transactional
     public BadgeRequestDto rejectRequest(Long id, BadgeRequestStatusUpdateDto dto, String username) {
-        BadgeRequest request = badgeRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        BadgeRequest request = badgeRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Request not found"));
         if (!"PENDING".equals(request.getStatus())) {
             throw new RuntimeException("Request is not pending");
         }

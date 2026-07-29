@@ -1,9 +1,9 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.admin.dto.request.CreateDepartmentRequest;
-import com.spdms.entity.Department;
-import com.spdms.entity.Section;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.admin.dto.request.CreateDepartmentRequest;
+import com.pragatix.entity.Department;
+import com.pragatix.entity.Section;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +18,8 @@ public class AdminDepartmentService {
     private final AdminClassCoordinatorQueryService adminClassCoordinatorQueryService;
 
     public AdminDepartmentService(AdminDepartmentCommandService adminDepartmentCommandService,
-                                  AdminSectionCommandService adminSectionCommandService,
-                                  AdminClassCoordinatorQueryService adminClassCoordinatorQueryService) {
+            AdminSectionCommandService adminSectionCommandService,
+            AdminClassCoordinatorQueryService adminClassCoordinatorQueryService) {
         this.adminDepartmentCommandService = adminDepartmentCommandService;
         this.adminSectionCommandService = adminSectionCommandService;
         this.adminClassCoordinatorQueryService = adminClassCoordinatorQueryService;

@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.pragatix.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,7 +13,8 @@ public class PointAdjustmentRequest {
 
     private Long subgroupId; // optional/nullable activity subgroup reference
 
-    public PointAdjustmentRequest() {}
+    public PointAdjustmentRequest() {
+    }
 
     public PointAdjustmentRequest(Integer points, String reason, Long subgroupId) {
         this.points = points;
@@ -21,12 +22,27 @@ public class PointAdjustmentRequest {
         this.subgroupId = subgroupId;
     }
 
-    public Integer getPoints() { return points; }
-    public void setPoints(Integer points) { this.points = points; }
+    public Integer getPoints() {
+        return points;
+    }
 
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
+    public void setPoints(Integer points) {
+        this.points = points;
+    }
 
-    public Long getSubgroupId() { return subgroupId; }
-    public void setSubgroupId(Long subgroupId) { this.subgroupId = subgroupId; }
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public Long getSubgroupId() {
+        return subgroupId;
+    }
+
+    public void setSubgroupId(Long subgroupId) {
+        this.subgroupId = subgroupId;
+    }
 }

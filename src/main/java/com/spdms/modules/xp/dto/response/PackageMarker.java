@@ -1,4 +1,4 @@
-package com.spdms.modules.xp.dto.response;
+package com.pragatix.modules.xp.dto.response;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

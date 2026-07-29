@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -23,26 +23,60 @@ public class Semester {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public Semester() {}
+    public Semester() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Byte getSemesterNo() { return semesterNo; }
-    public void setSemesterNo(Byte semesterNo) { this.semesterNo = semesterNo; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getSemesterName() { return semesterName; }
-    public void setSemesterName(String semesterName) { this.semesterName = semesterName; }
+    public Byte getSemesterNo() {
+        return semesterNo;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setSemesterNo(Byte semesterNo) {
+        this.semesterNo = semesterNo;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public String getSemesterName() {
+        return semesterName;
+    }
+
+    public void setSemesterName(String semesterName) {
+        this.semesterName = semesterName;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final Semester s = new Semester();
-        public Builder semesterNo(Byte v) { s.semesterNo = v; return this; }
-        public Builder semesterName(String v) { s.semesterName = v; return this; }
-        public Semester build() { return s; }
+
+        public Builder semesterNo(Byte v) {
+            s.semesterNo = v;
+            return this;
+        }
+
+        public Builder semesterName(String v) {
+            s.semesterName = v;
+            return this;
+        }
+
+        public Semester build() {
+            return s;
+        }
     }
 }

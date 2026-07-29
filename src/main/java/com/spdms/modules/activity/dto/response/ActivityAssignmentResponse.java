@@ -1,4 +1,4 @@
-package com.spdms.modules.activity.dto.response;
+package com.pragatix.modules.activity.dto.response;
 
 import java.time.LocalDateTime;
 
@@ -19,9 +19,12 @@ public class ActivityAssignmentResponse {
 
     private String assignmentScope;
 
-    public ActivityAssignmentResponse() {}
+    public ActivityAssignmentResponse() {
+    }
 
-    public ActivityAssignmentResponse(Long id, Long activityId, String activityName, Long departmentId, String departmentName, Long sectionId, String sectionName, Long teacherId, String teacherName, String teacherUsername, String assignedBy, LocalDateTime assignedAt, String year, String assignmentScope) {
+    public ActivityAssignmentResponse(Long id, Long activityId, String activityName, Long departmentId,
+            String departmentName, Long sectionId, String sectionName, Long teacherId, String teacherName,
+            String teacherUsername, String assignedBy, LocalDateTime assignedAt, String year, String assignmentScope) {
         this.id = id;
         this.activityId = activityId;
         this.activityName = activityName;
@@ -38,47 +41,117 @@ public class ActivityAssignmentResponse {
         this.assignmentScope = assignmentScope;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getActivityId() { return activityId; }
-    public void setActivityId(Long activityId) { this.activityId = activityId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getActivityName() { return activityName; }
-    public void setActivityName(String activityName) { this.activityName = activityName; }
+    public Long getActivityId() {
+        return activityId;
+    }
 
-    public Long getDepartmentId() { return departmentId; }
-    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
+    public void setActivityId(Long activityId) {
+        this.activityId = activityId;
+    }
 
-    public String getDepartmentName() { return departmentName; }
-    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+    public String getActivityName() {
+        return activityName;
+    }
 
-    public Long getSectionId() { return sectionId; }
-    public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
+    }
 
-    public String getSectionName() { return sectionName; }
-    public void setSectionName(String sectionName) { this.sectionName = sectionName; }
+    public Long getDepartmentId() {
+        return departmentId;
+    }
 
-    public Long getTeacherId() { return teacherId; }
-    public void setTeacherId(Long teacherId) { this.teacherId = teacherId; }
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
 
-    public String getTeacherName() { return teacherName; }
-    public void setTeacherName(String teacherName) { this.teacherName = teacherName; }
+    public String getDepartmentName() {
+        return departmentName;
+    }
 
-    public String getTeacherUsername() { return teacherUsername; }
-    public void setTeacherUsername(String teacherUsername) { this.teacherUsername = teacherUsername; }
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
 
-    public String getAssignedBy() { return assignedBy; }
-    public void setAssignedBy(String assignedBy) { this.assignedBy = assignedBy; }
+    public Long getSectionId() {
+        return sectionId;
+    }
 
-    public LocalDateTime getAssignedAt() { return assignedAt; }
-    public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
+    public void setSectionId(Long sectionId) {
+        this.sectionId = sectionId;
+    }
 
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public String getSectionName() {
+        return sectionName;
+    }
 
-    public String getAssignmentScope() { return assignmentScope; }
-    public void setAssignmentScope(String assignmentScope) { this.assignmentScope = assignmentScope; }
+    public void setSectionName(String sectionName) {
+        this.sectionName = sectionName;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+    }
+
+    public String getTeacherName() {
+        return teacherName;
+    }
+
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
+    }
+
+    public String getTeacherUsername() {
+        return teacherUsername;
+    }
+
+    public void setTeacherUsername(String teacherUsername) {
+        this.teacherUsername = teacherUsername;
+    }
+
+    public String getAssignedBy() {
+        return assignedBy;
+    }
+
+    public void setAssignedBy(String assignedBy) {
+        this.assignedBy = assignedBy;
+    }
+
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+
+    public void setAssignedAt(LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public String getAssignmentScope() {
+        return assignmentScope;
+    }
+
+    public void setAssignmentScope(String assignmentScope) {
+        this.assignmentScope = assignmentScope;
+    }
 
     public static Builder builder() {
         return new Builder();
@@ -100,23 +173,80 @@ public class ActivityAssignmentResponse {
         private String year;
         private String assignmentScope;
 
-        public Builder id(Long id) { this.id = id; return this; }
-        public Builder activityId(Long activityId) { this.activityId = activityId; return this; }
-        public Builder activityName(String activityName) { this.activityName = activityName; return this; }
-        public Builder departmentId(Long departmentId) { this.departmentId = departmentId; return this; }
-        public Builder departmentName(String departmentName) { this.departmentName = departmentName; return this; }
-        public Builder sectionId(Long sectionId) { this.sectionId = sectionId; return this; }
-        public Builder sectionName(String sectionName) { this.sectionName = sectionName; return this; }
-        public Builder teacherId(Long teacherId) { this.teacherId = teacherId; return this; }
-        public Builder teacherName(String teacherName) { this.teacherName = teacherName; return this; }
-        public Builder teacherUsername(String teacherUsername) { this.teacherUsername = teacherUsername; return this; }
-        public Builder assignedBy(String assignedBy) { this.assignedBy = assignedBy; return this; }
-        public Builder assignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; return this; }
-        public Builder year(String year) { this.year = year; return this; }
-        public Builder assignmentScope(String assignmentScope) { this.assignmentScope = assignmentScope; return this; }
+        public Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder activityId(Long activityId) {
+            this.activityId = activityId;
+            return this;
+        }
+
+        public Builder activityName(String activityName) {
+            this.activityName = activityName;
+            return this;
+        }
+
+        public Builder departmentId(Long departmentId) {
+            this.departmentId = departmentId;
+            return this;
+        }
+
+        public Builder departmentName(String departmentName) {
+            this.departmentName = departmentName;
+            return this;
+        }
+
+        public Builder sectionId(Long sectionId) {
+            this.sectionId = sectionId;
+            return this;
+        }
+
+        public Builder sectionName(String sectionName) {
+            this.sectionName = sectionName;
+            return this;
+        }
+
+        public Builder teacherId(Long teacherId) {
+            this.teacherId = teacherId;
+            return this;
+        }
+
+        public Builder teacherName(String teacherName) {
+            this.teacherName = teacherName;
+            return this;
+        }
+
+        public Builder teacherUsername(String teacherUsername) {
+            this.teacherUsername = teacherUsername;
+            return this;
+        }
+
+        public Builder assignedBy(String assignedBy) {
+            this.assignedBy = assignedBy;
+            return this;
+        }
+
+        public Builder assignedAt(LocalDateTime assignedAt) {
+            this.assignedAt = assignedAt;
+            return this;
+        }
+
+        public Builder year(String year) {
+            this.year = year;
+            return this;
+        }
+
+        public Builder assignmentScope(String assignmentScope) {
+            this.assignmentScope = assignmentScope;
+            return this;
+        }
 
         public ActivityAssignmentResponse build() {
-            return new ActivityAssignmentResponse(id, activityId, activityName, departmentId, departmentName, sectionId, sectionName, teacherId, teacherName, teacherUsername, assignedBy, assignedAt, year, assignmentScope);
+            return new ActivityAssignmentResponse(id, activityId, activityName, departmentId, departmentName, sectionId,
+                    sectionName, teacherId, teacherName, teacherUsername, assignedBy, assignedAt, year,
+                    assignmentScope);
         }
     }
 }

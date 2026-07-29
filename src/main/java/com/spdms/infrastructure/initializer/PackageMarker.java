@@ -1,4 +1,4 @@
-package com.spdms.infrastructure.initializer;
+package com.pragatix.infrastructure.initializer;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

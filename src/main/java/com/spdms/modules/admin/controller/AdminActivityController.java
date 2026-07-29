@@ -1,11 +1,11 @@
-package com.spdms.modules.admin.controller;
+package com.pragatix.modules.admin.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Activity;
-import com.spdms.modules.activity.dto.response.MyActivityResponse;
-import com.spdms.modules.activity.dto.response.GroupedActivityResponse;
-import com.spdms.modules.activity.dto.request.AssignmentRequest;
-import com.spdms.modules.activity.dto.response.ActivityAssignmentResponse;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.Activity;
+import com.pragatix.modules.activity.dto.response.MyActivityResponse;
+import com.pragatix.modules.activity.dto.response.GroupedActivityResponse;
+import com.pragatix.modules.activity.dto.request.AssignmentRequest;
+import com.pragatix.modules.activity.dto.response.ActivityAssignmentResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -32,7 +32,8 @@ public class AdminActivityController {
     private final AdminActivityService adminActivityService;
     private final ActivityAssignmentService activityAssignmentService;
 
-    public AdminActivityController(AdminActivityService adminActivityService, ActivityAssignmentService activityAssignmentService) {
+    public AdminActivityController(AdminActivityService adminActivityService,
+            ActivityAssignmentService activityAssignmentService) {
         this.adminActivityService = adminActivityService;
         this.activityAssignmentService = activityAssignmentService;
     }
@@ -47,8 +48,10 @@ public class AdminActivityController {
     @GetMapping("/subgroups/{subgroupId}/activities")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "Get all activities of a subgroup")
-    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(@PathVariable Long subgroupId) {
-        return adminActivityService.getActivitiesBySubgroup(subgroupId);
+    public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(
+            @PathVariable Long subgroupId,
+            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+        return adminActivityService.getActivitiesBySubgroup(subgroupId, academicYear);
     }
 
     @GetMapping("/stages/{stageId}/activities")
@@ -56,32 +59,35 @@ public class AdminActivityController {
     @Operation(summary = "Get all activities of a stage")
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(
             @PathVariable Long stageId,
-            @RequestParam(required = false) String subgroup) {
-        return adminActivityService.getActivitiesByStage(stageId, subgroup);
+            @RequestParam(required = false) String subgroup,
+            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+        return adminActivityService.getActivitiesByStage(stageId, subgroup, academicYear);
     }
 
     @GetMapping("/activities")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all activities globally")
     public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(
-            @RequestParam(required = false) String subgroup) {
-        return adminActivityService.getAllActivities(subgroup);
+            @RequestParam(required = false) String subgroup,
+            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+        return adminActivityService.getAllActivities(subgroup, academicYear);
     }
 
     @GetMapping("/activities/grouped")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all activities grouped by subgroup")
     public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(
-            @RequestParam(required = false) String subgroup) {
-        return adminActivityService.getGroupedActivities(subgroup);
+            @RequestParam(required = false) String subgroup,
+            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+        return adminActivityService.getGroupedActivities(subgroup, academicYear);
     }
 
     @PostMapping("/subgroups/{subgroupId}/activities")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new activity under a subgroup")
     public ResponseEntity<ApiResponse<Activity>> createActivity(
-                @PathVariable Long subgroupId,
-                @RequestBody Map<String, Object> body) {
+            @PathVariable Long subgroupId,
+            @RequestBody Map<String, Object> body) {
         return adminActivityService.createActivity(subgroupId, body);
     }
 
@@ -89,8 +95,8 @@ public class AdminActivityController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update an activity")
     public ResponseEntity<ApiResponse<Activity>> updateActivity(
-                @PathVariable Long activityId,
-                @RequestBody Map<String, Object> body) {
+            @PathVariable Long activityId,
+            @RequestBody Map<String, Object> body) {
         return adminActivityService.updateActivity(activityId, body);
     }
 
@@ -98,8 +104,8 @@ public class AdminActivityController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Assign departments/sections/faculty to an activity (Bulk)")
     public ResponseEntity<ApiResponse<Void>> assignActivity(
-                @PathVariable Long id,
-                @RequestBody Map<String, Object> body) {
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
         return activityAssignmentService.assignActivity(id, body);
     }
 
@@ -114,8 +120,8 @@ public class AdminActivityController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR')")
     @Operation(summary = "Add a single assignment to an activity")
     public ResponseEntity<ApiResponse<ActivityAssignmentResponse>> addAssignment(
-                @PathVariable Long id,
-                @RequestBody AssignmentRequest request) {
+            @PathVariable Long id,
+            @RequestBody AssignmentRequest request) {
         return activityAssignmentService.addAssignment(id, request);
     }
 
@@ -138,15 +144,15 @@ public class AdminActivityController {
     @GetMapping("/frequencies/custom")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all custom award frequencies")
-    public ResponseEntity<ApiResponse<List<com.spdms.entity.CustomFrequency>>> getCustomFrequencies() {
+    public ResponseEntity<ApiResponse<List<com.pragatix.entity.CustomFrequency>>> getCustomFrequencies() {
         return adminActivityService.getCustomFrequencies();
     }
 
     @PostMapping("/frequencies/custom")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a custom award frequency")
-    public ResponseEntity<ApiResponse<com.spdms.entity.CustomFrequency>> createCustomFrequency(
-                @RequestBody Map<String, Object> payload) {
+    public ResponseEntity<ApiResponse<com.pragatix.entity.CustomFrequency>> createCustomFrequency(
+            @RequestBody Map<String, Object> payload) {
         return adminActivityService.createCustomFrequency(payload);
     }
 

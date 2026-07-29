@@ -1,6 +1,6 @@
-package com.spdms.modules.attendance.dto.response;
+package com.pragatix.modules.attendance.dto.response;
 
-import com.spdms.entity.AttendanceRecord;
+import com.pragatix.entity.AttendanceRecord;
 
 public class StudentAttendanceListItemResponse {
     private Long studentId;
@@ -8,21 +8,47 @@ public class StudentAttendanceListItemResponse {
     private String registerNumber;
     private AttendanceRecord.AttendanceStatus status;
     private String remarks;
-    
-    public StudentAttendanceListItemResponse() {}
 
-    public Long getStudentId() { return studentId; }
-    public void setStudentId(Long studentId) { this.studentId = studentId; }
+    public StudentAttendanceListItemResponse() {
+    }
 
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public Long getStudentId() {
+        return studentId;
+    }
 
-    public String getRegisterNumber() { return registerNumber; }
-    public void setRegisterNumber(String registerNumber) { this.registerNumber = registerNumber; }
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
+    }
 
-    public AttendanceRecord.AttendanceStatus getStatus() { return status; }
-    public void setStatus(AttendanceRecord.AttendanceStatus status) { this.status = status; }
+    public String getStudentName() {
+        return studentName;
+    }
 
-    public String getRemarks() { return remarks; }
-    public void setRemarks(String remarks) { this.remarks = remarks; }
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getRegisterNumber() {
+        return registerNumber;
+    }
+
+    public void setRegisterNumber(String registerNumber) {
+        this.registerNumber = registerNumber;
+    }
+
+    public AttendanceRecord.AttendanceStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AttendanceRecord.AttendanceStatus status) {
+        this.status = status;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
 }

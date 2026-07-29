@@ -1,6 +1,6 @@
-package com.spdms.modules.attendance.dto.response;
+package com.pragatix.modules.attendance.dto.response;
 
-import com.spdms.entity.AttendanceRecord;
+import com.pragatix.entity.AttendanceRecord;
 import java.time.LocalDate;
 
 public class StudentAttendanceHistoryResponse {
@@ -8,18 +8,39 @@ public class StudentAttendanceHistoryResponse {
     private Integer period;
     private AttendanceRecord.AttendanceStatus status;
     private String remarks;
-    
-    public StudentAttendanceHistoryResponse() {}
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public StudentAttendanceHistoryResponse() {
+    }
 
-    public Integer getPeriod() { return period; }
-    public void setPeriod(Integer period) { this.period = period; }
+    public LocalDate getDate() {
+        return date;
+    }
 
-    public AttendanceRecord.AttendanceStatus getStatus() { return status; }
-    public void setStatus(AttendanceRecord.AttendanceStatus status) { this.status = status; }
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
 
-    public String getRemarks() { return remarks; }
-    public void setRemarks(String remarks) { this.remarks = remarks; }
+    public Integer getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(Integer period) {
+        this.period = period;
+    }
+
+    public AttendanceRecord.AttendanceStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AttendanceRecord.AttendanceStatus status) {
+        this.status = status;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
 }

@@ -1,10 +1,10 @@
-package com.spdms.modules.authentication.security;
+package com.pragatix.modules.authentication.security;
 
-import com.spdms.entity.Student;
-import com.spdms.entity.User;
-import com.spdms.modules.student.exception.StudentNotFoundException;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.User;
+import com.pragatix.modules.student.exception.StudentNotFoundException;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,7 +25,8 @@ public class StudentAuthResolver {
     }
 
     /**
-     * Resolves the currently authenticated Student identity using stable mapping rather than just email.
+     * Resolves the currently authenticated Student identity using stable mapping
+     * rather than just email.
      * 1. Looks up the authenticated User.
      * 2. Checks if there is a direct User -> Student relationship (findByUserId).
      * 3. Checks if the Username matches regNo, regNo, or sprNo.
@@ -37,7 +38,7 @@ public class StudentAuthResolver {
     @Transactional(readOnly = true)
     public Student getLoggedInStudent() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        
+
         Student student = null;
         User user = userRepository.findByUsername(username).orElse(null);
 
@@ -60,12 +61,13 @@ public class StudentAuthResolver {
         }
 
         if (student == null) {
-            log.error("Student resolution failed: No Student profile found for Username '{}', User ID '{}'", username, user.getId());
+            log.error("Student resolution failed: No Student profile found for Username '{}', User ID '{}'", username,
+                    user.getId());
             throw new StudentNotFoundException("Student profile not found for this user");
         }
 
-        log.debug("Resolved Authenticated Student - Username: {}, Resolved Student ID: {}, Resolved Student Name: {}", 
-                 username, student.getRegNo(), student.getFullName());
+        log.debug("Resolved Authenticated Student - Username: {}, Resolved Student ID: {}, Resolved Student Name: {}",
+                username, student.getRegNo(), student.getFullName());
 
         return student;
     }

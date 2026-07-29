@@ -1,4 +1,4 @@
-package com.spdms.common.config;
+package com.pragatix.common.config;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

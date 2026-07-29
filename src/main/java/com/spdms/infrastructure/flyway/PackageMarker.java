@@ -1,4 +1,4 @@
-package com.spdms.infrastructure.flyway;
+package com.pragatix.infrastructure.flyway;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

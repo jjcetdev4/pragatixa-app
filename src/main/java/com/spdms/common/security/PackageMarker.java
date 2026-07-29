@@ -1,4 +1,4 @@
-package com.spdms.common.security;
+package com.pragatix.common.security;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

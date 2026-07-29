@@ -1,10 +1,10 @@
-package com.spdms.modules.admin.controller;
+package com.pragatix.modules.admin.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.authentication.dto.request.CreateUserRequest;
-import com.spdms.modules.authentication.dto.request.UpdateUserRequest;
-import com.spdms.modules.authentication.dto.response.UserResponse;
-import com.spdms.entity.User;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.authentication.dto.request.CreateUserRequest;
+import com.pragatix.modules.authentication.dto.request.UpdateUserRequest;
+import com.pragatix.modules.authentication.dto.response.UserResponse;
+import com.pragatix.entity.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -52,8 +52,8 @@ public class AdminUserController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update User", description = "Updates teacher or admin profile information and role selections.")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
-                @PathVariable Long id,
-                @Valid @RequestBody UpdateUserRequest request) {
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRequest request) {
         return adminUserService.updateUser(id, request);
     }
 

@@ -1,4 +1,4 @@
-package com.spdms.modules.activity.dto.response;
+package com.pragatix.modules.activity.dto.response;
 
 public class ActivityOptionDTO {
     private Long id;
@@ -8,9 +8,11 @@ public class ActivityOptionDTO {
     private String awardFrequency;
     private String type;
 
-    public ActivityOptionDTO() {}
+    public ActivityOptionDTO() {
+    }
 
-    public ActivityOptionDTO(Long id, String name, String description, Integer awardXp, String awardFrequency, String type) {
+    public ActivityOptionDTO(Long id, String name, String description, Integer awardXp, String awardFrequency,
+            String type) {
         this.id = id;
         this.name = name;
         this.description = description;

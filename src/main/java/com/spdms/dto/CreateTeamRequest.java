@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.pragatix.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -18,20 +18,46 @@ public class CreateTeamRequest {
 
     private List<String> memberStudentIds; // other member student IDs
 
-    public CreateTeamRequest() {}
+    public CreateTeamRequest() {
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() {
+        return name;
+    }
 
-    public int getSize() { return size; }
-    public void setSize(int size) { this.size = size; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public Long getAssignmentId() { return assignmentId; }
-    public void setAssignmentId(Long assignmentId) { this.assignmentId = assignmentId; }
+    public int getSize() {
+        return size;
+    }
 
-    public String getCaptainStudentId() { return captainStudentId; }
-    public void setCaptainStudentId(String captainStudentId) { this.captainStudentId = captainStudentId; }
+    public void setSize(int size) {
+        this.size = size;
+    }
 
-    public List<String> getMemberStudentIds() { return memberStudentIds; }
-    public void setMemberStudentIds(List<String> memberStudentIds) { this.memberStudentIds = memberStudentIds; }
+    public Long getAssignmentId() {
+        return assignmentId;
+    }
+
+    public void setAssignmentId(Long assignmentId) {
+        this.assignmentId = assignmentId;
+    }
+
+    public String getCaptainStudentId() {
+        return captainStudentId;
+    }
+
+    public void setCaptainStudentId(String captainStudentId) {
+        this.captainStudentId = captainStudentId;
+    }
+
+    public List<String> getMemberStudentIds() {
+        return memberStudentIds;
+    }
+
+    public void setMemberStudentIds(List<String> memberStudentIds) {
+        this.memberStudentIds = memberStudentIds;
+    }
 }

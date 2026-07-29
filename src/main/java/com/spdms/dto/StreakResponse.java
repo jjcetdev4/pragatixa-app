@@ -1,4 +1,4 @@
-package com.spdms.dto;
+package com.pragatix.dto;
 
 import java.time.LocalDateTime;
 
@@ -9,9 +9,11 @@ public class StreakResponse {
     private String streakType;
     private int penaltyPerBreak;
 
-    public StreakResponse() {}
+    public StreakResponse() {
+    }
 
-    public StreakResponse(int currentStreak, boolean isBroken, LocalDateTime lastUpdated, String streakType, int penaltyPerBreak) {
+    public StreakResponse(int currentStreak, boolean isBroken, LocalDateTime lastUpdated, String streakType,
+            int penaltyPerBreak) {
         this.currentStreak = currentStreak;
         this.isBroken = isBroken;
         this.lastUpdated = lastUpdated;

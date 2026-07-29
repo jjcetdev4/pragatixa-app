@@ -1,11 +1,11 @@
-package com.spdms.modules.admin.mapper;
+package com.pragatix.modules.admin.mapper;
 
-import com.spdms.modules.authentication.dto.response.UserResponse;
-import com.spdms.entity.Role;
-import com.spdms.entity.User;
-import com.spdms.entity.ActivityAssignment;
-import com.spdms.modules.activity.dto.response.ActivityAssignmentResponse;
-import com.spdms.entity.SubRole;
+import com.pragatix.modules.authentication.dto.response.UserResponse;
+import com.pragatix.entity.Role;
+import com.pragatix.entity.User;
+import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.modules.activity.dto.response.ActivityAssignmentResponse;
+import com.pragatix.entity.SubRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -14,8 +14,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @Component
 public class AdminMapper {

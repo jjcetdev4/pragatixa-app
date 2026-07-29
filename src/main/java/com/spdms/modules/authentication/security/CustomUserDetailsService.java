@@ -1,7 +1,7 @@
-package com.spdms.modules.authentication.security;
+package com.pragatix.modules.authentication.security;
 
-import com.spdms.entity.User;
-import com.spdms.modules.authentication.repository.UserRepository;
+import com.pragatix.entity.User;
+import com.pragatix.modules.authentication.repository.UserRepository;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
@@ -26,21 +26,21 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException(
-                "User not found with username: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User not found with username: " + username));
 
         var authorities = user.getRoles().stream()
-            .map(role -> new SimpleGrantedAuthority(role.getName()))
-            .collect(Collectors.toList());
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
 
         return org.springframework.security.core.userdetails.User.builder()
-            .username(user.getUsername())
-            .password(user.getPassword())
-            .authorities(authorities)
-            .accountExpired(false)
-            .accountLocked(false)
-            .credentialsExpired(false)
-            .disabled(!user.isActive())
-            .build();
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .authorities(authorities)
+                .accountExpired(false)
+                .accountLocked(false)
+                .credentialsExpired(false)
+                .disabled(!user.isActive())
+                .build();
     }
 }

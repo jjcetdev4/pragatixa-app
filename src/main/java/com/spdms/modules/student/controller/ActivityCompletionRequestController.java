@@ -1,9 +1,9 @@
-package com.spdms.modules.student.controller;
+package com.pragatix.modules.student.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.student.dto.request.CreateActivityCompletionRequestDto;
-import com.spdms.modules.student.dto.response.ActivityCompletionRequestDto;
-import com.spdms.modules.student.service.ActivityCompletionRequestService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.student.dto.request.CreateActivityCompletionRequestDto;
+import com.pragatix.modules.student.dto.response.ActivityCompletionRequestDto;
+import com.pragatix.modules.student.service.ActivityCompletionRequestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -33,7 +33,8 @@ public class ActivityCompletionRequestController {
 
     @GetMapping("/my-requests")
     @PreAuthorize("hasAnyRole('STUDENT')")
-    public ResponseEntity<ApiResponse<List<ActivityCompletionRequestDto>>> getMyRequests(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<ActivityCompletionRequestDto>>> getMyRequests(
+            Authentication authentication) {
         String username = authentication.getName();
         return ResponseEntity.ok(service.getStudentRequests(username));
     }
@@ -44,11 +45,11 @@ public class ActivityCompletionRequestController {
             @RequestParam(required = false) String status,
             Authentication authentication) {
         String username = authentication.getName();
-        
+
         System.out.println("----- Entered ActivityCompletionRequestController.getInbox() -----");
         System.out.println("Logged-in Username: " + username);
         System.out.println("Roles: " + authentication.getAuthorities());
-        
+
         return ResponseEntity.ok(service.getInbox(username, status));
     }
 

@@ -1,4 +1,4 @@
-package com.spdms.infrastructure.mail;
+package com.pragatix.infrastructure.mail;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

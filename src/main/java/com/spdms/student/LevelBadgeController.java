@@ -1,9 +1,9 @@
-package com.spdms.student;
+package com.pragatix.student;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Badge;
-import com.spdms.entity.Level;
-import com.spdms.modules.student.dto.response.StudentBadgeResponse;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.Badge;
+import com.pragatix.entity.Level;
+import com.pragatix.modules.student.dto.response.StudentBadgeResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,9 +20,10 @@ import java.util.List;
 public class LevelBadgeController {
 
     private final LevelBadgeService levelBadgeService;
-    private final com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver;
+    private final com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
-    public LevelBadgeController(LevelBadgeService levelBadgeService, com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
+    public LevelBadgeController(LevelBadgeService levelBadgeService,
+            com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.levelBadgeService = levelBadgeService;
         this.studentAuthResolver = studentAuthResolver;
     }
@@ -34,7 +35,10 @@ public class LevelBadgeController {
         return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getAllLevels()));
     }
 
-    /** GET /api/v1/levels/student/{regNo}/current – Get student's current level by roll number */
+    /**
+     * GET /api/v1/levels/student/{regNo}/current – Get student's current level by
+     * roll number
+     */
     @GetMapping("/levels/student/{regNo}/current")
     @Operation(summary = "Get Student's Current Level", description = "Determines a student's active level based on their current XP score.")
     public ResponseEntity<ApiResponse<Level>> getCurrentLevelForStudent(@PathVariable String regNo) {
@@ -43,7 +47,10 @@ public class LevelBadgeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /** GET /api/v1/levels/me/current – Get currently logged in student's active level */
+    /**
+     * GET /api/v1/levels/me/current – Get currently logged in student's active
+     * level
+     */
     @GetMapping("/levels/me/current")
     @Operation(summary = "Get Current Logged-in Student's Level")
     public ResponseEntity<ApiResponse<Level>> getCurrentLoggedInLevel() {
@@ -60,7 +67,10 @@ public class LevelBadgeController {
         return ResponseEntity.ok(ApiResponse.ok(levelBadgeService.getAllBadges()));
     }
 
-    /** GET /api/v1/badges/student/me – Get logged-in student's earned & pending badges */
+    /**
+     * GET /api/v1/badges/student/me – Get logged-in student's earned & pending
+     * badges
+     */
     @GetMapping("/badges/student/me")
     @Operation(summary = "Get My Badges", description = "Returns all earned and pending badge claims for the active student session.")
     public ResponseEntity<ApiResponse<List<StudentBadgeResponse>>> getMyBadges() {
@@ -80,9 +90,10 @@ public class LevelBadgeController {
     @Operation(summary = "Claim Badge", description = "Student submits a badge claim with evidence URL.")
     public ResponseEntity<ApiResponse<StudentBadgeResponse>> submitBadgeClaim(@RequestBody ClaimBadgeRequest request) {
         String regNo = studentAuthResolver.getLoggedInStudent().getRegNo();
-        
-        ApiResponse<StudentBadgeResponse> response = levelBadgeService.submitBadgeClaim(regNo, request.getBadgeName(), request.getEvidenceUrl());
-        
+
+        ApiResponse<StudentBadgeResponse> response = levelBadgeService.submitBadgeClaim(regNo, request.getBadgeName(),
+                request.getEvidenceUrl());
+
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);
@@ -125,10 +136,20 @@ public class LevelBadgeController {
         private String badgeName;
         private String evidenceUrl;
 
-        public String getBadgeName() { return badgeName; }
-        public void setBadgeName(String badgeName) { this.badgeName = badgeName; }
+        public String getBadgeName() {
+            return badgeName;
+        }
 
-        public String getEvidenceUrl() { return evidenceUrl; }
-        public void setEvidenceUrl(String evidenceUrl) { this.evidenceUrl = evidenceUrl; }
+        public void setBadgeName(String badgeName) {
+            this.badgeName = badgeName;
+        }
+
+        public String getEvidenceUrl() {
+            return evidenceUrl;
+        }
+
+        public void setEvidenceUrl(String evidenceUrl) {
+            this.evidenceUrl = evidenceUrl;
+        }
     }
 }

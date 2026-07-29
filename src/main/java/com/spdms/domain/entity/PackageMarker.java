@@ -1,4 +1,4 @@
-package com.spdms.domain.entity;
+package com.pragatix.domain.entity;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

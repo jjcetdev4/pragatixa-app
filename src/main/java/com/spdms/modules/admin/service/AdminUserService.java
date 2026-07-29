@@ -1,19 +1,19 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.authentication.dto.request.CreateUserRequest;
-import com.spdms.modules.authentication.dto.request.UpdateUserRequest;
-import com.spdms.modules.authentication.dto.response.UserResponse;
-import com.spdms.entity.Department;
-import com.spdms.entity.Role;
-import com.spdms.entity.User;
-import com.spdms.repository.DepartmentRepository;
-import com.spdms.modules.authentication.repository.RoleRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
-import com.spdms.entity.SubRole;
-import com.spdms.modules.authentication.repository.SubRoleRepository;
-import com.spdms.repository.SectionRepository;
-import com.spdms.entity.Section;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.authentication.dto.request.CreateUserRequest;
+import com.pragatix.modules.authentication.dto.request.UpdateUserRequest;
+import com.pragatix.modules.authentication.dto.response.UserResponse;
+import com.pragatix.entity.Department;
+import com.pragatix.entity.Role;
+import com.pragatix.entity.User;
+import com.pragatix.repository.DepartmentRepository;
+import com.pragatix.modules.authentication.repository.RoleRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.entity.SubRole;
+import com.pragatix.modules.authentication.repository.SubRoleRepository;
+import com.pragatix.repository.SectionRepository;
+import com.pragatix.entity.Section;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +29,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @Service
 public class AdminUserService {
@@ -44,7 +44,9 @@ public class AdminUserService {
     private final UserRepository userRepository;
     private final AdminMapper adminMapper;
 
-    public AdminUserService(DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, SectionRepository sectionRepository, SubRoleRepository subRoleRepository, UserRepository userRepository, AdminMapper adminMapper) {
+    public AdminUserService(DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder,
+            RoleRepository roleRepository, SectionRepository sectionRepository, SubRoleRepository subRoleRepository,
+            UserRepository userRepository, AdminMapper adminMapper) {
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;

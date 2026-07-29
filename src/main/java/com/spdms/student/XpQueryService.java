@@ -1,13 +1,13 @@
-package com.spdms.student;
+package com.pragatix.student;
 
-import com.spdms.dto.StreakResponse;
-import com.spdms.dto.XpTransactionDto;
-import com.spdms.entity.Streak;
-import com.spdms.entity.XpTransaction;
-import com.spdms.repository.StreakRepository;
-import com.spdms.repository.XpTransactionRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.entity.Student;
+import com.pragatix.dto.StreakResponse;
+import com.pragatix.dto.XpTransactionDto;
+import com.pragatix.entity.Streak;
+import com.pragatix.entity.XpTransaction;
+import com.pragatix.repository.StreakRepository;
+import com.pragatix.repository.XpTransactionRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.entity.Student;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +29,8 @@ public class XpQueryService {
     private final StreakRepository streakRepository;
     private final StudentRepository studentRepository;
 
-    public XpQueryService(XpTransactionRepository xpTransactionRepository, StreakRepository streakRepository, StudentRepository studentRepository) {
+    public XpQueryService(XpTransactionRepository xpTransactionRepository, StreakRepository streakRepository,
+            StudentRepository studentRepository) {
         this.xpTransactionRepository = xpTransactionRepository;
         this.streakRepository = streakRepository;
         this.studentRepository = studentRepository;
@@ -37,14 +38,14 @@ public class XpQueryService {
 
     public Map<String, Integer> getXpSummary(String regNo) {
         Student student = studentRepository.findByRegNo(regNo)
-            .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Student not found"));
 
         Map<String, Integer> summary = new HashMap<>();
         summary.put("totalXp", student.getTotalXp());
         summary.put("groupXp", student.getGroupXp());
         summary.put("individualXp", student.getIndividualXp());
         summary.put("mustXp", student.getMustXp());
-        
+
         return summary;
     }
 

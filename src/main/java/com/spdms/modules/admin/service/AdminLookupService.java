@@ -1,18 +1,18 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.repository.ActivityAssignmentRepository;
-import com.spdms.entity.ActivityAssignment;
-import com.spdms.repository.SectionRepository;
-import com.spdms.repository.AcademicYearRepository;
-import com.spdms.repository.YearRepository;
-import com.spdms.repository.SemesterRepository;
-import com.spdms.repository.GenderRepository;
-import com.spdms.entity.AcademicYear;
-import com.spdms.entity.Year;
-import com.spdms.entity.Semester;
-import com.spdms.entity.Gender;
-import com.spdms.entity.Section;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.repository.ActivityAssignmentRepository;
+import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.repository.SectionRepository;
+import com.pragatix.repository.AcademicYearRepository;
+import com.pragatix.repository.YearRepository;
+import com.pragatix.repository.SemesterRepository;
+import com.pragatix.repository.GenderRepository;
+import com.pragatix.entity.AcademicYear;
+import com.pragatix.entity.Year;
+import com.pragatix.entity.Semester;
+import com.pragatix.entity.Gender;
+import com.pragatix.entity.Section;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @Service
 public class AdminLookupService {
@@ -36,7 +36,9 @@ public class AdminLookupService {
     private final SemesterRepository semesterRepository;
     private final YearRepository yearRepository;
 
-    public AdminLookupService(AcademicYearRepository academicYearRepository, ActivityAssignmentRepository activityAssignmentRepository, GenderRepository genderRepository, SectionRepository sectionRepository, SemesterRepository semesterRepository, YearRepository yearRepository) {
+    public AdminLookupService(AcademicYearRepository academicYearRepository,
+            ActivityAssignmentRepository activityAssignmentRepository, GenderRepository genderRepository,
+            SectionRepository sectionRepository, SemesterRepository semesterRepository, YearRepository yearRepository) {
         this.academicYearRepository = academicYearRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.genderRepository = genderRepository;

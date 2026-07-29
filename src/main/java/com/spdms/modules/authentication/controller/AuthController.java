@@ -1,11 +1,11 @@
-package com.spdms.modules.authentication.controller;
-import com.spdms.modules.authentication.service.AuthService;
+package com.pragatix.modules.authentication.controller;
 
+import com.pragatix.modules.authentication.service.AuthService;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.authentication.dto.response.AuthResponse;
-import com.spdms.modules.authentication.dto.request.LoginRequest;
-import com.spdms.modules.authentication.dto.request.StudentLoginRequest;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.authentication.dto.response.AuthResponse;
+import com.pragatix.modules.authentication.dto.request.LoginRequest;
+import com.pragatix.modules.authentication.dto.request.StudentLoginRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  * This class handles all incoming HTTP requests for login.
  * It is separated from business logic (which lives in AuthService) to follow the Single Responsibility Principle.
  */
-import com.spdms.modules.authentication.repository.UserRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/v1/auth")

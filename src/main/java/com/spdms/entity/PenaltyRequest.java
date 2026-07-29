@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -60,7 +60,8 @@ public class PenaltyRequest {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public PenaltyRequest() {}
+    public PenaltyRequest() {
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -76,68 +77,193 @@ public class PenaltyRequest {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public User getTeacher() { return teacher; }
-    public void setTeacher(User teacher) { this.teacher = teacher; }
+    public Student getStudent() {
+        return student;
+    }
 
-    public String getTeacherName() { return teacherName; }
-    public void setTeacherName(String teacherName) { this.teacherName = teacherName; }
+    public void setStudent(Student student) {
+        this.student = student;
+    }
 
-    public User getCc() { return cc; }
-    public void setCc(User cc) { this.cc = cc; }
+    public User getTeacher() {
+        return teacher;
+    }
 
-    public String getCcName() { return ccName; }
-    public void setCcName(String ccName) { this.ccName = ccName; }
+    public void setTeacher(User teacher) {
+        this.teacher = teacher;
+    }
 
-    public Activity getActivity() { return activity; }
-    public void setActivity(Activity activity) { this.activity = activity; }
+    public String getTeacherName() {
+        return teacherName;
+    }
 
-    public String getActivityName() { return activityName; }
-    public void setActivityName(String activityName) { this.activityName = activityName; }
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
+    }
 
-    public int getPenaltyXP() { return penaltyXP; }
-    public void setPenaltyXP(int penaltyXP) { this.penaltyXP = penaltyXP; }
+    public User getCc() {
+        return cc;
+    }
 
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
+    public void setCc(User cc) {
+        this.cc = cc;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getCcName() {
+        return ccName;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setCcName(String ccName) {
+        this.ccName = ccName;
+    }
 
-    public LocalDateTime getApprovedAt() { return approvedAt; }
-    public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
+    public Activity getActivity() {
+        return activity;
+    }
 
-    public String getApprovedBy() { return approvedBy; }
-    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
+    public void setActivity(Activity activity) {
+        this.activity = activity;
+    }
 
-    public String getRejectedReason() { return rejectedReason; }
-    public void setRejectedReason(String rejectedReason) { this.rejectedReason = rejectedReason; }
+    public String getActivityName() {
+        return activityName;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public int getPenaltyXP() {
+        return penaltyXP;
+    }
+
+    public void setPenaltyXP(int penaltyXP) {
+        this.penaltyXP = penaltyXP;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+
+    public String getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(String approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private final PenaltyRequest p = new PenaltyRequest();
-        public Builder student(Student v) { p.student = v; return this; }
-        public Builder teacher(User v) { p.teacher = v; return this; }
-        public Builder teacherName(String v) { p.teacherName = v; return this; }
-        public Builder cc(User v) { p.cc = v; return this; }
-        public Builder ccName(String v) { p.ccName = v; return this; }
-        public Builder activity(Activity v) { p.activity = v; return this; }
-        public Builder activityName(String v) { p.activityName = v; return this; }
-        public Builder penaltyXP(int v) { p.penaltyXP = v; return this; }
-        public Builder reason(String v) { p.reason = v; return this; }
-        public Builder status(String v) { p.status = v; return this; }
-        public PenaltyRequest build() { return p; }
+
+        public Builder student(Student v) {
+            p.student = v;
+            return this;
+        }
+
+        public Builder teacher(User v) {
+            p.teacher = v;
+            return this;
+        }
+
+        public Builder teacherName(String v) {
+            p.teacherName = v;
+            return this;
+        }
+
+        public Builder cc(User v) {
+            p.cc = v;
+            return this;
+        }
+
+        public Builder ccName(String v) {
+            p.ccName = v;
+            return this;
+        }
+
+        public Builder activity(Activity v) {
+            p.activity = v;
+            return this;
+        }
+
+        public Builder activityName(String v) {
+            p.activityName = v;
+            return this;
+        }
+
+        public Builder penaltyXP(int v) {
+            p.penaltyXP = v;
+            return this;
+        }
+
+        public Builder reason(String v) {
+            p.reason = v;
+            return this;
+        }
+
+        public Builder status(String v) {
+            p.status = v;
+            return this;
+        }
+
+        public PenaltyRequest build() {
+            return p;
+        }
     }
 }

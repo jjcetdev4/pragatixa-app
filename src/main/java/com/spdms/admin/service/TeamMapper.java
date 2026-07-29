@@ -1,17 +1,17 @@
-package com.spdms.admin.service;
+package com.pragatix.admin.service;
 
-import com.spdms.dto.TeamRemovalRequestDto;
-import com.spdms.dto.TeamResponse;
-import com.spdms.entity.Student;
-import com.spdms.entity.Team;
-import com.spdms.entity.TeamRemovalRequest;
-import com.spdms.modules.student.dto.response.StudentResponse;
+import com.pragatix.dto.TeamRemovalRequestDto;
+import com.pragatix.dto.TeamResponse;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.Team;
+import com.pragatix.entity.TeamRemovalRequest;
+import com.pragatix.modules.student.dto.response.StudentResponse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import com.spdms.repository.StageTeamRepository;
-import com.spdms.entity.StageTeam;
+import com.pragatix.repository.StageTeamRepository;
+import com.pragatix.entity.StageTeam;
 
 @Component
 public class TeamMapper {
@@ -51,10 +51,16 @@ public class TeamMapper {
     }
 
     private String resolveTeamRole(Student student) {
-        if (student.getTeam() == null) return "MEMBER";
-        
+        if (student.getTeam() == null)
+            return "MEMBER";
+
         if (student.getTeam().getCaptain() != null && student.getTeam().getCaptain().getId().equals(student.getId())) {
             return "CAPTAIN";
+        }
+
+        if (student.getTeam().getViceCaptain() != null
+                && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+            return "VICE_CAPTAIN";
         }
 
         List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
@@ -63,7 +69,7 @@ public class TeamMapper {
                 return "VICE_CAPTAIN";
             }
         }
-        
+
         return "MEMBER";
     }
 
@@ -75,11 +81,22 @@ public class TeamMapper {
         String captainId = team.getCaptain() != null ? team.getCaptain().getRegNo() : null;
         String captainName = team.getCaptain() != null ? team.getCaptain().getFullName() : null;
 
+        String viceCaptainId = team.getViceCaptain() != null ? team.getViceCaptain().getRegNo() : null;
+        String viceCaptainName = team.getViceCaptain() != null ? team.getViceCaptain().getFullName() : null;
+
         if (captainId != null) {
             boolean captainInMembers = studentResponses.stream()
                     .anyMatch(s -> s.getRegNo().equals(captainId));
             if (!captainInMembers) {
                 studentResponses.add(0, toStudentResponse(team.getCaptain()));
+            }
+        }
+
+        if (viceCaptainId != null) {
+            boolean viceCaptainInMembers = studentResponses.stream()
+                    .anyMatch(s -> s.getRegNo().equals(viceCaptainId));
+            if (!viceCaptainInMembers) {
+                studentResponses.add(toStudentResponse(team.getViceCaptain()));
             }
         }
 
@@ -89,6 +106,8 @@ public class TeamMapper {
                 team.getSize(),
                 captainId,
                 captainName,
+                viceCaptainId,
+                viceCaptainName,
                 studentResponses);
 
         // Data Resolution Priority
@@ -99,9 +118,9 @@ public class TeamMapper {
         Student representative = team.getCaptain();
         if (representative == null && !team.getMembers().isEmpty()) {
             representative = team.getMembers().stream()
-                .filter(Student::isActive)
-                .findFirst()
-                .orElse(team.getMembers().iterator().next());
+                    .filter(Student::isActive)
+                    .findFirst()
+                    .orElse(team.getMembers().iterator().next());
         }
 
         // Department
@@ -156,7 +175,6 @@ public class TeamMapper {
                 req.getCaptain().getFullName(),
                 req.getReason(),
                 req.getStatus(),
-                req.getCreatedAt()
-        );
+                req.getCreatedAt());
     }
 }

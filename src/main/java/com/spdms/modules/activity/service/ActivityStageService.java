@@ -1,17 +1,17 @@
-package com.spdms.modules.activity.service;
+package com.pragatix.modules.activity.service;
 
-import com.spdms.modules.activity.dto.request.ActivityStageRequest;
-import com.spdms.modules.activity.dto.response.ActivityStageResponse;
-import com.spdms.entity.Activity;
-import com.spdms.entity.ActivityStage;
-import com.spdms.entity.ActivitySubgroup;
-import com.spdms.modules.activity.mapper.ActivityStageMapper;
-import com.spdms.modules.activity.repository.ActivityRepository;
-import com.spdms.modules.activity.repository.ActivityStageRepository;
-import com.spdms.modules.activity.repository.ActivitySubgroupRepository;
-import com.spdms.repository.DisciplineLogRepository;
-import com.spdms.modules.student.repository.StudentRepository;
-import com.spdms.entity.Student;
+import com.pragatix.modules.activity.dto.request.ActivityStageRequest;
+import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
+import com.pragatix.entity.Activity;
+import com.pragatix.entity.ActivityStage;
+import com.pragatix.entity.ActivitySubgroup;
+import com.pragatix.modules.activity.mapper.ActivityStageMapper;
+import com.pragatix.modules.activity.repository.ActivityRepository;
+import com.pragatix.modules.activity.repository.ActivityStageRepository;
+import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
+import com.pragatix.repository.DisciplineLogRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.entity.Student;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,21 +32,23 @@ public class ActivityStageService {
     private final DisciplineLogRepository disciplineLogRepository;
     private final ActivityStageMapper activityStageMapper;
     private final StudentRepository studentRepository;
-    private final com.spdms.repository.StageTeamRepository stageTeamRepository;
-    private final com.spdms.repository.ActivityAssignmentRepository assignmentRepo;
-    private final com.spdms.modules.student.repository.StudentActivityXpRepository xpRepo;
-    private final com.spdms.repository.XpTransactionRepository txRepo;
+    private final com.pragatix.repository.StageTeamRepository stageTeamRepository;
+    private final com.pragatix.repository.ActivityAssignmentRepository assignmentRepo;
+    private final com.pragatix.modules.student.repository.StudentActivityXpRepository xpRepo;
+    private final com.pragatix.repository.XpTransactionRepository txRepo;
+    private final com.pragatix.modules.authentication.repository.UserRepository userRepository;
 
     public ActivityStageService(ActivityStageRepository activityStageRepository,
-                                ActivitySubgroupRepository activitySubgroupRepository,
-                                ActivityRepository activityRepository,
-                                DisciplineLogRepository disciplineLogRepository,
-                                ActivityStageMapper activityStageMapper,
-                                StudentRepository studentRepository,
-                                com.spdms.repository.StageTeamRepository stageTeamRepository,
-                                com.spdms.repository.ActivityAssignmentRepository assignmentRepo,
-                                com.spdms.modules.student.repository.StudentActivityXpRepository xpRepo,
-                                com.spdms.repository.XpTransactionRepository txRepo) {
+            ActivitySubgroupRepository activitySubgroupRepository,
+            ActivityRepository activityRepository,
+            DisciplineLogRepository disciplineLogRepository,
+            ActivityStageMapper activityStageMapper,
+            StudentRepository studentRepository,
+            com.pragatix.repository.StageTeamRepository stageTeamRepository,
+            com.pragatix.repository.ActivityAssignmentRepository assignmentRepo,
+            com.pragatix.modules.student.repository.StudentActivityXpRepository xpRepo,
+            com.pragatix.repository.XpTransactionRepository txRepo,
+            com.pragatix.modules.authentication.repository.UserRepository userRepository) {
         this.activityStageRepository = activityStageRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityRepository = activityRepository;
@@ -57,6 +59,7 @@ public class ActivityStageService {
         this.assignmentRepo = assignmentRepo;
         this.xpRepo = xpRepo;
         this.txRepo = txRepo;
+        this.userRepository = userRepository;
     }
 
     @PostConstruct
@@ -67,28 +70,31 @@ public class ActivityStageService {
         for (ActivityStage stage : allStages) {
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
             Map<String, ActivitySubgroup> uniqueCategories = new HashMap<>();
-            
+
             for (ActivitySubgroup sub : subgroups) {
                 String cat = sub.getCategory() != null ? sub.getCategory().toLowerCase() : sub.getName().toLowerCase();
-                
+
                 // If it's a known category
                 if (cat.contains("must") || cat.contains("individual") || cat.contains("group")) {
-                    String baseCat = cat.contains("must") ? "must" : (cat.contains("individual") ? "individual" : "group");
-                    
+                    String baseCat = cat.contains("must") ? "must"
+                            : (cat.contains("individual") ? "individual" : "group");
+
                     if (uniqueCategories.containsKey(baseCat)) {
                         // Found a duplicate! Delete it if it has no activities.
                         List<Activity> activities = activityRepository.findBySubgroupId(sub.getId());
                         if (activities.isEmpty()) {
-                            log.info("Deleting empty duplicate subgroup: {} for stage {}", sub.getName(), stage.getName());
+                            log.info("Deleting empty duplicate subgroup: {} for stage {}", sub.getName(),
+                                    stage.getName());
                             activitySubgroupRepository.delete(sub);
                         } else {
                             // If it has activities, move them to the primary subgroup, then delete
                             ActivitySubgroup primary = uniqueCategories.get(baseCat);
-                            for(Activity act : activities) {
+                            for (Activity act : activities) {
                                 act.setSubgroup(primary);
                                 activityRepository.save(act);
                             }
-                            log.info("Merged activities and deleting duplicate subgroup: {} for stage {}", sub.getName(), stage.getName());
+                            log.info("Merged activities and deleting duplicate subgroup: {} for stage {}",
+                                    sub.getName(), stage.getName());
                             activitySubgroupRepository.delete(sub);
                         }
                     } else {
@@ -104,56 +110,102 @@ public class ActivityStageService {
     }
 
     @Transactional
-    public List<ActivityStageResponse> getAllStages() {
-        List<ActivityStage> stages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
+    public List<ActivityStageResponse> getAllStages(com.pragatix.enums.AcademicYear requestedYear) {
+        System.out.println("Selected Academic Year : " + requestedYear);
+
+        com.pragatix.enums.AcademicYear effectiveYear = requestedYear;
+
+        try {
+            String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                    .getAuthentication().getName();
+            com.pragatix.entity.User user = userRepository.findByUsername(username).orElse(null);
+
+            if (user != null) {
+                boolean isSuperAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
+                boolean isAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
+                if (!isSuperAdmin && isAdmin) {
+                    effectiveYear = user.getAcademicYear();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not determine user for filtering stages", e);
+        }
+
+        List<ActivityStage> allStages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
+        System.out.println("Rows Before Filter : " + allStages.size());
+
+        final com.pragatix.enums.AcademicYear finalEffectiveYear = effectiveYear;
+        List<ActivityStage> stages;
+        if (finalEffectiveYear != null) {
+            stages = activityStageRepository.findByAcademicYearOrderByDisplayOrderAsc(finalEffectiveYear);
+        } else {
+            stages = allStages;
+        }
+        System.out.println("Rows After Academic Year Filter : " + stages.size());
 
         List<ActivityStageResponse> responses = stages.stream().map(stage -> {
 
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
-            
+
             // Map subgroups
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
-            List<com.spdms.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
-                com.spdms.modules.activity.dto.response.ActivitySubgroupResponse subMap = new com.spdms.modules.activity.dto.response.ActivitySubgroupResponse();
-                subMap.setId(sub.getId());
-                subMap.setName(sub.getName());
-                subMap.setThreshold(sub.getThreshold());
-                subMap.setAssignedFacultyId(sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getId() : null);
-                subMap.setAssignedFacultyName(sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getFullName() : null);
-                
-                // Fetch and attach missing nested activity list
-                List<Activity> activities = activityRepository.findBySubgroupId(sub.getId());
-                List<com.spdms.modules.activity.dto.response.ActivityResponse> actMaps = activities.stream().map(act -> {
-                    com.spdms.modules.activity.dto.response.ActivityResponse actMap = new com.spdms.modules.activity.dto.response.ActivityResponse();
-                    actMap.setActivityId(act.getId());
-                    actMap.setActivityName(act.getActivityName() != null ? act.getActivityName() : act.getName());
-                    actMap.setDescription(act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
-                    int rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp() : act.getMaxPoints();
-                    actMap.setRewardXp(rewardXp);
-                    actMap.setFrequency(act.getFrequency() != null ? act.getFrequency() : act.getAwardFrequency());
-                    actMap.setEvidence(act.getEvidence());
-                    
-                    String facultyName = null;
-                    Long facultyId = null;
-                    if (sub.getAssignedFaculty() != null) {
-                        facultyName = sub.getAssignedFaculty().getFullName();
-                        facultyId = sub.getAssignedFaculty().getId();
-                    }
-                    actMap.setFacultyName(facultyName);
-                    actMap.setFacultyId(facultyId);
-                    
-                    return actMap;
-                }).collect(Collectors.toList());
-                
-                subMap.setActivities(actMaps);
-                return subMap;
-            }).collect(Collectors.toList());
-            
+            List<com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream()
+                    .map(sub -> {
+                        com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse subMap = new com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse();
+                        subMap.setId(sub.getId());
+                        subMap.setName(sub.getName());
+                        subMap.setThreshold(sub.getThreshold());
+                        subMap.setAssignedFacultyId(
+                                sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getId() : null);
+                        subMap.setAssignedFacultyName(
+                                sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getFullName() : null);
+
+                        // Fetch and attach missing nested activity list
+                        List<Activity> activities;
+                        if (finalEffectiveYear != null) {
+                            activities = activityRepository.findBySubgroupIdAndAcademicYear(sub.getId(),
+                                    finalEffectiveYear);
+                        } else {
+                            activities = activityRepository.findBySubgroupId(sub.getId());
+                        }
+                        List<com.pragatix.modules.activity.dto.response.ActivityResponse> actMaps = activities.stream()
+                                .map(act -> {
+                                    com.pragatix.modules.activity.dto.response.ActivityResponse actMap = new com.pragatix.modules.activity.dto.response.ActivityResponse();
+                                    actMap.setActivityId(act.getId());
+                                    actMap.setActivityName(
+                                            act.getActivityName() != null ? act.getActivityName() : act.getName());
+                                    actMap.setDescription(
+                                            act.getActivityDescription() != null ? act.getActivityDescription()
+                                                    : act.getDescription());
+                                    int rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp()
+                                            : act.getMaxPoints();
+                                    actMap.setRewardXp(rewardXp);
+                                    actMap.setFrequency(
+                                            act.getFrequency() != null ? act.getFrequency() : act.getAwardFrequency());
+                                    actMap.setEvidence(act.getEvidence());
+
+                                    String facultyName = null;
+                                    Long facultyId = null;
+                                    if (sub.getAssignedFaculty() != null) {
+                                        facultyName = sub.getAssignedFaculty().getFullName();
+                                        facultyId = sub.getAssignedFaculty().getId();
+                                    }
+                                    actMap.setFacultyName(facultyName);
+                                    actMap.setFacultyId(facultyId);
+
+                                    return actMap;
+                                }).collect(Collectors.toList());
+
+                        subMap.setActivities(actMaps);
+                        return subMap;
+                    }).collect(Collectors.toList());
+
             response.setSubgroups(subMaps);
 
             return response;
         }).collect(Collectors.toList());
 
+        System.out.println("Returned : " + responses.size());
         return responses;
     }
 
@@ -162,68 +214,140 @@ public class ActivityStageService {
         return activityStageRepository.findById(id).map(stage -> {
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
-            List<com.spdms.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream().map(sub -> {
-                com.spdms.modules.activity.dto.response.ActivitySubgroupResponse subMap = new com.spdms.modules.activity.dto.response.ActivitySubgroupResponse();
-                subMap.setId(sub.getId());
-                subMap.setName(sub.getName());
-                subMap.setThreshold(sub.getThreshold());
-                subMap.setAssignedFacultyId(sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getId() : null);
-                subMap.setAssignedFacultyName(sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getFullName() : null);
-                
-                // Fetch and attach missing nested activity list
-                List<Activity> activities = activityRepository.findBySubgroupId(sub.getId());
-                List<com.spdms.modules.activity.dto.response.ActivityResponse> actMaps = activities.stream().map(act -> {
-                    com.spdms.modules.activity.dto.response.ActivityResponse actMap = new com.spdms.modules.activity.dto.response.ActivityResponse();
-                    actMap.setActivityId(act.getId());
-                    actMap.setActivityName(act.getActivityName() != null ? act.getActivityName() : act.getName());
-                    actMap.setDescription(act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
-                    int rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp() : act.getMaxPoints();
-                    actMap.setRewardXp(rewardXp);
-                    actMap.setFrequency(act.getFrequency() != null ? act.getFrequency() : act.getAwardFrequency());
-                    actMap.setEvidence(act.getEvidence());
-                    
-                    String facultyName = null;
-                    Long facultyId = null;
-                    if (sub.getAssignedFaculty() != null) {
-                        facultyName = sub.getAssignedFaculty().getFullName();
-                        facultyId = sub.getAssignedFaculty().getId();
-                    }
-                    actMap.setFacultyName(facultyName);
-                    actMap.setFacultyId(facultyId);
-                    
-                    return actMap;
-                }).collect(Collectors.toList());
-                
-                subMap.setActivities(actMaps);
-                return subMap;
-            }).collect(Collectors.toList());
+            List<com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream()
+                    .map(sub -> {
+                        com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse subMap = new com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse();
+                        subMap.setId(sub.getId());
+                        subMap.setName(sub.getName());
+                        subMap.setThreshold(sub.getThreshold());
+                        subMap.setAssignedFacultyId(
+                                sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getId() : null);
+                        subMap.setAssignedFacultyName(
+                                sub.getAssignedFaculty() != null ? sub.getAssignedFaculty().getFullName() : null);
+
+                        // Fetch and attach missing nested activity list
+                        List<Activity> activities = activityRepository.findBySubgroupId(sub.getId());
+                        List<com.pragatix.modules.activity.dto.response.ActivityResponse> actMaps = activities.stream()
+                                .map(act -> {
+                                    com.pragatix.modules.activity.dto.response.ActivityResponse actMap = new com.pragatix.modules.activity.dto.response.ActivityResponse();
+                                    actMap.setActivityId(act.getId());
+                                    actMap.setActivityName(
+                                            act.getActivityName() != null ? act.getActivityName() : act.getName());
+                                    actMap.setDescription(
+                                            act.getActivityDescription() != null ? act.getActivityDescription()
+                                                    : act.getDescription());
+                                    int rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp()
+                                            : act.getMaxPoints();
+                                    actMap.setRewardXp(rewardXp);
+                                    actMap.setFrequency(
+                                            act.getFrequency() != null ? act.getFrequency() : act.getAwardFrequency());
+                                    actMap.setEvidence(act.getEvidence());
+
+                                    String facultyName = null;
+                                    Long facultyId = null;
+                                    if (sub.getAssignedFaculty() != null) {
+                                        facultyName = sub.getAssignedFaculty().getFullName();
+                                        facultyId = sub.getAssignedFaculty().getId();
+                                    }
+                                    actMap.setFacultyName(facultyName);
+                                    actMap.setFacultyId(facultyId);
+
+                                    return actMap;
+                                }).collect(Collectors.toList());
+
+                        subMap.setActivities(actMaps);
+                        return subMap;
+                    }).collect(Collectors.toList());
             response.setSubgroups(subMaps);
             return response;
         });
     }
 
+    private com.pragatix.enums.AcademicYear resolveRoleBasedAcademicYear(
+            com.pragatix.enums.AcademicYear requestedYear) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        com.pragatix.entity.User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found."));
+
+        boolean isSuperAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
+        boolean isAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
+
+        if (isSuperAdmin) {
+            if (requestedYear == null) {
+                throw new IllegalArgumentException("Academic Year is required for Super Admin.");
+            }
+            return requestedYear;
+        } else if (isAdmin) {
+            if (user.getAcademicYear() == null) {
+                throw new IllegalArgumentException("Admin account is not assigned to any Academic Year.");
+            }
+            return user.getAcademicYear();
+        }
+
+        // Fallback
+        if (requestedYear != null)
+            return requestedYear;
+        throw new IllegalArgumentException("Role not authorized or missing Academic Year.");
+    }
+
     @Transactional
     public ActivityStageResponse createStage(ActivityStageRequest request) {
+        System.out.println("Incoming Academic Year: " + request.getAcademicYear());
+        System.out.println("Incoming Stage Name: " + request.getName());
+
+        com.pragatix.enums.AcademicYear resolvedYear = resolveRoleBasedAcademicYear(request.getAcademicYear());
+
         validateStage(request, null);
-        
+
         ActivityStage stage = activityStageMapper.toEntity(request);
+        stage.setAcademicYear(resolvedYear); // explicitly set based on role
+
+        System.out.println("Stage Name Before Save: " + stage.getName());
+        System.out.println("Academic Year Before Save: " + stage.getAcademicYear());
+
         ActivityStage saved = activityStageRepository.save(stage);
-        
+
+        // Reload to verify
+        ActivityStage reloaded = activityStageRepository.findById(saved.getId()).orElse(saved);
+        System.out.println("Stage ID After Save: " + reloaded.getId());
+        System.out.println("Stage Name After Save: " + reloaded.getName());
+        System.out.println("Academic Year After Save: " + reloaded.getAcademicYear());
+
         ensureMandatorySubgroups(saved);
-        
+
         return activityStageMapper.toResponse(saved);
     }
 
     @Transactional
     public ActivityStageResponse updateStage(Long id, ActivityStageRequest request) {
         ActivityStage stage = activityStageRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Stage not found"));
-        
+                .orElseThrow(() -> new java.util.NoSuchElementException("Stage not found"));
+
+        com.pragatix.enums.AcademicYear resolvedYear = resolveRoleBasedAcademicYear(request.getAcademicYear());
+
+        System.out.println("Incoming Stage ID : " + id);
+        System.out.println("Incoming Academic Year : " + request.getAcademicYear());
+        System.out.println("Resolved Academic Year : " + resolvedYear);
+        System.out.println("Existing Academic Year : " + stage.getAcademicYear());
+
         validateStage(request, id);
-        
+
         activityStageMapper.updateEntity(request, stage);
+        stage.setAcademicYear(resolvedYear);
+
+        System.out.println("Stage Year Before Save : " + stage.getAcademicYear());
         ActivityStage saved = activityStageRepository.save(stage);
-        
+        System.out.println("Stage Year After Save : " + saved.getAcademicYear());
+
+        if (resolvedYear != null) {
+            List<Activity> activities = activityRepository.findByStageId(id);
+            for (Activity act : activities) {
+                act.setAcademicYear(resolvedYear);
+                activityRepository.save(act);
+            }
+        }
+
         return activityStageMapper.toResponse(saved);
     }
 
@@ -232,42 +356,46 @@ public class ActivityStageService {
         if (!activityStageRepository.existsById(id)) {
             throw new NoSuchElementException("Stage not found");
         }
-        
+
         // 0. Delete StageTeams referencing this stage
-        List<com.spdms.entity.StageTeam> stageTeams = stageTeamRepository.findByStageId(id);
+        List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByStageId(id);
         stageTeamRepository.deleteAll(stageTeams);
-        
+
         List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(id);
-        
-        // 1. Nullify references in DisciplineLog for each subgroup and activity of this stage
+
+        // 1. Nullify references in DisciplineLog for each subgroup and activity of this
+        // stage
         for (ActivitySubgroup sub : subgroups) {
             disciplineLogRepository.nullifySubgroupReferences(sub.getId());
         }
-        
+
         List<Activity> activities = activityRepository.findByStageId(id);
-        
+
         // Resolve Activity Dependencies
         for (Activity act : activities) {
             disciplineLogRepository.nullifyActivityReferences(act.getId());
             xpRepo.deleteByActivityId(act.getId());
-            
-            // For XpTransaction, there is no deleteByActivityId out of the box, we may need to iterate or fetch
-            List<com.spdms.entity.XpTransaction> txs = txRepo.findAll().stream().filter(t -> t.getActivity() != null && t.getActivity().getId().equals(act.getId())).collect(Collectors.toList());
+
+            // For XpTransaction, there is no deleteByActivityId out of the box, we may need
+            // to iterate or fetch
+            List<com.pragatix.entity.XpTransaction> txs = txRepo.findAll().stream()
+                    .filter(t -> t.getActivity() != null && t.getActivity().getId().equals(act.getId()))
+                    .collect(Collectors.toList());
             txRepo.deleteAll(txs);
-            
-            List<com.spdms.entity.ActivityAssignment> assignments = assignmentRepo.findByActivityId(act.getId());
+
+            List<com.pragatix.entity.ActivityAssignment> assignments = assignmentRepo.findByActivityId(act.getId());
             assignmentRepo.deleteAll(assignments);
         }
-        
+
         // 2. Delete all Activity records referencing this stage
         activityRepository.deleteAll(activities);
-        
+
         // 3. Delete subgroups
         activitySubgroupRepository.deleteAll(subgroups);
-        
+
         // 4. Delete the stage itself
         activityStageRepository.deleteById(id);
-        
+
         log.debug("Admin deleted stage and its subgroups, activities, and teams: {}", id);
     }
 
@@ -275,7 +403,7 @@ public class ActivityStageService {
         if (request.getExpectedXp() != null && request.getExpectedXp() < 0) {
             throw new IllegalArgumentException("Expected XP cannot be negative");
         }
-        
+
         if (existingId == null) {
             if (activityStageRepository.existsByName(request.getName())) {
                 throw new IllegalArgumentException("Stage name already exists");
@@ -285,14 +413,15 @@ public class ActivityStageService {
                 throw new IllegalArgumentException("Stage name already exists");
             }
         }
-        
+
         List<ActivityStage> allStages = activityStageRepository.findAll();
         for (ActivityStage other : allStages) {
             if (existingId != null && other.getId().equals(existingId)) {
                 continue;
             }
             if (other.getDisplayOrder() == request.getDisplayOrder()) {
-                throw new IllegalArgumentException("Display order " + request.getDisplayOrder() + " is already used by stage: " + other.getName());
+                throw new IllegalArgumentException(
+                        "Display order " + request.getDisplayOrder() + " is already used by stage: " + other.getName());
             }
         }
     }
@@ -304,7 +433,7 @@ public class ActivityStageService {
 
         List<Student> allStudents = studentRepository.findByActiveTrue();
         int expectedXp = stage.getExpectedXp() != null ? stage.getExpectedXp() : 0;
-        
+
         long reachedTarget = 0;
         long totalXpAll = 0;
 
@@ -334,8 +463,10 @@ public class ActivityStageService {
 
     public void ensureMandatorySubgroups(ActivityStage stage) {
         List<ActivitySubgroup> existing = activitySubgroupRepository.findByStageId(stage.getId());
-        List<String> categories = existing.stream().map(sub -> sub.getCategory() != null ? sub.getCategory().toLowerCase() : "").collect(Collectors.toList());
-        
+        List<String> categories = existing.stream()
+                .map(sub -> sub.getCategory() != null ? sub.getCategory().toLowerCase() : "")
+                .collect(Collectors.toList());
+
         if (!categories.contains("must")) {
             ActivitySubgroup must = new ActivitySubgroup();
             must.setStage(stage);

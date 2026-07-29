@@ -1,4 +1,4 @@
-package com.spdms.modules.student.dto.response;
+package com.pragatix.modules.student.dto.response;
 
 public class StudentSearchDTO {
     private Long id;
@@ -12,35 +12,86 @@ public class StudentSearchDTO {
     private Long teamId;
     private int currentStage;
 
-    public StudentSearchDTO() {}
+    public StudentSearchDTO() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getRegNo() { return regNo; }
-    public void setRegNo(String regNo) { this.regNo = regNo; }
+    public String getFullName() {
+        return fullName;
+    }
 
-    public String getSprNo() { return sprNo; }
-    public void setSprNo(String sprNo) { this.sprNo = sprNo; }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-    public String getDepartmentName() { return departmentName; }
-    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+    public String getRegNo() {
+        return regNo;
+    }
 
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
+    }
 
-    public String getSection() { return section; }
-    public void setSection(String section) { this.section = section; }
+    public String getSprNo() {
+        return sprNo;
+    }
 
-    public String getTeamName() { return teamName; }
-    public void setTeamName(String teamName) { this.teamName = teamName; }
+    public void setSprNo(String sprNo) {
+        this.sprNo = sprNo;
+    }
 
-    public Long getTeamId() { return teamId; }
-    public void setTeamId(Long teamId) { this.teamId = teamId; }
+    public String getDepartmentName() {
+        return departmentName;
+    }
 
-    public int getCurrentStage() { return currentStage; }
-    public void setCurrentStage(int currentStage) { this.currentStage = currentStage; }
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public String getSection() {
+        return section;
+    }
+
+    public void setSection(String section) {
+        this.section = section;
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
+    public void setTeamName(String teamName) {
+        this.teamName = teamName;
+    }
+
+    public Long getTeamId() {
+        return teamId;
+    }
+
+    public void setTeamId(Long teamId) {
+        this.teamId = teamId;
+    }
+
+    public int getCurrentStage() {
+        return currentStage;
+    }
+
+    public void setCurrentStage(int currentStage) {
+        this.currentStage = currentStage;
+    }
 }

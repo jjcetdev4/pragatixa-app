@@ -1,9 +1,9 @@
-package com.spdms.student;
+package com.pragatix.student;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.dto.XpTransactionDto;
-import com.spdms.entity.XpTransaction;
-import com.spdms.dto.StreakResponse;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.dto.XpTransactionDto;
+import com.pragatix.entity.XpTransaction;
+import com.pragatix.dto.StreakResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +19,10 @@ import java.util.Map;
 public class XpController {
 
     private final XpService xpService;
-    private final com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver;
+    private final com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
-    public XpController(XpService xpService, com.spdms.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
+    public XpController(XpService xpService,
+            com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.xpService = xpService;
         this.studentAuthResolver = studentAuthResolver;
     }
@@ -61,8 +62,7 @@ public class XpController {
                 request.getCategory(),
                 request.getActivityName(),
                 request.getXpPoints(),
-                request.getEvidenceUrl()
-        );
+                request.getEvidenceUrl());
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
@@ -97,8 +97,7 @@ public class XpController {
                 request.getViolationType(),
                 request.getXpPenalty(),
                 appliedBy,
-                request.getDescription()
-        );
+                request.getDescription());
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
@@ -109,17 +108,37 @@ public class XpController {
         private int xpPoints;
         private String evidenceUrl;
 
-        public String getCategory() { return category; }
-        public void setCategory(String category) { this.category = category; }
+        public String getCategory() {
+            return category;
+        }
 
-        public String getActivityName() { return activityName; }
-        public void setActivityName(String activityName) { this.activityName = activityName; }
+        public void setCategory(String category) {
+            this.category = category;
+        }
 
-        public int getXpPoints() { return xpPoints; }
-        public void setXpPoints(int xpPoints) { this.xpPoints = xpPoints; }
+        public String getActivityName() {
+            return activityName;
+        }
 
-        public String getEvidenceUrl() { return evidenceUrl; }
-        public void setEvidenceUrl(String evidenceUrl) { this.evidenceUrl = evidenceUrl; }
+        public void setActivityName(String activityName) {
+            this.activityName = activityName;
+        }
+
+        public int getXpPoints() {
+            return xpPoints;
+        }
+
+        public void setXpPoints(int xpPoints) {
+            this.xpPoints = xpPoints;
+        }
+
+        public String getEvidenceUrl() {
+            return evidenceUrl;
+        }
+
+        public void setEvidenceUrl(String evidenceUrl) {
+            this.evidenceUrl = evidenceUrl;
+        }
     }
 
     public static class LogViolationRequest {
@@ -128,16 +147,36 @@ public class XpController {
         private int xpPenalty;
         private String description;
 
-        public String getRegNo() { return regNo; }
-        public void setRegNo(String regNo) { this.regNo = regNo; }
+        public String getRegNo() {
+            return regNo;
+        }
 
-        public String getViolationType() { return violationType; }
-        public void setViolationType(String violationType) { this.violationType = violationType; }
+        public void setRegNo(String regNo) {
+            this.regNo = regNo;
+        }
 
-        public int getXpPenalty() { return xpPenalty; }
-        public void setXpPenalty(int xpPenalty) { this.xpPenalty = xpPenalty; }
+        public String getViolationType() {
+            return violationType;
+        }
 
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
+        public void setViolationType(String violationType) {
+            this.violationType = violationType;
+        }
+
+        public int getXpPenalty() {
+            return xpPenalty;
+        }
+
+        public void setXpPenalty(int xpPenalty) {
+            this.xpPenalty = xpPenalty;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
     }
 }

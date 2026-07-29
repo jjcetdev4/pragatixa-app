@@ -1,15 +1,15 @@
-package com.spdms.student;
+package com.pragatix.student;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Badge;
-import com.spdms.entity.Level;
-import com.spdms.entity.Student;
-import com.spdms.entity.StudentBadge;
-import com.spdms.modules.student.dto.response.StudentBadgeResponse;
-import com.spdms.repository.BadgeRepository;
-import com.spdms.repository.LevelRepository;
-import com.spdms.modules.student.repository.StudentBadgeRepository;
-import com.spdms.modules.student.repository.StudentRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.Badge;
+import com.pragatix.entity.Level;
+import com.pragatix.entity.Student;
+import com.pragatix.entity.StudentBadge;
+import com.pragatix.modules.student.dto.response.StudentBadgeResponse;
+import com.pragatix.repository.BadgeRepository;
+import com.pragatix.repository.LevelRepository;
+import com.pragatix.modules.student.repository.StudentBadgeRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -25,9 +25,9 @@ public class LevelBadgeService {
     private final StudentRepository studentRepository;
 
     public LevelBadgeService(LevelRepository levelRepository,
-                             BadgeRepository badgeRepository,
-                             StudentBadgeRepository studentBadgeRepository,
-                             StudentRepository studentRepository) {
+            BadgeRepository badgeRepository,
+            StudentBadgeRepository studentBadgeRepository,
+            StudentRepository studentRepository) {
         this.levelRepository = levelRepository;
         this.badgeRepository = badgeRepository;
         this.studentBadgeRepository = studentBadgeRepository;
@@ -77,7 +77,8 @@ public class LevelBadgeService {
         Student student = studentOpt.get();
         Badge badge = badgeOpt.get();
 
-        List<StudentBadge> existingClaims = studentBadgeRepository.findByStudentIdAndBadgeId(student.getId(), badge.getId());
+        List<StudentBadge> existingClaims = studentBadgeRepository.findByStudentIdAndBadgeId(student.getId(),
+                badge.getId());
         for (StudentBadge existingClaim : existingClaims) {
             if ("APPROVED".equalsIgnoreCase(existingClaim.getStatus())) {
                 return ApiResponse.error("You have already earned this badge.");

@@ -1,4 +1,4 @@
-package com.spdms.entity;
+package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -39,9 +39,11 @@ public class StudentActivityXp {
     @Column(name = "awarded_at", nullable = false)
     private LocalDateTime awardedAt;
 
-    public StudentActivityXp() {}
+    public StudentActivityXp() {
+    }
 
-    public StudentActivityXp(Student student, Activity activity, User teacher, ActivityAssignment assignment, int xpAwarded, String remarks, LocalDateTime awardedAt) {
+    public StudentActivityXp(Student student, Activity activity, User teacher, ActivityAssignment assignment,
+            int xpAwarded, String remarks, LocalDateTime awardedAt) {
         this.student = student;
         this.activity = activity;
         this.teacher = teacher;
@@ -52,7 +54,8 @@ public class StudentActivityXp {
         this.result = xpAwarded >= 0 ? "PASS" : "FAIL";
     }
 
-    public StudentActivityXp(Student student, Activity activity, User teacher, ActivityAssignment assignment, int xpAwarded, String remarks, String result, LocalDateTime awardedAt) {
+    public StudentActivityXp(Student student, Activity activity, User teacher, ActivityAssignment assignment,
+            int xpAwarded, String remarks, String result, LocalDateTime awardedAt) {
         this.student = student;
         this.activity = activity;
         this.teacher = teacher;
@@ -63,30 +66,75 @@ public class StudentActivityXp {
         this.awardedAt = awardedAt;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Activity getActivity() { return activity; }
-    public void setActivity(Activity activity) { this.activity = activity; }
+    public Student getStudent() {
+        return student;
+    }
 
-    public User getTeacher() { return teacher; }
-    public void setTeacher(User teacher) { this.teacher = teacher; }
+    public void setStudent(Student student) {
+        this.student = student;
+    }
 
-    public ActivityAssignment getAssignment() { return assignment; }
-    public void setAssignment(ActivityAssignment assignment) { this.assignment = assignment; }
+    public Activity getActivity() {
+        return activity;
+    }
 
-    public int getXpAwarded() { return xpAwarded; }
-    public void setXpAwarded(int xpAwarded) { this.xpAwarded = xpAwarded; }
+    public void setActivity(Activity activity) {
+        this.activity = activity;
+    }
 
-    public String getRemarks() { return remarks; }
-    public void setRemarks(String remarks) { this.remarks = remarks; }
+    public User getTeacher() {
+        return teacher;
+    }
 
-    public String getResult() { return result != null ? result : "PASS"; }
-    public void setResult(String result) { this.result = result; }
+    public void setTeacher(User teacher) {
+        this.teacher = teacher;
+    }
 
-    public LocalDateTime getAwardedAt() { return awardedAt; }
-    public void setAwardedAt(LocalDateTime awardedAt) { this.awardedAt = awardedAt; }
+    public ActivityAssignment getAssignment() {
+        return assignment;
+    }
+
+    public void setAssignment(ActivityAssignment assignment) {
+        this.assignment = assignment;
+    }
+
+    public int getXpAwarded() {
+        return xpAwarded;
+    }
+
+    public void setXpAwarded(int xpAwarded) {
+        this.xpAwarded = xpAwarded;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public String getResult() {
+        return result != null ? result : "PASS";
+    }
+
+    public void setResult(String result) {
+        this.result = result;
+    }
+
+    public LocalDateTime getAwardedAt() {
+        return awardedAt;
+    }
+
+    public void setAwardedAt(LocalDateTime awardedAt) {
+        this.awardedAt = awardedAt;
+    }
 }

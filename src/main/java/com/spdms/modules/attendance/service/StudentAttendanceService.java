@@ -1,11 +1,11 @@
-package com.spdms.modules.attendance.service;
+package com.pragatix.modules.attendance.service;
 
-import com.spdms.entity.Attendance;
-import com.spdms.modules.attendance.dto.response.StudentAttendanceHistoryResponse;
-import com.spdms.modules.attendance.dto.response.StudentAttendanceSummaryResponse;
-import com.spdms.modules.attendance.repository.AttendanceRepository;
-import com.spdms.repository.StreakRepository;
-import com.spdms.entity.Streak;
+import com.pragatix.entity.Attendance;
+import com.pragatix.modules.attendance.dto.response.StudentAttendanceHistoryResponse;
+import com.pragatix.modules.attendance.dto.response.StudentAttendanceSummaryResponse;
+import com.pragatix.modules.attendance.repository.AttendanceRepository;
+import com.pragatix.repository.StreakRepository;
+import com.pragatix.entity.Streak;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,14 +25,18 @@ public class StudentAttendanceService {
 
     @Transactional(readOnly = true)
     public StudentAttendanceSummaryResponse getSummary(Long studentId) {
-        long totalPresent = attendanceRepository.countByStudentIdAndStatus(studentId, Attendance.AttendanceStatus.PRESENT);
-        long totalAbsent = attendanceRepository.countByStudentIdAndStatus(studentId, Attendance.AttendanceStatus.ABSENT);
+        long totalPresent = attendanceRepository.countByStudentIdAndStatus(studentId,
+                Attendance.AttendanceStatus.PRESENT);
+        long totalAbsent = attendanceRepository.countByStudentIdAndStatus(studentId,
+                Attendance.AttendanceStatus.ABSENT);
         long totalDays = totalPresent + totalAbsent;
         double overallPercentage = totalDays == 0 ? 0 : ((double) totalPresent / totalDays) * 100.0;
 
         LocalDate now = LocalDate.now();
-        long monthPresent = attendanceRepository.countByStudentIdAndMonthAndYearAndStatus(studentId, now.getMonthValue(), now.getYear(), Attendance.AttendanceStatus.PRESENT);
-        long monthAbsent = attendanceRepository.countByStudentIdAndMonthAndYearAndStatus(studentId, now.getMonthValue(), now.getYear(), Attendance.AttendanceStatus.ABSENT);
+        long monthPresent = attendanceRepository.countByStudentIdAndMonthAndYearAndStatus(studentId,
+                now.getMonthValue(), now.getYear(), Attendance.AttendanceStatus.PRESENT);
+        long monthAbsent = attendanceRepository.countByStudentIdAndMonthAndYearAndStatus(studentId, now.getMonthValue(),
+                now.getYear(), Attendance.AttendanceStatus.ABSENT);
         long monthTotal = monthPresent + monthAbsent;
         double monthlyPercentage = monthTotal == 0 ? 0 : ((double) monthPresent / monthTotal) * 100.0;
 
@@ -56,7 +60,7 @@ public class StudentAttendanceService {
             StudentAttendanceHistoryResponse res = new StudentAttendanceHistoryResponse();
             res.setDate(r.getAttendanceDate());
             res.setPeriod(r.getPeriodNo());
-            res.setStatus(com.spdms.entity.AttendanceRecord.AttendanceStatus.valueOf(r.getStatus().name()));
+            res.setStatus(com.pragatix.entity.AttendanceRecord.AttendanceStatus.valueOf(r.getStatus().name()));
             res.setRemarks(r.getRemarks());
             return res;
         }).collect(Collectors.toList());

@@ -1,6 +1,6 @@
-package com.spdms.modules.student.dto.response;
+package com.pragatix.modules.student.dto.response;
 
-import com.spdms.entity.StudentBadge;
+import com.pragatix.entity.StudentBadge;
 import java.time.LocalDateTime;
 
 public class StudentBadgeResponse {
@@ -18,7 +18,8 @@ public class StudentBadgeResponse {
     private String evidenceUrl;
     private LocalDateTime awardedAt;
 
-    public StudentBadgeResponse() {}
+    public StudentBadgeResponse() {
+    }
 
     public StudentBadgeResponse(StudentBadge claim) {
         this.id = claim.getId();
@@ -42,42 +43,107 @@ public class StudentBadgeResponse {
         }
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getRegNo() { return regNo; }
-    public void setRegNo(String regNo) { this.regNo = regNo; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public String getRegNo() {
+        return regNo;
+    }
 
-    public Long getBadgeId() { return badgeId; }
-    public void setBadgeId(Long badgeId) { this.badgeId = badgeId; }
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
+    }
 
-    public String getBadgeName() { return badgeName; }
-    public void setBadgeName(String badgeName) { this.badgeName = badgeName; }
+    public String getStudentName() {
+        return studentName;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
 
-    public String getTier() { return tier; }
-    public void setTier(String tier) { this.tier = tier; }
+    public Long getBadgeId() {
+        return badgeId;
+    }
 
-    public String getIconUrl() { return iconUrl; }
-    public void setIconUrl(String iconUrl) { this.iconUrl = iconUrl; }
+    public void setBadgeId(Long badgeId) {
+        this.badgeId = badgeId;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getBadgeName() {
+        return badgeName;
+    }
 
-    public String getApprovalAuthority() { return approvalAuthority; }
-    public void setApprovalAuthority(String approvalAuthority) { this.approvalAuthority = approvalAuthority; }
+    public void setBadgeName(String badgeName) {
+        this.badgeName = badgeName;
+    }
 
-    public String getRarity() { return rarity; }
-    public void setRarity(String rarity) { this.rarity = rarity; }
+    public String getDescription() {
+        return description;
+    }
 
-    public String getEvidenceUrl() { return evidenceUrl; }
-    public void setEvidenceUrl(String evidenceUrl) { this.evidenceUrl = evidenceUrl; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public LocalDateTime getAwardedAt() { return awardedAt; }
-    public void setAwardedAt(LocalDateTime awardedAt) { this.awardedAt = awardedAt; }
+    public String getTier() {
+        return tier;
+    }
+
+    public void setTier(String tier) {
+        this.tier = tier;
+    }
+
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getApprovalAuthority() {
+        return approvalAuthority;
+    }
+
+    public void setApprovalAuthority(String approvalAuthority) {
+        this.approvalAuthority = approvalAuthority;
+    }
+
+    public String getRarity() {
+        return rarity;
+    }
+
+    public void setRarity(String rarity) {
+        this.rarity = rarity;
+    }
+
+    public String getEvidenceUrl() {
+        return evidenceUrl;
+    }
+
+    public void setEvidenceUrl(String evidenceUrl) {
+        this.evidenceUrl = evidenceUrl;
+    }
+
+    public LocalDateTime getAwardedAt() {
+        return awardedAt;
+    }
+
+    public void setAwardedAt(LocalDateTime awardedAt) {
+        this.awardedAt = awardedAt;
+    }
 }

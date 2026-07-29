@@ -1,4 +1,4 @@
-package com.spdms.modules.leaderboard.service;
+package com.pragatix.modules.leaderboard.service;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

@@ -1,8 +1,8 @@
-package com.spdms.modules.student.controller;
+package com.pragatix.modules.student.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.modules.student.dto.response.StudentProgressionDto;
-import com.spdms.modules.student.service.StudentLevelService;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.modules.student.dto.response.StudentProgressionDto;
+import com.pragatix.modules.student.service.StudentLevelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;

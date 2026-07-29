@@ -1,9 +1,9 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.entity.Activity;
-import com.spdms.entity.ActivityAssignment;
-import com.spdms.entity.Student;
-import com.spdms.modules.activity.dto.response.ActivityResponse;
+import com.pragatix.entity.Activity;
+import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.entity.Student;
+import com.pragatix.modules.activity.dto.response.ActivityResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,10 +32,14 @@ public class StudentActivityAssembler {
             actMap.setActivityId(act.getId());
 
             String currentActivityName = act.getActivityName() != null ? act.getActivityName() : act.getName();
-            String normalizedActName = currentActivityName != null ? currentActivityName.trim().toLowerCase().replaceAll("\\s+", " ").replaceAll("^\\p{Punct}+|\\p{Punct}+$", "") : null;
+            String normalizedActName = currentActivityName != null
+                    ? currentActivityName.trim().toLowerCase().replaceAll("\\s+", " ")
+                            .replaceAll("^\\p{Punct}+|\\p{Punct}+$", "")
+                    : null;
 
             actMap.setActivityName(currentActivityName);
-            actMap.setDescription(act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
+            actMap.setDescription(
+                    act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
             int rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp() : act.getMaxPoints();
             actMap.setRewardXp(rewardXp);
 
@@ -68,7 +72,8 @@ public class StudentActivityAssembler {
             String facultyName = null;
             Long facultyId = null;
 
-            List<ActivityAssignment> assignments = assignmentsByActivity.getOrDefault(act.getId(), java.util.Collections.emptyList());
+            List<ActivityAssignment> assignments = assignmentsByActivity.getOrDefault(act.getId(),
+                    java.util.Collections.emptyList());
             ActivityAssignment bestAssignment = assignmentResolver.resolveBestAssignment(student, assignments);
 
             if (bestAssignment != null && bestAssignment.getTeacher() != null) {

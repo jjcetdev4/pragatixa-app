@@ -1,4 +1,4 @@
-package com.spdms.modules.authentication.repository;
+package com.pragatix.modules.authentication.repository;
 
-public final class PackageMarker {}
-
+public final class PackageMarker {
+}

@@ -1,9 +1,9 @@
-package com.spdms.modules.student.service;
+package com.pragatix.modules.student.service;
 
-import com.spdms.entity.*;
-import com.spdms.repository.*;
-import com.spdms.enums.TeamRole;
-import com.spdms.modules.student.repository.StudentRepository;
+import com.pragatix.entity.*;
+import com.pragatix.repository.*;
+import com.pragatix.enums.TeamRole;
+import com.pragatix.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,17 +18,17 @@ public class TeamAssignmentService {
     private final StudentRepository studentRepository;
     private final TeamRepository teamRepository;
     private final StageTeamRepository stageTeamRepository;
-    private final com.spdms.admin.service.CaptainSelectionService captainSelectionService;
-    private final com.spdms.admin.service.TeamCleanupService teamCleanupService;
-    
+    private final com.pragatix.admin.service.CaptainSelectionService captainSelectionService;
+    private final com.pragatix.admin.service.TeamCleanupService teamCleanupService;
+
     @PersistenceContext
     private EntityManager entityManager;
 
     public TeamAssignmentService(StudentRepository studentRepository,
-                                 TeamRepository teamRepository,
-                                 StageTeamRepository stageTeamRepository,
-                                 com.spdms.admin.service.CaptainSelectionService captainSelectionService,
-                                 com.spdms.admin.service.TeamCleanupService teamCleanupService) {
+            TeamRepository teamRepository,
+            StageTeamRepository stageTeamRepository,
+            com.pragatix.admin.service.CaptainSelectionService captainSelectionService,
+            com.pragatix.admin.service.TeamCleanupService teamCleanupService) {
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
         this.stageTeamRepository = stageTeamRepository;
@@ -39,10 +39,11 @@ public class TeamAssignmentService {
     @Transactional
     public void assignTeamOnPromotion(Student student, ActivityStage nextStage) {
         System.out.println("TEAM ASSIGNMENT: Promotion Started for " + student.getRegNo());
-        
+
         // Stage 2 must ignore the previous team and strictly follow promotion order.
-        boolean isStage2 = nextStage.getDisplayOrder() == 2 || nextStage.getStageName().toLowerCase().contains("stage 2");
-        
+        boolean isStage2 = nextStage.getDisplayOrder() == 2
+                || nextStage.getStageName().toLowerCase().contains("stage 2");
+
         if (isStage2 || student.getTeam() == null) {
             handleInitialTeamAssignment(student, nextStage);
         } else {
@@ -54,8 +55,9 @@ public class TeamAssignmentService {
     @Transactional
     public void promoteStudentToNextStage(Student student, ActivityStage nextStage) {
         Team oldTeam = student.getTeam();
-        if (oldTeam == null) return;
-        
+        if (oldTeam == null)
+            return;
+
         System.out.println("=====================================================");
         System.out.println("PROMOTION LOG:");
         System.out.println("Student: " + student.getRegNo() + " (" + student.getFullName() + ")");
@@ -65,15 +67,15 @@ public class TeamAssignmentService {
 
         String baseName = extractBaseTeamName(oldTeam.getName());
         String newTeamName = nextStage.getStageName() + " - " + baseName;
-        
+
         System.out.println("Destination Team: " + newTeamName);
 
         Team newTeam = createNextStageTeamIfRequired(newTeamName, student, nextStage);
-        
+
         removeStudentFromOldStage(student, oldTeam);
-        
+
         moveStudent(student, newTeam, nextStage);
-        
+
         System.out.println("Student Moved: YES");
         System.out.println("TEAM ASSIGNMENT: Promotion Success for " + student.getRegNo());
         System.out.println("=====================================================");
@@ -94,13 +96,13 @@ public class TeamAssignmentService {
             newTeam.setYear(yearStr);
             newTeam.setCreatedBy(null);
             newTeam = teamRepository.save(newTeam);
-            
+
             // Create StageTeam link
             StageTeam st = new StageTeam();
             st.setStage(nextStage);
             st.setTeam(newTeam);
             stageTeamRepository.save(st);
-            
+
             System.out.println("Team Created: YES");
             System.out.println("StageTeam Created: YES");
             System.out.println("TEAM ASSIGNMENT: Created new team " + newTeamName);
@@ -113,11 +115,12 @@ public class TeamAssignmentService {
     }
 
     public void moveStudent(Student student, Team newTeam, ActivityStage nextStage) {
-        // Prevent cross-team joining by checking if student already has a DIFFERENT team in this stage
+        // Prevent cross-team joining by checking if student already has a DIFFERENT
+        // team in this stage
         // We know student.team is now newTeam or will be updated to newTeam.
         student.setTeam(newTeam);
         addStudentToStageTeam(student, newTeam);
-        
+
         student.setPromotionTimestamp(LocalDateTime.now());
         studentRepository.save(student);
     }
@@ -129,23 +132,24 @@ public class TeamAssignmentService {
             }
             newTeam.getMembers().add(student);
             teamRepository.save(newTeam);
-            
+
             System.out.println("TEAM ASSIGNMENT: Member Added to " + newTeam.getName());
         }
     }
 
-    // Removed assignCaptainIfFirstMember and createCaptain as captain selection is now dynamic
+    // Removed assignCaptainIfFirstMember and createCaptain as captain selection is
+    // now dynamic
 
     public void removeStudentFromOldStage(Student student, Team oldTeam) {
         if (oldTeam != null) {
             oldTeam.getMembers().remove(student);
-            
+
             boolean captainRemoved = false;
             if (oldTeam.getCaptain() != null && oldTeam.getCaptain().getId().equals(student.getId())) {
                 oldTeam.setCaptain(null); // Clear previous captaincy
                 captainRemoved = true;
             }
-            
+
             // Clear previous vice captaincy if applicable
             java.util.List<StageTeam> oldStageTeams = stageTeamRepository.findByTeamId(oldTeam.getId());
             for (StageTeam st : oldStageTeams) {
@@ -154,25 +158,26 @@ public class TeamAssignmentService {
                     stageTeamRepository.save(st);
                 }
             }
-            
+
             // Brutally clean up any orphaned team_members records left behind
             if (entityManager != null) {
-                entityManager.createNativeQuery("DELETE FROM team_members WHERE student_id = :sid OR reg_no = :reg OR (student_id = :sid AND team_id = :tid)")
-                             .setParameter("sid", student.getId())
-                             .setParameter("reg", student.getRegNo())
-                             .setParameter("tid", oldTeam.getId())
-                             .executeUpdate();
+                entityManager.createNativeQuery(
+                        "DELETE FROM team_members WHERE student_id = :sid OR reg_no = :reg OR (student_id = :sid AND team_id = :tid)")
+                        .setParameter("sid", student.getId())
+                        .setParameter("reg", student.getRegNo())
+                        .setParameter("tid", oldTeam.getId())
+                        .executeUpdate();
             }
 
             teamRepository.save(oldTeam);
-                
+
             // Re-evaluate captaincy for the old team ONLY if captain was removed
             if (captainRemoved) {
                 captainSelectionService.evaluateCaptainForTeam(oldTeam);
             }
 
             System.out.println("TEAM ASSIGNMENT: Removed from old team " + oldTeam.getName());
-            
+
             teamCleanupService.autoDeleteEmptyTeam(oldTeam);
         }
     }
@@ -192,18 +197,19 @@ public class TeamAssignmentService {
         Long secId = student.getSection() != null ? student.getSection().getId() : null;
         String yearStr = student.getYear();
 
-        if (deptId == null || yearStr == null) return;
+        if (deptId == null || yearStr == null)
+            return;
 
         int teamCount = 6;
-        
+
         java.util.List<Team> teams = new java.util.ArrayList<>();
-        
+
         for (int i = 0; i < teamCount; i++) {
             String teamName = nextStage.getStageName() + " - Team " + (char) ('A' + i);
             Team t = findNextStageTeam(teamName, deptId, secId, yearStr);
             teams.add(t);
         }
-        
+
         Team assignedTeam = null;
         boolean assignCaptain = false;
         boolean assignViceCaptain = false;
@@ -231,12 +237,14 @@ public class TeamAssignmentService {
             for (int i = teamCount - 1; i >= 0; i--) {
                 Team t = teams.get(i);
                 if (t != null && t.getCaptain() != null) {
-                    StageTeam st = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), t.getId()).orElse(null);
+                    StageTeam st = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), t.getId())
+                            .orElse(null);
                     if (st != null && st.getViceCaptain() == null) {
                         assignedTeam = t;
                         assignedStageTeam = st;
                         assignViceCaptain = true;
-                        System.out.println("SNAKE ALGORITHM: Reverse Assigning Vice Captain to " + assignedTeam.getName());
+                        System.out.println(
+                                "SNAKE ALGORITHM: Reverse Assigning Vice Captain to " + assignedTeam.getName());
                         break;
                     }
                 }
@@ -251,22 +259,25 @@ public class TeamAssignmentService {
                     totalMembers += t.getMembers() != null ? t.getMembers().size() : 0;
                 }
             }
-            
+
             int sequenceIndex = totalMembers - 12;
-            if (sequenceIndex < 0) sequenceIndex = 0;
-            
+            if (sequenceIndex < 0)
+                sequenceIndex = 0;
+
             int cycle = sequenceIndex / teamCount;
             int pos = sequenceIndex % teamCount;
             int teamIndex;
-            
+
             if (cycle % 2 == 0) {
                 teamIndex = pos;
-                System.out.println("SNAKE ALGORITHM: Forward Phase Member Assignment -> Team " + (char)('A' + teamIndex));
+                System.out.println(
+                        "SNAKE ALGORITHM: Forward Phase Member Assignment -> Team " + (char) ('A' + teamIndex));
             } else {
                 teamIndex = teamCount - 1 - pos;
-                System.out.println("SNAKE ALGORITHM: Reverse Phase Member Assignment -> Team " + (char)('A' + teamIndex));
+                System.out.println(
+                        "SNAKE ALGORITHM: Reverse Phase Member Assignment -> Team " + (char) ('A' + teamIndex));
             }
-            
+
             assignedTeam = teams.get(teamIndex);
         }
 
@@ -275,15 +286,17 @@ public class TeamAssignmentService {
         if (assignedTeam != null) {
             student.setPromotionOrder(null); // Clear legacy counter
             moveStudent(student, assignedTeam, nextStage);
-            
+
             if (assignCaptain) {
                 assignedTeam.setCaptain(student);
                 teamRepository.save(assignedTeam);
-                System.out.println("CAPTAIN SELECTION: New Captain for " + assignedTeam.getName() + " -> " + student.getRegNo());
+                System.out.println(
+                        "CAPTAIN SELECTION: New Captain for " + assignedTeam.getName() + " -> " + student.getRegNo());
             } else if (assignViceCaptain && assignedStageTeam != null) {
                 assignedStageTeam.setViceCaptain(student);
                 stageTeamRepository.save(assignedStageTeam);
-                System.out.println("CAPTAIN SELECTION: New Vice Captain for " + assignedTeam.getName() + " -> " + student.getRegNo());
+                System.out.println("CAPTAIN SELECTION: New Vice Captain for " + assignedTeam.getName() + " -> "
+                        + student.getRegNo());
             }
         }
     }

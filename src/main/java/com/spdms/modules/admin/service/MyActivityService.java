@@ -1,12 +1,12 @@
-package com.spdms.modules.admin.service;
+package com.pragatix.modules.admin.service;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.Activity;
-import com.spdms.entity.ActivityAssignment;
-import com.spdms.entity.User;
-import com.spdms.modules.activity.dto.response.MyActivityResponse;
-import com.spdms.repository.ActivityAssignmentRepository;
-import com.spdms.modules.authentication.repository.UserRepository;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.Activity;
+import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.entity.User;
+import com.pragatix.modules.activity.dto.response.MyActivityResponse;
+import com.pragatix.repository.ActivityAssignmentRepository;
+import com.pragatix.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -22,12 +22,13 @@ import java.util.stream.Collectors;
 public class MyActivityService {
 
     private static final Logger log = LoggerFactory.getLogger(MyActivityService.class);
-    
+
     private final ActivityAssignmentRepository activityAssignmentRepository;
     private final UserRepository userRepository;
     private final AdminAssignmentService adminAssignmentService;
 
-    public MyActivityService(ActivityAssignmentRepository activityAssignmentRepository, UserRepository userRepository, AdminAssignmentService adminAssignmentService) {
+    public MyActivityService(ActivityAssignmentRepository activityAssignmentRepository, UserRepository userRepository,
+            AdminAssignmentService adminAssignmentService) {
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.userRepository = userRepository;
         this.adminAssignmentService = adminAssignmentService;
@@ -39,7 +40,8 @@ public class MyActivityService {
                 .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.<List<MyActivityResponse>>error("User not found"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.<List<MyActivityResponse>>error("User not found"));
         }
 
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findAll();

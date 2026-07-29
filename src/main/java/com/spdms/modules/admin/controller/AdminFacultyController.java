@@ -1,7 +1,7 @@
-package com.spdms.modules.admin.controller;
+package com.pragatix.modules.admin.controller;
 
-import com.spdms.common.response.ApiResponse;
-import com.spdms.entity.ActivitySubgroup;
+import com.pragatix.common.response.ApiResponse;
+import com.pragatix.entity.ActivitySubgroup;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.spdms.modules.admin.service.*;
-import com.spdms.modules.admin.mapper.*;
+import com.pragatix.modules.admin.service.*;
+import com.pragatix.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -34,8 +34,8 @@ public class AdminFacultyController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Assign a faculty member to an activity subgroup")
     public ResponseEntity<ApiResponse<ActivitySubgroup>> assignFacultyToSubgroup(
-                @PathVariable Long id,
-                @RequestBody Map<String, Object> body) {
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
         return adminFacultyService.assignFacultyToSubgroup(id, body);
     }
 
