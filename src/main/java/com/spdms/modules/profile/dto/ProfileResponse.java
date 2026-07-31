@@ -2,6 +2,7 @@ package com.pragatix.modules.profile.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProfileResponse {
     // Common Info
@@ -231,19 +232,19 @@ public class ProfileResponse {
     }
 
     public static class AdminDetails {
-        private String assignedAcademicYear;
+        private String academicYear;
         private long totalStudentsInYear;
         private long totalGroups;
         private long totalActivities;
         private long totalStages;
         private List<String> permissions;
 
-        public String getAssignedAcademicYear() {
-            return assignedAcademicYear;
+        public String getAcademicYear() {
+            return academicYear;
         }
 
-        public void setAssignedAcademicYear(String assignedAcademicYear) {
-            this.assignedAcademicYear = assignedAcademicYear;
+        public void setAcademicYear(String academicYear) {
+            this.academicYear = academicYear;
         }
 
         public long getTotalStudentsInYear() {
@@ -469,6 +470,7 @@ public class ProfileResponse {
             this.teamName = teamName;
         }
 
+        @JsonProperty("isCaptain")
         public boolean isCaptain() {
             return isCaptain;
         }
@@ -477,6 +479,7 @@ public class ProfileResponse {
             isCaptain = captain;
         }
 
+        @JsonProperty("isViceCaptain")
         public boolean isViceCaptain() {
             return isViceCaptain;
         }
@@ -520,7 +523,7 @@ public class ProfileResponse {
 
     public static class CcDetails {
         private String section;
-        private String assignedAcademicYear;
+        private String academicYear;
         private long totalStudents;
         private long totalActivities;
         private List<String> permissions;
@@ -533,12 +536,12 @@ public class ProfileResponse {
             this.section = section;
         }
 
-        public String getAssignedAcademicYear() {
-            return assignedAcademicYear;
+        public String getAcademicYear() {
+            return academicYear;
         }
 
-        public void setAssignedAcademicYear(String assignedAcademicYear) {
-            this.assignedAcademicYear = assignedAcademicYear;
+        public void setAcademicYear(String academicYear) {
+            this.academicYear = academicYear;
         }
 
         public long getTotalStudents() {

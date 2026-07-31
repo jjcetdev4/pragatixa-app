@@ -54,7 +54,7 @@ public class User {
     private String year;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "assigned_academic_year")
+    @Column(name = "academic_year")
     private com.pragatix.enums.AcademicYear academicYear;
 
     @Column(name = "created_at", insertable = false, updatable = false)

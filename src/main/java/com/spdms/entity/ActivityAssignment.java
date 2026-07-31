@@ -38,10 +38,22 @@ public class ActivityAssignment {
     @JoinColumn(name = "assigned_by_id", nullable = false)
     private User assignedBy;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "stage_id", nullable = true)
+    private ActivityStage stage;
+
     @Column(name = "assigned_at", nullable = false)
     private LocalDateTime assignedAt;
 
     public ActivityAssignment() {
+    }
+
+    public ActivityStage getStage() {
+        return stage;
+    }
+
+    public void setStage(ActivityStage stage) {
+        this.stage = stage;
     }
 
     public Long getId() {

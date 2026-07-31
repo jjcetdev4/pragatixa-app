@@ -69,9 +69,25 @@ public interface ActivityAssignmentRepository extends JpaRepository<ActivityAssi
     List<ActivityAssignment> findByActivityIdAndTeacherIdOrTeacherIsNull(Long activityId, Long teacherId,
             Long departmentId);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
+            "teacher", "assignedBy" })
+    List<ActivityAssignment> findByActivityIdAndStageId(Long activityId, Long stageId);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
+            "teacher", "assignedBy" })
+    List<ActivityAssignment> findByActivityIdAndStageIdIsNull(Long activityId);
+
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional
     void deleteByActivityId(Long activityId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByActivityIdAndStageId(Long activityId, Long stageId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByActivityIdAndStageIdIsNull(Long activityId);
 
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional

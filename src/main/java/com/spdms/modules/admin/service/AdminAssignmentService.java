@@ -29,7 +29,19 @@ public class AdminAssignmentService {
     }
 
     public void populateActivityTransientFields(Activity activity) {
-        List<ActivityAssignment> assignments = activityAssignmentRepository.findByActivityId(activity.getId());
+        populateActivityTransientFields(activity, activity.getStage() != null ? activity.getStage().getId() : null);
+    }
+
+    public void populateActivityTransientFields(Activity activity, Long stageId) {
+        List<ActivityAssignment> assignments;
+        if (stageId != null) {
+            assignments = activityAssignmentRepository.findByActivityIdAndStageId(activity.getId(), stageId);
+            if (assignments.isEmpty()) {
+                assignments = activityAssignmentRepository.findByActivityIdAndStageIdIsNull(activity.getId());
+            }
+        } else {
+            assignments = activityAssignmentRepository.findByActivityId(activity.getId());
+        }
         List<Map<String, Object>> summary = new ArrayList<>();
 
         for (ActivityAssignment aa : assignments) {

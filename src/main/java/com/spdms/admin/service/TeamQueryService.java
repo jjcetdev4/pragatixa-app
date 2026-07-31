@@ -97,19 +97,24 @@ public class TeamQueryService {
         response.setCaptainName(team.getCaptain() != null ? team.getCaptain().getFullName() : "N/A");
         response.setMaxTeamSize(team.getSize() > 0 ? team.getSize() : 10);
 
-        String viceCaptainName = "N/A";
+        String viceCaptainName = team.getViceCaptain() != null ? team.getViceCaptain().getFullName() : "N/A";
         String currentRole = "MEMBER";
 
         // Process members and calculate XP (deduplicated)
         java.util.Set<Student> uniqueMembers = new java.util.HashSet<>();
         if (team.getCaptain() != null)
             uniqueMembers.add(team.getCaptain());
+        if (team.getViceCaptain() != null)
+            uniqueMembers.add(team.getViceCaptain());
         if (team.getMembers() != null)
             uniqueMembers.addAll(team.getMembers());
 
         for (com.pragatix.entity.StageTeam st : stageTeams) {
             if (st.getViceCaptain() != null) {
                 uniqueMembers.add(st.getViceCaptain());
+                if ("N/A".equals(viceCaptainName)) {
+                    viceCaptainName = st.getViceCaptain().getFullName();
+                }
             }
         }
 
@@ -140,6 +145,8 @@ public class TeamQueryService {
             String role = "MEMBER";
             if (team.getCaptain() != null && team.getCaptain().getRegNo().equals(m.getRegNo())) {
                 role = "CAPTAIN";
+            } else if (team.getViceCaptain() != null && team.getViceCaptain().getRegNo().equals(m.getRegNo())) {
+                role = "VICE_CAPTAIN";
             } else {
                 for (com.pragatix.entity.StageTeam st : stageTeams) {
                     if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(m.getId())) {
@@ -149,7 +156,7 @@ public class TeamQueryService {
                 }
             }
 
-            if ("VICE_CAPTAIN".equals(role)) {
+            if ("VICE_CAPTAIN".equals(role) && "N/A".equals(viceCaptainName)) {
                 viceCaptainName = m.getFullName();
             }
             if (m.getRegNo().equals(student.getRegNo())) {

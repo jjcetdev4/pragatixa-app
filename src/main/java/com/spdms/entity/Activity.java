@@ -7,7 +7,7 @@ import java.util.Map;
 
 @Entity
 @Table(name = "activities", uniqueConstraints = {
-        @UniqueConstraint(name = "uq_activity", columnNames = { "category_id", "activity_name" })
+        @UniqueConstraint(name = "uq_activity_subgroup", columnNames = { "subgroup_id", "activity_name" })
 })
 public class Activity {
 

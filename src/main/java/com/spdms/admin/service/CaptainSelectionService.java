@@ -41,43 +41,10 @@ public class CaptainSelectionService {
 
     @Transactional
     public void evaluateCaptainForTeam(Team team) {
-        if (team == null || team.getMembers() == null || team.getMembers().isEmpty()) {
-            return;
-        }
-
-        List<Student> eligibleMembers = team.getMembers().stream()
-                .filter(Student::isActive)
-                .collect(Collectors.toList());
-
-        if (eligibleMembers.isEmpty()) {
-            if (team.getCaptain() != null) {
-                Student oldCaptain = team.getCaptain();
-                studentRepository.save(oldCaptain);
-                team.setCaptain(null);
-                teamRepository.save(team);
-                updateStageTeamCaptain(team, null);
-            }
-            return;
-        }
-
-        eligibleMembers.sort(Comparator.comparingInt(Student::getTotalXp).reversed()
-                .thenComparing(Student::getId));
-
-        Student newCaptain = eligibleMembers.get(0);
-        Student oldCaptain = team.getCaptain();
-
-        if (oldCaptain == null || !oldCaptain.getId().equals(newCaptain.getId())) {
-            if (oldCaptain != null) {
-                studentRepository.save(oldCaptain);
-            }
-            team.setCaptain(newCaptain);
-            studentRepository.save(newCaptain);
-            teamRepository.save(team);
-
-            updateStageTeamCaptain(team, newCaptain);
-
-            System.out.println("CAPTAIN SELECTION: New Captain for " + team.getName() + " -> " + newCaptain.getRegNo());
-        }
+        // Disabled legacy XP-based leadership reassignment.
+        // Leadership is determined strictly by the order in which team members satisfy the promotion conditions.
+        // Highest XP no longer influences leadership.
+        System.out.println("CAPTAIN SELECTION: Legacy XP-based reassignment disabled for team: " + (team != null ? team.getName() : "null"));
     }
 
     private void updateStageTeamCaptain(Team team, Student captain) {

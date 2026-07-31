@@ -41,14 +41,7 @@ public class StudentStageFacade {
     @Transactional(readOnly = true)
     public ResponseEntity<?> getStudentStages(Student student) {
         try {
-            com.pragatix.enums.AcademicYear acYear = null;
-            if (student.getYearRef() != null && student.getYearRef().getYearName() != null) {
-                try {
-                    acYear = com.pragatix.enums.AcademicYear.valueOf(student.getYearRef().getYearName().toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    // ignore if invalid
-                }
-            }
+            com.pragatix.enums.AcademicYear acYear = com.pragatix.enums.AcademicYear.fromStudent(student);
             List<ActivityStageResponse> stages = activityStageService.getAllStages(acYear);
 
             if (stages != null && !stages.isEmpty()) {

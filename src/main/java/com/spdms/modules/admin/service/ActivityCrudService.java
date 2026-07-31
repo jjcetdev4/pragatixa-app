@@ -17,8 +17,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.pragatix.entity.ActivityStageMapping;
+import com.pragatix.modules.activity.repository.ActivityStageMappingRepository;
 import com.pragatix.modules.activity.repository.ActivityStageRepository;
 import com.pragatix.entity.ActivityStage;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 public class ActivityCrudService {
@@ -28,6 +31,7 @@ public class ActivityCrudService {
     private final ActivityRepository activityRepository;
     private final ActivitySubgroupRepository activitySubgroupRepository;
     private final ActivityStageRepository activityStageRepository;
+    private final ActivityStageMappingRepository activityStageMappingRepository;
     private final ActivityAssignmentRepository activityAssignmentRepository;
     private final DisciplineLogRepository disciplineLogRepository;
     private final StudentActivityXpRepository studentActivityXpRepository;
@@ -41,6 +45,7 @@ public class ActivityCrudService {
             ActivityRepository activityRepository,
             ActivitySubgroupRepository activitySubgroupRepository,
             ActivityStageRepository activityStageRepository,
+            ActivityStageMappingRepository activityStageMappingRepository,
             ActivityAssignmentRepository activityAssignmentRepository,
             DisciplineLogRepository disciplineLogRepository,
             StudentActivityXpRepository studentActivityXpRepository,
@@ -51,6 +56,7 @@ public class ActivityCrudService {
         this.activityRepository = activityRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityStageRepository = activityStageRepository;
+        this.activityStageMappingRepository = activityStageMappingRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
@@ -200,6 +206,21 @@ public class ActivityCrudService {
         requestMapper.mapRemainingConfiguration(activity, body, matchedCategory, awardEnabled, awardXp, penaltyEnabled,
                 penaltyXp, awardType, matchedFrequency, cap, awardDays);
 
+        if (body.containsKey("stageId") && body.get("stageId") != null) {
+            try {
+                Long stageId = Long.valueOf(body.get("stageId").toString());
+                ActivityStageMapping mapping = activityStageMappingRepository.findByStageIdAndActivityId(stageId, activityId).orElse(null);
+                if (mapping != null) {
+                    mapping.setAwardXp(awardXp);
+                    mapping.setAwardEnabled(awardEnabled);
+                    mapping.setPenaltyEnabled(penaltyEnabled);
+                    mapping.setPenaltyXp(penaltyXp);
+                    mapping.setAwardFrequency(matchedFrequency);
+                    activityStageMappingRepository.save(mapping);
+                }
+            } catch (Exception ignored) {}
+        }
+
         log.debug("Entity before save [Update] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                 activity.getAwardEnabled(), activity.getAwardXp(), activity.getPenaltyEnabled(),
                 activity.getPenaltyXp());
@@ -254,7 +275,11 @@ public class ActivityCrudService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Stage not found"));
         }
 
-        if (activity.getAcademicYear() != stage.getAcademicYear()) {
+        if (activity.getStatus() != null && "INACTIVE".equalsIgnoreCase(activity.getStatus())) {
+            return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Cannot map inactive or deleted activity"));
+        }
+
+        if (activity.getAcademicYear() != null && stage.getAcademicYear() != null && activity.getAcademicYear() != stage.getAcademicYear()) {
             return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Cross-year mapping is not allowed"));
         }
 
@@ -264,24 +289,45 @@ public class ActivityCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.<Void>error(e.getMessage()));
         }
 
-        activity.setStage(stage);
-        ActivitySubgroup subgroup = activitySubgroupRepository.findByStageIdAndCategoryIgnoreCase(stageId, subgroupName)
-                .orElseGet(() -> activitySubgroupRepository.findByStageIdAndNameIgnoreCase(stageId, subgroupName)
+        // Check if activity with same name is already mapped to target stage
+        List<Activity> existingStageActivities = activityRepository.findByStageId(stage.getId());
+        String sourceNameLower = activity.getName() != null ? activity.getName().trim().toLowerCase() : "";
+        for (Activity existing : existingStageActivities) {
+            String existingNameLower = existing.getName() != null ? existing.getName().trim().toLowerCase() : "";
+            if (!sourceNameLower.isEmpty() && existingNameLower.equals(sourceNameLower)) {
+                return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Activity '" + activity.getName() + "' is already mapped to this stage"));
+            }
+        }
+
+        String mode = activity.getModeType() != null ? activity.getModeType().trim().toLowerCase() : "";
+        String computedCategory;
+        if (mode.contains("group")) {
+            computedCategory = "group";
+        } else {
+            if (activity.isMandatory()) {
+                computedCategory = "must";
+            } else {
+                computedCategory = "individual";
+            }
+        }
+
+        ActivitySubgroup subgroup = activitySubgroupRepository.findByStageIdAndCategoryIgnoreCase(stageId, computedCategory)
+                .orElseGet(() -> activitySubgroupRepository.findByStageIdAndNameIgnoreCase(stageId, computedCategory)
                         .orElse(null));
 
         if (subgroup == null) {
             subgroup = new ActivitySubgroup();
             subgroup.setStage(stage);
-            subgroup.setCategory(subgroupName);
-            String displayName = subgroupName.substring(0, 1).toUpperCase() + subgroupName.substring(1).toLowerCase();
-            if (subgroupName.equalsIgnoreCase("must")) {
+            subgroup.setCategory(computedCategory);
+            String displayName = computedCategory.substring(0, 1).toUpperCase() + computedCategory.substring(1).toLowerCase();
+            if (computedCategory.equalsIgnoreCase("must")) {
                 subgroup.setThreshold(
                         subgroup.getStage().getMustThreshold() != null ? subgroup.getStage().getMustThreshold() : 0);
-            } else if (subgroupName.equalsIgnoreCase("individual")) {
+            } else if (computedCategory.equalsIgnoreCase("individual")) {
                 subgroup.setThreshold(subgroup.getStage().getIndividualThreshold() != null
                         ? subgroup.getStage().getIndividualThreshold()
                         : 0);
-            } else if (subgroupName.equalsIgnoreCase("group")) {
+            } else if (computedCategory.equalsIgnoreCase("group")) {
                 subgroup.setThreshold(
                         subgroup.getStage().getGroupThreshold() != null ? subgroup.getStage().getGroupThreshold() : 0);
             } else {
@@ -291,65 +337,52 @@ public class ActivityCrudService {
             subgroup = activitySubgroupRepository.save(subgroup);
         }
 
-        Activity clonedActivity = new Activity();
+        if (activityStageMappingRepository.existsByStageIdAndActivityId(stageId, activityId)) {
+            return ResponseEntity.badRequest().body(ApiResponse.<Void>error("Activity is already mapped to this stage"));
+        }
 
-        // Copy basic fields
-        clonedActivity.setName(activity.getName());
-        clonedActivity.setActivityName(activity.getActivityName());
-        clonedActivity.setDescription(activity.getDescription());
-        clonedActivity.setActivityDescription(activity.getActivityDescription());
-        clonedActivity.setModeType(activity.getModeType());
-        clonedActivity.setAwardXp(activity.getAwardXp());
-        clonedActivity.setAwardEnabled(activity.getAwardEnabled());
-        clonedActivity.setPenaltyEnabled(activity.getPenaltyEnabled());
-        clonedActivity.setPenaltyXp(activity.getPenaltyXp());
-        clonedActivity.setAwardType(activity.getAwardType());
-        clonedActivity.setRepeatAllowed(activity.isRepeatAllowed());
-        clonedActivity.setResetPeriod(activity.getResetPeriod());
-        clonedActivity.setMandatory(activity.isMandatory());
-        clonedActivity.setEvidenceRequired(activity.isEvidenceRequired());
-        clonedActivity.setCategory(activity.getCategory());
-        clonedActivity.setEvidence(activity.getEvidence());
-        clonedActivity.setJustification(activity.getJustification());
-        clonedActivity.setOwnerDepartment(activity.getOwnerDepartment());
-        clonedActivity.setOwnerSubrole(activity.getOwnerSubrole());
-        clonedActivity.setType(activity.getType());
-        clonedActivity.setXpCategory(activity.getXpCategory());
-        clonedActivity.setXpType(activity.getXpType());
-        clonedActivity.setMaximumAwards(activity.getMaximumAwards());
-        clonedActivity.setAwardFrequency(activity.getAwardFrequency());
-        clonedActivity.setAllowStudentRequest(activity.getAllowStudentRequest());
-        clonedActivity.setAwardDays(activity.getAwardDays());
-        clonedActivity.setDisplayOrder(activity.getDisplayOrder());
-        clonedActivity.setStatus(activity.getStatus());
-        clonedActivity.setAssignmentMode(activity.getAssignmentMode());
-        clonedActivity.setActivityCategory(activity.getActivityCategory());
-        clonedActivity.setMaxPoints(activity.getMaxPoints());
+        try {
+            System.out.println("========================================");
+            System.out.println("Stage ID: " + stageId);
+            System.out.println("Activity ID: " + activityId);
+            System.out.println("Activity Name: " + activity.getName());
+            System.out.println("Activity Type: " + activity.getModeType());
+            System.out.println("isMandatory: " + activity.isMandatory());
+            System.out.println("Selected Subgroup: " + computedCategory);
+            System.out.println("Subgroup ID: " + (subgroup != null ? subgroup.getId() : "null"));
+            System.out.println("SQL INSERT: ActivityStageMapping (activity_id=" + activityId + ", stage_id=" + stageId + ", subgroup_id=" + (subgroup != null ? subgroup.getId() : "null") + ")");
+            System.out.println("========================================");
 
-        clonedActivity.setStage(subgroup.getStage());
-        clonedActivity.setSubgroup(subgroup);
-        clonedActivity.setAcademicYear(subgroup.getStage().getAcademicYear());
-
-        activityRepository.save(clonedActivity);
-
-        return ResponseEntity.ok(ApiResponse.ok("Activity mapped successfully", null));
+            ActivityStageMapping mapping = new ActivityStageMapping(activity, stage, subgroup);
+            activityStageMappingRepository.save(mapping);
+            log.debug("Successfully mapped activity ID {} to stage ID {} subgroup {}", activityId, stageId, subgroupName);
+            return ResponseEntity.ok(ApiResponse.ok("Activity mapped successfully", null));
+        } catch (DataIntegrityViolationException e) {
+            log.error("Data integrity error mapping activity to stage: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<Void>error("Activity is already mapped to this stage."));
+        } catch (Exception e) {
+            log.error("Failed to map activity to stage", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<Void>error("Failed to map activity to stage: " + e.getMessage()));
+        }
     }
 
     @Transactional
     public ResponseEntity<ApiResponse<Void>> unmapActivityFromStage(Long stageId, Long activityId) {
+        ActivityStageMapping mapping = activityStageMappingRepository.findByStageIdAndActivityId(stageId, activityId).orElse(null);
+        if (mapping != null) {
+            activityStageMappingRepository.delete(mapping);
+            return ResponseEntity.ok(ApiResponse.ok("Activity removed from stage successfully", null));
+        }
+
         Activity activity = activityRepository.findById(activityId).orElse(null);
-        if (activity == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Activity not found"));
+        if (activity != null && activity.getStage() != null && activity.getStage().getId().equals(stageId)) {
+            activity.setStage(null);
+            activityRepository.save(activity);
+            return ResponseEntity.ok(ApiResponse.ok("Activity removed from stage successfully", null));
         }
 
-        if (activity.getStage() == null || !activity.getStage().getId().equals(stageId)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<Void>error("Activity is not mapped to this stage"));
-        }
-
-        activity.setStage(null);
-        activityRepository.save(activity);
-
-        return ResponseEntity.ok(ApiResponse.ok("Activity removed from stage successfully", null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Activity mapping not found"));
     }
 }

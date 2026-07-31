@@ -7,6 +7,7 @@ public class ActivityOptionDTO {
     private Integer awardXp;
     private String awardFrequency;
     private String type;
+    private boolean alreadyMapped;
 
     public ActivityOptionDTO() {
     }
@@ -19,6 +20,18 @@ public class ActivityOptionDTO {
         this.awardXp = awardXp;
         this.awardFrequency = awardFrequency;
         this.type = type;
+        this.alreadyMapped = false;
+    }
+
+    public ActivityOptionDTO(Long id, String name, String description, Integer awardXp, String awardFrequency,
+            String type, boolean alreadyMapped) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.awardXp = awardXp;
+        this.awardFrequency = awardFrequency;
+        this.type = type;
+        this.alreadyMapped = alreadyMapped;
     }
 
     public Long getId() {
@@ -67,5 +80,13 @@ public class ActivityOptionDTO {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public boolean isAlreadyMapped() {
+        return alreadyMapped;
+    }
+
+    public void setAlreadyMapped(boolean alreadyMapped) {
+        this.alreadyMapped = alreadyMapped;
     }
 }

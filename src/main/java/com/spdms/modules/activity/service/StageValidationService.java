@@ -6,14 +6,18 @@ import com.pragatix.entity.ActivitySubgroup;
 import com.pragatix.entity.Student;
 import com.pragatix.modules.activity.repository.ActivityStageRepository;
 import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
+import com.pragatix.modules.activity.repository.ActivityRepository;
 import com.pragatix.modules.student.repository.StudentRepository;
 import com.pragatix.modules.student.repository.StudentActivityXpRepository;
+import com.pragatix.entity.Activity;
+import com.pragatix.entity.StudentActivityXp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class StageValidationService {
@@ -23,15 +27,18 @@ public class StageValidationService {
     private final StudentRepository studentRepository;
     private final ActivitySubgroupRepository activitySubgroupRepository;
     private final StudentActivityXpRepository studentActivityXpRepository;
+    private final ActivityRepository activityRepository;
 
     public StageValidationService(ActivityStageRepository activityStageRepository,
             StudentRepository studentRepository,
             ActivitySubgroupRepository activitySubgroupRepository,
-            StudentActivityXpRepository studentActivityXpRepository) {
+            StudentActivityXpRepository studentActivityXpRepository,
+            ActivityRepository activityRepository) {
         this.activityStageRepository = activityStageRepository;
         this.studentRepository = studentRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
+        this.activityRepository = activityRepository;
     }
 
     public StageValidationResponse validateStage(Student student, ActivityStage stage) {
@@ -114,8 +121,14 @@ public class StageValidationService {
 
         System.out.println("=====================================================");
         System.out.println("STAGE ENGINE - EVALUATING THRESHOLDS DYNAMICALLY");
-        System.out.println("Student ID    : " + student.getId());
-        System.out.println("Stage Target  : " + stage.getDisplayOrder() + " (" + stage.getName() + ")");
+        System.out.println("Which Stage object is loaded: " + stage.getName());
+        System.out.println("Database Stage ID           : " + stage.getId());
+        System.out.println("Total Threshold             : " + stage.getExpectedXp());
+        System.out.println("Must Threshold              : " + stage.getMustThreshold());
+        System.out.println("Individual Threshold        : " + stage.getIndividualThreshold());
+        System.out.println("Group Threshold             : " + stage.getGroupThreshold());
+        System.out.println("Repository method used      : activityStageRepository.findById/findByDisplayOrder");
+        System.out.println("Student ID                  : " + student.getId());
         System.out.println("--- XP Values vs Thresholds ---");
 
         int expectedXp = stage.getExpectedXp() != null ? stage.getExpectedXp() : 0;
@@ -172,6 +185,26 @@ public class StageValidationService {
         }
 
         boolean allMet = expectedXpMet && allSubgroupsMet;
+
+        if (allMet) {
+            List<Activity> allActivities = activityRepository.findByStageId(stage.getId());
+            List<Activity> mandatoryMustActivities = allActivities.stream()
+                    .filter(a -> a.isMandatory() && 
+                                 a.getAwardEnabled() != null && a.getAwardEnabled() && 
+                                 a.getSubgroup() != null && a.getSubgroup().getName() != null && 
+                                 a.getSubgroup().getName().toLowerCase().contains("must"))
+                    .collect(Collectors.toList());
+
+            for (Activity act : mandatoryMustActivities) {
+                List<StudentActivityXp> xpLogs = studentActivityXpRepository.findByStudentIdAndActivityId(student.getId(), act.getId());
+                boolean hasCompleted = xpLogs.stream().anyMatch(xp -> xp.getXpAwarded() > 0 && !"FAIL".equals(xp.getResult()));
+                if (!hasCompleted) {
+                    System.out.println("Mandatory Activity Not Completed: " + act.getActivityName());
+                    allMet = false;
+                    break;
+                }
+            }
+        }
 
         System.out.println(
                 "Final Decision: " + (allMet ? "PROMOTED (All thresholds met)" : "PENDING (Thresholds not met)"));

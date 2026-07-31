@@ -48,9 +48,9 @@ public class AdminActivityService {
         return queryService.getAllActivities(subgroup, academicYear);
     }
 
-    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(String subgroup,
+    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(Long stageId, String subgroup,
             com.pragatix.enums.AcademicYear academicYear) {
-        return queryService.getGroupedActivities(subgroup, academicYear);
+        return queryService.getGroupedActivities(stageId, subgroup, academicYear);
     }
 
     public ResponseEntity<ApiResponse<Activity>> createActivity(Long subgroupId, Map<String, Object> body) {

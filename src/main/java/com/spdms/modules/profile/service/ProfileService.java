@@ -22,24 +22,77 @@ public class ProfileService {
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
+    private final StageTeamRepository stageTeamRepository;
 
     public ProfileService(AuthUtils authUtils,
             StudentRepository studentRepository,
             FacultyRepository facultyRepository,
             DepartmentRepository departmentRepository,
             UserRepository userRepository,
-            TeamRepository teamRepository) {
+            TeamRepository teamRepository,
+            StageTeamRepository stageTeamRepository) {
         this.authUtils = authUtils;
         this.studentRepository = studentRepository;
         this.facultyRepository = facultyRepository;
         this.departmentRepository = departmentRepository;
         this.userRepository = userRepository;
         this.teamRepository = teamRepository;
+        this.stageTeamRepository = stageTeamRepository;
     }
 
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile() {
+        String authName = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         User user = authUtils.getCurrentUser();
+
+        Student student = studentRepository.findByRegNo(authName).orElse(null);
+        if (student == null) {
+            student = studentRepository.findByEmail(authName).orElse(null);
+        }
+        if (student == null && user != null) {
+            student = studentRepository.findByUserId(user.getId()).orElse(null);
+            if (student == null && user.getEmail() != null) {
+                student = studentRepository.findByEmail(user.getEmail()).orElse(null);
+            }
+        }
+
+        if (student != null) {
+            boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
+                    && student.getTeam().getCaptain().getId().equals(student.getId());
+            boolean isViceCap = false;
+            if (student.getTeam() != null) {
+                if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+                    isViceCap = true;
+                } else {
+                    List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
+                    for (com.pragatix.entity.StageTeam st : stageTeams) {
+                        if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                            isViceCap = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            String primaryRole = isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "STUDENT");
+
+            ProfileResponse response = new ProfileResponse();
+            response.setId(user != null ? user.getId() : student.getId());
+            response.setFullName(student.getFullName());
+            response.setUsername(student.getRegNo());
+            response.setEmail(student.getEmail());
+            response.setPhone(student.getPhoneNo() != null ? student.getPhoneNo() : (user != null ? user.getPhone() : ""));
+            response.setDepartment(student.getDepartment() != null
+                    ? (student.getDepartment().getName() != null ? student.getDepartment().getName() : student.getDepartment().getDeptName())
+                    : (user != null && user.getDepartment() != null ? user.getDepartment().getName() : "N/A"));
+            response.setAccountStatus("Active");
+            response.setCreatedDate(student.getCreatedAt());
+            response.setLastUpdated(student.getUpdatedAt());
+            response.setRole(primaryRole);
+            response.setStudentDetails(buildStudentDetails(student));
+            return response;
+        }
+
         if (user == null) {
             throw new RuntimeException("User not authenticated");
         }
@@ -75,11 +128,6 @@ public class ProfileService {
                 break;
             case "TEACHER":
                 response.setTeacherDetails(buildTeacherDetails(user));
-                break;
-            case "STUDENT":
-            case "CAPTAIN":
-            case "VICE_CAPTAIN":
-                response.setStudentDetails(buildStudentDetails(user, primaryRole));
                 break;
             default:
                 break;
@@ -129,7 +177,7 @@ public class ProfileService {
 
     private ProfileResponse.AdminDetails buildAdminDetails(User user) {
         ProfileResponse.AdminDetails d = new ProfileResponse.AdminDetails();
-        d.setAssignedAcademicYear(AuthUtils.getAssignedYearString(user.getAcademicYear()));
+        d.setAcademicYear(AuthUtils.getAssignedYearString(user.getAcademicYear()));
         d.setTotalStudentsInYear(0);
         d.setTotalGroups(0);
         d.setTotalActivities(0);
@@ -151,7 +199,7 @@ public class ProfileService {
     private ProfileResponse.CcDetails buildCcDetails(User user) {
         ProfileResponse.CcDetails d = new ProfileResponse.CcDetails();
         d.setSection(user.getSection() != null ? user.getSection().getSectionName() : "N/A");
-        d.setAssignedAcademicYear(user.getYear());
+        d.setAcademicYear(user.getYear());
         d.setTotalStudents(0);
         d.setTotalActivities(0);
         d.setPermissions(List.of("Manage Class", "View Attendance", "View Student Progress"));
@@ -170,23 +218,46 @@ public class ProfileService {
         return d;
     }
 
-    private ProfileResponse.StudentDetails buildStudentDetails(User user, String role) {
+    private ProfileResponse.StudentDetails buildStudentDetails(Student student) {
         ProfileResponse.StudentDetails d = new ProfileResponse.StudentDetails();
-        d.setRegisterNumber(user.getUsername());
-        d.setRollNumber("N/A");
-        d.setAcademicYear(user.getYear());
-        d.setSection(user.getSection() != null ? user.getSection().getSectionName() : "N/A");
-        d.setSemester("N/A");
+        d.setRegisterNumber(student.getRegNo());
+        d.setRollNumber(student.getSprNo() != null ? student.getSprNo() : "N/A");
+        d.setAcademicYear(student.getYearRef() != null ? student.getYearRef().getYearName() : student.getYear());
+        d.setSection(student.getSection() != null ? student.getSection().getSectionName() : "N/A");
+        d.setSemester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName() : (student.getSemester() != null ? student.getSemester() : "N/A"));
         d.setBatch("N/A");
-        d.setCurrentXp(0);
-        d.setCurrentStage("N/A");
-        d.setCurrentLevel("N/A");
-        d.setRank(0);
-        d.setAttendancePercentage(100.0);
-        d.setTeamName("N/A");
-        d.setCaptain("CAPTAIN".equals(role));
-        d.setViceCaptain("VICE_CAPTAIN".equals(role));
         d.setPermissions(List.of("View Profile", "View Attendance", "View Leaderboard"));
+        
+        boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
+                && student.getTeam().getCaptain().getId().equals(student.getId());
+        boolean isViceCap = false;
+        if (student.getTeam() != null) {
+            if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+                isViceCap = true;
+            } else {
+                List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
+                for (com.pragatix.entity.StageTeam st : stageTeams) {
+                    if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                        isViceCap = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        d.setCurrentXp(student.getTotalXp());
+        d.setCurrentStage("Stage " + student.getStage());
+        d.setCurrentLevel(String.valueOf(student.getStage()));
+        d.setRank(studentRepository.getStudentRankByTotalXp(student.getTotalXp()));
+        d.setAttendancePercentage(100.0);
+        d.setTeamName(student.getTeam() != null ? student.getTeam().getName() : "N/A");
+        d.setCaptain(isCap);
+        d.setViceCaptain(isViceCap);
+        if (student.getTeam() != null) {
+            d.setTeamMembersCount(student.getTeam().getMembers() != null ? student.getTeam().getMembers().size() : 0);
+            d.setTeamXp(0);
+        }
+
         return d;
     }
 }

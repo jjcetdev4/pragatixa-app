@@ -75,14 +75,44 @@ public class ActivityStageMapper {
         response.setGroupThreshold(entity.getGroupThreshold());
         response.setAcademicYear(entity.getAcademicYear());
 
-        // Dynamically calculate time remaining but use true database status
-        StageStatus calculatedStatus = entity.getStatus();
+        LocalDateTime now = LocalDateTime.now();
+        StageStatus calculatedStatus;
+
+        if (entity.getStartDateTime() == null && entity.getEndDateTime() == null) {
+            calculatedStatus = StageStatus.ACTIVE;
+        } else if (entity.getStartDateTime() != null && now.isBefore(entity.getStartDateTime())) {
+            calculatedStatus = StageStatus.UPCOMING;
+        } else if (entity.getEndDateTime() != null && now.isAfter(entity.getEndDateTime())) {
+            calculatedStatus = StageStatus.COMPLETED;
+        } else {
+            calculatedStatus = StageStatus.ACTIVE;
+        }
+
+        System.out.println("======================================");
+        System.out.println("DEBUG LOG: Stage ID = " + entity.getId());
+        System.out.println("DEBUG LOG: Stage Name = " + entity.getName());
+        System.out.println("DEBUG LOG: Start Date = " + (entity.getStartDateTime() != null ? entity.getStartDateTime().toLocalDate() : "null"));
+        System.out.println("DEBUG LOG: End Date = " + (entity.getEndDateTime() != null ? entity.getEndDateTime().toLocalDate() : "null"));
+        System.out.println("DEBUG LOG: Start Time = " + (entity.getStartDateTime() != null ? entity.getStartDateTime().toLocalTime() : "null"));
+        System.out.println("DEBUG LOG: End Time = " + (entity.getEndDateTime() != null ? entity.getEndDateTime().toLocalTime() : "null"));
+        System.out.println("DEBUG LOG: Current Time = " + now);
+        System.out.println("DEBUG LOG: Calculated Status = " + calculatedStatus);
+        
+        if (entity.getStartDateTime() == null && entity.getEndDateTime() == null) {
+            System.out.println("DEBUG LOG: Reason = No valid scheduling information exists. Defaulting to ACTIVE.");
+        } else if (calculatedStatus == StageStatus.UPCOMING) {
+            System.out.println("DEBUG LOG: Reason = Current time is before the configured Start Date.");
+        } else if (calculatedStatus == StageStatus.COMPLETED) {
+            System.out.println("DEBUG LOG: Reason = Current time is after the configured End Date.");
+        } else {
+            System.out.println("DEBUG LOG: Reason = Current time satisfies the ACTIVE condition (after start, before end).");
+        }
+        System.out.println("======================================");
+
         response.setStatus(calculatedStatus);
         response.setIsActive(calculatedStatus == StageStatus.ACTIVE);
         response.setIsUpcoming(calculatedStatus == StageStatus.UPCOMING);
         response.setIsCompleted(calculatedStatus == StageStatus.COMPLETED);
-
-        LocalDateTime now = LocalDateTime.now();
         if (calculatedStatus == StageStatus.UPCOMING && entity.getStartDateTime() != null) {
             long days = ChronoUnit.DAYS.between(now, entity.getStartDateTime());
             long hours = ChronoUnit.HOURS.between(now, entity.getStartDateTime()) % 24;

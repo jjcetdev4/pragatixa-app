@@ -285,6 +285,7 @@ public class AuthResponse {
         this.memberCount = memberCount;
     }
 
+    @JsonProperty("isCaptain")
     public boolean isCaptain() {
         return isCaptain;
     }
@@ -293,6 +294,7 @@ public class AuthResponse {
         this.isCaptain = isCaptain;
     }
 
+    @JsonProperty("isViceCaptain")
     public boolean isViceCaptain() {
         return isViceCaptain;
     }
@@ -301,6 +303,7 @@ public class AuthResponse {
         this.isViceCaptain = isViceCaptain;
     }
 
+    @JsonProperty("isMember")
     public boolean isMember() {
         return isMember;
     }

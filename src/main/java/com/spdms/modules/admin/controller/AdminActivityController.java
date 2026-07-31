@@ -74,12 +74,13 @@ public class AdminActivityController {
     }
 
     @GetMapping("/activities/grouped")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Get all activities grouped by subgroup")
     public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(
+            @RequestParam(required = false) Long stageId,
             @RequestParam(required = false) String subgroup,
             @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
-        return adminActivityService.getGroupedActivities(subgroup, academicYear);
+        return adminActivityService.getGroupedActivities(stageId, subgroup, academicYear);
     }
 
     @PostMapping("/subgroups/{subgroupId}/activities")
@@ -105,15 +106,21 @@ public class AdminActivityController {
     @Operation(summary = "Assign departments/sections/faculty to an activity (Bulk)")
     public ResponseEntity<ApiResponse<Void>> assignActivity(
             @PathVariable Long id,
+            @RequestParam(required = false) Long stageId,
             @RequestBody Map<String, Object> body) {
+        if (stageId != null && body != null && !body.containsKey("stageId")) {
+            body.put("stageId", stageId);
+        }
         return activityAssignmentService.assignActivity(id, body);
     }
 
     @GetMapping("/activities/{id}/assignments")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'TEACHER')")
     @Operation(summary = "Get all assignments for an activity")
-    public ResponseEntity<ApiResponse<List<ActivityAssignmentResponse>>> getAssignments(@PathVariable Long id) {
-        return activityAssignmentService.getAssignments(id);
+    public ResponseEntity<ApiResponse<List<ActivityAssignmentResponse>>> getAssignments(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long stageId) {
+        return activityAssignmentService.getAssignments(id, stageId);
     }
 
     @PostMapping("/activities/{id}/assignments")
@@ -121,8 +128,22 @@ public class AdminActivityController {
     @Operation(summary = "Add a single assignment to an activity")
     public ResponseEntity<ApiResponse<ActivityAssignmentResponse>> addAssignment(
             @PathVariable Long id,
+            @RequestParam(required = false) Long stageId,
             @RequestBody AssignmentRequest request) {
-        return activityAssignmentService.addAssignment(id, request);
+        
+        log.info("========================");
+        log.info("Incoming Assignment Request");
+        log.info("activityId: {}", id);
+        log.info("stageId: {}", stageId);
+        log.info("teacherId: {}", request.getTeacherId());
+        log.info("departmentId: {}", request.getDepartmentId());
+        log.info("sectionId: {}", request.getSectionId());
+        log.info("assignmentType: {}", request.getScope());
+        log.info("assignmentMode: UNKNOWN");
+        log.info("JWT User: {}", org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName() : "Anonymous");
+        log.info("========================");
+        
+        return activityAssignmentService.addAssignment(id, stageId, request);
     }
 
     @DeleteMapping("/activities/assignments/{assignmentId}")
@@ -178,7 +199,9 @@ public class AdminActivityController {
     @DeleteMapping("/activities/{activityId}/assignments/clear")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Remove all faculty assignments for an activity")
-    public ResponseEntity<ApiResponse<Void>> clearAssignments(@PathVariable Long activityId) {
-        return activityAssignmentService.clearAssignments(activityId);
+    public ResponseEntity<ApiResponse<Void>> clearAssignments(
+            @PathVariable Long activityId,
+            @RequestParam(required = false) Long stageId) {
+        return activityAssignmentService.clearAssignments(activityId, stageId);
     }
 }

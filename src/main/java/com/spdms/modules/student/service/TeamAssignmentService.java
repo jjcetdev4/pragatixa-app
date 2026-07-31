@@ -74,7 +74,32 @@ public class TeamAssignmentService {
 
         removeStudentFromOldStage(student, oldTeam);
 
+        boolean isCaptainAssigned = newTeam.getCaptain() != null;
+        boolean isViceCaptainAssigned = false;
+        
+        StageTeam newStageTeam = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), newTeam.getId()).orElse(null);
+        if (newStageTeam != null) {
+            isViceCaptainAssigned = newStageTeam.getViceCaptain() != null;
+        }
+
         moveStudent(student, newTeam, nextStage);
+
+        // Assign leadership strictly by promotion order within this new team
+        if (!isCaptainAssigned) {
+            newTeam.setCaptain(student);
+            teamRepository.save(newTeam);
+            System.out.println("STAGE 3+ LEADERSHIP: First promoted in " + newTeamName + " is now Captain -> " + student.getRegNo());
+            if (newStageTeam != null) {
+                newStageTeam.setCaptain(student);
+                stageTeamRepository.save(newStageTeam);
+            }
+        } else if (!isViceCaptainAssigned && newStageTeam != null) {
+            newStageTeam.setViceCaptain(student);
+            stageTeamRepository.save(newStageTeam);
+            System.out.println("STAGE 3+ LEADERSHIP: Second promoted in " + newTeamName + " is now Vice Captain -> " + student.getRegNo());
+        } else {
+            System.out.println("STAGE 3+ LEADERSHIP: Standard member assigned to " + newTeamName + " -> " + student.getRegNo());
+        }
 
         System.out.println("Student Moved: YES");
         System.out.println("TEAM ASSIGNMENT: Promotion Success for " + student.getRegNo());

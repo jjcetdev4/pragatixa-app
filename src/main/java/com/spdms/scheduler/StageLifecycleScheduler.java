@@ -40,11 +40,17 @@ public class StageLifecycleScheduler {
         boolean updated = false;
 
         for (ActivityStage stage : allStages) {
-            if (stage.getStartDateTime() == null || stage.getEndDateTime() == null) {
-                continue;
-            }
+            StageStatus newStatus;
 
-            StageStatus newStatus = StageStatus.ACTIVE;
+            if (stage.getStartDateTime() == null && stage.getEndDateTime() == null) {
+                newStatus = StageStatus.ACTIVE;
+            } else if (stage.getStartDateTime() != null && now.isBefore(stage.getStartDateTime())) {
+                newStatus = StageStatus.UPCOMING;
+            } else if (stage.getEndDateTime() != null && now.isAfter(stage.getEndDateTime())) {
+                newStatus = StageStatus.COMPLETED;
+            } else {
+                newStatus = StageStatus.ACTIVE;
+            }
 
             if (stage.getStatus() != newStatus) {
                 log.debug("Stage '{}' transitioned from {} to {}", stage.getName(), stage.getStatus(), newStatus);

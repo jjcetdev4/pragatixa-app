@@ -114,17 +114,35 @@ public class ActivityStageService {
         System.out.println("Selected Academic Year : " + requestedYear);
 
         com.pragatix.enums.AcademicYear effectiveYear = requestedYear;
+        Long departmentId = null;
+        boolean isStudent = false;
 
         try {
             String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                     .getAuthentication().getName();
             com.pragatix.entity.User user = userRepository.findByUsername(username).orElse(null);
+            
+            com.pragatix.entity.Student student = null;
+            if (user == null) {
+                student = studentRepository.findByRegNo(username).orElse(null);
+                if (student == null) {
+                    student = studentRepository.findByEmail(username).orElse(null);
+                }
+            }
 
             if (user != null) {
                 boolean isSuperAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
                 boolean isAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
                 if (!isSuperAdmin && isAdmin) {
                     effectiveYear = user.getAcademicYear();
+                }
+            } else if (student != null) {
+                isStudent = true;
+                departmentId = student.getDepartment() != null ? student.getDepartment().getId() : null;
+                
+                // If effectiveYear is still null, try to derive it from the student entity
+                if (effectiveYear == null) {
+                    effectiveYear = com.pragatix.enums.AcademicYear.fromStudent(student);
                 }
             }
         } catch (Exception e) {
@@ -136,12 +154,21 @@ public class ActivityStageService {
 
         final com.pragatix.enums.AcademicYear finalEffectiveYear = effectiveYear;
         List<ActivityStage> stages;
+        
         if (finalEffectiveYear != null) {
             stages = activityStageRepository.findByAcademicYearOrderByDisplayOrderAsc(finalEffectiveYear);
+        } else if (isStudent) {
+            // If it's a student and we couldn't resolve an academic year, return an empty list 
+            // rather than returning all stages for all years
+            stages = new ArrayList<>();
         } else {
             stages = allStages;
         }
+        
         System.out.println("Rows After Academic Year Filter : " + stages.size());
+
+        final Long finalDepartmentId = departmentId;
+        final boolean finalIsStudent = isStudent;
 
         List<ActivityStageResponse> responses = stages.stream().map(stage -> {
 
@@ -149,6 +176,14 @@ public class ActivityStageService {
 
             // Map subgroups
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
+            
+            // If student, filter subgroups by department
+            if (finalIsStudent && finalDepartmentId != null) {
+                subgroups = subgroups.stream()
+                        .filter(sub -> sub.getAssignedDepartment() == null || sub.getAssignedDepartment().getId().equals(finalDepartmentId))
+                        .collect(Collectors.toList());
+            }
+            
             List<com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream()
                     .map(sub -> {
                         com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse subMap = new com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse();
@@ -336,9 +371,37 @@ public class ActivityStageService {
         activityStageMapper.updateEntity(request, stage);
         stage.setAcademicYear(resolvedYear);
 
+        System.out.println("--- BEFORE UPDATE (Entity) ---");
+        System.out.println("Stage ID: " + stage.getId());
+        System.out.println("Total Threshold: " + stage.getExpectedXp());
+        System.out.println("Must Threshold: " + stage.getMustThreshold());
+        System.out.println("Individual Threshold: " + stage.getIndividualThreshold());
+        System.out.println("Group Threshold: " + stage.getGroupThreshold());
+
         System.out.println("Stage Year Before Save : " + stage.getAcademicYear());
         ActivityStage saved = activityStageRepository.save(stage);
         System.out.println("Stage Year After Save : " + saved.getAcademicYear());
+
+        System.out.println("--- AFTER UPDATE (Saved Entity) ---");
+        System.out.println("Stage ID: " + saved.getId());
+        System.out.println("Total Threshold: " + saved.getExpectedXp());
+        System.out.println("Must Threshold: " + saved.getMustThreshold());
+        System.out.println("Individual Threshold: " + saved.getIndividualThreshold());
+        System.out.println("Group Threshold: " + saved.getGroupThreshold());
+
+        // Update threshold values in associated subgroups to keep the Promotion Engine in sync
+        List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(id);
+        for (ActivitySubgroup sub : subgroups) {
+            String cat = sub.getCategory() != null ? sub.getCategory().toLowerCase() : "";
+            if (cat.contains("must")) {
+                sub.setThreshold(saved.getMustThreshold() != null ? saved.getMustThreshold() : 0);
+            } else if (cat.contains("individual")) {
+                sub.setThreshold(saved.getIndividualThreshold() != null ? saved.getIndividualThreshold() : 0);
+            } else if (cat.contains("group")) {
+                sub.setThreshold(saved.getGroupThreshold() != null ? saved.getGroupThreshold() : 0);
+            }
+            activitySubgroupRepository.save(sub);
+        }
 
         if (resolvedYear != null) {
             List<Activity> activities = activityRepository.findByStageId(id);

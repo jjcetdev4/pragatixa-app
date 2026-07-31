@@ -185,8 +185,20 @@ public class AuthService {
 
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                 && student.getTeam().getCaptain().getId().equals(student.getId());
-        boolean isViceCap = student.getTeam() != null && student.getTeam().getViceCaptain() != null
-                && student.getTeam().getViceCaptain().getId().equals(student.getId());
+        boolean isViceCap = false;
+        if (student.getTeam() != null) {
+            if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+                isViceCap = true;
+            } else {
+                List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
+                for (com.pragatix.entity.StageTeam st : stageTeams) {
+                    if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                        isViceCap = true;
+                        break;
+                    }
+                }
+            }
+        }
         boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
         int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
 
@@ -239,52 +251,36 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public ApiResponse<AuthResponse> getUserProfile(String username) {
-        User user = userRepository.findByUsername(username).orElse(null);
-        if (user != null) {
-            List<String> rolesList = user.getRoles().stream()
-                    .map(com.pragatix.entity.Role::getName)
-                    .collect(java.util.stream.Collectors.toList());
-
-            String userType = "USER";
-            if (rolesList.contains("ROLE_ADMIN")) {
-                userType = "ADMIN";
-            } else if (rolesList.contains("ROLE_TEACHER")) {
-                userType = "TEACHER";
-            } else if (rolesList.contains("ROLE_TRANSPORT")) {
-                userType = "TRANSPORT";
-            }
-
-            AuthResponse response = AuthResponse.builder()
-                    .token(null)
-                    .type("Bearer")
-                    .username(user.getUsername())
-                    .fullName(user.getFullName())
-                    .email(user.getEmail())
-                    .roles(rolesList)
-                    .subRoles(user.getSubRoles().stream()
-                            .map(SubRole::getName)
-                            .collect(Collectors.toList()))
-                    .userType(userType)
-                    .section(user.getSection() != null ? user.getSection().getSectionName() : null)
-                    .sectionId(user.getSection() != null ? user.getSection().getId() : null)
-                    .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
-                    .year(user.getYear())
-                    .academicYear(user.getAcademicYear() != null ? user.getAcademicYear().name() : null)
-                    .department(user.getDepartment() != null ? user.getDepartment().getName() : "")
-                    .build();
-            return ApiResponse.ok("Profile loaded", response);
-        }
-
         Student student = studentRepository.findByRegNo(username).orElse(null);
         if (student == null) {
             student = studentRepository.findByEmail(username).orElse(null);
         }
+        if (student == null) {
+            User u = userRepository.findByUsername(username).orElse(null);
+            if (u != null) {
+                student = studentRepository.findByUserId(u.getId()).orElse(null);
+                if (student == null && u.getEmail() != null) {
+                    student = studentRepository.findByEmail(u.getEmail()).orElse(null);
+                }
+            }
+        }
+
         if (student != null) {
             boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                     && student.getTeam().getCaptain().getId().equals(student.getId());
             boolean isViceCap = false;
-            if (student.getTeam() != null && student.getTeam().getViceCaptain() != null) {
-                isViceCap = student.getTeam().getViceCaptain().getId().equals(student.getId());
+            if (student.getTeam() != null) {
+                if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+                    isViceCap = true;
+                } else {
+                    List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
+                    for (com.pragatix.entity.StageTeam st : stageTeams) {
+                        if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                            isViceCap = true;
+                            break;
+                        }
+                    }
+                }
             }
 
             boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
@@ -339,6 +335,42 @@ public class AuthService {
             return ApiResponse.ok("Profile loaded", response);
         }
 
-        return ApiResponse.error("User not found");
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user != null) {
+            List<String> rolesList = user.getRoles().stream()
+                    .map(com.pragatix.entity.Role::getName)
+                    .collect(java.util.stream.Collectors.toList());
+
+            String userType = "USER";
+            if (rolesList.contains("ROLE_ADMIN")) {
+                userType = "ADMIN";
+            } else if (rolesList.contains("ROLE_TEACHER")) {
+                userType = "TEACHER";
+            } else if (rolesList.contains("ROLE_TRANSPORT")) {
+                userType = "TRANSPORT";
+            }
+
+            AuthResponse response = AuthResponse.builder()
+                    .token(null)
+                    .type("Bearer")
+                    .username(user.getUsername())
+                    .fullName(user.getFullName())
+                    .email(user.getEmail())
+                    .roles(rolesList)
+                    .subRoles(user.getSubRoles().stream()
+                            .map(SubRole::getName)
+                            .collect(Collectors.toList()))
+                    .userType(userType)
+                    .section(user.getSection() != null ? user.getSection().getSectionName() : null)
+                    .sectionId(user.getSection() != null ? user.getSection().getId() : null)
+                    .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
+                    .year(user.getYear())
+                    .academicYear(user.getAcademicYear() != null ? user.getAcademicYear().name() : null)
+                    .department(user.getDepartment() != null ? user.getDepartment().getName() : "")
+                    .build();
+            return ApiResponse.ok("Profile loaded", response);
+        }
+
+        return ApiResponse.error("User profile not found");
     }
 }

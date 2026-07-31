@@ -238,7 +238,7 @@ public class ActivityRequestMapper {
             activity.setAwardDays(null);
         }
 
-        Boolean isMandatory = true;
+        Boolean isMandatory = false;
         if (body.containsKey("isMandatory")) {
             Object val = body.get("isMandatory");
             if (val instanceof Boolean)
