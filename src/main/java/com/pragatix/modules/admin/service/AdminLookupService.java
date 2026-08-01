@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,8 +71,11 @@ public class AdminLookupService {
         return ResponseEntity.ok(ApiResponse.ok("Genders fetched successfully", filtered));
     }
 
-    public ResponseEntity<ApiResponse<List<Section>>> getAllSections() {
-        return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully", sectionRepository.findAll()));
+    public ResponseEntity<ApiResponse<List<Section>>> getAllSections(Long departmentId) {
+        if (departmentId == null) {
+            return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully", new ArrayList<>()));
+        }
+        return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully", sectionRepository.findByDepartment_IdOrderBySectionNameAsc(departmentId)));
     }
 
     public static String normalizeYearToRoman(String yr) {

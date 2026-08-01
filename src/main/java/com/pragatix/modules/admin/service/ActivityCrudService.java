@@ -341,17 +341,7 @@ public class ActivityCrudService {
             }
         }
 
-        String mode = activity.getModeType() != null ? activity.getModeType().trim().toLowerCase() : "";
-        String computedCategory;
-        if (mode.contains("group")) {
-            computedCategory = "group";
-        } else {
-            if (activity.isMandatory()) {
-                computedCategory = "must";
-            } else {
-                computedCategory = "individual";
-            }
-        }
+        String computedCategory = subgroupName.trim().toLowerCase();
 
         ActivitySubgroup subgroup = activitySubgroupRepository.findByStageIdAndCategoryIgnoreCase(stageId, computedCategory)
                 .orElseGet(() -> activitySubgroupRepository.findByStageIdAndNameIgnoreCase(stageId, computedCategory)

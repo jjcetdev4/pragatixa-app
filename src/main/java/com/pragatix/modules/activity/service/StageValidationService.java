@@ -169,15 +169,6 @@ public class StageValidationService {
             }
         }
 
-        System.out.println("========== MANDATORY ACTIVITY FILTERING ==========");
-        System.out.println("All Mapped Activities (raw size): " + allMappedActivities.size());
-        for (Activity a : allMappedActivities) {
-            if (a == null) continue;
-            if (a.isMandatory()) {
-                System.out.println(String.format("Mandatory Candidate - ID: %d, status: %s, xpType: %s, isMandatory: %b", 
-                    a.getId(), a.getStatus(), a.getXpType(), a.isMandatory()));
-            }
-        }
 
         List<Activity> mandatoryMustActivities = allMappedActivities.stream()
                 .filter(a -> {
@@ -214,6 +205,13 @@ public class StageValidationService {
                     return passed;
                 })
                 .collect(Collectors.toList());
+
+        System.out.println("========== MANDATORY ACTIVITY FILTERING ==========");
+        System.out.println("All Mapped Activities (raw size): " + allMappedActivities.size());
+        for (Activity a : mandatoryMustActivities) {
+            System.out.println(String.format("Mandatory Candidate - ID: %d, status: %s, xpType: %s, isMandatory: %b", 
+                a.getId(), a.getStatus(), a.getXpType(), a.isMandatory()));
+        }
 
         List<Long> requiredActivityIds = mandatoryMustActivities.stream()
                 .map(Activity::getId)

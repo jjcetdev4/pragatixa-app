@@ -12,6 +12,7 @@ public interface StudentActivityXpRepository extends JpaRepository<StudentActivi
 
     List<StudentActivityXp> findByStudentIdAndActivityId(Long regNo, Long activityId);
 
+    List<StudentActivityXp> findByStudentIdAndActivityIdAndStage(Long studentId, Long activityId, Integer stage);
     long countByActivityId(Long activityId);
 
     @org.springframework.data.jpa.repository.Modifying

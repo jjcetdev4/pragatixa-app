@@ -65,8 +65,8 @@ public class AdminLookupController {
     @GetMapping("/sections")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "List Sections")
-    public ResponseEntity<ApiResponse<List<Section>>> getAllSections() {
-        return adminLookupService.getAllSections();
+    public ResponseEntity<ApiResponse<List<Section>>> getAllSections(@RequestParam(required = false) Long departmentId) {
+        return adminLookupService.getAllSections(departmentId);
     }
 
 }

@@ -46,14 +46,14 @@ public class TeamQueryService {
         this.stageTeamRepository = stageTeamRepository;
     }
 
-    public ResponseEntity<ApiResponse<List<TeamResponse>>> getAllTeams() {
+    public ResponseEntity<ApiResponse<List<TeamResponse>>> getAllTeams(String academicYear, Long departmentId, Long sectionId) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         com.pragatix.entity.User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
 
-        List<Team> teams = teamRepository.findAll();
+        List<Team> teams = teamRepository.findFilteredTeams(academicYear, departmentId, sectionId);
         List<TeamResponse> responses = teams.stream()
                 .filter(team -> {
                     if (team.getCaptain() == null && (team.getMembers() == null || team.getMembers().isEmpty())) {

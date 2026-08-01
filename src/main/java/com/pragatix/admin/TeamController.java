@@ -57,8 +57,11 @@ public class TeamController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "List Teams")
-    public ResponseEntity<ApiResponse<List<TeamResponse>>> getAllTeams() {
-        return teamQueryService.getAllTeams();
+    public ResponseEntity<ApiResponse<List<TeamResponse>>> getAllTeams(
+            @RequestParam(required = false) String academicYear,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long sectionId) {
+        return teamQueryService.getAllTeams(academicYear, departmentId, sectionId);
     }
 
     @GetMapping("/my-team")

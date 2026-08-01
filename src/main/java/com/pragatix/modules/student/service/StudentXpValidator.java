@@ -43,8 +43,8 @@ public class StudentXpValidator {
             }
         }
 
-        List<StudentActivityXp> history = studentActivityXpRepository.findByStudentIdAndActivityId(
-                student.getId(), activity.getId());
+        List<StudentActivityXp> history = studentActivityXpRepository.findByStudentIdAndActivityIdAndStage(
+                student.getId(), activity.getId(), student.getStage());
 
         if ("One Time".equalsIgnoreCase(awardFrequency)) {
             if (!history.isEmpty()) {

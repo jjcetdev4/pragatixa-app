@@ -35,4 +35,13 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
                         @org.springframework.data.repository.query.Param("deptId") Long deptId,
                         @org.springframework.data.repository.query.Param("secId") Long secId,
                         @org.springframework.data.repository.query.Param("year") String year);
+
+        @org.springframework.data.jpa.repository.Query("SELECT t FROM Team t " +
+                        "WHERE (:academicYear IS NULL OR t.year = :academicYear) " +
+                        "AND (:departmentId IS NULL OR t.department.id = :departmentId) " +
+                        "AND (:sectionId IS NULL OR t.section.id = :sectionId)")
+        java.util.List<Team> findFilteredTeams(
+                        @org.springframework.data.repository.query.Param("academicYear") String academicYear,
+                        @org.springframework.data.repository.query.Param("departmentId") Long departmentId,
+                        @org.springframework.data.repository.query.Param("sectionId") Long sectionId);
 }
