@@ -467,7 +467,19 @@ if (engineActivity == null) {
                     
                     if (executeXp) {
                         try {
-                            Student savedStudent = xpEngineService.awardAttendanceXpOnly(student, engineActivity, appliedXp, transactionRemark);
+                            com.pragatix.modules.attendance.dto.AttendanceXpExecutionRequest req = new com.pragatix.modules.attendance.dto.AttendanceXpExecutionRequest();
+                            req.setStudentId(student.getId());
+                            req.setActivityId(engineActivity.getId());
+                            req.setAttendanceRule(penaltySource);
+                            req.setCalculatedXp(appliedXp);
+                            req.setIsPenalty(appliedXp < 0);
+                            req.setAttendanceDate(engineDate);
+                            req.setWeekStartDate(startDate);
+                            req.setWeekEndDate(endDate);
+                            req.setReason("Attendance Daily Rule: " + penaltySource);
+                            req.setRemarks(transactionRemark);
+
+                            Student savedStudent = xpEngineService.awardXp(student, engineActivity, null, null, appliedXp, transactionRemark, req);
                             log.info("New Total XP      : {}", savedStudent.getTotalXp());
                             log.info("Transaction Saved : YES");
                         } catch (Exception e) {

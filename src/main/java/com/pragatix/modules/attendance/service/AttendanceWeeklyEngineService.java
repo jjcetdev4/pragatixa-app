@@ -290,16 +290,65 @@ if (engineActivity == null) {
                     }
 
                     double attendancePct = totalMarked == 0 ? 0 : (totalPresent * 100.0 / totalMarked);
-                    // Master Prompt: "If the student has even one Partial Absent OR Full Day Absent, No reward."
-                    boolean perfectWeek = totalAbsent == 0 && totalPresent == totalMarked && totalMarked == workingDays.size();
+                    
+                    // Root Cause Fix: totalMarked is the number of periods/records across the week, not days.
+                    // We just need to ensure they have some attendance marked, and that all marked records are PRESENT.
+                    // Also, we can optionally ensure they have attendance marked on every working day.
+                    // Let's count how many distinct working days they have attendance for.
+                    long daysWithAttendance = 0;
+                    long partialDays = 0;
+                    long fullAbsentDays = 0;
+                    long fullPresentDays = 0;
+                    
+                    for (LocalDate workDay : workingDays) {
+                        long dPresent = attendanceRepository.countByStudentIdAndAttendanceDateAndStatus(student.getId(), workDay, Attendance.AttendanceStatus.PRESENT);
+                        long dAbsent = attendanceRepository.countByStudentIdAndAttendanceDateAndStatus(student.getId(), workDay, Attendance.AttendanceStatus.ABSENT);
+                        long dMarked = attendanceRepository.countByStudentIdAndAttendanceDate(student.getId(), workDay);
+                        
+                        if (dMarked > 0) {
+                            daysWithAttendance++;
+                            if (dAbsent == 0) {
+                                fullPresentDays++;
+                            } else if (dPresent > 0) {
+                                partialDays++;
+                            } else {
+                                fullAbsentDays++;
+                            }
+                        }
+                    }
 
-                    log.info("==================================== ATTENDANCE XP EXECUTION ====================================");
-                    log.info("Student ID         : {}", student.getId());
-                    log.info("Student Name       : {}", student.getUser() != null ? student.getUser().getFullName() : student.getRegNo());
-                    log.info("Activity ID        : {}", engineActivity.getId());
-                    log.info("Activity Name      : {}", engineActivity.getName());
-                    log.info("Attendance Status  : {}%", String.format("%.1f", attendancePct));
-                    log.info("Perfect Week       : {}", perfectWeek ? "YES" : "NO");
+                    boolean perfectWeek = false;
+                    String reason = "";
+                    
+                    if (daysWithAttendance < workingDays.size()) {
+                        perfectWeek = false;
+                        reason = "Missing attendance for one or more working days.";
+                    } else if (totalAbsent > 0) {
+                        perfectWeek = false;
+                        reason = "Has " + totalAbsent + " absent records in the week.";
+                    } else if (totalPresent == totalMarked && totalMarked > 0) {
+                        perfectWeek = true;
+                        reason = "Perfect attendance for entire configured week.";
+                    } else {
+                        perfectWeek = false;
+                        reason = "Unknown condition failed.";
+                    }
+
+                    log.info("================ FORENSIC TRACE: WEEKLY ELIGIBILITY ================");
+                    log.info("Student           : {}", student.getRegNo());
+                    log.info("Working Days      : {}", workingDays.size());
+                    log.info("Days With Records : {}", daysWithAttendance);
+                    log.info("Total Records     : {}", totalMarked);
+                    log.info("Present Records   : {}", totalPresent);
+                    log.info("Absent Records    : {}", totalAbsent);
+                    log.info("Full Present Days : {}", fullPresentDays);
+                    log.info("Partial Days      : {}", partialDays);
+                    log.info("Full Absent Days  : {}", fullAbsentDays);
+                    log.info("Attendance %      : {}%", String.format("%.1f", attendancePct));
+                    log.info("PerfectWeek       : {}", perfectWeek ? "TRUE" : "FALSE");
+                    log.info("Eligible          : {}", perfectWeek ? "TRUE" : "FALSE");
+                    log.info("Reason            : {}", reason);
+                    log.info("====================================================================");
                     
                     if (perfectWeek) {
                         // Duplicate Protection
@@ -346,7 +395,19 @@ if (engineActivity == null) {
 
                         if (executeXp) {
                             try {
-                                Student savedStudent = xpEngineService.awardAttendanceXpOnly(student, engineActivity, awardXp, transactionRemark);
+                                com.pragatix.modules.attendance.dto.AttendanceXpExecutionRequest req = new com.pragatix.modules.attendance.dto.AttendanceXpExecutionRequest();
+                                req.setStudentId(student.getId());
+                                req.setActivityId(engineActivity.getId());
+                                req.setAttendanceRule(ruleApplied);
+                                req.setCalculatedXp(awardXp);
+                                req.setIsPenalty(awardXp < 0);
+                                req.setAttendanceDate(endDate);
+                                req.setWeekStartDate(startDate);
+                                req.setWeekEndDate(endDate);
+                                req.setReason("Attendance Weekly Rule: " + ruleApplied);
+                                req.setRemarks(transactionRemark);
+
+                                Student savedStudent = xpEngineService.awardXp(student, engineActivity, null, null, awardXp, transactionRemark, req);
                                 log.info("New Total XP      : {}", savedStudent.getTotalXp());
                                 log.info("Transaction Saved : YES");
                             } catch (Exception e) {

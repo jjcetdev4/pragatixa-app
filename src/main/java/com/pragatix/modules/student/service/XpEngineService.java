@@ -44,6 +44,12 @@ public class XpEngineService {
     @Transactional
     public Student awardXp(Student student, Activity activity, User authorizedUser, ActivityAssignment assignment,
             int requestXp, String remarks) {
+        return awardXp(student, activity, authorizedUser, assignment, requestXp, remarks, null);
+    }
+
+    @Transactional
+    public Student awardXp(Student student, Activity activity, User authorizedUser, ActivityAssignment assignment,
+            int requestXp, String remarks, com.pragatix.modules.attendance.dto.AttendanceXpExecutionRequest attendanceReq) {
 
         System.out.println("=====================================================");
         System.out.println("XP ENGINE: Processing Award for Student: " + student.getId());
@@ -71,46 +77,62 @@ public class XpEngineService {
         // ====================================================
         int configuredXp = 0;
         boolean penaltyFlag = false;
-
-        if (activity != null) {
-            if (Boolean.TRUE.equals(activity.getAttendanceEngineEnabled()) ||
-               (Boolean.TRUE.equals(activity.getAwardEnabled()) && Boolean.TRUE.equals(activity.getPenaltyEnabled()))) {
-                penaltyFlag = requestXp < 0;
-            } else {
-                penaltyFlag = (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled())
-                        || "Penalty".equalsIgnoreCase(activity.getXpType());
-            }
-            if (penaltyFlag) {
-                configuredXp = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : 0;
-                if (configuredXp == 0)
-                    configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
-            } else {
-                configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
-            }
-        } else {
-            configuredXp = Math.abs(requestXp);
-            penaltyFlag = requestXp < 0;
-        }
-
         int appliedXp = 0;
-        if (penaltyFlag) {
-            if (activity != null && Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
-                appliedXp = -Math.abs(requestXp);
-            } else {
-                appliedXp = -Math.abs(configuredXp);
-            }
-        } else {
-            // For regular rewards, allow partial points if valid, otherwise use configured.
-            // But if strict rule:
-            appliedXp = Math.abs(configuredXp);
-            if (requestXp > 0 && requestXp < configuredXp) {
-                appliedXp = requestXp; // Allow partial grading for awards, but never for penalties.
-            }
-        }
 
-        System.out.println("Configured XP: " + configuredXp);
-        System.out.println("Penalty: " + penaltyFlag);
-        System.out.println("Calculated Applied XP: " + appliedXp);
+        if (attendanceReq != null) {
+            System.out.println("Attendance Override = TRUE");
+            System.out.println("Activity ID\n" + (activity != null ? activity.getId() : "null"));
+            System.out.println("Attendance Rule\n" + attendanceReq.getAttendanceRule());
+            System.out.println("Calculated XP\n" + attendanceReq.getCalculatedXp());
+            System.out.println("Activity Award XP (Ignored)\n" + (activity != null ? activity.getAwardXp() : "null"));
+            System.out.println("Activity Penalty XP (Ignored)\n" + (activity != null ? activity.getPenaltyXp() : "null"));
+            System.out.println("Applied XP\n" + attendanceReq.getCalculatedXp());
+            System.out.println("Reason\n" + attendanceReq.getReason());
+
+            configuredXp = Math.abs(attendanceReq.getCalculatedXp());
+            penaltyFlag = attendanceReq.getIsPenalty();
+            appliedXp = attendanceReq.getCalculatedXp(); // Note: we assume Attendance engine passes signed XP correctly (-40 for penalties)
+        } else {
+            System.out.println("Attendance Override = FALSE");
+            
+            if (activity != null) {
+                if (Boolean.TRUE.equals(activity.getAttendanceEngineEnabled()) ||
+                   (Boolean.TRUE.equals(activity.getAwardEnabled()) && Boolean.TRUE.equals(activity.getPenaltyEnabled()))) {
+                    penaltyFlag = requestXp < 0;
+                } else {
+                    penaltyFlag = (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled())
+                            || "Penalty".equalsIgnoreCase(activity.getXpType());
+                }
+                if (penaltyFlag) {
+                    configuredXp = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : 0;
+                    if (configuredXp == 0)
+                        configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+                } else {
+                    configuredXp = activity.getAwardXp() != null ? activity.getAwardXp() : 0;
+                }
+            } else {
+                configuredXp = Math.abs(requestXp);
+                penaltyFlag = requestXp < 0;
+            }
+
+            if (penaltyFlag) {
+                if (activity != null && Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
+                    appliedXp = -Math.abs(requestXp);
+                } else {
+                    appliedXp = -Math.abs(configuredXp);
+                }
+            } else {
+                // For regular rewards, allow partial points if valid, otherwise use configured.
+                appliedXp = Math.abs(configuredXp);
+                if (requestXp > 0 && requestXp < configuredXp) {
+                    appliedXp = requestXp; // Allow partial grading for awards, but never for penalties.
+                }
+            }
+
+            System.out.println("Activity Award XP Used: " + (activity != null ? activity.getAwardXp() : "null"));
+            System.out.println("Activity Penalty XP Used: " + (activity != null ? activity.getPenaltyXp() : "null"));
+            System.out.println("Applied XP: " + appliedXp);
+        }
 
         int oldTotalXp = student.getTotalXp();
 
@@ -301,32 +323,4 @@ public class XpEngineService {
         }
     }
 
-    @Transactional
-    public Student awardAttendanceXpOnly(Student student, Activity activity, int appliedXp, String remarks) {
-        String resolvedCategory = "ATTENDANCE";
-        String activityName = activity != null ? activity.getName() : "Attendance Update";
-        
-        // Only update Total XP and Score
-        int oldTotalXp = student.getTotalXp();
-        student.setTotalXp(oldTotalXp + appliedXp);
-        student.setScore(student.getScore() + appliedXp);
-
-        // Save XP Transaction ONLY
-        XpTransaction tx = XpTransaction.builder()
-                .student(student)
-                .activity(activity)
-                .category(resolvedCategory)
-                .activityName(activityName + (remarks != null && !remarks.isEmpty() ? " - " + remarks : ""))
-                .xpPoints(appliedXp)
-                .submittedAt(LocalDateTime.now())
-                .status("APPROVED")
-                .approvedBy("ATTENDANCE_ENGINE")
-                .isPenalty(appliedXp < 0)
-                .capApplied(false)
-                .stage(student.getStage())
-                .build();
-        xpTransactionRepository.saveAndFlush(tx);
-
-        return studentRepository.save(student);
-    }
 }
