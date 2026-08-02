@@ -15,6 +15,8 @@ public class ActivityResponse {
     private Integer remainingXp;
     private Boolean completed;
     private Boolean allowStudentRequest;
+    private Boolean attendanceEngineEnabled;
+    private String attendanceRule;
 
     public ActivityResponse() {
     }
@@ -129,5 +131,31 @@ public class ActivityResponse {
 
     public void setAllowStudentRequest(Boolean allowStudentRequest) {
         this.allowStudentRequest = allowStudentRequest;
+    }
+
+    public Boolean getAttendanceEngineEnabled() {
+        return attendanceEngineEnabled;
+    }
+
+    public void setAttendanceEngineEnabled(Boolean attendanceEngineEnabled) {
+        this.attendanceEngineEnabled = attendanceEngineEnabled;
+    }
+
+    public String getAttendanceRule() {
+        return attendanceRule;
+    }
+
+    public void setAttendanceRule(String attendanceRule) {
+        this.attendanceRule = attendanceRule;
+    }
+
+    private String manualEvidenceName;
+
+    public String getManualEvidenceName() {
+        return manualEvidenceName;
+    }
+
+    public void setManualEvidenceName(String manualEvidenceName) {
+        this.manualEvidenceName = manualEvidenceName;
     }
 }

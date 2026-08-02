@@ -95,6 +95,9 @@ public class StudentActivityAssembler {
             actMap.setCompleted(completed);
             actMap.setStatus(status);
             actMap.setAllowStudentRequest(act.getAllowStudentRequest());
+            actMap.setAttendanceEngineEnabled(act.getAttendanceEngineEnabled());
+            actMap.setAttendanceRule(act.getAttendanceRule());
+            actMap.setManualEvidenceName(act.getManualEvidenceName());
 
             enrichedActivities.add(actMap);
         }

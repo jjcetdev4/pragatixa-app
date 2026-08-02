@@ -218,6 +218,7 @@ public class ActivityStageService {
                                     actMap.setFrequency(
                                             act.getFrequency() != null ? act.getFrequency() : act.getAwardFrequency());
                                     actMap.setEvidence(act.getEvidence());
+                                    actMap.setManualEvidenceName(act.getManualEvidenceName());
 
                                     String facultyName = null;
                                     Long facultyId = null;
@@ -277,6 +278,7 @@ public class ActivityStageService {
                                     actMap.setFrequency(
                                             act.getFrequency() != null ? act.getFrequency() : act.getAwardFrequency());
                                     actMap.setEvidence(act.getEvidence());
+                                    actMap.setManualEvidenceName(act.getManualEvidenceName());
 
                                     String facultyName = null;
                                     Long facultyId = null;

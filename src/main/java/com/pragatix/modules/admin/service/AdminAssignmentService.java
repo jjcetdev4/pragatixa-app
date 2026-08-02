@@ -5,6 +5,9 @@ import com.pragatix.entity.Activity;
 import com.pragatix.repository.ActivityAssignmentRepository;
 import com.pragatix.entity.ActivityAssignment;
 import com.pragatix.entity.AssignmentScope;
+import com.pragatix.entity.ActivitySubgroup;
+import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
+import com.pragatix.modules.activity.repository.ActivityRepository;
 import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +26,15 @@ public class AdminAssignmentService {
     private static final Logger log = LoggerFactory.getLogger(AdminAssignmentService.class);
 
     private final ActivityAssignmentRepository activityAssignmentRepository;
+    private final ActivitySubgroupRepository activitySubgroupRepository;
+    private final ActivityRepository activityRepository;
 
-    public AdminAssignmentService(ActivityAssignmentRepository activityAssignmentRepository) {
+    public AdminAssignmentService(ActivityAssignmentRepository activityAssignmentRepository,
+                                  ActivitySubgroupRepository activitySubgroupRepository,
+                                  ActivityRepository activityRepository) {
         this.activityAssignmentRepository = activityAssignmentRepository;
+        this.activitySubgroupRepository = activitySubgroupRepository;
+        this.activityRepository = activityRepository;
     }
 
     public void populateActivityTransientFields(Activity activity) {
@@ -33,6 +42,42 @@ public class AdminAssignmentService {
     }
 
     public void populateActivityTransientFields(Activity activity, Long stageId) {
+        if (Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
+            boolean isValid = true;
+            String storedSubgroup = activity.getSubgroup() != null ? activity.getSubgroup().getName() : "null";
+            String storedCategory = activity.getSubgroup() != null ? activity.getSubgroup().getCategory() : "null";
+            
+            if (activity.getSubgroup() == null || !"Individual".equalsIgnoreCase(activity.getSubgroup().getName())) {
+                isValid = false;
+            }
+            
+            log.info("================================================");
+            log.info("ATTENDANCE ACTIVITY LOAD");
+            log.info("Activity ID : {}", activity.getId());
+            log.info("Activity Name : {}", activity.getName());
+            log.info("Attendance Enabled : {}", activity.getAttendanceEngineEnabled());
+            log.info("Stored Subgroup : {}", storedSubgroup);
+            log.info("Stored Category : {}", storedCategory);
+            log.info("Mode Type : {}", activity.getModeType());
+            log.info("Mandatory : {}", activity.isMandatory());
+            log.info("Dropdown Status : {}", isValid ? "VALID" : "INVALID");
+            log.info("================================================");
+            
+            if (!isValid) {
+                log.warn("WARNING Invalid dropdown value detected. Dropdown : Subgroup Stored Value : {} Resolved To : Individual Reason : Referenced value no longer exists or is incorrect.", storedSubgroup);
+                
+                if (activity.getStage() != null) {
+                    ActivitySubgroup individualSubgroup = activitySubgroupRepository.findByStageIdAndNameIgnoreCase(activity.getStage().getId(), "Individual").orElse(null);
+                    if (individualSubgroup != null) {
+                        activity.setSubgroup(individualSubgroup);
+                        activity.setModeType("Individual");
+                        activity.setMandatory(false);
+                        activityRepository.save(activity);
+                    }
+                }
+            }
+        }
+
         List<ActivityAssignment> assignments;
         if (stageId != null) {
             assignments = activityAssignmentRepository.findByActivityIdAndStageId(activity.getId(), stageId);

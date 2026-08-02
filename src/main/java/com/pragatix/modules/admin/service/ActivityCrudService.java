@@ -111,14 +111,16 @@ public class ActivityCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.<Activity>error(catVal.getBody().getMessage()));
         String matchedCategory = validationService.matchXpCategory(xpCategory);
 
-        Object[] awardConfig = requestMapper.parseAwardConfiguration(body);
+        Object[] awardConfig = requestMapper.parseAwardConfiguration(body, null);
         boolean awardEnabled = (Boolean) awardConfig[0];
         Integer awardXp = (Integer) awardConfig[1];
         boolean penaltyEnabled = (Boolean) awardConfig[2];
         Integer penaltyXp = (Integer) awardConfig[3];
 
-        ResponseEntity<ApiResponse<String>> confVal = validationService.validateXpConfiguration(awardEnabled,
-                penaltyEnabled, awardXp, penaltyXp);
+        ResponseEntity<ApiResponse<String>> confVal = null;
+        if (!Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
+            confVal = validationService.validateXpConfiguration(awardEnabled, penaltyEnabled, awardXp, penaltyXp);
+        }
         if (confVal != null)
             return ResponseEntity.badRequest().body(ApiResponse.<Activity>error(confVal.getBody().getMessage()));
 
@@ -143,10 +145,26 @@ public class ActivityCrudService {
         requestMapper.mapRemainingConfiguration(activity, body, matchedCategory, awardEnabled, awardXp, penaltyEnabled,
                 penaltyXp, awardType, matchedFrequency, cap, awardDays);
 
+        if (Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
+            if (activity.getEvidence() == null || activity.getEvidence().trim().isEmpty()) {
+                activity.setEvidence("Manual");
+            }
+            if (activity.getStage() != null) {
+                long existingCount = activityRepository.countByStageIdAndAttendanceEngineEnabledTrue(activity.getStage().getId());
+                if (existingCount > 0) {
+                    String errorMsg = "An Attendance Engine activity is already configured for this stage.";
+                    return ResponseEntity.badRequest().body(ApiResponse.<Activity>error(errorMsg));
+                }
+            }
+        }
+
         log.debug("Entity before save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                 activity.getAwardEnabled(), activity.getAwardXp(), activity.getPenaltyEnabled(),
                 activity.getPenaltyXp());
+        log.info("FORENSIC: ActivityCrudService before save - attendanceEngineEnabled: {}", activity.getAttendanceEngineEnabled());
         Activity saved = activityRepository.save(activity);
+        log.info("FORENSIC: ActivityCrudService after save - attendanceEngineEnabled: {}", saved.getAttendanceEngineEnabled());
+
         log.debug("Entity after save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                 saved.getAwardEnabled(), saved.getAwardXp(), saved.getPenaltyEnabled(), saved.getPenaltyXp());
         adminAssignmentService.populateActivityTransientFields(saved);
@@ -155,6 +173,10 @@ public class ActivityCrudService {
 
     @Transactional
     public ResponseEntity<ApiResponse<Activity>> updateActivity(Long activityId, Map<String, Object> body) {
+        System.out.println("========== FORENSIC TRACE: UPDATE ACTIVITY ==========");
+        System.out.println("Activity ID : " + activityId);
+        System.out.println("Raw Request Body : " + body);
+        
         Activity activity = activityRepository.findById(activityId).orElse(null);
         if (activity == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Activity>error("Activity not found"));
@@ -166,7 +188,9 @@ public class ActivityCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.<Activity>error(e.getMessage()));
         }
 
+        System.out.println("Status before mapBasicFields : " + activity.getStatus());
         requestMapper.mapBasicFields(activity, body);
+        System.out.println("Status after mapBasicFields : " + activity.getStatus());
 
         String xpCategory = requestMapper.extractXpCategory(body);
         ResponseEntity<ApiResponse<String>> catVal = validationService.validateXpCategory(xpCategory);
@@ -174,14 +198,16 @@ public class ActivityCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.<Activity>error(catVal.getBody().getMessage()));
         String matchedCategory = validationService.matchXpCategory(xpCategory);
 
-        Object[] awardConfig = requestMapper.parseAwardConfiguration(body);
+        Object[] awardConfig = requestMapper.parseAwardConfiguration(body, activity);
         boolean awardEnabled = (Boolean) awardConfig[0];
         Integer awardXp = (Integer) awardConfig[1];
         boolean penaltyEnabled = (Boolean) awardConfig[2];
         Integer penaltyXp = (Integer) awardConfig[3];
 
-        ResponseEntity<ApiResponse<String>> confVal = validationService.validateXpConfiguration(awardEnabled,
-                penaltyEnabled, awardXp, penaltyXp);
+        ResponseEntity<ApiResponse<String>> confVal = null;
+        if (!Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
+            confVal = validationService.validateXpConfiguration(awardEnabled, penaltyEnabled, awardXp, penaltyXp);
+        }
         if (confVal != null)
             return ResponseEntity.badRequest().body(ApiResponse.<Activity>error(confVal.getBody().getMessage()));
 
@@ -205,6 +231,19 @@ public class ActivityCrudService {
 
         requestMapper.mapRemainingConfiguration(activity, body, matchedCategory, awardEnabled, awardXp, penaltyEnabled,
                 penaltyXp, awardType, matchedFrequency, cap, awardDays);
+
+        if (Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
+            if (activity.getEvidence() == null || activity.getEvidence().trim().isEmpty()) {
+                activity.setEvidence("Manual");
+            }
+            if (activity.getStage() != null) {
+                java.util.Optional<Activity> existing = activityRepository.findByStageIdAndAttendanceEngineEnabledTrue(activity.getStage().getId());
+                if (existing.isPresent() && !existing.get().getId().equals(activity.getId())) {
+                    String errorMsg = "An Attendance Engine activity is already configured for this stage.";
+                    return ResponseEntity.badRequest().body(ApiResponse.<Activity>error(errorMsg));
+                }
+            }
+        }
 
         if (body.containsKey("stageId") && body.get("stageId") != null) {
             try {
@@ -217,6 +256,21 @@ public class ActivityCrudService {
                     mapping.setPenaltyXp(penaltyXp);
                     mapping.setAwardFrequency(matchedFrequency);
                     activityStageMappingRepository.save(mapping);
+                }
+            } catch (Exception ignored) {}
+        } else {
+            // Synchronize across all mappings for this activity if specific stageId is not provided
+            try {
+                List<com.pragatix.entity.ActivityStageMapping> mappings = activityStageMappingRepository.findByActivityId(activityId);
+                for (com.pragatix.entity.ActivityStageMapping m : mappings) {
+                    m.setAwardXp(awardXp);
+                    m.setAwardEnabled(awardEnabled);
+                    m.setPenaltyEnabled(penaltyEnabled);
+                    m.setPenaltyXp(penaltyXp);
+                    m.setAwardFrequency(matchedFrequency);
+                }
+                if (!mappings.isEmpty()) {
+                    activityStageMappingRepository.saveAll(mappings);
                 }
             } catch (Exception ignored) {}
         }
@@ -266,9 +320,19 @@ public class ActivityCrudService {
         log.debug("Entity before save [Update] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                 activity.getAwardEnabled(), activity.getAwardXp(), activity.getPenaltyEnabled(),
                 activity.getPenaltyXp());
+
+        System.out.println("Status before save : " + activity.getStatus());
+        log.info("FORENSIC: ActivityCrudService before save - attendanceEngineEnabled: {}", activity.getAttendanceEngineEnabled());
         Activity saved = activityRepository.save(activity);
-        log.debug("Entity after save [Update] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
-                saved.getAwardEnabled(), saved.getAwardXp(), saved.getPenaltyEnabled(), saved.getPenaltyXp());
+        log.info("FORENSIC: ActivityCrudService after save - attendanceEngineEnabled: {}", saved.getAttendanceEngineEnabled());
+
+        activityRepository.flush(); // Force write to DB
+        
+        // Re-read from database
+        Activity reRead = activityRepository.findById(saved.getId()).orElse(null);
+        System.out.println("Status after save (re-read from DB) : " + (reRead != null ? reRead.getStatus() : "null"));
+        System.out.println("=====================================================");
+
         adminAssignmentService.populateActivityTransientFields(saved);
         return ResponseEntity.ok(ApiResponse.ok("Activity updated successfully", saved));
     }
@@ -386,6 +450,11 @@ public class ActivityCrudService {
             System.out.println("========================================");
 
             ActivityStageMapping mapping = new ActivityStageMapping(activity, stage, subgroup);
+            mapping.setAwardEnabled(activity.getAwardEnabled());
+            mapping.setPenaltyEnabled(activity.getPenaltyEnabled());
+            mapping.setAwardXp(activity.getAwardXp());
+            mapping.setPenaltyXp(activity.getPenaltyXp());
+            mapping.setAwardFrequency(activity.getAwardFrequency());
             activityStageMappingRepository.save(mapping);
             log.debug("Successfully mapped activity ID {} to stage ID {} subgroup {}", activityId, stageId, subgroupName);
             return ResponseEntity.ok(ApiResponse.ok("Activity mapped successfully", null));

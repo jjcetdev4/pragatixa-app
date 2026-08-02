@@ -30,6 +30,13 @@ public class ActivityRequestMapper {
             activity.setEvidence((String) evidenceObj);
         }
 
+        if (body.containsKey("manualEvidenceName")) {
+            Object manualEvObj = body.get("manualEvidenceName");
+            activity.setManualEvidenceName(manualEvObj != null ? manualEvObj.toString() : null);
+        } else {
+            activity.setManualEvidenceName(null);
+        }
+
         activity.setXp((String) body.get("xp"));
         activity.setCap(body.get("cap"));
         activity.setType((String) body.get("type"));
@@ -50,13 +57,32 @@ public class ActivityRequestMapper {
                 activity.setAllowStudentRequest(Boolean.parseBoolean((String) val));
             }
         }
+
+        if (body.containsKey("attendanceEngineEnabled") && body.get("attendanceEngineEnabled") != null) {
+            Object val = body.get("attendanceEngineEnabled");
+            if (val instanceof Boolean) {
+                activity.setAttendanceEngineEnabled((Boolean) val);
+            } else if (val instanceof String) {
+                activity.setAttendanceEngineEnabled(Boolean.parseBoolean((String) val));
+            }
+            System.out.println("FORENSIC: ActivityRequestMapper - Parsed attendanceEngineEnabled as TRUE/FALSE: " + activity.getAttendanceEngineEnabled());
+        } else if (activity.getId() == null) {
+            activity.setAttendanceEngineEnabled(false);
+            System.out.println("FORENSIC: ActivityRequestMapper - Key not found or null for CREATE. Set to FALSE.");
+        }
+
+        if (body.containsKey("attendanceRule") && body.get("attendanceRule") != null) {
+            activity.setAttendanceRule(body.get("attendanceRule").toString().trim());
+        } else if (activity.getId() == null) {
+            activity.setAttendanceRule(null);
+        }
     }
 
     public String extractXpCategory(Map<String, Object> body) {
         return (String) body.get("xpCategory");
     }
 
-    public Object[] parseAwardConfiguration(Map<String, Object> body) {
+    public Object[] parseAwardConfiguration(Map<String, Object> body, Activity existingActivity) {
         Boolean awardEnabled = false;
         if (body.containsKey("awardEnabled")) {
             Object val = body.get("awardEnabled");
@@ -104,44 +130,63 @@ public class ActivityRequestMapper {
             }
         }
 
-        // Backward compatibility
-        if (!body.containsKey("awardEnabled") && !body.containsKey("penaltyEnabled")) {
-            Integer passXp = 0;
-            if (body.containsKey("passXp")) {
-                try {
-                    passXp = Integer.parseInt(body.get("passXp").toString());
-                } catch (Exception ignored) {
-                }
+        // Preservation logic for updates
+        if (existingActivity != null && Boolean.TRUE.equals(existingActivity.getAttendanceEngineEnabled()) &&
+                !body.containsKey("awardEnabled") && !body.containsKey("penaltyEnabled") &&
+                !body.containsKey("awardXp") && !body.containsKey("penaltyXp")) {
+            
+            if (!body.containsKey("awardEnabled")) {
+                awardEnabled = existingActivity.getAwardEnabled();
             }
-            Integer failXp = 0;
-            if (body.containsKey("failXp")) {
-                try {
-                    failXp = Integer.parseInt(body.get("failXp").toString());
-                } catch (Exception ignored) {
-                }
+            if (!body.containsKey("awardXp")) {
+                awardXp = existingActivity.getAwardXp();
             }
-            if (passXp > 0 || failXp > 0) {
-                awardEnabled = passXp > 0;
-                awardXp = passXp;
-                penaltyEnabled = failXp > 0;
-                penaltyXp = failXp;
-            } else {
-                String reqXpType = body.containsKey("xpType") && body.get("xpType") != null
-                        ? body.get("xpType").toString()
-                        : "Reward";
-                if ("Penalty".equalsIgnoreCase(reqXpType) || "Discipline".equalsIgnoreCase(reqXpType)) {
-                    penaltyEnabled = true;
-                    penaltyXp = awardXp;
-                    awardEnabled = false;
-                    awardXp = 0;
-                } else if ("Mixed".equalsIgnoreCase(reqXpType)) {
-                    awardEnabled = true;
-                    penaltyEnabled = true;
-                    penaltyXp = awardXp;
+            if (!body.containsKey("penaltyEnabled")) {
+                penaltyEnabled = existingActivity.getPenaltyEnabled();
+            }
+            if (!body.containsKey("penaltyXp")) {
+                penaltyXp = existingActivity.getPenaltyXp();
+            }
+        } else {
+            // Backward compatibility
+            if (!body.containsKey("awardEnabled") && !body.containsKey("penaltyEnabled")) {
+                Integer passXp = 0;
+                if (body.containsKey("passXp")) {
+                    try {
+                        passXp = Integer.parseInt(body.get("passXp").toString());
+                    } catch (Exception ignored) {
+                    }
+                }
+                Integer failXp = 0;
+                if (body.containsKey("failXp")) {
+                    try {
+                        failXp = Integer.parseInt(body.get("failXp").toString());
+                    } catch (Exception ignored) {
+                    }
+                }
+                if (passXp > 0 || failXp > 0) {
+                    awardEnabled = passXp > 0;
+                    awardXp = passXp;
+                    penaltyEnabled = failXp > 0;
+                    penaltyXp = failXp;
                 } else {
-                    awardEnabled = true;
-                    penaltyEnabled = false;
-                    penaltyXp = 0;
+                    String reqXpType = body.containsKey("xpType") && body.get("xpType") != null
+                            ? body.get("xpType").toString()
+                            : "Reward";
+                    if ("Penalty".equalsIgnoreCase(reqXpType) || "Discipline".equalsIgnoreCase(reqXpType)) {
+                        penaltyEnabled = true;
+                        penaltyXp = awardXp;
+                        awardEnabled = false;
+                        awardXp = 0;
+                    } else if ("Mixed".equalsIgnoreCase(reqXpType)) {
+                        awardEnabled = true;
+                        penaltyEnabled = true;
+                        penaltyXp = awardXp;
+                    } else {
+                        awardEnabled = true;
+                        penaltyEnabled = false;
+                        penaltyXp = 0;
+                    }
                 }
             }
         }
@@ -234,11 +279,11 @@ public class ActivityRequestMapper {
 
         if (awardDays != null && !awardDays.isEmpty()) {
             activity.setAwardDays(awardDays.stream().map(String::trim).collect(Collectors.joining(",")));
-        } else {
+        } else if (body.containsKey("awardDays")) {
             activity.setAwardDays(null);
         }
 
-        Boolean isMandatory = false;
+        Boolean isMandatory = activity.getId() == null ? false : activity.isMandatory();
         if (body.containsKey("isMandatory")) {
             Object val = body.get("isMandatory");
             if (val instanceof Boolean)
@@ -279,9 +324,12 @@ public class ActivityRequestMapper {
         activity.setDisplayOrder(displayOrder);
 
         String status = "ACTIVE";
+        System.out.println("Mapper Trace -> Body Contains Status: " + body.containsKey("status"));
+        System.out.println("Mapper Trace -> Body Status Value: " + body.get("status"));
         if (body.containsKey("status") && body.get("status") != null) {
             status = (String) body.get("status");
         }
+        System.out.println("Mapper Trace -> Final Status Applied: " + status);
         activity.setStatus(status);
         activity.setMaxPoints(100);
     }

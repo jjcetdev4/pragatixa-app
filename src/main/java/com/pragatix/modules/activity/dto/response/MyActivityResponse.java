@@ -28,10 +28,16 @@ public class MyActivityResponse {
     private String awardType;
     private boolean repeatAllowed;
     private String xpType;
+
     // ── Refactored Award Rules ─────────────────────────────────────────────────
     private Integer cap; // max awards per frequency window
     private String awardFrequency; // One Time | Daily | Weekly | Monthly | Manual | Per Assignment
     private String awardDays; // comma-separated days, set when Weekly
+    
+    // ── Attendance Engine Mapping ──────────────────────────────────────────────
+    private Boolean attendanceEngineEnabled;
+    private String attendanceRule;
+    private String manualEvidenceName;
 
     public MyActivityResponse() {
     }
@@ -43,7 +49,8 @@ public class MyActivityResponse {
             String xpCategory,
             Integer awardXp, Boolean awardEnabled, Boolean penaltyEnabled, Integer penaltyXp, String awardType,
             boolean repeatAllowed, String xpType,
-            Integer cap, String awardFrequency, String awardDays) {
+            Integer cap, String awardFrequency, String awardDays,
+            Boolean attendanceEngineEnabled, String attendanceRule, String manualEvidenceName) {
         this.activityId = activityId;
         this.name = name;
         this.description = description;
@@ -71,6 +78,9 @@ public class MyActivityResponse {
         this.cap = cap;
         this.awardFrequency = awardFrequency;
         this.awardDays = awardDays;
+        this.attendanceEngineEnabled = attendanceEngineEnabled;
+        this.attendanceRule = attendanceRule;
+        this.manualEvidenceName = manualEvidenceName;
     }
 
     public Long getActivityId() {
@@ -294,6 +304,30 @@ public class MyActivityResponse {
         this.awardDays = awardDays;
     }
 
+    public Boolean getAttendanceEngineEnabled() {
+        return attendanceEngineEnabled;
+    }
+
+    public void setAttendanceEngineEnabled(Boolean attendanceEngineEnabled) {
+        this.attendanceEngineEnabled = attendanceEngineEnabled;
+    }
+
+    public String getAttendanceRule() {
+        return attendanceRule;
+    }
+
+    public void setAttendanceRule(String attendanceRule) {
+        this.attendanceRule = attendanceRule;
+    }
+
+    public String getManualEvidenceName() {
+        return manualEvidenceName;
+    }
+
+    public void setManualEvidenceName(String manualEvidenceName) {
+        this.manualEvidenceName = manualEvidenceName;
+    }
+
     // ── Backward-compat getters ────────────────────────────────────────────────
     public String getXpType() {
         return xpType;
@@ -491,12 +525,31 @@ public class MyActivityResponse {
             return this;
         }
 
+        private Boolean attendanceEngineEnabled;
+        private String attendanceRule;
+        private String manualEvidenceName;
+
+        public Builder attendanceEngineEnabled(Boolean v) {
+            this.attendanceEngineEnabled = v;
+            return this;
+        }
+
+        public Builder attendanceRule(String v) {
+            this.attendanceRule = v;
+            return this;
+        }
+
+        public Builder manualEvidenceName(String v) {
+            this.manualEvidenceName = v;
+            return this;
+        }
+
         public MyActivityResponse build() {
             return new MyActivityResponse(activityId, name, description, frequency, evidence,
                     xp, type, justification, departmentId, departmentName, sectionId, sectionName,
                     assignedBy, assignedAt, assignedFacultyName, assignmentMode, xpCategory, awardXp, awardEnabled,
-                    penaltyEnabled, penaltyXp, awardType, repeatAllowed, xpType,
-                    cap, awardFrequency, awardDays);
+                    penaltyEnabled, penaltyXp, awardType, repeatAllowed, xpType, cap, awardFrequency, awardDays,
+                    attendanceEngineEnabled, attendanceRule, manualEvidenceName);
         }
     }
 }

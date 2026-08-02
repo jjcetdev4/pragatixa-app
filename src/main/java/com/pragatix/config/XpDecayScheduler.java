@@ -16,11 +16,14 @@ public class XpDecayScheduler {
 
     private final StreakRepository streakRepository;
     private final XpEngineService xpEngineService;
+    private final com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
 
     public XpDecayScheduler(StreakRepository streakRepository,
-            XpEngineService xpEngineService) {
+            XpEngineService xpEngineService,
+            com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver) {
         this.streakRepository = streakRepository;
         this.xpEngineService = xpEngineService;
+        this.academicCalendarResolver = academicCalendarResolver;
     }
 
     /**
@@ -36,6 +39,13 @@ public class XpDecayScheduler {
         List<Streak> streaksToSave = new java.util.ArrayList<>();
 
         for (Streak streak : allStreaks) {
+            com.pragatix.enums.AcademicYear academicYear = com.pragatix.enums.AcademicYear.fromStudent(streak.getStudent());
+            boolean yesterdayWasHoliday = academicCalendarResolver.isHoliday(java.time.LocalDate.now().minusDays(1), academicYear);
+
+            if ("ATTENDANCE".equalsIgnoreCase(streak.getStreakType()) && yesterdayWasHoliday) {
+                continue; // Do not break attendance streaks if yesterday was a holiday
+            }
+
             // If the streak is active and hasn't been updated for 36 hours
             if (!streak.isBroken() && streak.getCurrentStreak() > 0 &&
                     (streak.getLastUpdated() == null || streak.getLastUpdated().isBefore(thresholdTime))) {

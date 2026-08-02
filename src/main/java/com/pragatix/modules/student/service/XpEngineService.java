@@ -73,8 +73,13 @@ public class XpEngineService {
         boolean penaltyFlag = false;
 
         if (activity != null) {
-            penaltyFlag = (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled())
-                    || "Penalty".equalsIgnoreCase(activity.getXpType());
+            if (Boolean.TRUE.equals(activity.getAttendanceEngineEnabled()) ||
+               (Boolean.TRUE.equals(activity.getAwardEnabled()) && Boolean.TRUE.equals(activity.getPenaltyEnabled()))) {
+                penaltyFlag = requestXp < 0;
+            } else {
+                penaltyFlag = (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled())
+                        || "Penalty".equalsIgnoreCase(activity.getXpType());
+            }
             if (penaltyFlag) {
                 configuredXp = activity.getPenaltyXp() != null ? activity.getPenaltyXp() : 0;
                 if (configuredXp == 0)
@@ -89,7 +94,11 @@ public class XpEngineService {
 
         int appliedXp = 0;
         if (penaltyFlag) {
-            appliedXp = -Math.abs(configuredXp);
+            if (activity != null && Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
+                appliedXp = -Math.abs(requestXp);
+            } else {
+                appliedXp = -Math.abs(configuredXp);
+            }
         } else {
             // For regular rewards, allow partial points if valid, otherwise use configured.
             // But if strict rule:
@@ -290,5 +299,34 @@ public class XpEngineService {
             }
             streakRepository.save(streak);
         }
+    }
+
+    @Transactional
+    public Student awardAttendanceXpOnly(Student student, Activity activity, int appliedXp, String remarks) {
+        String resolvedCategory = "ATTENDANCE";
+        String activityName = activity != null ? activity.getName() : "Attendance Update";
+        
+        // Only update Total XP and Score
+        int oldTotalXp = student.getTotalXp();
+        student.setTotalXp(oldTotalXp + appliedXp);
+        student.setScore(student.getScore() + appliedXp);
+
+        // Save XP Transaction ONLY
+        XpTransaction tx = XpTransaction.builder()
+                .student(student)
+                .activity(activity)
+                .category(resolvedCategory)
+                .activityName(activityName + (remarks != null && !remarks.isEmpty() ? " - " + remarks : ""))
+                .xpPoints(appliedXp)
+                .submittedAt(LocalDateTime.now())
+                .status("APPROVED")
+                .approvedBy("ATTENDANCE_ENGINE")
+                .isPenalty(appliedXp < 0)
+                .capApplied(false)
+                .stage(student.getStage())
+                .build();
+        xpTransactionRepository.saveAndFlush(tx);
+
+        return studentRepository.save(student);
     }
 }

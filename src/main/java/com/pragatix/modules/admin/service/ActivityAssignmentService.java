@@ -147,25 +147,15 @@ public class ActivityAssignmentService {
                     assignmentsToSave.add(aa);
                 }
             }
-            if (!assignmentsToSave.isEmpty()) {
-                log.info("SAVE LOG: Method=assignActivity Class=ActivityAssignmentService Reason=CC Mode SaveAll IncomingAssignments={}", assignmentsToSave.size());
-                for(ActivityAssignment aa : assignmentsToSave) {
-                    log.info("Saving Assignment: ActivityId={}, StageId={}, DeptId={}, SecId={}, TeacherId={}, Mode={}", 
-                        aa.getActivity().getId(), 
-                        aa.getStage() != null ? aa.getStage().getId() : "null", 
-                        aa.getDepartment() != null ? aa.getDepartment().getId() : "null", 
-                        aa.getSection() != null ? aa.getSection().getId() : "null", 
-                        aa.getTeacher() != null ? aa.getTeacher().getId() : "null", 
-                        aa.getAssignmentScope());
-                }
-                activityAssignmentRepository.saveAll(assignmentsToSave);
-            }
+            syncAssignments(existingAssignments, assignmentsToSave);
             if (!warnings.isEmpty()) {
                 log.warn("CC Assignment completed with warnings: {}", warnings);
+                logAttendanceEngineLink(activity, assignmentsToSave);
                 return ResponseEntity.ok(ApiResponse.ok(
                         "Assigned to sections with class coordinators. Warnings: " + String.join(", ", warnings),
                         null));
             }
+            logAttendanceEngineLink(activity, assignmentsToSave);
             return ResponseEntity.ok(ApiResponse.ok("Class Coordinator assignments saved successfully", null));
 
         } else if (globalEnabled) {
@@ -180,16 +170,9 @@ public class ActivityAssignmentService {
                 activityRepository.save(activity);
             }
 
-            List<ActivityAssignment> globalsToDelete = existingAssignments.stream()
+            List<ActivityAssignment> globalsExisting = existingAssignments.stream()
                 .filter(a -> a.getAssignmentScope() == AssignmentScope.GLOBAL)
                 .collect(java.util.stream.Collectors.toList());
-            if (!globalsToDelete.isEmpty()) {
-                log.info("DELETE LOG: Method=assignActivity Class=ActivityAssignmentService Reason=Deleting Old GLOBAL assignments before regen RowsToDelete={}", globalsToDelete.size());
-                for(ActivityAssignment d : globalsToDelete) {
-                    log.info("Deleting Assignment ID={}, ActivityID={}, StageID={}", d.getId(), d.getActivity().getId(), d.getStage() != null ? d.getStage().getId() : "null");
-                }
-                activityAssignmentRepository.deleteAll(globalsToDelete);
-            }
 
             List<Department> allDepts = departmentRepository.findAll();
             List<ActivityAssignment> assignmentsToSave = new ArrayList<>();
@@ -204,27 +187,12 @@ public class ActivityAssignmentService {
                 aa.setYear("1");
                 assignmentsToSave.add(aa);
             }
-            if (!assignmentsToSave.isEmpty()) {
-                log.info("SAVE LOG: Method=assignActivity Class=ActivityAssignmentService Reason=GLOBAL Mode SaveAll IncomingAssignments={}", assignmentsToSave.size());
-                for(ActivityAssignment aa : assignmentsToSave) {
-                    log.info("Saving Assignment: ActivityId={}, StageId={}, DeptId={}, SecId={}, TeacherId={}, Mode={}", 
-                        aa.getActivity().getId(), 
-                        aa.getStage() != null ? aa.getStage().getId() : "null", 
-                        aa.getDepartment() != null ? aa.getDepartment().getId() : "null", 
-                        aa.getSection() != null ? aa.getSection().getId() : "null", 
-                        aa.getTeacher() != null ? aa.getTeacher().getId() : "null", 
-                        aa.getAssignmentScope());
-                }
-                activityAssignmentRepository.saveAll(assignmentsToSave);
-            }
+            syncAssignments(globalsExisting, assignmentsToSave);
+            logAttendanceEngineLink(activity, assignmentsToSave);
             return ResponseEntity.ok(ApiResponse.ok("Activity successfully assigned globally (Section assignments retained)", null));
 
         } else {
             // MANUAL ASSIGNMENT MODE
-            if (!existingAssignments.isEmpty()) {
-                log.info("DELETE LOG: Method=assignActivity Class=ActivityAssignmentService Reason=Deleting Old assignments for MANUAL sync RowsToDelete={}", existingAssignments.size());
-                activityAssignmentRepository.deleteAll(existingAssignments);
-            }
 
             if (targetStageId != null) {
                 ActivityStageMapping mapping = activityStageMappingRepository.findByStageIdAndActivityId(targetStageId, id).orElse(null);
@@ -272,21 +240,52 @@ public class ActivityAssignmentService {
                     assignmentsToSave.add(aa);
                 }
             }
-            if (!assignmentsToSave.isEmpty()) {
-                log.info("SAVE LOG: Method=assignActivity Class=ActivityAssignmentService Reason=MANUAL Mode SaveAll IncomingAssignments={}", assignmentsToSave.size());
-                for(ActivityAssignment aa : assignmentsToSave) {
-                    log.info("Saving Assignment: ActivityId={}, StageId={}, DeptId={}, SecId={}, TeacherId={}, Mode={}", 
-                        aa.getActivity().getId(), 
-                        aa.getStage() != null ? aa.getStage().getId() : "null", 
-                        aa.getDepartment() != null ? aa.getDepartment().getId() : "null", 
-                        aa.getSection() != null ? aa.getSection().getId() : "null", 
-                        aa.getTeacher() != null ? aa.getTeacher().getId() : "null", 
-                        aa.getAssignmentScope());
-                }
-                activityAssignmentRepository.saveAll(assignmentsToSave);
-            }
+            syncAssignments(existingAssignments, assignmentsToSave);
+            logAttendanceEngineLink(activity, assignmentsToSave);
             return ResponseEntity.ok(ApiResponse.ok("Activity assignments updated successfully", null));
         }
+    }
+
+    private void logAttendanceEngineLink(Activity activity, List<ActivityAssignment> assignments) {
+        if (!Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
+            return;
+        }
+
+        String stageName = activity.getStage() != null ? activity.getStage().getName() : "Unknown";
+        String academicYear = activity.getAcademicYear() != null ? activity.getAcademicYear().name() : "Unknown";
+        
+        List<String> departments = new ArrayList<>();
+        List<String> sections = new ArrayList<>();
+        List<String> teachers = new ArrayList<>();
+        
+        for (ActivityAssignment aa : assignments) {
+            if (aa.getDepartment() != null) departments.add(aa.getDepartment().getName());
+            if (aa.getSection() != null) sections.add(aa.getSection().getSectionName());
+            if (aa.getTeacher() != null) teachers.add(aa.getTeacher().getFullName());
+        }
+        
+        String deptsStr = departments.isEmpty() ? "None" : String.join(", ", departments.stream().distinct().collect(java.util.stream.Collectors.toList()));
+        String secsStr = sections.isEmpty() ? "None" : String.join(", ", sections.stream().distinct().collect(java.util.stream.Collectors.toList()));
+        String teachersStr = teachers.isEmpty() ? "None" : String.join(", ", teachers.stream().distinct().collect(java.util.stream.Collectors.toList()));
+
+        boolean resolvedSuccessfully = activity.getStage() != null && !assignments.isEmpty();
+        String reason = resolvedSuccessfully ? "Successfully mapped to Stage and Assignments" : "Missing Stage or Assignments";
+
+        log.info("=============================");
+        log.info("ATTENDANCE ENGINE LINK");
+        log.info("=============================");
+        log.info("Activity ID          : {}", activity.getId());
+        log.info("Activity Name        : {}", activity.getName());
+        log.info("Attendance Enabled   : {}", activity.getAttendanceEngineEnabled());
+        log.info("Stage                : {}", stageName);
+        log.info("Academic Year        : {}", academicYear);
+        log.info("Assignment Mode      : {}", activity.getAssignmentMode());
+        log.info("Departments          : {}", deptsStr);
+        log.info("Sections             : {}", secsStr);
+        log.info("Teachers             : {}", teachersStr);
+        log.info("Resolved Successfully: {}", resolvedSuccessfully ? "YES" : "NO");
+        log.info("Reason               : {}", reason);
+        log.info("=============================");
     }
 
     @Transactional(readOnly = true)
@@ -526,5 +525,91 @@ public class ActivityAssignmentService {
         }
 
         return ResponseEntity.ok(ApiResponse.ok("All faculty assignments removed successfully", null));
+    }
+
+    private void syncAssignments(List<ActivityAssignment> existingAssignments, List<ActivityAssignment> incomingAssignments) {
+        log.info("========== ASSIGNMENT SYNC ==========");
+        log.info("Activity ID : {}", incomingAssignments.isEmpty() ? "N/A" : incomingAssignments.get(0).getActivity().getId());
+        log.info("Existing Assignments : {}", existingAssignments.size());
+        log.info("Incoming Assignments : {}", incomingAssignments.size());
+
+        int updatedCount = 0;
+        int insertedCount = 0;
+        int retainedCount = 0;
+        int deletedCount = 0;
+        int skippedDeletesCount = 0;
+
+        List<ActivityAssignment> toSave = new ArrayList<>();
+        List<ActivityAssignment> toDelete = new ArrayList<>();
+
+        List<ActivityAssignment> unhandledExisting = new ArrayList<>(existingAssignments);
+
+        for (ActivityAssignment incoming : incomingAssignments) {
+            ActivityAssignment exactMatch = unhandledExisting.stream()
+                .filter(e -> isSameAssignment(e, incoming))
+                .findFirst().orElse(null);
+
+            if (exactMatch != null) {
+                exactMatch.setAssignedBy(incoming.getAssignedBy());
+                exactMatch.setAssignedAt(incoming.getAssignedAt());
+                exactMatch.setYear(incoming.getYear());
+                toSave.add(exactMatch);
+                unhandledExisting.remove(exactMatch);
+                retainedCount++;
+            } else {
+                ActivityAssignment similar = unhandledExisting.stream()
+                    .filter(e -> e.getAssignmentScope() == incoming.getAssignmentScope())
+                    .findFirst().orElse(null);
+
+                if (similar != null) {
+                    similar.setDepartment(incoming.getDepartment());
+                    similar.setSection(incoming.getSection());
+                    similar.setTeacher(incoming.getTeacher());
+                    similar.setAssignedBy(incoming.getAssignedBy());
+                    similar.setAssignedAt(incoming.getAssignedAt());
+                    similar.setYear(incoming.getYear());
+                    toSave.add(similar);
+                    unhandledExisting.remove(similar);
+                    updatedCount++;
+                } else {
+                    toSave.add(incoming);
+                    insertedCount++;
+                }
+            }
+        }
+
+        for (ActivityAssignment e : unhandledExisting) {
+            boolean hasXp = studentActivityXpRepository.existsByAssignmentId(e.getId());
+            if (hasXp) {
+                skippedDeletesCount++;
+                log.info("Assignment ID : {}", e.getId());
+                log.info("Referenced By : student_activity_xp");
+                log.info("Count : >0");
+                log.info("Decision : KEEP EXISTING");
+            } else {
+                toDelete.add(e);
+                deletedCount++;
+            }
+        }
+
+        activityAssignmentRepository.saveAll(toSave);
+        if (!toDelete.isEmpty()) {
+            activityAssignmentRepository.deleteAll(toDelete);
+        }
+
+        log.info("Assignments Updated : {}", updatedCount);
+        log.info("Assignments Inserted : {}", insertedCount);
+        log.info("Assignments Retained : {}", retainedCount);
+        log.info("Assignments Deleted : {}", deletedCount);
+        log.info("Skipped Deletes (Has XP Records) : {}", skippedDeletesCount);
+        log.info("=====================================");
+    }
+
+    private boolean isSameAssignment(ActivityAssignment a, ActivityAssignment b) {
+        if (a.getAssignmentScope() != b.getAssignmentScope()) return false;
+        if (a.getDepartment() != null ? !a.getDepartment().getId().equals(b.getDepartment() != null ? b.getDepartment().getId() : null) : b.getDepartment() != null) return false;
+        if (a.getSection() != null ? !a.getSection().getId().equals(b.getSection() != null ? b.getSection().getId() : null) : b.getSection() != null) return false;
+        if (a.getTeacher() != null ? !a.getTeacher().getId().equals(b.getTeacher() != null ? b.getTeacher().getId() : null) : b.getTeacher() != null) return false;
+        return true;
     }
 }

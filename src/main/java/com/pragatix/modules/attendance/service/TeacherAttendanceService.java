@@ -56,9 +56,13 @@ public class TeacherAttendanceService {
     @Autowired
     private AuthUtils authUtils;
 
+    @Autowired
+    private com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
+
     @Transactional(readOnly = true)
     public List<StudentAttendanceListItemResponse> getStudentListWithAttendance(LocalDate date, Integer period,
             Long yearId, Long deptId, Long sectionId) {
+        
         User currentUser = authUtils.getCurrentUser();
         if (currentUser != null && authUtils.isAdmin(currentUser) && !authUtils.isSuperAdmin(currentUser)) {
             String adminYearStr = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
@@ -74,6 +78,20 @@ public class TeacherAttendanceService {
 
         if (yearId == null) {
             throw new IllegalArgumentException("yearId is required");
+        }
+
+        com.pragatix.entity.Year yearEntity = yearRepository.findById(yearId).orElse(null);
+        com.pragatix.enums.AcademicYear academicYear = null;
+        if (yearEntity != null && yearEntity.getYearNo() != null) {
+            int no = yearEntity.getYearNo();
+            if (no == 1) academicYear = com.pragatix.enums.AcademicYear.FIRST_YEAR;
+            else if (no == 2) academicYear = com.pragatix.enums.AcademicYear.SECOND_YEAR;
+            else if (no == 3) academicYear = com.pragatix.enums.AcademicYear.THIRD_YEAR;
+            else if (no == 4) academicYear = com.pragatix.enums.AcademicYear.FOURTH_YEAR;
+        }
+
+        if (academicCalendarResolver.isHoliday(date, academicYear)) {
+            throw new IllegalArgumentException("Attendance cannot be marked. Today is configured as a Holiday.");
         }
 
         List<Student> students = (sectionId != null)
@@ -107,6 +125,20 @@ public class TeacherAttendanceService {
     public void saveAttendance(String username, SaveAttendanceRequest request) {
         log.info("Starting saveAttendance for user: {}, records count: {}", username,
                 request.getRecords() != null ? request.getRecords().size() : 0);
+
+        com.pragatix.entity.Year reqYear = yearRepository.findById(request.getYearId()).orElse(null);
+        com.pragatix.enums.AcademicYear reqAcademicYear = null;
+        if (reqYear != null && reqYear.getYearNo() != null) {
+            int no = reqYear.getYearNo();
+            if (no == 1) reqAcademicYear = com.pragatix.enums.AcademicYear.FIRST_YEAR;
+            else if (no == 2) reqAcademicYear = com.pragatix.enums.AcademicYear.SECOND_YEAR;
+            else if (no == 3) reqAcademicYear = com.pragatix.enums.AcademicYear.THIRD_YEAR;
+            else if (no == 4) reqAcademicYear = com.pragatix.enums.AcademicYear.FOURTH_YEAR;
+        }
+
+        if (academicCalendarResolver.isHoliday(request.getDate(), reqAcademicYear)) {
+            throw new IllegalArgumentException("Attendance cannot be marked. Today is configured as a Holiday.");
+        }
 
         if (request.getDate().isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Cannot mark attendance for future dates.");

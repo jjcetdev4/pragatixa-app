@@ -92,6 +92,9 @@ public class MyActivityService {
                     .cap(act.getCap())
                     .awardFrequency(act.getAwardFrequency())
                     .awardDays(act.getAwardDays())
+                    .attendanceEngineEnabled(act.getAttendanceEngineEnabled())
+                    .attendanceRule(act.getAttendanceRule())
+                    .manualEvidenceName(act.getManualEvidenceName())
                     .build());
         }
 

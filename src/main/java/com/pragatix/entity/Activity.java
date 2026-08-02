@@ -80,6 +80,9 @@ public class Activity {
     @Column(length = 255)
     private String evidence;
 
+    @Column(name = "manual_evidence_name", length = 255)
+    private String manualEvidenceName;
+
     @Column(columnDefinition = "TEXT")
     private String justification;
 
@@ -118,6 +121,21 @@ public class Activity {
 
     @Column(name = "assignment_mode", length = 50)
     private String assignmentMode = "MANUAL";
+
+    /**
+     * When true, this activity is managed exclusively by the Attendance Engine.
+     * Manual XP awards (Teacher, CC, Admin) must be blocked for this activity.
+     * Only one activity per Academic Year may have this set to true.
+     */
+    @Column(name = "attendance_engine_enabled", nullable = false)
+    private Boolean attendanceEngineEnabled = false;
+
+    /**
+     * Determines which engine phase uses this activity for XP.
+     * Values: DAILY | WEEKLY | BOTH
+     */
+    @Column(name = "attendance_rule", length = 20)
+    private String attendanceRule;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "academic_year")
@@ -388,6 +406,14 @@ public class Activity {
         this.evidence = evidence;
     }
 
+    public String getManualEvidenceName() {
+        return manualEvidenceName;
+    }
+
+    public void setManualEvidenceName(String manualEvidenceName) {
+        this.manualEvidenceName = manualEvidenceName;
+    }
+
     public String getJustification() {
         return justification;
     }
@@ -490,6 +516,22 @@ public class Activity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getAttendanceEngineEnabled() {
+        return attendanceEngineEnabled != null ? attendanceEngineEnabled : false;
+    }
+
+    public void setAttendanceEngineEnabled(Boolean attendanceEngineEnabled) {
+        this.attendanceEngineEnabled = attendanceEngineEnabled;
+    }
+
+    public String getAttendanceRule() {
+        return attendanceRule;
+    }
+
+    public void setAttendanceRule(String attendanceRule) {
+        this.attendanceRule = attendanceRule;
     }
 
     public String getAssignmentMode() {

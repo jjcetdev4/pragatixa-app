@@ -11,6 +11,8 @@ import java.util.List;
 public interface XpTransactionRepository extends JpaRepository<XpTransaction, Long> {
     List<XpTransaction> findByStudentRegNo(String regNo);
     
+    List<XpTransaction> findByStudentIdAndActivityId(Long studentId, Long activityId);
+    
     List<XpTransaction> findByStudentRegNoAndStage(String regNo, Integer stage);
 
     List<XpTransaction> findByStudentIdAndStageAndStatus(Long studentId, Integer stage, String status);

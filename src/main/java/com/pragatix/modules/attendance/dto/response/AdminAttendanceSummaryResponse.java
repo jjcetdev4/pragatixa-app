@@ -8,8 +8,7 @@ public class AdminAttendanceSummaryResponse {
     private long totalAbsent;
     private double attendancePercentage;
 
-    private List<StudentAttendanceListItemResponse> presentStudents;
-    private List<StudentAttendanceListItemResponse> absentStudents;
+    private List<StudentAttendanceMatrixItemResponse> students;
 
     public AdminAttendanceSummaryResponse() {
     }
@@ -46,19 +45,11 @@ public class AdminAttendanceSummaryResponse {
         this.attendancePercentage = attendancePercentage;
     }
 
-    public List<StudentAttendanceListItemResponse> getPresentStudents() {
-        return presentStudents;
+    public List<StudentAttendanceMatrixItemResponse> getStudents() {
+        return students;
     }
 
-    public void setPresentStudents(List<StudentAttendanceListItemResponse> presentStudents) {
-        this.presentStudents = presentStudents;
-    }
-
-    public List<StudentAttendanceListItemResponse> getAbsentStudents() {
-        return absentStudents;
-    }
-
-    public void setAbsentStudents(List<StudentAttendanceListItemResponse> absentStudents) {
-        this.absentStudents = absentStudents;
+    public void setStudents(List<StudentAttendanceMatrixItemResponse> students) {
+        this.students = students;
     }
 }

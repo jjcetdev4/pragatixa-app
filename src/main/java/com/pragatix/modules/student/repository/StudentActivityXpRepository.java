@@ -23,6 +23,8 @@ public interface StudentActivityXpRepository extends JpaRepository<StudentActivi
     @org.springframework.transaction.annotation.Transactional
     void deleteByAssignmentId(Long assignmentId);
 
+    boolean existsByAssignmentId(Long assignmentId);
+
     boolean existsByAssignmentAndStudentIn(com.pragatix.entity.ActivityAssignment assignment,
             java.util.Collection<com.pragatix.entity.Student> students);
 

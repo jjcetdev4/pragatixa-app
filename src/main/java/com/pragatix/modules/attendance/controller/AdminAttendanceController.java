@@ -20,12 +20,12 @@ public class AdminAttendanceController {
     @GetMapping("/summary")
     public ResponseEntity<ApiResponse<AdminAttendanceSummaryResponse>> getSummary(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam Integer period,
+            @RequestParam(required = false) Integer period,
             @RequestParam(required = false) Long yearId,
             @RequestParam Long departmentId,
             @RequestParam(required = false) Long sectionId) {
 
-        AdminAttendanceSummaryResponse summary = attendanceService.getDashboardSummary(date, period, yearId,
+        AdminAttendanceSummaryResponse summary = attendanceService.getDashboardSummary(date, yearId,
                 departmentId, sectionId);
         return ResponseEntity.ok(ApiResponse.ok(summary));
     }

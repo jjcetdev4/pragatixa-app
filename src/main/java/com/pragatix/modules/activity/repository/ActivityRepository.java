@@ -22,6 +22,12 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 
     List<Activity> findBySubgroupIdAndAcademicYear(Long subgroupId, com.pragatix.enums.AcademicYear academicYear);
 
+    java.util.Optional<Activity> findByAcademicYearAndAttendanceEngineEnabledTrue(com.pragatix.enums.AcademicYear academicYear);
+
+    java.util.Optional<Activity> findByStageIdAndAttendanceEngineEnabledTrue(Long stageId);
+
+    long countByStageIdAndAttendanceEngineEnabledTrue(Long stageId);
+
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT act FROM Activity act JOIN ActivityAssignment a ON a.activity.id = act.id "
             +
             "WHERE a.department.id = :departmentId AND a.year = :year AND a.section.id = :sectionId AND (a.teacher IS NULL OR a.teacher.id = :teacherId)")

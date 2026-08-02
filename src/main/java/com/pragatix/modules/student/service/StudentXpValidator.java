@@ -15,9 +15,12 @@ import java.util.stream.Collectors;
 public class StudentXpValidator {
 
     private final StudentActivityXpRepository studentActivityXpRepository;
+    private final com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
 
-    public StudentXpValidator(StudentActivityXpRepository studentActivityXpRepository) {
+    public StudentXpValidator(StudentActivityXpRepository studentActivityXpRepository,
+                              com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver) {
         this.studentActivityXpRepository = studentActivityXpRepository;
+        this.academicCalendarResolver = academicCalendarResolver;
     }
 
     public String checkAwardLimit(Student student, Activity activity) {
@@ -29,7 +32,11 @@ public class StudentXpValidator {
         if ("Weekly".equalsIgnoreCase(awardFrequency)) {
             String awardDays = activity.getAwardDays();
             if (awardDays != null && !awardDays.trim().isEmpty()) {
-                java.time.DayOfWeek today = LocalDate.now().getDayOfWeek();
+                com.pragatix.enums.AcademicYear academicYear = com.pragatix.enums.AcademicYear.fromStudent(student);
+                java.time.DayOfWeek today = academicCalendarResolver.getEffectiveAcademicDay(LocalDate.now(), academicYear);
+                if (today == null) {
+                    return "Activity cannot be performed. Today is configured as a Holiday.";
+                }
                 String todayName = today.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH);
                 boolean dayAllowed = java.util.Arrays.stream(awardDays.split(","))
                         .map(String::trim)
