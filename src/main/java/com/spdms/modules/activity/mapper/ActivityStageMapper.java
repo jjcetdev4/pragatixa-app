@@ -1,0 +1,102 @@
+package com.spdms.modules.activity.mapper;
+
+import com.spdms.modules.activity.dto.request.ActivityStageRequest;
+import com.spdms.modules.activity.dto.response.ActivityStageResponse;
+import com.spdms.entity.ActivityStage;
+import com.spdms.enums.StageStatus;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
+@Component
+public class ActivityStageMapper {
+
+    public ActivityStage toEntity(ActivityStageRequest request) {
+        if (request == null) {
+            return null;
+        }
+        return ActivityStage.builder()
+                .name(request.getName())
+                .stageName(request.getName())
+                .description(request.getDescription())
+                .expectedXp(request.getExpectedXp() != null ? request.getExpectedXp() : 0)
+                .startDateTime(request.getStartDateTime())
+                .endDateTime(request.getEndDateTime())
+                .displayOrder(request.getDisplayOrder())
+                .useDateValidation(request.isUseDateValidation())
+                .useThresholdValidation(request.isUseThresholdValidation())
+                .useCombinedValidation(request.isUseCombinedValidation())
+                .mustThreshold(request.getMustThreshold() != null ? request.getMustThreshold() : 0)
+                .individualThreshold(request.getIndividualThreshold() != null ? request.getIndividualThreshold() : 0)
+                .groupThreshold(request.getGroupThreshold() != null ? request.getGroupThreshold() : 0)
+                .status(StageStatus.UPCOMING) // Default to UPCOMING for new stages
+                .build();
+    }
+
+    public void updateEntity(ActivityStageRequest request, ActivityStage entity) {
+        if (request == null || entity == null) {
+            return;
+        }
+        entity.setName(request.getName());
+        entity.setStageName(request.getName());
+        entity.setDescription(request.getDescription());
+        entity.setExpectedXp(request.getExpectedXp() != null ? request.getExpectedXp() : 0);
+        entity.setStartDateTime(request.getStartDateTime());
+        entity.setEndDateTime(request.getEndDateTime());
+        entity.setDisplayOrder(request.getDisplayOrder());
+        entity.setUseDateValidation(request.isUseDateValidation());
+        entity.setUseThresholdValidation(request.isUseThresholdValidation());
+        entity.setUseCombinedValidation(request.isUseCombinedValidation());
+        entity.setMustThreshold(request.getMustThreshold() != null ? request.getMustThreshold() : 0);
+        entity.setIndividualThreshold(request.getIndividualThreshold() != null ? request.getIndividualThreshold() : 0);
+        entity.setGroupThreshold(request.getGroupThreshold() != null ? request.getGroupThreshold() : 0);
+    }
+
+    public ActivityStageResponse toResponse(ActivityStage entity) {
+        if (entity == null) {
+            return null;
+        }
+        ActivityStageResponse response = new ActivityStageResponse();
+        response.setId(entity.getId());
+        response.setName(entity.getName());
+        response.setDescription(entity.getDescription());
+        response.setExpectedXp(entity.getExpectedXp());
+        response.setStartDateTime(entity.getStartDateTime());
+        response.setEndDateTime(entity.getEndDateTime());
+        response.setDisplayOrder(entity.getDisplayOrder());
+        response.setUseDateValidation(entity.isUseDateValidation());
+        response.setUseThresholdValidation(entity.isUseThresholdValidation());
+        response.setUseCombinedValidation(entity.isUseCombinedValidation());
+        response.setMustThreshold(entity.getMustThreshold());
+        response.setIndividualThreshold(entity.getIndividualThreshold());
+        response.setGroupThreshold(entity.getGroupThreshold());
+        
+        // Dynamically calculate time remaining but use true database status
+        StageStatus calculatedStatus = entity.getStatus();
+        response.setStatus(calculatedStatus);
+        response.setIsActive(calculatedStatus == StageStatus.ACTIVE);
+        response.setIsUpcoming(calculatedStatus == StageStatus.UPCOMING);
+        response.setIsCompleted(calculatedStatus == StageStatus.COMPLETED);
+        
+        LocalDateTime now = LocalDateTime.now();
+        if (calculatedStatus == StageStatus.UPCOMING && entity.getStartDateTime() != null) {
+            long days = ChronoUnit.DAYS.between(now, entity.getStartDateTime());
+            long hours = ChronoUnit.HOURS.between(now, entity.getStartDateTime()) % 24;
+            String cd = "Starts in " + days + "d " + hours + "h";
+            response.setCountdown(cd);
+            response.setRemainingTime(cd);
+        } else if (calculatedStatus == StageStatus.ACTIVE && entity.getEndDateTime() != null) {
+            long days = ChronoUnit.DAYS.between(now, entity.getEndDateTime());
+            long hours = ChronoUnit.HOURS.between(now, entity.getEndDateTime()) % 24;
+            String cd = "Ends in " + days + "d " + hours + "h";
+            response.setCountdown(cd);
+            response.setRemainingTime(cd);
+        } else {
+            response.setCountdown("Ended");
+            response.setRemainingTime("Ended");
+        }
+        
+        return response;
+    }
+}

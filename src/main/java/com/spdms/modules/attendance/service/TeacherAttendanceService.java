@@ -1,0 +1,132 @@
+package com.spdms.modules.attendance.service;
+
+import com.spdms.entity.*;
+import com.spdms.modules.attendance.dto.request.SaveAttendanceRequest;
+import com.spdms.modules.attendance.dto.response.StudentAttendanceListItemResponse;
+import com.spdms.modules.attendance.repository.AttendanceRepository;
+import com.spdms.modules.attendance.repository.AttendanceRepository;
+import com.spdms.repository.*;
+import com.spdms.modules.student.repository.StudentRepository;
+import com.spdms.modules.faculty.repository.FacultyRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+public class TeacherAttendanceService {
+
+    private static final Logger log = LoggerFactory.getLogger(TeacherAttendanceService.class);
+
+    @Autowired
+    private AttendanceRepository attendanceRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+    
+    @Autowired
+    private AcademicYearRepository academicYearRepository;
+    
+    @Autowired
+    private YearRepository yearRepository;
+    
+    @Autowired
+    private DepartmentRepository departmentRepository;
+    
+    @Autowired
+    private SectionRepository sectionRepository;
+
+    @Autowired
+    private FacultyRepository facultyRepository;
+
+    @Autowired
+    private AttendanceStreakService streakService;
+    
+    @Autowired
+    private com.spdms.modules.notification.service.NotificationService notificationService;
+
+    @Transactional(readOnly = true)
+    public List<StudentAttendanceListItemResponse> getStudentListWithAttendance(LocalDate date, Integer period, Long yearId, Long deptId, Long sectionId) {
+        List<Student> students = (sectionId != null)
+            ? studentRepository.findByYearRefIdAndDepartmentIdAndSectionId(yearId, deptId, sectionId)
+            : studentRepository.findByYearRefIdAndDepartmentId(yearId, deptId);
+
+        List<StudentAttendanceListItemResponse> responseList = new ArrayList<>();
+        
+        for (Student s : students) {
+            StudentAttendanceListItemResponse res = new StudentAttendanceListItemResponse();
+            res.setStudentId(s.getId());
+            res.setStudentName(s.getUser().getFullName());
+            res.setRegisterNumber(s.getRegNo());
+            
+            Optional<Attendance> recordOpt = attendanceRepository.findByStudentIdAndAttendanceDateAndPeriodNo(s.getId(), date, period);
+            if (recordOpt.isPresent()) {
+                res.setStatus(com.spdms.entity.AttendanceRecord.AttendanceStatus.valueOf(recordOpt.get().getStatus().name()));
+                res.setRemarks(recordOpt.get().getRemarks());
+            } else {
+                res.setStatus(com.spdms.entity.AttendanceRecord.AttendanceStatus.PRESENT); // Default if not marked
+            }
+            responseList.add(res);
+        }
+        
+        return responseList;
+    }
+
+    @Transactional
+    public void saveAttendance(String username, SaveAttendanceRequest request) {
+        log.info("Starting saveAttendance for user: {}, records count: {}", username, request.getRecords() != null ? request.getRecords().size() : 0);
+        
+        if (request.getDate().isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Cannot mark attendance for future dates.");
+        }
+        
+        Faculty teacher = facultyRepository.findByUserUsername(username)
+            .orElseThrow(() -> new RuntimeException("Faculty not found for username: " + username));
+            
+        int count = 0;
+        for (SaveAttendanceRequest.StudentAttendanceRequest recordReq : request.getRecords()) {
+            Student student = studentRepository.findById(recordReq.getStudentId()).orElseThrow();
+            
+            Attendance attendance = attendanceRepository.findByStudentIdAndAttendanceDateAndPeriodNo(
+                    student.getId(), request.getDate(), request.getPeriod())
+                .orElseGet(() -> Attendance.builder()
+                    .student(student)
+                    .faculty(teacher)
+                    .regNo(student.getRegNo())
+                    .attendanceDate(request.getDate())
+                    .periodNo(request.getPeriod())
+                    .build());
+            
+            attendance.setStatus(Attendance.AttendanceStatus.valueOf(recordReq.getStatus().name()));
+            attendance.setRemarks(recordReq.getRemarks());
+            
+            attendanceRepository.save(attendance);
+            count++;
+            
+            try {
+                streakService.updateAttendanceStreak(student, request.getDate());
+            } catch (Exception e) {
+                log.error("Failed to update streak", e);
+                throw new RuntimeException("Failed to update streak for student " + student.getRegNo() + ": " + e.getMessage(), e);
+            }
+            
+            if (attendance.getStatus() == Attendance.AttendanceStatus.ABSENT) {
+                try {
+                    notificationService.sendAbsenceNotification(student.getId(), request.getDate());
+                } catch (Exception e) {
+                    log.error("Failed to queue SMS notification for student {}", student.getRegNo(), e);
+                }
+            }
+        }
+        
+        log.info("AttendanceRecord Count = {}", count);
+        log.info("Attendance committed successfully.");
+    }
+}
