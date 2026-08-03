@@ -31,7 +31,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
             @Param("yearId") Long yearId, @Param("deptId") Long deptId, @Param("sectionId") Long sectionId,
             @Param("status") Attendance.AttendanceStatus status);
 
-    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date AND a.student.yearRef.id = :yearId AND a.student.department.id = :deptId AND (:sectionId IS NULL OR a.student.section.id = :sectionId)")
+    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date AND a.student.yearRef.id = :yearId AND (:deptId IS NULL OR a.student.department.id = :deptId) AND (:sectionId IS NULL OR a.student.section.id = :sectionId)")
     List<Attendance> findBySessionDetails(@Param("date") LocalDate date, @Param("yearId") Long yearId, @Param("deptId") Long deptId, @Param("sectionId") Long sectionId);
 
     @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId ORDER BY a.attendanceDate DESC, a.periodNo DESC")

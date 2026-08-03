@@ -74,9 +74,14 @@ public class AdminAttendanceService {
             throw new IllegalArgumentException("yearId is required");
         }
 
-        List<Student> allStudents = (sectionId != null)
-                ? studentRepository.findByYearRefIdAndDepartmentIdAndSectionId(yearId, deptId, sectionId)
-                : studentRepository.findByYearRefIdAndDepartmentId(yearId, deptId);
+        List<Student> allStudents;
+        if (deptId == null) {
+            allStudents = studentRepository.findByYearRefId(yearId);
+        } else if (sectionId != null) {
+            allStudents = studentRepository.findByYearRefIdAndDepartmentIdAndSectionId(yearId, deptId, sectionId);
+        } else {
+            allStudents = studentRepository.findByYearRefIdAndDepartmentId(yearId, deptId);
+        }
 
         List<Attendance> dayRecords = attendanceRepository.findBySessionDetails(date, yearId, deptId, sectionId);
 

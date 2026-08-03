@@ -12,6 +12,9 @@ import com.pragatix.repository.SubjectRepository;
 import com.pragatix.repository.SectionRepository;
 import com.pragatix.modules.faculty.repository.FacultyRepository;
 import com.pragatix.modules.student.repository.StudentGroupRepository;
+import com.pragatix.modules.authentication.security.AuthUtils;
+import com.pragatix.repository.YearRepository;
+import com.pragatix.entity.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,11 +36,14 @@ public class AdminDepartmentCommandService {
     private final StudentRepository studentRepository;
     private final SubjectRepository subjectRepository;
     private final UserRepository userRepository;
+    private final AuthUtils authUtils;
+    private final YearRepository yearRepository;
 
     public AdminDepartmentCommandService(ActivitySubgroupRepository activitySubgroupRepository,
             DepartmentRepository departmentRepository, FacultyRepository facultyRepository,
             SectionRepository sectionRepository, StudentGroupRepository studentGroupRepository,
-            StudentRepository studentRepository, SubjectRepository subjectRepository, UserRepository userRepository) {
+            StudentRepository studentRepository, SubjectRepository subjectRepository, UserRepository userRepository,
+            AuthUtils authUtils, YearRepository yearRepository) {
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.departmentRepository = departmentRepository;
         this.facultyRepository = facultyRepository;
@@ -46,11 +52,14 @@ public class AdminDepartmentCommandService {
         this.studentRepository = studentRepository;
         this.subjectRepository = subjectRepository;
         this.userRepository = userRepository;
+        this.authUtils = authUtils;
+        this.yearRepository = yearRepository;
     }
 
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments() {
         List<Department> depts = departmentRepository.findAll();
+        
         List<Map<String, Object>> response = new ArrayList<>();
 
         List<Section> allSections = sectionRepository.findAll();

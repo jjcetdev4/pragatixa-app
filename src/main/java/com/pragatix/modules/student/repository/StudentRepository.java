@@ -1,6 +1,7 @@
 package com.pragatix.modules.student.repository;
 
 import com.pragatix.entity.Student;
+import com.pragatix.entity.Department;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -55,6 +56,12 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "user" })
        List<Student> findByYearRefIdAndDepartmentId(Long yearId, Long departmentId);
+
+       @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "user" })
+       List<Student> findByYearRefId(Long yearId);
+
+       @Query("SELECT DISTINCT s.department FROM Student s WHERE s.yearRef.id = :yearId AND s.department IS NOT NULL")
+       List<Department> findDistinctDepartmentsByYearId(@Param("yearId") Long yearId);
 
        long countByDepartmentId(Long departmentId);
 

@@ -78,9 +78,9 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         } catch (BadCredentialsException e) {
             log.warn("Failed login attempt for username: {}", request.getUsername());
-            return ApiResponse.error("Invalid username or password");
+            throw new BadCredentialsException("Invalid username or password");
         } catch (DisabledException e) {
-            return ApiResponse.error("Account is disabled. Please contact admin.");
+            throw new DisabledException("Account is disabled. Please contact admin.");
         }
 
         // STEP 2: Fetch the user's details and roles
@@ -153,7 +153,7 @@ public class AuthService {
 
         if (studentOpt.isEmpty()) {
             log.warn("[Student Login] Authentication failed: Student not found with identifier: {}", identity);
-            return ApiResponse.error("Invalid student ID, email, register number, or SPR number");
+            throw new org.springframework.security.core.userdetails.UsernameNotFoundException("Invalid student ID, email, register number, or SPR number");
         }
 
         Student student = studentOpt.get();
@@ -162,7 +162,7 @@ public class AuthService {
 
         if (!student.isActive()) {
             log.warn("[Student Login] Authentication failed: Student {} is inactive", student.getRegNo());
-            return ApiResponse.error("Student account is inactive. Please contact admin.");
+            throw new DisabledException("Student account is inactive. Please contact admin.");
         }
 
         // Compare Passwords securely
@@ -175,7 +175,7 @@ public class AuthService {
                 log.warn(
                         "[Student Login] Authentication failed: Password mismatch for student: {}. Raw: '{}', Hashed: '{}'",
                         student.getRegNo(), request.getPassword(), student.getPassword());
-                return ApiResponse.error("Invalid password");
+                throw new BadCredentialsException("Invalid password");
             }
         }
 

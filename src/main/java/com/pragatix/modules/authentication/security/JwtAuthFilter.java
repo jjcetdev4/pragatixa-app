@@ -48,13 +48,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
+        String jwt = null;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        } else if (request.getParameter("access_token") != null) {
+            jwt = request.getParameter("access_token");
+        }
+
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        final String jwt = authHeader.substring(7);
 
         try {
             final String username = jwtUtil.extractUsername(jwt);
@@ -69,6 +74,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                 userDetails, null, userDetails.getAuthorities());
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
+                        
+                        if (request.getRequestURI().contains("/api/v1/analytics")) {
+                            System.out.println("\n====== FORENSIC: JWT AUTHENTICATION ======");
+                            System.out.println("Requested URI: " + request.getRequestURI());
+                            System.out.println("Username: " + username);
+                            System.out.println("Token Type: " + tokenType);
+                            System.out.println("Granted Authorities: " + userDetails.getAuthorities());
+                            System.out.println("Authenticated: true");
+                            System.out.println("==========================================\n");
+                        }
                     }
                 } else if ("STUDENT".equals(tokenType)) {
                     UserDetails userDetails = studentDetailsService.loadUserByUsername(username);
@@ -82,6 +97,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             log.warn("JWT validation failed: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            
+            com.pragatix.common.response.ApiResponse<Void> apiResponse = com.pragatix.common.response.ApiResponse.error("Unauthorized. Please login.");
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            response.getWriter().write(mapper.writeValueAsString(apiResponse));
+            return;
         }
 
         filterChain.doFilter(request, response);

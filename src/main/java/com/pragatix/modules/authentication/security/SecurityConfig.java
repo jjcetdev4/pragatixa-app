@@ -37,15 +37,21 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final CustomUserDetailsService customUserDetailsService;
     private final StudentDetailsService studentDetailsService;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final List<String> allowedOrigins;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter,
             CustomUserDetailsService customUserDetailsService,
             StudentDetailsService studentDetailsService,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+            CustomAccessDeniedHandler customAccessDeniedHandler,
             @Value("${cors.allowed-origins:}") String allowedOrigins) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.customUserDetailsService = customUserDetailsService;
         this.studentDetailsService = studentDetailsService;
+        this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
         this.allowedOrigins = StringUtils.hasText(allowedOrigins)
                 ? Arrays.stream(allowedOrigins.split(","))
                         .map(String::trim)
@@ -56,13 +62,10 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/v1/auth/**",
-            "/swagger-ui/**",
             "/api/swagger-ui/**",
-            "/swagger-ui.html",
             "/api/swagger-ui.html",
-            "/api-docs/**",
             "/api/api-docs/**",
-            "/v3/api-docs/**"
+            "/api/actuator/health"
     };
 
     @Bean
@@ -71,6 +74,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
@@ -82,6 +89,7 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
                         .requestMatchers("/api/activity-requests/**")
                         .hasAnyRole("TEACHER", "CLASS_COORDINATOR", "ADMIN", "STUDENT")
+                        .requestMatchers("/api/v1/analytics/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ADMIN", "SUPER_ADMIN", "SUPERADMIN")
                         .requestMatchers("/api/v1/profile/**").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

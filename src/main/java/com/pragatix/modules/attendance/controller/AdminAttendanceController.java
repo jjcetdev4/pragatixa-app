@@ -22,7 +22,7 @@ public class AdminAttendanceController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) Integer period,
             @RequestParam(required = false) Long yearId,
-            @RequestParam Long departmentId,
+            @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long sectionId) {
 
         AdminAttendanceSummaryResponse summary = attendanceService.getDashboardSummary(date, yearId,

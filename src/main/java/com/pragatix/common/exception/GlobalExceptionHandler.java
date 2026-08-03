@@ -107,6 +107,27 @@ public class GlobalExceptionHandler {
         return ApiResponse.error("JWT_EXPIRED: Please refresh token");
     }
 
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiResponse<Void> handleBadCredentials(org.springframework.security.authentication.BadCredentialsException ex) {
+        log.warn("Bad credentials: {}", ex.getMessage());
+        return ApiResponse.error(ex.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiResponse<Void> handleUsernameNotFound(org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
+        log.warn("Username not found: {}", ex.getMessage());
+        return ApiResponse.error(ex.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.security.authentication.DisabledException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiResponse<Void> handleDisabledException(org.springframework.security.authentication.DisabledException ex) {
+        log.warn("Account disabled: {}", ex.getMessage());
+        return ApiResponse.error(ex.getMessage());
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ApiResponse<Void> handleAuthenticationException(AuthenticationException ex) {
