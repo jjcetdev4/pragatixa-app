@@ -1,9 +1,9 @@
-package com.spdms.modules.authentication.controller;
+package com.pragatix.modules.authentication.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.spdms.BaseIntegrationTest;
-import com.spdms.modules.authentication.dto.request.LoginRequest;
-import com.spdms.modules.authentication.dto.request.StudentLoginRequest;
+import com.pragatix.BaseIntegrationTest;
+import com.pragatix.modules.authentication.dto.request.LoginRequest;
+import com.pragatix.modules.authentication.dto.request.StudentLoginRequest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

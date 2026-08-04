@@ -1,4 +1,4 @@
-package com.spdms;
+package com.pragatix;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

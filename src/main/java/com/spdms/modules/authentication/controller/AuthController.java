@@ -3,6 +3,15 @@ import com.spdms.modules.authentication.service.AuthService;
 
 
 import com.spdms.common.response.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.Arrays;
 import com.spdms.modules.authentication.dto.response.AuthResponse;
 import com.spdms.modules.authentication.dto.request.LoginRequest;
 import com.spdms.modules.authentication.dto.request.StudentLoginRequest;
@@ -27,6 +36,9 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserRepository userRepository;
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+    @Value("${cors.allowed-origins:}")
+    private String[] injectedAllowedOrigins;
 
     public AuthController(AuthService authService, UserRepository userRepository) {
         this.authService = authService;
@@ -43,6 +55,7 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "Teacher / Admin Login", description = "Authenticate username & password. Returns a JWT token.")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+        log.debug("[AuthController] Login attempt for username='{}'", request.getUsername());
 
         // Step 1: Pass the raw request to the service layer for processing
         ApiResponse<AuthResponse> response = authService.loginUser(request);
@@ -65,6 +78,7 @@ public class AuthController {
     @PostMapping("/student-login")
     @Operation(summary = "Student Login", description = "Authenticate using Student ID (or email) & password. Returns a JWT token.")
     public ResponseEntity<ApiResponse<AuthResponse>> studentLogin(@Valid @RequestBody StudentLoginRequest request) {
+        log.debug("[AuthController] Student login attempt for identifier='{}'", request.getIdentity());
 
         // Step 1: Pass the raw request to the service layer for processing
         ApiResponse<AuthResponse> response = authService.loginStudent(request);
@@ -88,6 +102,27 @@ public class AuthController {
         } else {
             return ResponseEntity.status(401).body(response);
         }
+    }
+
+    @GetMapping("/ping")
+    public ResponseEntity<ApiResponse<String>> ping() {
+        log.debug("[AuthController] Ping received");
+        return ResponseEntity.ok(ApiResponse.ok("pong"));
+    }
+
+    @GetMapping("/echo-headers")
+    public ResponseEntity<ApiResponse<Map<String,Object>>> echoHeaders(HttpServletRequest request) {
+        Map<String, String> headers = Collections.list(request.getHeaderNames())
+                .stream().collect(Collectors.toMap(h -> h, request::getHeader));
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("receivedHeaders", headers);
+        payload.put("env_CORS_ALLOWED_ORIGINS", System.getenv("CORS_ALLOWED_ORIGINS"));
+        payload.put("injected_allowed_origins", injectedAllowedOrigins == null ? null : Arrays.asList(injectedAllowedOrigins));
+
+        log.debug("[AuthController] Echo headers called, env_CORS_ALLOWED_ORIGINS={} injectedAllowedOrigins={}", System.getenv("CORS_ALLOWED_ORIGINS"), injectedAllowedOrigins == null ? null : Arrays.toString(injectedAllowedOrigins));
+
+        return ResponseEntity.ok(ApiResponse.ok("headers", payload));
     }
 
 }

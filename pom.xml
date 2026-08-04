@@ -11,8 +11,8 @@
     <relativePath/>
   </parent>
 
-  <groupId>com.spdms</groupId>
-  <artifactId>spdms-backend</artifactId>
+  <groupId>com.pragatix</groupId>
+  <artifactId>pragatix-backend</artifactId>
   <version>1.0.0</version>
   <name>SPDMS Backend</name>
   <description>Student Performance and Discipline Management System - Backend</description>
@@ -49,6 +49,12 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- Spring Boot Actuator -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
     <!-- Spring Security -->
@@ -142,6 +148,12 @@
       <artifactId>poi</artifactId>
       <version>5.2.5</version>
     </dependency>
+    <!-- Explicit commons-io to fix NoSuchMethodError UnsynchronizedByteArrayOutputStream -->
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.16.1</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml</artifactId>
@@ -160,6 +172,9 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>com.pragatix.SpdmsApplication</mainClass>
+        </configuration>
       </plugin>
     </plugins>
   </build>

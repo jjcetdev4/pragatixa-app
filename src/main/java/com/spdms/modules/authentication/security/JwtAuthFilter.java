@@ -45,10 +45,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+        // Log incoming request for debugging (method + URI + presence of Authorization header)
+        log.debug("Incoming request: {} {} , Authorization present={}", request.getMethod(), request.getRequestURI(), request.getHeader("Authorization") != null);
 
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            // No Bearer token -> proceed to controller (login endpoints expect this)
             filterChain.doFilter(request, response);
             return;
         }
