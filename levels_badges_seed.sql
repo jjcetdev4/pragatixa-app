@@ -1,6 +1,6 @@
 -- ========================================================
 -- JJCET GAMIFIED STUDENT SYSTEM: LEVELS & BADGES SEED
--- Execute this script in your MySQL Database (spdms_lab)
+-- Execute this script in your MySQL Database (Pragatix)
 -- ========================================================
 
 -- 1. Create tables if they do not exist

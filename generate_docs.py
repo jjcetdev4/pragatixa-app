@@ -2,24 +2,24 @@ import os
 import re
 
 files = [
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/student/XpController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/student/LevelBadgeController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/student/controller/StudentXpController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/student/controller/StudentController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/activity/controller/GroupActivityController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/authentication/controller/AuthController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminDashboardController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminLookupController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminFacultyController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminStageController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminAssignmentController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminRoleController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminDepartmentController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminSubgroupController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminSubjectController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminActivityController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/modules/admin/controller/AdminUserController.java",
-    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/spdms/admin/TeamController.java"
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/student/XpController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/student/LevelBadgeController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/student/controller/StudentXpController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/student/controller/StudentController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/activity/controller/GroupActivityController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/authentication/controller/AuthController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminDashboardController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminLookupController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminFacultyController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminStageController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminAssignmentController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminRoleController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminDepartmentController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminSubgroupController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminSubjectController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminActivityController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/modules/admin/controller/AdminUserController.java",
+    "h:/Updating SPDMS/updating_decipline_backend/src/main/java/com/pragatix/admin/TeamController.java"
 ]
 
 endpoints = []

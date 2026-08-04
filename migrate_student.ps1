@@ -1,17 +1,17 @@
  = @(
-  'CreateStudentRequest,com.spdms.dto,com.spdms.modules.student.dto.request',
-  'UpdateStudentRequest,com.spdms.dto,com.spdms.modules.student.dto.request',
-  'MyActivityStudentsResponse,com.spdms.dto,com.spdms.modules.student.dto.response',
-  'StudentBadgeResponse,com.spdms.dto,com.spdms.modules.student.dto.response',
-  'StudentResponse,com.spdms.dto,com.spdms.modules.student.dto.response',
-  'StudentNotFoundException,com.spdms.exception,com.spdms.modules.student.exception',
-  'StudentActivityXpRepository,com.spdms.repository,com.spdms.modules.student.repository',
-  'StudentBadgeRepository,com.spdms.repository,com.spdms.modules.student.repository',
-  'StudentGroupRepository,com.spdms.repository,com.spdms.modules.student.repository',
-  'StudentRepository,com.spdms.repository,com.spdms.modules.student.repository',
-  'StudentService,com.spdms.student,com.spdms.modules.student.service',
-  'StudentController,com.spdms.student,com.spdms.modules.student.controller',
-  'StudentXpController,com.spdms.student,com.spdms.modules.student.controller'
+  'CreateStudentRequest,com.pragatix.dto,com.pragatix.modules.student.dto.request',
+  'UpdateStudentRequest,com.pragatix.dto,com.pragatix.modules.student.dto.request',
+  'MyActivityStudentsResponse,com.pragatix.dto,com.pragatix.modules.student.dto.response',
+  'StudentBadgeResponse,com.pragatix.dto,com.pragatix.modules.student.dto.response',
+  'StudentResponse,com.pragatix.dto,com.pragatix.modules.student.dto.response',
+  'StudentNotFoundException,com.pragatix.exception,com.pragatix.modules.student.exception',
+  'StudentActivityXpRepository,com.pragatix.repository,com.pragatix.modules.student.repository',
+  'StudentBadgeRepository,com.pragatix.repository,com.pragatix.modules.student.repository',
+  'StudentGroupRepository,com.pragatix.repository,com.pragatix.modules.student.repository',
+  'StudentRepository,com.pragatix.repository,com.pragatix.modules.student.repository',
+  'StudentService,com.pragatix.student,com.pragatix.modules.student.service',
+  'StudentController,com.pragatix.student,com.pragatix.modules.student.controller',
+  'StudentXpController,com.pragatix.student,com.pragatix.modules.student.controller'
 )
 
 foreach ($move in $moves) {
