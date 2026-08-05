@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * AttendanceEngineController — REST API for the Attendance Engine Control Center.
+ * AttendanceEngineController - REST API for the Attendance Engine Control Center.
  *
  * Provides endpoints to:
  * - Get engine status for an Academic Year
@@ -61,8 +61,13 @@ public class AttendanceEngineController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> runDaily(
             @RequestParam(required = false) AcademicYear academicYear) {
         if (academicYear == null) academicYear = AcademicYear.FIRST_YEAR;
+        log.info("[TRACE] ======================================================");
+        log.info("[TRACE] |  MANUAL TRIGGER: Daily Engine via REST API          |");
+        log.info("[TRACE] ======================================================");
+        log.info("[TRACE] Academic Year = {}", academicYear);
         log.info("Manual trigger: Daily Engine for {}", academicYear);
         Map<String, Object> result = dailyEngineService.execute(academicYear);
+        log.info("[TRACE] MANUAL Daily Engine returned: {}", result);
         return ResponseEntity.ok(ApiResponse.ok("Daily engine executed", result));
     }
 
@@ -74,8 +79,13 @@ public class AttendanceEngineController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> runWeekly(
             @RequestParam(required = false) AcademicYear academicYear) {
         if (academicYear == null) academicYear = AcademicYear.FIRST_YEAR;
+        log.info("[TRACE] ======================================================");
+        log.info("[TRACE] |  MANUAL TRIGGER: Weekly Engine via REST API         |");
+        log.info("[TRACE] ======================================================");
+        log.info("[TRACE] Academic Year = {}", academicYear);
         log.info("Manual trigger: Weekly Engine for {}", academicYear);
         Map<String, Object> result = weeklyEngineService.execute(academicYear);
+        log.info("[TRACE] MANUAL Weekly Engine returned: {}", result);
         return ResponseEntity.ok(ApiResponse.ok("Weekly engine executed", result));
     }
 

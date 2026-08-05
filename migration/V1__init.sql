@@ -298,11 +298,7 @@ CREATE TABLE IF NOT EXISTS stages (
     CONSTRAINT chk_stage_xp CHECK (max_xp IS NULL OR min_xp < max_xp)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO stages (id, name, order_no, min_xp, max_xp, description) VALUES
-  (1, 'Stage 1 - Foundation', 1, 0, 499, 'Daily MUST habits + basic tasks'),
-  (2, 'Stage 2 - Engagement', 2, 500, 1199, 'Clubs, events, courses'),
-  (3, 'Stage 3 - Mastery', 3, 1200, NULL, 'Projects, competitions')
-ON DUPLICATE KEY UPDATE name = VALUES(name), order_no = VALUES(order_no), min_xp = VALUES(min_xp), max_xp = VALUES(max_xp);
+
 
 -- ------------------------------------------------------------
 -- 6. CATEGORIES

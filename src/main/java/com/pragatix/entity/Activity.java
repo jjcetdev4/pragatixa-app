@@ -65,6 +65,9 @@ public class Activity {
     @Column(name = "allow_student_request")
     private Boolean allowStudentRequest = false;
 
+    @Column(name = "streak_enabled", nullable = false)
+    private Boolean streakEnabled = false;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -324,6 +327,14 @@ public class Activity {
 
     public void setAllowStudentRequest(Boolean allowStudentRequest) {
         this.allowStudentRequest = allowStudentRequest;
+    }
+
+    public Boolean getStreakEnabled() {
+        return streakEnabled != null ? streakEnabled : false;
+    }
+
+    public void setStreakEnabled(Boolean streakEnabled) {
+        this.streakEnabled = streakEnabled;
     }
 
     public Integer getPenaltyXp() {

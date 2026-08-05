@@ -15,6 +15,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     Optional<Attendance> findByStudentIdAndAttendanceDateAndPeriodNo(Long studentId, LocalDate date, Integer periodNo);
 
+    boolean existsByStudentIdInAndAttendanceDateAndPeriodNo(List<Long> studentIds, LocalDate date, Integer periodNo);
+
     long countByStudentIdAndAttendanceDate(Long studentId, LocalDate date);
 
     long countByStudentIdAndAttendanceDateAndStatus(Long studentId, LocalDate date, Attendance.AttendanceStatus status);

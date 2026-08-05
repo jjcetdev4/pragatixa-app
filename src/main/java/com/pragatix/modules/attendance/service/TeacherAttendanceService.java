@@ -103,7 +103,7 @@ public class TeacherAttendanceService {
         for (Student s : students) {
             StudentAttendanceListItemResponse res = new StudentAttendanceListItemResponse();
             res.setStudentId(s.getId());
-            res.setStudentName(s.getUser().getFullName());
+            res.setStudentName(s.getFullName());
             res.setRegisterNumber(s.getRegNo());
 
             Optional<Attendance> recordOpt = attendanceRepository.findByStudentIdAndAttendanceDateAndPeriodNo(s.getId(),
@@ -152,6 +152,18 @@ public class TeacherAttendanceService {
 
         Faculty teacher = facultyRepository.findByUserUsername(username)
                 .orElseThrow(() -> new RuntimeException("Faculty not found for username: " + username));
+
+        List<Long> studentIds = request.getRecords().stream()
+                .map(SaveAttendanceRequest.StudentAttendanceRequest::getStudentId)
+                .collect(Collectors.toList());
+
+        if (!studentIds.isEmpty()) {
+            boolean alreadyMarked = attendanceRepository.existsByStudentIdInAndAttendanceDateAndPeriodNo(
+                    studentIds, request.getDate(), request.getPeriod());
+            if (alreadyMarked) {
+                throw new IllegalArgumentException("Attendance for this class in period " + request.getPeriod() + " has already been marked.");
+            }
+        }
 
         int count = 0;
         for (SaveAttendanceRequest.StudentAttendanceRequest recordReq : request.getRecords()) {

@@ -9,6 +9,8 @@ import java.util.List;
 
 @Repository
 public interface XpTransactionRepository extends JpaRepository<XpTransaction, Long> {
+    void deleteByActivityId(Long activityId);
+
     List<XpTransaction> findByStudentRegNo(String regNo);
     
     List<XpTransaction> findByStudentIdAndActivityId(Long studentId, Long activityId);

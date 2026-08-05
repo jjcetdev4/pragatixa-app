@@ -36,4 +36,8 @@ public interface ActivityCompletionRequestRepository extends JpaRepository<Activ
             "ORDER BY r.createdAt DESC")
     List<ActivityCompletionRequest> findPossibleRequestsForTeacher(@Param("teacherId") Long teacherId,
             @Param("status") String status);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM ActivityCompletionRequest r WHERE r.activity.id = :activityId")
+    void deleteByActivityId(@Param("activityId") Long activityId);
 }

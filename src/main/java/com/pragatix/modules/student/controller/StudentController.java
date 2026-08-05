@@ -34,15 +34,18 @@ public class StudentController {
     private final StudentStageFacade studentStageFacade;
     private final com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver;
     private final com.pragatix.modules.activity.repository.ActivityRepository activityRepository;
+    private final com.pragatix.modules.activity.service.ActivityStreakService activityStreakService;
 
     public StudentController(StudentService studentService,
             StudentStageFacade studentStageFacade,
             com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver,
-            com.pragatix.modules.activity.repository.ActivityRepository activityRepository) {
+            com.pragatix.modules.activity.repository.ActivityRepository activityRepository,
+            com.pragatix.modules.activity.service.ActivityStreakService activityStreakService) {
         this.studentService = studentService;
         this.studentStageFacade = studentStageFacade;
         this.studentAuthResolver = studentAuthResolver;
         this.activityRepository = activityRepository;
+        this.activityStreakService = activityStreakService;
     }
 
     @PostMapping
@@ -95,12 +98,17 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Delete Student", description = "Deletes a student record. Requires ADMIN role.")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Delete Student", description = "Deletes a student record. Requires ADMIN or TEACHER role.")
     public ResponseEntity<ApiResponse<Void>> deleteStudent(@PathVariable Long id) {
         ApiResponse<Void> response = studentService.deleteStudent(id);
-        return response.isSuccess() ? ResponseEntity.ok(response)
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else if (response.getMessage() != null && response.getMessage().contains("authorized")) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).body(response);
+        } else {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(response);
+        }
     }
 
     @PutMapping("/{id}")
@@ -192,6 +200,23 @@ public class StudentController {
     public ResponseEntity<ApiResponse<List<com.pragatix.entity.Activity>>> getActivitiesBySubgroup(
             @PathVariable Long subgroupId) {
         List<com.pragatix.entity.Activity> activities = activityRepository.findBySubgroupId(subgroupId);
-        return ResponseEntity.ok(ApiResponse.ok(activities));
+        return ResponseEntity.ok(ApiResponse.ok("Activities fetched successfully", activities));
+    }
+
+    @GetMapping("/me/activity-streaks")
+    @PreAuthorize("hasAnyRole('STUDENT')")
+    @Operation(summary = "Get Student Activity Streaks", description = "Returns all activity streaks for the logged-in student.")
+    public ResponseEntity<ApiResponse<List<StudentActivityStreakDTO>>> getMyActivityStreaks() {
+        com.pragatix.entity.Student student = studentAuthResolver.getLoggedInStudent();
+        List<com.pragatix.entity.StudentActivityStreak> streaks = activityStreakService.getStudentActivityStreaks(student.getId());
+        List<StudentActivityStreakDTO> dtos = streaks.stream()
+                .map(s -> new StudentActivityStreakDTO(
+                        s.getActivity().getId(),
+                        s.getActivity().getName(),
+                        s.getCurrentStreak(),
+                        s.getLongestStreak(),
+                        s.getLastCompletedDate()))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok("Activity streaks fetched successfully", dtos));
     }
 }

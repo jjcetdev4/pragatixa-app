@@ -25,4 +25,6 @@ public interface ActivityStageRepository extends JpaRepository<ActivityStage, Lo
     Optional<ActivityStage> findByDisplayOrder(int displayOrder);
 
     Optional<ActivityStage> findFirstByDisplayOrderGreaterThanOrderByDisplayOrderAsc(int displayOrder);
+
+    Optional<ActivityStage> findFirstByIsActiveTrueOrderByDisplayOrderAsc();
 }

@@ -47,6 +47,7 @@ public class Section {
         this.department = department;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("departmentId")
     public Long getDepartmentId() {
         return department != null ? department.getId() : null;
     }

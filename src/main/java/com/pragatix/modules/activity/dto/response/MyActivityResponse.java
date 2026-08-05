@@ -38,6 +38,8 @@ public class MyActivityResponse {
     private Boolean attendanceEngineEnabled;
     private String attendanceRule;
     private String manualEvidenceName;
+    // ── Streak System ──────────────────────────────────────────────────────────
+    private Boolean streakEnabled;
 
     public MyActivityResponse() {
     }
@@ -50,7 +52,7 @@ public class MyActivityResponse {
             Integer awardXp, Boolean awardEnabled, Boolean penaltyEnabled, Integer penaltyXp, String awardType,
             boolean repeatAllowed, String xpType,
             Integer cap, String awardFrequency, String awardDays,
-            Boolean attendanceEngineEnabled, String attendanceRule, String manualEvidenceName) {
+            Boolean attendanceEngineEnabled, String attendanceRule, String manualEvidenceName, Boolean streakEnabled) {
         this.activityId = activityId;
         this.name = name;
         this.description = description;
@@ -81,6 +83,7 @@ public class MyActivityResponse {
         this.attendanceEngineEnabled = attendanceEngineEnabled;
         this.attendanceRule = attendanceRule;
         this.manualEvidenceName = manualEvidenceName;
+        this.streakEnabled = streakEnabled;
     }
 
     public Long getActivityId() {
@@ -312,6 +315,14 @@ public class MyActivityResponse {
         this.attendanceEngineEnabled = attendanceEngineEnabled;
     }
 
+    public Boolean getStreakEnabled() {
+        return streakEnabled;
+    }
+
+    public void setStreakEnabled(Boolean streakEnabled) {
+        this.streakEnabled = streakEnabled;
+    }
+
     public String getAttendanceRule() {
         return attendanceRule;
     }
@@ -528,6 +539,7 @@ public class MyActivityResponse {
         private Boolean attendanceEngineEnabled;
         private String attendanceRule;
         private String manualEvidenceName;
+        private Boolean streakEnabled;
 
         public Builder attendanceEngineEnabled(Boolean v) {
             this.attendanceEngineEnabled = v;
@@ -544,12 +556,17 @@ public class MyActivityResponse {
             return this;
         }
 
+        public Builder streakEnabled(Boolean v) {
+            this.streakEnabled = v;
+            return this;
+        }
+
         public MyActivityResponse build() {
             return new MyActivityResponse(activityId, name, description, frequency, evidence,
                     xp, type, justification, departmentId, departmentName, sectionId, sectionName,
                     assignedBy, assignedAt, assignedFacultyName, assignmentMode, xpCategory, awardXp, awardEnabled,
-                    penaltyEnabled, penaltyXp, awardType, repeatAllowed, xpType, cap, awardFrequency, awardDays,
-                    attendanceEngineEnabled, attendanceRule, manualEvidenceName);
+                    penaltyEnabled, penaltyXp, awardType, repeatAllowed, xpType,
+                    cap, awardFrequency, awardDays, attendanceEngineEnabled, attendanceRule, manualEvidenceName, streakEnabled);
         }
     }
 }

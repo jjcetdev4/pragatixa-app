@@ -29,7 +29,6 @@ public class TwilioConfig {
         }
         try {
             Twilio.init(accountSid, authToken);
-            log.info("Twilio SDK initialized successfully.");
         } catch (Exception e) {
             log.error("Failed to initialize Twilio SDK", e);
         }

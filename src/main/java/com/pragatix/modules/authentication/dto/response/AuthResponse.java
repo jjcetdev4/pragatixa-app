@@ -17,6 +17,7 @@ public class AuthResponse {
     private String sectionName;
     private String year;
     private String department;
+    private Long departmentId;
     private String phone;
     private String semester;
     private String sprNo;
@@ -147,6 +148,14 @@ public class AuthResponse {
 
     public void setDepartment(String department) {
         this.department = department;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
     }
 
     public String getPhone() {
@@ -381,6 +390,11 @@ public class AuthResponse {
 
         public Builder department(String v) {
             r.department = v;
+            return this;
+        }
+
+        public Builder departmentId(Long v) {
+            r.departmentId = v;
             return this;
         }
 

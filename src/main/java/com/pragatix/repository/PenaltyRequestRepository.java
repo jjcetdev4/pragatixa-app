@@ -17,4 +17,9 @@ public interface PenaltyRequestRepository extends JpaRepository<PenaltyRequest, 
     @Query("SELECT p FROM PenaltyRequest p WHERE p.teacher.id = :teacherId ORDER BY p.createdAt DESC")
     List<PenaltyRequest> findByTeacherId(@Param("teacherId") Long teacherId);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM PenaltyRequest p WHERE p.activity.id = :activityId")
+    int deleteByActivityId(@Param("activityId") Long activityId);
+
 }
+

@@ -10,6 +10,8 @@ import java.util.Optional;
 public interface ActivityStageMappingRepository extends JpaRepository<ActivityStageMapping, Long> {
     boolean existsByStageIdAndActivityId(Long stageId, Long activityId);
 
+    void deleteByActivityId(Long activityId);
+
     List<ActivityStageMapping> findByStageId(Long stageId);
 
     List<ActivityStageMapping> findByActivityId(Long activityId);

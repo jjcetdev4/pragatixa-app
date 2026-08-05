@@ -8,6 +8,10 @@ import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
 import com.pragatix.repository.ActivityAssignmentRepository;
 import com.pragatix.repository.DisciplineLogRepository;
 import com.pragatix.modules.student.repository.StudentActivityXpRepository;
+import com.pragatix.repository.StudentActivityStreakRepository;
+import com.pragatix.repository.XpTransactionRepository;
+import com.pragatix.repository.PenaltyRequestRepository;
+import com.pragatix.repository.ActivityCompletionRequestRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,8 +37,12 @@ public class ActivityCrudService {
     private final ActivityStageRepository activityStageRepository;
     private final ActivityStageMappingRepository activityStageMappingRepository;
     private final ActivityAssignmentRepository activityAssignmentRepository;
+    private final PenaltyRequestRepository penaltyRequestRepository;
+    private final ActivityCompletionRequestRepository activityCompletionRequestRepository;
     private final DisciplineLogRepository disciplineLogRepository;
     private final StudentActivityXpRepository studentActivityXpRepository;
+    private final StudentActivityStreakRepository studentActivityStreakRepository;
+    private final XpTransactionRepository xpTransactionRepository;
     private final ActivityValidationService validationService;
     private final ActivityRequestMapper requestMapper;
     private final AdminAssignmentService adminAssignmentService;
@@ -47,8 +55,12 @@ public class ActivityCrudService {
             ActivityStageRepository activityStageRepository,
             ActivityStageMappingRepository activityStageMappingRepository,
             ActivityAssignmentRepository activityAssignmentRepository,
+            PenaltyRequestRepository penaltyRequestRepository,
+            ActivityCompletionRequestRepository activityCompletionRequestRepository,
             DisciplineLogRepository disciplineLogRepository,
             StudentActivityXpRepository studentActivityXpRepository,
+            StudentActivityStreakRepository studentActivityStreakRepository,
+            XpTransactionRepository xpTransactionRepository,
             ActivityValidationService validationService,
             ActivityRequestMapper requestMapper,
             AdminAssignmentService adminAssignmentService,
@@ -58,8 +70,12 @@ public class ActivityCrudService {
         this.activityStageRepository = activityStageRepository;
         this.activityStageMappingRepository = activityStageMappingRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
+        this.penaltyRequestRepository = penaltyRequestRepository;
+        this.activityCompletionRequestRepository = activityCompletionRequestRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
+        this.studentActivityStreakRepository = studentActivityStreakRepository;
+        this.xpTransactionRepository = xpTransactionRepository;
         this.validationService = validationService;
         this.requestMapper = requestMapper;
         this.adminAssignmentService = adminAssignmentService;
@@ -344,28 +360,46 @@ public class ActivityCrudService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Activity not found"));
         }
 
-        long xpTransactions = studentActivityXpRepository.countByActivityId(activityId);
-        long studentAssignments = activityAssignmentRepository.countByActivityId(activityId);
-        long disciplineLogs = disciplineLogRepository.countByActivityId(activityId);
-        boolean isMappedToStage = activity.getStage() != null;
+        System.out.println("=================================");
+        System.out.println("ACTIVITY DELETE");
+        System.out.println("=================================");
+        System.out.println("Activity ID : " + activityId);
 
-        if (!force && (xpTransactions > 0 || studentAssignments > 0 || disciplineLogs > 0 || isMappedToStage)) {
-            String msg = "Cannot delete Activity. Currently referenced by: " +
-                    (xpTransactions > 0 ? "\n• " + xpTransactions + " XP Transactions" : "") +
-                    (studentAssignments > 0 ? "\n• " + studentAssignments + " Student Assignments" : "") +
-                    (disciplineLogs > 0 ? "\n• " + disciplineLogs + " Discipline Logs" : "") +
-                    (isMappedToStage ? "\n• 1 Stage Mapping" : "");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.<Void>error(msg));
-        }
+        // 1. Delete penalty_requests WHERE activity_id = ?
+        System.out.println("Deleting Penalty Requests...");
+        int deletedPenaltyRequests = penaltyRequestRepository.deleteByActivityId(activityId);
+        System.out.println("Deleted : " + deletedPenaltyRequests);
 
-        if (force) {
-            studentActivityXpRepository.deleteByActivityId(activityId);
-            activityAssignmentRepository.deleteByActivityId(activityId);
-            disciplineLogRepository.nullifyActivityReferences(activityId);
-        }
+        // 2. Delete activity completion requests
+        activityCompletionRequestRepository.deleteByActivityId(activityId);
 
+        // 3. Remove all Stage Activity mappings for the activity
+        activityStageMappingRepository.deleteByActivityId(activityId);
+
+        // 4. Remove any Activity Assignment mappings
+        activityAssignmentRepository.deleteByActivityId(activityId);
+
+        // 5. Remove XP configuration/mappings related to the activity
+        studentActivityXpRepository.deleteByActivityId(activityId);
+        xpTransactionRepository.deleteByActivityId(activityId);
+        studentActivityStreakRepository.deleteByActivityId(activityId);
+
+        // 6. Remove discipline log references pointing to this activity
+        disciplineLogRepository.nullifyActivityReferences(activityId);
+
+        // Flush changes
+        activityRepository.flush();
+
+        // 7. Delete Activity
+        System.out.println("Deleting Activity...");
         activityRepository.deleteById(activityId);
-        log.debug("Admin deleted activity with ID: {}", activityId);
+        activityRepository.flush();
+
+        System.out.println("Success");
+        System.out.println("Activity Deleted Successfully");
+        System.out.println("=================================");
+
+        log.info("Admin deleted activity with ID and all its references: {}", activityId);
         return ResponseEntity.ok(ApiResponse.ok("Activity deleted successfully", null));
     }
 

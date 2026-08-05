@@ -46,13 +46,15 @@ public class StudentImportService {
     private final ExcelStudentParser excelStudentParser;
     private final StudentImportResolverService resolverService;
     private final StudentGuardianRepository studentGuardianRepository;
+    private final ActivityStageRepository activityStageRepository;
 
     public StudentImportService(AcademicYearRepository academicYearRepository,
             DepartmentRepository departmentRepository, GenderRepository genderRepository,
             PasswordEncoder passwordEncoder, SectionRepository sectionRepository, SemesterRepository semesterRepository,
             StudentRepository studentRepository, TeamRepository teamRepository, UserRepository userRepository,
             YearRepository yearRepository, ExcelStudentParser excelStudentParser,
-            StudentImportResolverService resolverService, StudentGuardianRepository studentGuardianRepository) {
+            StudentImportResolverService resolverService, StudentGuardianRepository studentGuardianRepository,
+            ActivityStageRepository activityStageRepository) {
         this.academicYearRepository = academicYearRepository;
         this.departmentRepository = departmentRepository;
         this.genderRepository = genderRepository;
@@ -66,6 +68,7 @@ public class StudentImportService {
         this.excelStudentParser = excelStudentParser;
         this.resolverService = resolverService;
         this.studentGuardianRepository = studentGuardianRepository;
+        this.activityStageRepository = activityStageRepository;
     }
 
     private List<String> parseCsvLine(String line) {
@@ -440,6 +443,11 @@ public class StudentImportService {
             java.util.Set<String> processedSprs = new java.util.HashSet<>();
             List<Student> studentsToSave = new ArrayList<>();
             List<StudentGuardian> guardiansToSave = new ArrayList<>();
+
+            ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueOrderByDisplayOrderAsc().orElse(null);
+            if (initialStage == null) {
+                return ApiResponse.error("Validation Error: No active stages found. Please configure stages before creating students.");
+            }
             java.util.Map<Long, Department> deptMap = new java.util.HashMap<>();
             java.util.Map<Long, Section> sectionMap = new java.util.HashMap<>();
             java.util.Map<Long, Gender> genderMap = new java.util.HashMap<>();
@@ -637,6 +645,9 @@ public class StudentImportService {
                             .semester(String.valueOf(semester.getSemesterNo()))
                             .gender(gender.getGenderName())
                             .score(100)
+                            .stage(initialStage.getDisplayOrder())
+                            .currentStage(initialStage.getDisplayOrder())
+                            .currentStageId(initialStage.getId())
                             .team(team)
                             .sprNo(request.getSprNo() != null && !request.getSprNo().trim().isEmpty()
                                     ? request.getSprNo().trim()

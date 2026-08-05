@@ -58,6 +58,17 @@ public class ActivityRequestMapper {
             }
         }
 
+        if (body.containsKey("streakEnabled") && body.get("streakEnabled") != null) {
+            Object val = body.get("streakEnabled");
+            if (val instanceof Boolean) {
+                activity.setStreakEnabled((Boolean) val);
+            } else if (val instanceof String) {
+                activity.setStreakEnabled(Boolean.parseBoolean((String) val));
+            }
+        } else if (activity.getId() == null) {
+            activity.setStreakEnabled(false);
+        }
+
         if (body.containsKey("attendanceEngineEnabled") && body.get("attendanceEngineEnabled") != null) {
             Object val = body.get("attendanceEngineEnabled");
             if (val instanceof Boolean) {

@@ -85,7 +85,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/students/me").hasRole("STUDENT")
                         .requestMatchers(HttpMethod.POST, "/api/v1/students").hasAnyRole("ADMIN", "TEACHER")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/students/**").hasAnyRole("ADMIN", "TEACHER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/students/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/students/**").hasAnyRole("ADMIN", "TEACHER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/students/**")
                         .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
                         .requestMatchers("/api/activity-requests/**")
@@ -142,11 +142,9 @@ public class SecurityConfig {
         }
 
         configuration.setAllowedOriginPatterns(originsList);
-        System.out.println("Allowed Origin Patterns: " + originsList);
 
         List<String> methods = List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS");
         configuration.setAllowedMethods(methods);
-        System.out.println("Allowed Methods: " + methods);
 
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));

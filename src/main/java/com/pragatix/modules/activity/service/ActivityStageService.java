@@ -65,7 +65,6 @@ public class ActivityStageService {
     @PostConstruct
     @Transactional
     public void cleanupDuplicateSubgroups() {
-        log.info("Starting cleanup of duplicate subgroups...");
         List<ActivityStage> allStages = activityStageRepository.findAll();
         for (ActivityStage stage : allStages) {
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
@@ -106,7 +105,6 @@ public class ActivityStageService {
                 }
             }
         }
-        log.info("Finished cleanup of duplicate subgroups.");
     }
 
     @Transactional

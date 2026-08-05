@@ -28,10 +28,10 @@ public class AttendanceCronScheduler {
     private final AcademicWeekRepository academicWeekRepository;
 
     public AttendanceCronScheduler(AttendanceDailyEngineService dailyEngineService,
-                                   AttendanceWeeklyEngineService weeklyEngineService,
-                                   AttendanceSettingsRepository settingsRepository,
-                                   EngineClockService clockService,
-                                   AcademicWeekRepository academicWeekRepository) {
+            AttendanceWeeklyEngineService weeklyEngineService,
+            AttendanceSettingsRepository settingsRepository,
+            EngineClockService clockService,
+            AcademicWeekRepository academicWeekRepository) {
         this.dailyEngineService = dailyEngineService;
         this.weeklyEngineService = weeklyEngineService;
         this.settingsRepository = settingsRepository;
@@ -40,61 +40,60 @@ public class AttendanceCronScheduler {
     }
 
     /**
-     * Runs every 5 minutes to check if the Daily or Weekly engine needs to run.
+     * Runs every 1 minute to check if the Daily or Weekly engine needs to run.
      */
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void executeAttendanceEngines() {
-        log.info("AttendanceCronScheduler checking configured times...");
         List<AttendanceSettings> allSettings = settingsRepository.findAll();
 
         for (AttendanceSettings settings : allSettings) {
             AcademicYear year = settings.getAcademicYear();
             if (year == null) {
-                log.warn("Skipping attendance settings with null AcademicYear (ID: {})", settings.getId());
-                continue;
-            }
-            LocalTime effectiveTime = clockService.getEffectiveTime(year);
-            LocalDate effectiveDate = clockService.getEffectiveDate(year);
-
-            // Fetch Active AcademicWeek
-            AcademicWeek activeWeek = academicWeekRepository.findActiveWeekForDate(year, effectiveDate).orElse(null);
-            if (activeWeek == null) {
-                log.info("No active Academic Week configured for Academic Year: {}. Skipping engine runs.", year);
                 continue;
             }
             
-            LocalDate startDate = activeWeek.getStartDate();
-            LocalDate endDate = activeWeek.getEndDate();
+            LocalTime effectiveTime = clockService.getEffectiveTime(year);
+            LocalDate effectiveDate = clockService.getEffectiveDate(year);
+            boolean isTestMode = clockService.isTestMode(year);
 
             // Check Daily Engine
-            if (Boolean.TRUE.equals(settings.getDailyEngineEnabled()) && settings.getDailyProcessingTime() != null) {
-                if (startDate != null && endDate != null && 
-                    !effectiveDate.isBefore(startDate) && !effectiveDate.isAfter(endDate)) {
-                    
-                    if (!effectiveTime.isBefore(settings.getDailyProcessingTime())) {
-                        boolean runToday = settings.getLastDailyRun() == null || !settings.getLastDailyRun().toLocalDate().isEqual(effectiveDate);
-                        if (runToday) {
-                            log.info("Triggering Daily Engine automatically for Academic Year: {}", year);
-                            dailyEngineService.execute(year);
-                        }
-                    }
+            boolean shouldExecuteDaily = true;
+
+            if (!Boolean.TRUE.equals(settings.getDailyEngineEnabled()) ||
+                settings.getDailyProcessingTime() == null ||
+                effectiveTime.isBefore(settings.getDailyProcessingTime()) ||
+                (settings.getLastDailyRun() != null && settings.getLastDailyRun().toLocalDate().isEqual(effectiveDate))) {
+                shouldExecuteDaily = false;
+            }
+
+            if (shouldExecuteDaily) {
+                try {
+                    dailyEngineService.execute(year);
+                } catch (Exception e) {
+                    log.error("Error executing Daily Engine for year {}: {}", year, e.getMessage(), e);
                 }
             }
 
+            // Fetch Active AcademicWeek for Weekly Engine
+            AcademicWeek activeWeek = academicWeekRepository.findActiveWeekForDate(year, effectiveDate).orElse(null);
+
             // Check Weekly Engine
-            if (Boolean.TRUE.equals(settings.getWeeklyEngineEnabled()) && settings.getWeeklyProcessingTime() != null) {
-                if (endDate == null) {
-                    continue; // Cannot run weekly engine without a configured end date
-                }
-                // Weekly engine only runs on the configured end date
-                if (effectiveDate.isEqual(endDate)) {
-                    if (!effectiveTime.isBefore(settings.getWeeklyProcessingTime())) {
-                        boolean runToday = settings.getLastWeeklyRun() == null || !settings.getLastWeeklyRun().toLocalDate().isEqual(effectiveDate);
-                        if (runToday) {
-                            log.info("Triggering Weekly Engine automatically for Academic Year: {}", year);
-                            weeklyEngineService.execute(year);
-                        }
-                    }
+            boolean shouldExecuteWeekly = true;
+
+            if (!Boolean.TRUE.equals(settings.getWeeklyEngineEnabled()) ||
+                settings.getWeeklyProcessingTime() == null ||
+                activeWeek == null || activeWeek.getEndDate() == null ||
+                !effectiveDate.isEqual(activeWeek.getEndDate()) ||
+                effectiveTime.isBefore(settings.getWeeklyProcessingTime()) ||
+                (settings.getLastWeeklyRun() != null && settings.getLastWeeklyRun().toLocalDate().isEqual(effectiveDate))) {
+                shouldExecuteWeekly = false;
+            }
+
+            if (shouldExecuteWeekly) {
+                try {
+                    weeklyEngineService.execute(year);
+                } catch (Exception e) {
+                    log.error("Error executing Weekly Engine for year {}: {}", year, e.getMessage(), e);
                 }
             }
         }

@@ -106,7 +106,7 @@ public class Student {
     @Column(name = "stage", nullable = false)
     private int stage = 1;
 
-    @Transient
+    @Column(name = "current_stage", nullable = false)
     private int currentStage = 1;
 
     @Transient
@@ -127,6 +127,9 @@ public class Student {
 
     @Column(name = "promotion_order")
     private Integer promotionOrder;
+
+    @Column(name = "is_captain", nullable = false)
+    private boolean isCaptain = false;
 
     public Student() {
     }
@@ -413,6 +416,14 @@ public class Student {
         this.promotionOrder = promotionOrder;
     }
 
+    public boolean isCaptain() {
+        return isCaptain;
+    }
+
+    public void setCaptain(boolean isCaptain) {
+        this.isCaptain = isCaptain;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -427,6 +438,11 @@ public class Student {
 
         public Builder sprNo(String v) {
             s.sprNo = v;
+            return this;
+        }
+
+        public Builder isCaptain(boolean v) {
+            s.isCaptain = v;
             return this;
         }
 

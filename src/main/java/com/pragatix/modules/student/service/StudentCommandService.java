@@ -9,6 +9,7 @@ import com.pragatix.repository.*;
 import com.pragatix.modules.student.repository.StudentRepository;
 import com.pragatix.repository.StudentGuardianRepository;
 import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.modules.activity.repository.ActivityStageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,11 +35,13 @@ public class StudentCommandService {
     private final StudentMapper studentMapper;
     private final StudentGuardianRepository studentGuardianRepository;
     private final com.pragatix.admin.service.TeamCleanupService teamCleanupService;
+    private final ActivityStageRepository activityStageRepository;
 
     public StudentCommandService(PasswordEncoder passwordEncoder, StudentRepository studentRepository,
             TeamRepository teamRepository, UserRepository userRepository, StudentLookupService studentLookupService,
             StudentMapper studentMapper, StudentGuardianRepository studentGuardianRepository,
-            com.pragatix.admin.service.TeamCleanupService teamCleanupService) {
+            com.pragatix.admin.service.TeamCleanupService teamCleanupService,
+            ActivityStageRepository activityStageRepository) {
         this.passwordEncoder = passwordEncoder;
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
@@ -47,6 +50,7 @@ public class StudentCommandService {
         this.studentMapper = studentMapper;
         this.studentGuardianRepository = studentGuardianRepository;
         this.teamCleanupService = teamCleanupService;
+        this.activityStageRepository = activityStageRepository;
     }
 
     @Transactional
@@ -84,6 +88,12 @@ public class StudentCommandService {
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
         }
+
+        ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueOrderByDisplayOrderAsc().orElse(null);
+        if (initialStage == null) {
+            return ApiResponse.error("Validation Error: No active stages found. Please configure stages before creating students.");
+        }
+
         Team team = request.getTeamId() != null ? teamRepository.findById(request.getTeamId()).orElse(null) : null;
 
         String rawPassword = request.getPassword();
@@ -93,6 +103,21 @@ public class StudentCommandService {
             } else {
                 rawPassword = "123456";
             }
+        }
+
+        String sprNoStr = request.getSprNo() != null ? request.getSprNo().trim() : null;
+        if (sprNoStr != null && sprNoStr.isEmpty()) {
+            sprNoStr = null;
+        }
+
+        if (sprNoStr != null && studentRepository.findBySprNo(sprNoStr).isPresent()) {
+            return ApiResponse.error("Student with SPR No '" + sprNoStr + "' already exists.");
+        }
+        if (studentRepository.existsByRegNo(request.getRegNo().trim())) {
+            return ApiResponse.error("Student with Register No '" + request.getRegNo().trim() + "' already exists.");
+        }
+        if (studentRepository.existsByEmail(request.getEmail().trim())) {
+            return ApiResponse.error("Student with Email '" + request.getEmail().trim() + "' already exists.");
         }
 
         Student student = Student.builder()
@@ -115,9 +140,12 @@ public class StudentCommandService {
                 .gender(gender.getGenderName())
                 .section(section)
                 .team(team)
-                .sprNo(request.getSprNo() != null ? request.getSprNo().trim() : null)
+                .sprNo(sprNoStr)
                 .active(true)
                 .score(100)
+                .stage(initialStage.getDisplayOrder())
+                .currentStage(initialStage.getDisplayOrder())
+                .currentStageId(initialStage.getId())
                 .build();
 
         Student saved = studentRepository.save(student);
@@ -125,11 +153,19 @@ public class StudentCommandService {
         StudentGuardian guardian = null;
         if (request.getGuardian() != null) {
             GuardianDTO gDto = request.getGuardian();
+            StudentGuardian.RelationshipType rel = StudentGuardian.RelationshipType.GUARDIAN;
+            if (gDto.getRelationship() != null && !gDto.getRelationship().trim().isEmpty()) {
+                try {
+                    rel = StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    rel = StudentGuardian.RelationshipType.GUARDIAN;
+                }
+            }
             guardian = StudentGuardian.builder()
                     .student(saved)
                     .regNo(saved.getRegNo())
                     .guardianName(gDto.getGuardianName())
-                    .relationship(StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()))
+                    .relationship(rel)
                     .phoneNo(gDto.getPhoneNo())
                     .email(gDto.getEmail())
                     .isPrimary(true)
@@ -152,6 +188,15 @@ public class StudentCommandService {
                 throw new RuntimeException("Email already registered by another student");
             }
         });
+
+        String sprNoStr = request.getSprNo() != null ? request.getSprNo().trim() : null;
+        if (sprNoStr != null && sprNoStr.isEmpty()) sprNoStr = null;
+        if (sprNoStr != null) {
+            java.util.Optional<Student> existingSpr = studentRepository.findBySprNo(sprNoStr);
+            if (existingSpr.isPresent() && !existingSpr.get().getId().equals(id)) {
+                return ApiResponse.error("Student with SPR No '" + sprNoStr + "' already exists.");
+            }
+        }
 
         Department department;
         AcademicYear academicYear;
@@ -192,7 +237,7 @@ public class StudentCommandService {
         student.setGender(gender.getGenderName());
         student.setSection(section);
         student.setTeam(team);
-        student.setSprNo(request.getSprNo() != null ? request.getSprNo().trim() : null);
+        student.setSprNo(sprNoStr);
         if (request.getActive() != null) {
             student.setActive(request.getActive());
         }
@@ -213,7 +258,17 @@ public class StudentCommandService {
                 guardian.setPrimary(true);
             }
             guardian.setGuardianName(gDto.getGuardianName());
-            guardian.setRelationship(StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()));
+            
+            StudentGuardian.RelationshipType rel = StudentGuardian.RelationshipType.GUARDIAN;
+            if (gDto.getRelationship() != null && !gDto.getRelationship().trim().isEmpty()) {
+                try {
+                    rel = StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    rel = StudentGuardian.RelationshipType.GUARDIAN;
+                }
+            }
+            guardian.setRelationship(rel);
+            
             guardian.setPhoneNo(gDto.getPhoneNo());
             guardian.setEmail(gDto.getEmail());
             guardian = studentGuardianRepository.save(guardian);
@@ -229,24 +284,63 @@ public class StudentCommandService {
             return ApiResponse.error("Student not found with ID: " + id);
         }
 
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+            log.info("DeleteStudent Auth: username={}, isAdmin={}", auth.getName(), isAdmin);
+            if (!isAdmin) {
+                User user = userRepository.findByUsername(auth.getName()).orElse(null);
+                if (user != null) {
+                    boolean deptMatch = user.getDepartment() != null && student.getDepartment() != null 
+                        && user.getDepartment().getId().equals(student.getDepartment().getId());
+                    
+                    String normalizedUserYear = user.getYear();
+                    if (normalizedUserYear != null) {
+                        switch(normalizedUserYear.toUpperCase().trim()) {
+                            case "I": normalizedUserYear = "1"; break;
+                            case "II": normalizedUserYear = "2"; break;
+                            case "III": normalizedUserYear = "3"; break;
+                            case "IV": normalizedUserYear = "4"; break;
+                            case "V": normalizedUserYear = "5"; break;
+                        }
+                    }
+                    boolean yearMatch = normalizedUserYear != null && student.getYearRef() != null 
+                        && normalizedUserYear.equals(String.valueOf(student.getYearRef().getYearNo()));
+                    
+                    boolean sectionMatch = user.getSection() != null && student.getSection() != null 
+                        && user.getSection().getId().equals(student.getSection().getId());
+                    
+                    log.info("DeleteStudent Ownership Check: deptMatch={}, yearMatch={}, sectionMatch={}", deptMatch, yearMatch, sectionMatch);
+                    if (!deptMatch || !yearMatch || !sectionMatch) {
+                        log.info("User Dept: {}, Student Dept: {}", user.getDepartment() != null ? user.getDepartment().getId() : "null", student.getDepartment() != null ? student.getDepartment().getId() : "null");
+                        log.info("User Year (Normalized): {}, Student Year: {}", normalizedUserYear, student.getYearRef() != null ? student.getYearRef().getYearNo() : "null");
+                        log.info("User Section: {}, Student Section: {}", user.getSection() != null ? user.getSection().getId() : "null", student.getSection() != null ? student.getSection().getId() : "null");
+                        return ApiResponse.error("You are not authorized to delete this student.");
+                    }
+                } else {
+                    return ApiResponse.error("You are not authorized to delete this student.");
+                }
+            }
+        }
+
         com.pragatix.entity.Team oldTeam = student.getTeam();
         Long oldTeamId = oldTeam != null ? oldTeam.getId() : null;
 
         entityManager.createNativeQuery("DELETE FROM student_guardians WHERE student_id = :sid").setParameter("sid", id)
                 .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE reg_no = :sid").setParameter("sid", id)
+        entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE student_id = :sid").setParameter("sid", id)
                 .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM discipline_logs WHERE reg_no = :sid").setParameter("sid", id)
+        entityManager.createNativeQuery("DELETE FROM discipline_logs WHERE student_id = :sid").setParameter("sid", id)
                 .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE reg_no = :sid").setParameter("sid", id)
+        entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE student_id = :sid").setParameter("sid", id)
                 .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM team_removal_requests WHERE reg_no = :sid OR captain_id = :sid")
+        entityManager.createNativeQuery("DELETE FROM team_removal_requests WHERE student_id = :sid OR captain_id = :sid")
                 .setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM team_members WHERE reg_no = :sid").setParameter("sid", id)
+        entityManager.createNativeQuery("DELETE FROM team_members WHERE student_id = :sid").setParameter("sid", id)
                 .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM student_badges WHERE reg_no = :sid").setParameter("sid", id)
+        entityManager.createNativeQuery("DELETE FROM student_badges WHERE student_id = :sid").setParameter("sid", id)
                 .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM streaks WHERE reg_no = :sid").setParameter("sid", id)
+        entityManager.createNativeQuery("DELETE FROM streaks WHERE student_id = :sid").setParameter("sid", id)
                 .executeUpdate();
         entityManager.createNativeQuery("UPDATE teams SET captain_id = NULL WHERE captain_id = :sid")
                 .setParameter("sid", id).executeUpdate();

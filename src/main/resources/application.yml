@@ -5,9 +5,12 @@ server:
 spring:
   application:
     name: pragatix-backend
+  main:
+    banner-mode: "off"
+    log-startup-info: false
 
   datasource:
-    url: jdbc:mysql://localhost:3307/Pragatix?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3307/spdms_lab?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: sharu
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -19,7 +22,6 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
   security:
@@ -41,7 +43,11 @@ springdoc:
 
 logging:
   level:
-    com.pragatix: DEBUG
-    org.springframework.security: INFO
+    root: WARN
+    com.pragatix: INFO
+    org.springframework: WARN
+    org.springframework.security: ERROR
+    org.hibernate: WARN
     org.hibernate.SQL: ERROR
     org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    com.zaxxer.hikari: WARN

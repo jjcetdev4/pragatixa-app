@@ -73,7 +73,7 @@ public class AdminLookupService {
 
     public ResponseEntity<ApiResponse<List<Section>>> getAllSections(Long departmentId) {
         if (departmentId == null) {
-            return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully", new ArrayList<>()));
+            return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully", sectionRepository.findAll()));
         }
         return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully", sectionRepository.findByDepartment_IdOrderBySectionNameAsc(departmentId)));
     }

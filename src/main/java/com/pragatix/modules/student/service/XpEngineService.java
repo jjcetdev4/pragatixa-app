@@ -22,6 +22,7 @@ public class XpEngineService {
     private final TeamAssignmentService teamAssignmentService;
     private final com.pragatix.admin.service.CaptainSelectionService captainSelectionService;
     private final com.pragatix.repository.StreakRepository streakRepository;
+    private final com.pragatix.modules.activity.service.ActivityStreakService activityStreakService;
 
     public XpEngineService(StudentRepository studentRepository,
             StudentActivityXpRepository studentActivityXpRepository,
@@ -30,7 +31,8 @@ public class XpEngineService {
             StageValidationService stageValidationService,
             TeamAssignmentService teamAssignmentService,
             com.pragatix.admin.service.CaptainSelectionService captainSelectionService,
-            com.pragatix.repository.StreakRepository streakRepository) {
+            com.pragatix.repository.StreakRepository streakRepository,
+            com.pragatix.modules.activity.service.ActivityStreakService activityStreakService) {
         this.studentRepository = studentRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
         this.xpTransactionRepository = xpTransactionRepository;
@@ -39,6 +41,7 @@ public class XpEngineService {
         this.teamAssignmentService = teamAssignmentService;
         this.captainSelectionService = captainSelectionService;
         this.streakRepository = streakRepository;
+        this.activityStreakService = activityStreakService;
     }
 
     @Transactional
@@ -213,6 +216,9 @@ public class XpEngineService {
 
         // Update streak
         updateStreakOnSubmission(student, activityName);
+        
+        // Activity-wise Streak hook
+        activityStreakService.incrementStreak(student, activity);
 
         // 5. Evaluate Captain
         captainSelectionService.evaluateCaptainPromotion(student);

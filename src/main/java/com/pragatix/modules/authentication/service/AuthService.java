@@ -367,6 +367,7 @@ public class AuthService {
                     .year(user.getYear())
                     .academicYear(user.getAcademicYear() != null ? user.getAcademicYear().name() : null)
                     .department(user.getDepartment() != null ? user.getDepartment().getName() : "")
+                    .departmentId(user.getDepartment() != null ? user.getDepartment().getId() : null)
                     .build();
             return ApiResponse.ok("Profile loaded", response);
         }
