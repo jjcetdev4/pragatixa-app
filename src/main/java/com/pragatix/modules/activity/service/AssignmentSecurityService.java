@@ -1,25 +1,32 @@
 package com.pragatix.modules.activity.service;
 
 import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.entity.ActivityTemporaryAssignment;
 import com.pragatix.entity.AssignmentScope;
 import com.pragatix.entity.User;
 import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.repository.ActivityTemporaryAssignmentRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class AssignmentSecurityService {
 
     private final UserRepository userRepository;
+    private final ActivityTemporaryAssignmentRepository temporaryAssignmentRepository;
 
-    public AssignmentSecurityService(UserRepository userRepository) {
+    public AssignmentSecurityService(UserRepository userRepository,
+                                     ActivityTemporaryAssignmentRepository temporaryAssignmentRepository) {
         this.userRepository = userRepository;
+        this.temporaryAssignmentRepository = temporaryAssignmentRepository;
     }
 
     /**
      * Determines whether the given User is the assigned faculty for the given
      * ActivityAssignment.
+     * Checks temporary assignments for today first, then falls back to permanent assignment.
      * Admin users always return true.
      */
     public boolean isUserAssignedFaculty(ActivityAssignment assignment, User user) {
@@ -32,27 +39,59 @@ public class AssignmentSecurityService {
             return true;
         }
 
-        // 2. Global Scope (Any Teacher can view/approve)
-        if (assignment.getAssignmentScope() == AssignmentScope.GLOBAL) {
-            return true;
+        // 2. Check Temporary Assignment Priority for Today
+        if (assignment.getActivity() != null) {
+            Long deptId = assignment.getDepartment() != null ? assignment.getDepartment().getId() : null;
+            Long secId = assignment.getSection() != null ? assignment.getSection().getId() : null;
+            LocalDate today = LocalDate.now();
+
+            List<ActivityTemporaryAssignment> tempAssignments = temporaryAssignmentRepository.findActiveAssignments(
+                    assignment.getActivity().getId(),
+                    deptId,
+                    secId,
+                    today
+            );
+
+            if (!tempAssignments.isEmpty()) {
+                ActivityTemporaryAssignment activeTemp = tempAssignments.get(0);
+                if (activeTemp.getTemporaryTeacher() != null && activeTemp.getTemporaryTeacher().getId().equals(user.getId())) {
+                    return true;
+                }
+                // If user is the original/permanent teacher replaced for today, they do not have active assignment today
+                if (activeTemp.getOriginalTeacher() != null && activeTemp.getOriginalTeacher().getId().equals(user.getId())) {
+                    return false;
+                }
+                if (assignment.getTeacher() != null && assignment.getTeacher().getId().equals(user.getId())) {
+                    return false;
+                }
+            }
         }
 
-        // 3. Specific Faculty Scope
+        // 3. Global Scope (Only the assigned Teacher can perform/award)
+        if (assignment.getAssignmentScope() == AssignmentScope.GLOBAL) {
+            return assignment.getTeacher() != null && assignment.getTeacher().getId().equals(user.getId());
+        }
+
+        // 4. Specific Faculty Scope
         if (assignment.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY) {
             return assignment.getTeacher() != null && assignment.getTeacher().getId().equals(user.getId());
         }
 
-        // 4. Department / Section Scope (Class Coordinator resolution)
+        // 5. Department / Section Scope
         if (assignment.getAssignmentScope() == AssignmentScope.DEPARTMENT
                 || assignment.getAssignmentScope() == AssignmentScope.SECTION) {
-            // Find all CCs for the assigned department and section
+
+            // 5a. If a specific teacher is directly assigned on this record, authorise that teacher.
+            if (assignment.getTeacher() != null && assignment.getTeacher().getId().equals(user.getId())) {
+                return true;
+            }
+
+            // 5b. Otherwise fall back to Class-Coordinator resolution:
             if (assignment.getDepartment() != null && assignment.getSection() != null) {
                 List<User> classCoordinators = userRepository.findClassCoordinatorsByDepartmentAndSection(
                         assignment.getDepartment().getId(),
                         assignment.getSection().getId());
 
-                // If the logged-in user is one of the resolved CCs for this specific dept/sec,
-                // they are authorized
                 return classCoordinators.stream().anyMatch(cc -> cc.getId().equals(user.getId()));
             }
         }

@@ -148,6 +148,19 @@ public class Activity {
     @JoinColumn(name = "subgroup_id", nullable = false)
     private ActivitySubgroup subgroup;
 
+    @Column(name = "subgroup", length = 255)
+    private String legacySubgroup = "Individual";
+
+    @PrePersist
+    @PreUpdate
+    public void syncLegacySubgroup() {
+        if (this.subgroup != null && this.subgroup.getName() != null) {
+            this.legacySubgroup = this.subgroup.getName();
+        } else if (this.legacySubgroup == null) {
+            this.legacySubgroup = "Individual";
+        }
+    }
+
     @Transient
     private String departmentId;
 
@@ -185,16 +198,51 @@ public class Activity {
     }
     
     // XP Eligibility Helpers for Promotion Validation Engine
+    //
+    // BUSINESS RULE (corrected):
+    //   XP bucket is determined EXCLUSIVELY by the Activity Subgroup category.
+    //   Mode (Individual / Group) determines HOW the activity is performed,
+    //   NOT which XP bucket receives the points.
+    //
+    //   Must (Individual) / Must (Group)  →  Must XP ONLY
+    //   Individual                        →  Individual XP ONLY
+    //   Group                             →  Group XP ONLY
+    //
+    // Use subgroup.getCategory() (canonical key) instead of subgroup.getName()
+    // because the display name is "Must (Individual)", NOT "Must".
     public boolean isMustXpEligible() {
-        return "Reward".equalsIgnoreCase(this.xpType) && this.subgroup != null && "Must".equalsIgnoreCase(this.subgroup.getName());
+        if (!"Reward".equalsIgnoreCase(this.xpType) || this.subgroup == null) return false;
+        String cat = this.subgroup.getCategory();
+        // "must" category covers both Must (Individual) and Must (Group)
+        return cat != null && cat.trim().equalsIgnoreCase("must");
     }
-    
+
     public boolean isIndividualXpEligible() {
-        return "Reward".equalsIgnoreCase(this.xpType) && "Individual".equalsIgnoreCase(this.modeType);
+        if (!"Reward".equalsIgnoreCase(this.xpType)) return false;
+        if (this.subgroup != null) {
+            String cat = this.subgroup.getCategory() != null ? this.subgroup.getCategory().trim() : "";
+            // Must activities (Must Individual / Must Group) go ONLY to Must XP — never Individual XP
+            if ("must".equalsIgnoreCase(cat)) return false;
+            if ("individual".equalsIgnoreCase(cat)) return true;
+            // Any other subgroup (e.g. Group) → not Individual XP
+            return false;
+        }
+        // No subgroup: no bucket assignment
+        return false;
     }
-    
+
     public boolean isGroupXpEligible() {
-        return "Reward".equalsIgnoreCase(this.xpType) && "Group".equalsIgnoreCase(this.modeType);
+        if (!"Reward".equalsIgnoreCase(this.xpType)) return false;
+        if (this.subgroup != null) {
+            String cat = this.subgroup.getCategory() != null ? this.subgroup.getCategory().trim() : "";
+            // Must activities (Must Individual / Must Group) go ONLY to Must XP — never Group XP
+            if ("must".equalsIgnoreCase(cat)) return false;
+            if ("group".equalsIgnoreCase(cat)) return true;
+            // Any other subgroup (e.g. Individual) → not Group XP
+            return false;
+        }
+        // No subgroup: no bucket assignment
+        return false;
     }
 
     public Long getId() {
@@ -487,6 +535,19 @@ public class Activity {
 
     public void setSubgroup(ActivitySubgroup subgroup) {
         this.subgroup = subgroup;
+        if (subgroup != null && subgroup.getName() != null) {
+            this.legacySubgroup = subgroup.getName();
+        } else if (this.legacySubgroup == null) {
+            this.legacySubgroup = "Individual";
+        }
+    }
+
+    public String getLegacySubgroup() {
+        return legacySubgroup;
+    }
+
+    public void setLegacySubgroup(String legacySubgroup) {
+        this.legacySubgroup = legacySubgroup;
     }
 
     public Integer getMaximumAwards() {

@@ -102,7 +102,91 @@ public class ActivityCrudService {
 
     @Transactional
     public ResponseEntity<ApiResponse<Activity>> createActivity(Long subgroupId, Map<String, Object> body) {
-        ActivitySubgroup subgroup = activitySubgroupRepository.findById(subgroupId).orElse(null);
+        if (subgroupId == null && body != null) {
+            if (body.get("subgroupId") != null) {
+                try {
+                    subgroupId = Long.valueOf(body.get("subgroupId").toString());
+                } catch (Exception ignored) {}
+            } else if (body.get("subgroup_id") != null) {
+                try {
+                    subgroupId = Long.valueOf(body.get("subgroup_id").toString());
+                } catch (Exception ignored) {}
+            }
+        }
+
+        ActivitySubgroup subgroup = null;
+        if (subgroupId != null) {
+            subgroup = activitySubgroupRepository.findById(subgroupId).orElse(null);
+        }
+
+        Long targetStageId = null;
+        if (body != null) {
+            if (body.get("stageId") != null) {
+                try {
+                    targetStageId = Long.valueOf(body.get("stageId").toString());
+                } catch (Exception ignored) {}
+            } else if (body.get("stage_id") != null) {
+                try {
+                    targetStageId = Long.valueOf(body.get("stage_id").toString());
+                } catch (Exception ignored) {}
+            }
+        }
+
+        if (subgroup == null && targetStageId != null) {
+            ActivityStage stage = activityStageRepository.findById(targetStageId).orElse(null);
+            if (stage != null) {
+                String subName = "Individual";
+                if (body.get("subgroup") != null) {
+                    subName = body.get("subgroup").toString();
+                } else if (body.get("subgroupName") != null) {
+                    subName = body.get("subgroupName").toString();
+                } else if (body.get("category") != null) {
+                    subName = body.get("category").toString();
+                }
+                String computedCategory = subName.trim().toLowerCase();
+                final Long finalStageId = targetStageId;
+                final String finalComputedCategory = computedCategory;
+                subgroup = activitySubgroupRepository.findByStageIdAndCategoryIgnoreCase(finalStageId, finalComputedCategory)
+                        .orElseGet(() -> activitySubgroupRepository.findByStageIdAndNameIgnoreCase(finalStageId, finalComputedCategory)
+                                .orElse(null));
+                if (subgroup == null) {
+                    subgroup = new ActivitySubgroup();
+                    subgroup.setStage(stage);
+                    subgroup.setCategory(computedCategory);
+                    String displayName = computedCategory.substring(0, 1).toUpperCase() + computedCategory.substring(1).toLowerCase();
+                    if (computedCategory.equalsIgnoreCase("must")) {
+                        subgroup.setThreshold(stage.getMustThreshold() != null ? stage.getMustThreshold() : 0);
+                    } else if (computedCategory.equalsIgnoreCase("individual")) {
+                        subgroup.setThreshold(stage.getIndividualThreshold() != null ? stage.getIndividualThreshold() : 0);
+                    } else if (computedCategory.equalsIgnoreCase("group")) {
+                        subgroup.setThreshold(stage.getGroupThreshold() != null ? stage.getGroupThreshold() : 0);
+                    } else {
+                        subgroup.setThreshold(0);
+                    }
+                    subgroup.setName(displayName);
+                    subgroup = activitySubgroupRepository.save(subgroup);
+                }
+            }
+        }
+
+        if (subgroup == null) {
+            List<ActivityStage> stages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
+            if (!stages.isEmpty()) {
+                ActivityStage defaultStage = stages.get(0);
+                List<ActivitySubgroup> defaultSubgroups = activitySubgroupRepository.findByStageId(defaultStage.getId());
+                if (!defaultSubgroups.isEmpty()) {
+                    subgroup = defaultSubgroups.get(0);
+                } else {
+                    subgroup = new ActivitySubgroup();
+                    subgroup.setStage(defaultStage);
+                    subgroup.setCategory("individual");
+                    subgroup.setName("Individual");
+                    subgroup.setThreshold(0);
+                    subgroup = activitySubgroupRepository.save(subgroup);
+                }
+            }
+        }
+
         if (subgroup == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Activity>error("Subgroup not found"));
         }
@@ -117,6 +201,10 @@ public class ActivityCrudService {
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().body(ApiResponse.<Activity>error(e.getMessage()));
             }
+        } else if (body != null && body.containsKey("academicYear") && body.get("academicYear") != null) {
+            try {
+                activity.setAcademicYear(com.pragatix.enums.AcademicYear.valueOf(body.get("academicYear").toString()));
+            } catch (Exception ignored) {}
         }
 
         requestMapper.mapBasicFields(activity, body);
@@ -180,6 +268,17 @@ public class ActivityCrudService {
         log.info("FORENSIC: ActivityCrudService before save - attendanceEngineEnabled: {}", activity.getAttendanceEngineEnabled());
         Activity saved = activityRepository.save(activity);
         log.info("FORENSIC: ActivityCrudService after save - attendanceEngineEnabled: {}", saved.getAttendanceEngineEnabled());
+
+        ActivityStage stageToMap = (targetStageId != null) ? activityStageRepository.findById(targetStageId).orElse(subgroup.getStage()) : subgroup.getStage();
+        if (stageToMap != null && !activityStageMappingRepository.existsByStageIdAndActivityId(stageToMap.getId(), saved.getId())) {
+            ActivityStageMapping mapping = new ActivityStageMapping(saved, stageToMap, subgroup);
+            mapping.setAwardEnabled(saved.getAwardEnabled());
+            mapping.setPenaltyEnabled(saved.getPenaltyEnabled());
+            mapping.setAwardXp(saved.getAwardXp());
+            mapping.setPenaltyXp(saved.getPenaltyXp());
+            mapping.setAwardFrequency(saved.getAwardFrequency());
+            activityStageMappingRepository.save(mapping);
+        }
 
         log.debug("Entity after save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                 saved.getAwardEnabled(), saved.getAwardXp(), saved.getPenaltyEnabled(), saved.getPenaltyXp());

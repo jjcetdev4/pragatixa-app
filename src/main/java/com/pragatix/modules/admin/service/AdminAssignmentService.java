@@ -2,37 +2,39 @@ package com.pragatix.modules.admin.service;
 
 import com.pragatix.entity.User;
 import com.pragatix.entity.Activity;
-import com.pragatix.repository.ActivityAssignmentRepository;
 import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.entity.ActivityTemporaryAssignment;
 import com.pragatix.entity.AssignmentScope;
 import com.pragatix.entity.ActivitySubgroup;
+import com.pragatix.repository.ActivityAssignmentRepository;
+import com.pragatix.repository.ActivityTemporaryAssignmentRepository;
 import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
 import com.pragatix.modules.activity.repository.ActivityRepository;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.stereotype.Service;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
 
 @Service
 public class AdminAssignmentService {
     private static final Logger log = LoggerFactory.getLogger(AdminAssignmentService.class);
 
     private final ActivityAssignmentRepository activityAssignmentRepository;
+    private final ActivityTemporaryAssignmentRepository temporaryAssignmentRepository;
     private final ActivitySubgroupRepository activitySubgroupRepository;
     private final ActivityRepository activityRepository;
 
     public AdminAssignmentService(ActivityAssignmentRepository activityAssignmentRepository,
+                                  ActivityTemporaryAssignmentRepository temporaryAssignmentRepository,
                                   ActivitySubgroupRepository activitySubgroupRepository,
                                   ActivityRepository activityRepository) {
         this.activityAssignmentRepository = activityAssignmentRepository;
+        this.temporaryAssignmentRepository = temporaryAssignmentRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityRepository = activityRepository;
     }
@@ -88,6 +90,7 @@ public class AdminAssignmentService {
             assignments = activityAssignmentRepository.findByActivityId(activity.getId());
         }
         List<Map<String, Object>> summary = new ArrayList<>();
+        LocalDate today = LocalDate.now();
 
         for (ActivityAssignment aa : assignments) {
             Map<String, Object> map = new HashMap<>();
@@ -100,16 +103,36 @@ public class AdminAssignmentService {
             map.put("sectionName", aa.getSection() != null ? aa.getSection().getSectionName() : null);
             map.put("assignmentMode", activity.getAssignmentMode());
 
-            if (aa.getTeacher() != null) {
+            // Check active temporary assignment for today
+            Long deptId = aa.getDepartment() != null ? aa.getDepartment().getId() : null;
+            Long secId = aa.getSection() != null ? aa.getSection().getId() : null;
+            List<ActivityTemporaryAssignment> tempMatches = temporaryAssignmentRepository.findActiveAssignments(
+                    activity.getId(), deptId, secId, today);
+
+            if (!tempMatches.isEmpty() && tempMatches.get(0).getTemporaryTeacher() != null) {
+                ActivityTemporaryAssignment temp = tempMatches.get(0);
+                map.put("teacherId", temp.getTemporaryTeacher().getId());
+                map.put("teacherName", temp.getTemporaryTeacher().getFullName() + " (Temporary Today)");
+                map.put("teacher", temp.getTemporaryTeacher().getFullName() + " (Temporary Today)");
+                map.put("username", temp.getTemporaryTeacher().getUsername());
+                map.put("isTemporary", true);
+                map.put("assignmentType", "TEMPORARY");
+                map.put("originalTeacherId", temp.getOriginalTeacher() != null ? temp.getOriginalTeacher().getId() : null);
+                map.put("originalTeacherName", temp.getOriginalTeacher() != null ? temp.getOriginalTeacher().getFullName() : null);
+            } else if (aa.getTeacher() != null) {
                 map.put("teacherId", aa.getTeacher().getId());
                 map.put("teacherName", aa.getTeacher().getFullName());
                 map.put("teacher", aa.getTeacher().getFullName());
                 map.put("username", aa.getTeacher().getUsername());
+                map.put("isTemporary", false);
+                map.put("assignmentType", "PERMANENT");
             } else {
                 map.put("teacherId", 0);
                 map.put("teacherName", "Any Faculty");
                 map.put("teacher", "Any Faculty");
                 map.put("username", "any");
+                map.put("isTemporary", false);
+                map.put("assignmentType", "NONE");
             }
             summary.add(map);
         }
@@ -122,13 +145,29 @@ public class AdminAssignmentService {
     }
 
     public boolean isAssignmentMatching(ActivityAssignment a, User u) {
-        if (u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))) {
+        if (u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN") || r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN") || r.getName().equalsIgnoreCase("ROLE_SUPERADMIN"))) {
             return true;
         }
 
-        // GLOBAL scope
-        if (a.getAssignmentScope() == AssignmentScope.GLOBAL) {
-            return true;
+        // Check active temporary assignment for today
+        if (a.getActivity() != null) {
+            Long deptId = a.getDepartment() != null ? a.getDepartment().getId() : null;
+            Long secId = a.getSection() != null ? a.getSection().getId() : null;
+            List<ActivityTemporaryAssignment> tempMatches = temporaryAssignmentRepository.findActiveAssignments(
+                    a.getActivity().getId(), deptId, secId, LocalDate.now());
+
+            if (!tempMatches.isEmpty()) {
+                ActivityTemporaryAssignment temp = tempMatches.get(0);
+                if (temp.getTemporaryTeacher() != null && temp.getTemporaryTeacher().getId().equals(u.getId())) {
+                    return true;
+                }
+                if (temp.getOriginalTeacher() != null && temp.getOriginalTeacher().getId().equals(u.getId())) {
+                    return false;
+                }
+                if (a.getTeacher() != null && a.getTeacher().getId().equals(u.getId())) {
+                    return false;
+                }
+            }
         }
 
         return a.getTeacher() != null && a.getTeacher().getId().equals(u.getId());

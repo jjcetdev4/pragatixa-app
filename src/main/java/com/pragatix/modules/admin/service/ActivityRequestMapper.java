@@ -11,10 +11,18 @@ public class ActivityRequestMapper {
 
     public void mapBasicFields(Activity activity, Map<String, Object> body) {
         String name = (String) body.get("name");
+        if (name == null && body.containsKey("activityName") && body.get("activityName") != null) {
+            name = body.get("activityName").toString();
+        } else if (name == null && body.containsKey("title") && body.get("title") != null) {
+            name = body.get("title").toString();
+        }
         activity.setName(name);
         activity.setActivityName(name);
 
         String desc = (String) body.get("description");
+        if (desc == null && body.containsKey("activityDescription") && body.get("activityDescription") != null) {
+            desc = body.get("activityDescription").toString();
+        }
         activity.setDescription(desc);
         activity.setActivityDescription(desc);
 

@@ -83,11 +83,11 @@ public class AdminActivityController {
         return adminActivityService.getGroupedActivities(stageId, subgroup, academicYear);
     }
 
-    @PostMapping("/subgroups/{subgroupId}/activities")
+    @PostMapping(value = { "/activities", "/subgroups/{subgroupId}/activities" })
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create a new activity under a subgroup")
+    @Operation(summary = "Create a new activity under a subgroup or globally")
     public ResponseEntity<ApiResponse<Activity>> createActivity(
-            @PathVariable Long subgroupId,
+            @PathVariable(required = false) Long subgroupId,
             @RequestBody Map<String, Object> body) {
         return adminActivityService.createActivity(subgroupId, body);
     }
@@ -102,7 +102,7 @@ public class AdminActivityController {
     }
 
     @PostMapping(value = { "/activities/{id}/assign", "/activity/{id}/assign" })
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR')")
     @Operation(summary = "Assign departments/sections/faculty to an activity (Bulk)")
     public ResponseEntity<ApiResponse<Void>> assignActivity(
             @PathVariable Long id,
@@ -197,7 +197,7 @@ public class AdminActivityController {
     }
 
     @DeleteMapping("/activities/{activityId}/assignments/clear")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR')")
     @Operation(summary = "Remove all faculty assignments for an activity")
     public ResponseEntity<ApiResponse<Void>> clearAssignments(
             @PathVariable Long activityId,

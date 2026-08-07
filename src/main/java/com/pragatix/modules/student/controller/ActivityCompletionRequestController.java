@@ -53,6 +53,14 @@ public class ActivityCompletionRequestController {
         return ResponseEntity.ok(service.getInbox(username, status));
     }
 
+    @GetMapping("/pending-count")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getPendingCount(
+            Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(service.getPendingCount(username));
+    }
+
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR')")
     public ResponseEntity<ApiResponse<ActivityCompletionRequestDto>> approveRequest(

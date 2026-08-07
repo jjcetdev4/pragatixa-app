@@ -76,7 +76,11 @@ public class StudentQueryService {
     }
 
     public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
+        Sort sort = Sort.by(sortBy).ascending();
+        if (!"regNo".equalsIgnoreCase(sortBy)) {
+            sort = sort.and(Sort.by("regNo").ascending());
+        }
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
@@ -120,24 +124,24 @@ public class StudentQueryService {
         if (currentUser != null && !authUtils.isSuperAdmin(currentUser) && authUtils.isAdmin(currentUser)) {
             String adminYear = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
             if (adminYear != null) {
-                // Assuming we need a repository method findAllByYear(year, pageable)
-                // Let's fallback to findAll and filter or create one.
-                // Wait, it's better to implement findAllByYear in StudentRepository.
-                // For now, I'll assume studentRepository.findAllByYear exists.
-                // Actually, I can use a generic search with year.
                 Page<StudentResponse> result = mapWithGuardians(studentRepository.findAllByYear(adminYear, pageable));
+                log.info("Admin user '{}' with year '{}': total students in DB = {}, returned in page = {}",
+                        username, adminYear, result.getTotalElements(), result.getNumberOfElements());
                 return ApiResponse.ok(result);
             } else {
+                log.warn("Admin user '{}' has no academic year assigned; returning 0 students.", username);
                 return ApiResponse.ok(Page.empty(pageable));
             }
         }
 
         Page<StudentResponse> result = mapWithGuardians(studentRepository.findAll(pageable));
+        log.info("User '{}': total students in DB = {}, returned in page = {}",
+                username, result.getTotalElements(), result.getNumberOfElements());
         return ApiResponse.ok(result);
     }
 
     public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending().and(Sort.by("regNo").ascending()));
 
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();

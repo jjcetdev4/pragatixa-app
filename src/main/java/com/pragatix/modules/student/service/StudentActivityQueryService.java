@@ -3,9 +3,11 @@ package com.pragatix.modules.student.service;
 import com.pragatix.common.response.ApiResponse;
 import com.pragatix.entity.Activity;
 import com.pragatix.entity.ActivityAssignment;
+import com.pragatix.entity.ActivityStage;
 import com.pragatix.entity.AssignmentScope;
 import com.pragatix.entity.Student;
 import com.pragatix.entity.User;
+import com.pragatix.modules.activity.repository.ActivityStageRepository;
 import com.pragatix.repository.ActivityAssignmentRepository;
 import com.pragatix.modules.activity.service.AssignmentSecurityService;
 import com.pragatix.modules.authentication.repository.UserRepository;
@@ -26,6 +28,7 @@ public class StudentActivityQueryService {
 
     private final UserRepository userRepository;
     private final ActivityAssignmentRepository activityAssignmentRepository;
+    private final ActivityStageRepository activityStageRepository;
     private final StudentRepository studentRepository;
     private final SectionRepository sectionRepository;
     private final AssignmentSecurityService assignmentSecurityService;
@@ -33,12 +36,14 @@ public class StudentActivityQueryService {
 
     public StudentActivityQueryService(UserRepository userRepository,
             ActivityAssignmentRepository activityAssignmentRepository,
+            ActivityStageRepository activityStageRepository,
             StudentRepository studentRepository,
             SectionRepository sectionRepository,
             AssignmentSecurityService assignmentSecurityService,
             StudentXpMapper mapper) {
         this.userRepository = userRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
+        this.activityStageRepository = activityStageRepository;
         this.studentRepository = studentRepository;
         this.sectionRepository = sectionRepository;
         this.assignmentSecurityService = assignmentSecurityService;
@@ -50,6 +55,10 @@ public class StudentActivityQueryService {
     }
 
     public ResponseEntity<ApiResponse<List<String>>> getYearsForActivity(Long activityId, String username) {
+        return getYearsForActivity(activityId, username, null);
+    }
+
+    public ResponseEntity<ApiResponse<List<String>>> getYearsForActivity(Long activityId, String username, Long stageId) {
         User currentUser = getCurrentUser(username);
         if (currentUser == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -58,6 +67,7 @@ public class StudentActivityQueryService {
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
         List<String> years = allAssignments.stream()
                 .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
+                .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
                 .map(ActivityAssignment::getYear)
                 .filter(Objects::nonNull)
                 .filter(y -> !y.trim().isEmpty())
@@ -72,6 +82,11 @@ public class StudentActivityQueryService {
 
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDepartmentsForActivity(Long activityId,
             String year, String username) {
+        return getDepartmentsForActivity(activityId, year, username, null);
+    }
+
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDepartmentsForActivity(Long activityId,
+            String year, String username, Long stageId) {
         User currentUser = getCurrentUser(username);
         if (currentUser == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -81,6 +96,7 @@ public class StudentActivityQueryService {
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
         List<Map<String, Object>> depts = allAssignments.stream()
                 .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
+                .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
                 .filter(a -> isYearMatching(targetYear, a.getYear()))
                 .map(ActivityAssignment::getDepartment)
                 .filter(Objects::nonNull)
@@ -98,6 +114,11 @@ public class StudentActivityQueryService {
 
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getSectionsForActivity(Long activityId, String year,
             Long departmentId, String username) {
+        return getSectionsForActivity(activityId, year, departmentId, username, null);
+    }
+
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getSectionsForActivity(Long activityId, String year,
+            Long departmentId, String username, Long stageId) {
         User currentUser = getCurrentUser(username);
         if (currentUser == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -107,6 +128,7 @@ public class StudentActivityQueryService {
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
         List<ActivityAssignment> matching = allAssignments.stream()
                 .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
+                .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
                 .filter(a -> isYearMatching(targetYear, a.getYear()))
                 .filter(a -> a.getDepartment() == null || a.getDepartment().getId().equals(departmentId))
                 .collect(Collectors.toList());
@@ -136,6 +158,11 @@ public class StudentActivityQueryService {
 
     public ResponseEntity<ApiResponse<MyActivityStudentsResponse>> getStudentsForActivity(Long activityId, String year,
             Long departmentId, Long sectionId, String username) {
+        return getStudentsForActivity(activityId, year, departmentId, sectionId, username, null);
+    }
+
+    public ResponseEntity<ApiResponse<MyActivityStudentsResponse>> getStudentsForActivity(Long activityId, String year,
+            Long departmentId, Long sectionId, String username, Long stageId) {
         User teacher = getCurrentUser(username);
         if (teacher == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -144,6 +171,7 @@ public class StudentActivityQueryService {
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
         List<ActivityAssignment> matching = allAssignments.stream()
                 .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, teacher))
+                .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
                 .filter(a -> year == null || isYearMatching(year, a.getYear()))
                 .filter(a -> departmentId == null || a.getDepartment() == null
                         || a.getDepartment().getId().equals(departmentId))
@@ -158,54 +186,89 @@ public class StudentActivityQueryService {
         Activity activity = priorityAssignment.getActivity();
         String targetYear = (year == null || year.trim().isEmpty()) ? "1" : year;
 
+        // Determine the stage order number that this activity belongs to.
+        // 1. If stageId is explicitly passed, resolve displayOrder from the stage.
+        // 2. Else check priorityAssignment.getStage() (assigned stage).
+        // 3. Else check activity.getStage() or subgroup's stage.
+        int stageOrder = 0;
+        if (stageId != null) {
+            ActivityStage targetStage = activityStageRepository.findById(stageId).orElse(null);
+            if (targetStage != null) {
+                stageOrder = targetStage.getDisplayOrder();
+            }
+        }
+        if (stageOrder == 0 && priorityAssignment != null && priorityAssignment.getStage() != null) {
+            stageOrder = priorityAssignment.getStage().getDisplayOrder();
+        }
+        if (stageOrder == 0 && activity != null && activity.getStage() != null) {
+            stageOrder = activity.getStage().getDisplayOrder();
+        }
+        if (stageOrder == 0 && activity != null && activity.getSubgroup() != null && activity.getSubgroup().getStage() != null) {
+            stageOrder = activity.getSubgroup().getStage().getDisplayOrder();
+        }
+        final int activityStageOrder = stageOrder;
+
         List<Student> rawStudents;
         if (departmentId != null) {
             if (sectionId != null) {
-                rawStudents = studentRepository.findByDepartmentIdAndSectionId(departmentId, sectionId);
+                if (activityStageOrder > 0) {
+                    rawStudents = studentRepository.findByDepartmentIdAndSectionIdAndStage(departmentId, sectionId, activityStageOrder);
+                } else {
+                    rawStudents = studentRepository.findByDepartmentIdAndSectionId(departmentId, sectionId);
+                }
             } else {
-                rawStudents = studentRepository.findByDepartmentId(departmentId);
+                if (activityStageOrder > 0) {
+                    rawStudents = studentRepository.findByDepartmentIdAndStage(departmentId, activityStageOrder);
+                } else {
+                    rawStudents = studentRepository.findByDepartmentId(departmentId);
+                }
             }
         } else {
-            rawStudents = studentRepository.findAll();
+            if (activityStageOrder > 0) {
+                rawStudents = studentRepository.findByStage(activityStageOrder);
+            } else {
+                rawStudents = studentRepository.findAll();
+            }
         }
 
         Set<Student> uniqueStudents = new java.util.HashSet<>();
         if (rawStudents != null) {
-            System.out.println("DEBUG: Total students fetched from DB: " + rawStudents.size());
             for (Student s : rawStudents) {
                 if (s.isActive()) {
                     if (departmentId != null
                             && (s.getDepartment() == null || !s.getDepartment().getId().equals(departmentId))) {
-                        if (s.getId().equals(75L)) System.out.println("DEBUG: Student 75 excluded by Department mismatch.");
                         continue;
                     }
                     if (!isYearMatching(targetYear, s.getYear())) {
-                        if (s.getId().equals(75L)) System.out.println("DEBUG: Student 75 excluded by Year mismatch. DB Year=" + s.getYear() + ", targetYear=" + targetYear);
                         continue;
                     }
                     if (sectionId != null) {
                         if (s.getSection() == null || !s.getSection().getId().equals(sectionId)) {
-                            if (s.getId().equals(75L)) System.out.println("DEBUG: Student 75 excluded by Section mismatch. DB Section=" + (s.getSection() != null ? s.getSection().getId() : "null") + ", Expected=" + sectionId);
                             continue;
                         }
                     }
+                    // Stage filter: only include students whose current stage matches the activity's stage.
+                    // This ensures promoted students are hidden from activities of their old stage.
+                    if (activityStageOrder > 0 && s.getStage() != activityStageOrder && s.getCurrentStage() != activityStageOrder) {
+                        continue;
+                    }
                     uniqueStudents.add(s);
-                } else {
-                    if (s.getId().equals(75L)) System.out.println("DEBUG: Student 75 excluded because isActive() is false.");
                 }
             }
         }
 
         List<Student> studentList = new ArrayList<>(uniqueStudents);
-        System.out.println("DEBUG: Returned Students:");
-        for (Student s : studentList) {
-            System.out.println(s.getId() + " " + s.getFullName());
-        }
 
         studentList.sort((s1, s2) -> {
-            String r1 = s1.getRegNo() != null ? s1.getRegNo() : "";
-            String r2 = s2.getRegNo() != null ? s2.getRegNo() : "";
-            return r1.compareTo(r2);
+            String n1 = s1.getFullName() != null ? s1.getFullName().trim() : "";
+            String n2 = s2.getFullName() != null ? s2.getFullName().trim() : "";
+            int comp = n1.compareToIgnoreCase(n2);
+            if (comp != 0) {
+                return comp;
+            }
+            String r1 = s1.getRegNo() != null ? s1.getRegNo().trim() : "";
+            String r2 = s2.getRegNo() != null ? s2.getRegNo().trim() : "";
+            return r1.compareToIgnoreCase(r2);
         });
 
         MyActivityStudentsResponse response = mapper.mapToActivityStudentsResponse(activity, priorityAssignment,

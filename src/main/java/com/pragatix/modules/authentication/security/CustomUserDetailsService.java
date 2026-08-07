@@ -33,6 +33,20 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
 
+        if (user.getSubRoles() != null) {
+            for (com.pragatix.entity.SubRole sr : user.getSubRoles()) {
+                String srName = sr.getName().toUpperCase();
+                authorities.add(new SimpleGrantedAuthority(srName));
+                if (!srName.startsWith("ROLE_")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + srName));
+                }
+                if (srName.equals("CC") || srName.equals("ROLE_CC")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_CLASS_COORDINATOR"));
+                    authorities.add(new SimpleGrantedAuthority("CLASS_COORDINATOR"));
+                }
+            }
+        }
+
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())

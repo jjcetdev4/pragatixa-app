@@ -59,16 +59,23 @@ public class StudentController {
                 : ResponseEntity.badRequest().body(response);
     }
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StudentController.class);
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "Get All Students", description = "Returns paginated list of all students.")
     public ResponseEntity<ApiResponse<Page<StudentResponse>>> getAllStudents(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "100") int size,
+            @RequestParam(defaultValue = "1000") int size,
             @RequestParam(defaultValue = "fullName") String sortBy,
             @RequestParam(required = false) String year,
             @RequestParam(required = false) String section) {
-        return ResponseEntity.ok(studentService.getAllStudents(page, size, sortBy));
+        ApiResponse<Page<StudentResponse>> response = studentService.getAllStudents(page, size, sortBy);
+        if (response.getData() != null) {
+            log.info("\n=== STUDENT DIRECTORY API ===\nRequested Page: {}, Size: {}\nTotal in DB: {}\nReturned in Page: {}\n",
+                    page, size, response.getData().getTotalElements(), response.getData().getNumberOfElements());
+        }
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -85,8 +92,13 @@ public class StudentController {
     public ResponseEntity<ApiResponse<Page<StudentResponse>>> searchStudents(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "100") int size) {
-        return ResponseEntity.ok(studentService.searchStudents(keyword, page, size));
+            @RequestParam(defaultValue = "1000") int size) {
+        ApiResponse<Page<StudentResponse>> response = studentService.searchStudents(keyword, page, size);
+        if (response.getData() != null) {
+            log.info("\n=== STUDENT SEARCH API ===\nKeyword: '{}', Page: {}, Size: {}\nTotal Matches: {}\nReturned: {}\n",
+                    keyword, page, size, response.getData().getTotalElements(), response.getData().getNumberOfElements());
+        }
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/team-member-search")

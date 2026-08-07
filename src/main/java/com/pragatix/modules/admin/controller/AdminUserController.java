@@ -35,7 +35,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
     @Operation(summary = "List All Users", description = "Returns all staff/users (teachers and admins).")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
         return adminUserService.getAllUsers();

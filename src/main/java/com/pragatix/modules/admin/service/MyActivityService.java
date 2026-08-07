@@ -47,6 +47,7 @@ public class MyActivityService {
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findAll();
 
         List<ActivityAssignment> matchingAssignments = allAssignments.stream()
+                .filter(a -> a.getActivity() != null && !Boolean.TRUE.equals(a.getActivity().getAttendanceEngineEnabled()))
                 .filter(a -> adminAssignmentService.isAssignmentMatching(a, currentUser))
                 .collect(Collectors.toList());
 
@@ -58,6 +59,10 @@ public class MyActivityService {
             List<ActivityAssignment> activityAssignments = entry.getValue();
             ActivityAssignment aa = adminAssignmentService.getPriorityAssignment(activityAssignments);
             Activity act = aa.getActivity();
+
+            if (act == null || Boolean.TRUE.equals(act.getAttendanceEngineEnabled())) {
+                continue;
+            }
 
             List<String> evidenceList = new java.util.ArrayList<>();
             if (act.getEvidence() != null && !act.getEvidence().trim().isEmpty()) {

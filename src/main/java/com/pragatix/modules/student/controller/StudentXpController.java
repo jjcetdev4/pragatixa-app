@@ -31,9 +31,11 @@ public class StudentXpController {
     @GetMapping("/my-activities/{activityId}/years")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Get distinct years assigned to the activity that the teacher has permission to view")
-    public ResponseEntity<ApiResponse<List<String>>> getYearsForActivity(@PathVariable Long activityId) {
+    public ResponseEntity<ApiResponse<List<String>>> getYearsForActivity(
+            @PathVariable Long activityId,
+            @RequestParam(required = false) Long stageId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return queryService.getYearsForActivity(activityId, username);
+        return queryService.getYearsForActivity(activityId, username, stageId);
     }
 
     @GetMapping("/my-activities/{activityId}/departments")
@@ -41,9 +43,10 @@ public class StudentXpController {
     @Operation(summary = "Get distinct departments assigned to the activity/year that the teacher has permission to view")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDepartmentsForActivity(
             @PathVariable Long activityId,
-            @RequestParam(required = false) String year) {
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) Long stageId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return queryService.getDepartmentsForActivity(activityId, year, username);
+        return queryService.getDepartmentsForActivity(activityId, year, username, stageId);
     }
 
     @GetMapping("/my-activities/{activityId}/sections")
@@ -52,9 +55,10 @@ public class StudentXpController {
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getSectionsForActivity(
             @PathVariable Long activityId,
             @RequestParam(required = false) String year,
-            @RequestParam Long departmentId) {
+            @RequestParam Long departmentId,
+            @RequestParam(required = false) Long stageId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return queryService.getSectionsForActivity(activityId, year, departmentId, username);
+        return queryService.getSectionsForActivity(activityId, year, departmentId, username, stageId);
     }
 
     @GetMapping("/my-activities/{activityId}/students")
@@ -64,9 +68,10 @@ public class StudentXpController {
             @PathVariable Long activityId,
             @RequestParam(required = false) String year,
             @RequestParam(required = false) Long departmentId,
-            @RequestParam(required = false) Long sectionId) {
+            @RequestParam(required = false) Long sectionId,
+            @RequestParam(required = false) Long stageId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return queryService.getStudentsForActivity(activityId, year, departmentId, sectionId, username);
+        return queryService.getStudentsForActivity(activityId, year, departmentId, sectionId, username, stageId);
     }
 
     @PostMapping("/student-xp/award")

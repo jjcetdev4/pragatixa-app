@@ -9,33 +9,33 @@ import java.util.Optional;
 
 @Repository
 public interface ActivityAssignmentRepository extends JpaRepository<ActivityAssignment, Long> {
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "department", "section",
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
             "teacher", "assignedBy" })
     List<ActivityAssignment> findAll();
 
     long countByActivityId(Long activityId);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "department", "section",
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
             "teacher", "assignedBy" })
     List<ActivityAssignment> findByActivityId(Long activityId);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "department", "section",
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
             "teacher", "assignedBy" })
     List<ActivityAssignment> findByActivityIdIn(List<Long> activityIds);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "department", "section",
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
             "teacher", "assignedBy" })
     Optional<ActivityAssignment> findByActivityIdAndSectionId(Long activityId, Long sectionId);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "department", "section",
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
             "teacher", "assignedBy" })
     Optional<ActivityAssignment> findByActivityIdAndSectionIsNull(Long activityId);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "department", "section",
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
             "teacher", "assignedBy" })
     List<ActivityAssignment> findByTeacherId(Long teacherId);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "department", "section",
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
             "teacher", "assignedBy" })
     List<ActivityAssignment> findByActivityIdAndTeacherId(Long activityId, Long teacherId);
 
@@ -99,4 +99,23 @@ public interface ActivityAssignmentRepository extends JpaRepository<ActivityAssi
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "department", "section",
             "teacher", "assignedBy" })
     List<ActivityAssignment> findByAssignmentScope(com.pragatix.entity.AssignmentScope scope);
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT a.activity.id FROM ActivityAssignment a " +
+            "WHERE a.teacher IS NOT NULL " +
+            "AND (:stageId IS NULL OR a.stage.id = :stageId OR a.stage IS NULL) " +
+            "AND (:departmentId IS NULL OR a.department IS NULL OR a.department.id = :departmentId) " +
+            "AND (:sectionId IS NULL OR a.section IS NULL OR a.section.id = :sectionId)")
+    List<Long> findActivityIdsWithAssignedTeacher(
+            @org.springframework.data.repository.query.Param("stageId") Long stageId,
+            @org.springframework.data.repository.query.Param("departmentId") Long departmentId,
+            @org.springframework.data.repository.query.Param("sectionId") Long sectionId
+    );
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT a.activity.id FROM ActivityAssignment a " +
+            "WHERE a.teacher.id = :teacherId " +
+            "AND (:stageId IS NULL OR a.stage.id = :stageId OR a.stage IS NULL)")
+    List<Long> findActivityIdsByTeacherId(
+            @org.springframework.data.repository.query.Param("teacherId") Long teacherId,
+            @org.springframework.data.repository.query.Param("stageId") Long stageId
+    );
 }

@@ -7,12 +7,15 @@ import com.pragatix.modules.authentication.repository.UserRepository;
 import com.pragatix.modules.student.dto.request.CreatePenaltyRequestDto;
 import com.pragatix.modules.student.dto.response.PenaltyRequestDto;
 import com.pragatix.modules.student.repository.StudentRepository;
+import com.pragatix.repository.ActivityAssignmentRepository;
 import com.pragatix.repository.PenaltyRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,17 +27,37 @@ public class PenaltyWorkflowService {
     private final UserRepository userRepository;
     private final ActivityRepository activityRepository;
     private final XpEngineService xpEngineService;
+    private final ActivityAssignmentRepository activityAssignmentRepository;
 
     public PenaltyWorkflowService(PenaltyRequestRepository penaltyRequestRepository,
             StudentRepository studentRepository,
             UserRepository userRepository,
             ActivityRepository activityRepository,
-            XpEngineService xpEngineService) {
+            XpEngineService xpEngineService,
+            ActivityAssignmentRepository activityAssignmentRepository) {
         this.penaltyRequestRepository = penaltyRequestRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.xpEngineService = xpEngineService;
+        this.activityAssignmentRepository = activityAssignmentRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Map<String, Object>> getPendingCount(String username) {
+        Optional<User> ccOpt = userRepository.findByUsername(username);
+        if (ccOpt.isEmpty()) {
+            return ApiResponse.error("User not found");
+        }
+        User cc = ccOpt.get();
+        Long deptId = cc.getDepartment() != null ? cc.getDepartment().getId() : null;
+        Long sectionId = cc.getSection() != null ? cc.getSection().getId() : null;
+
+        long count = penaltyRequestRepository.countPendingForCc(cc.getId(), deptId, sectionId);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("pendingCount", count);
+        return ApiResponse.ok("Pending penalty request count", data);
     }
 
     private boolean isUserCcForStudent(User teacher, Student student) {
@@ -76,6 +99,22 @@ public class PenaltyWorkflowService {
         Activity activity = null;
         if (dto.getActivityId() != null) {
             activity = activityRepository.findById(dto.getActivityId()).orElse(null);
+            if (activity != null) {
+                // ── Stage eligibility: use execution stage (assignment), not original activity stage ──
+                // activity.getStage() is the original creation stage. When an activity is reused
+                // in multiple stages, we must validate against the assignment's stage instead.
+                ActivityAssignment relevantAssignment = null;
+                if (student.getSection() != null) {
+                    relevantAssignment = activityAssignmentRepository
+                            .findByActivityIdAndSectionId(dto.getActivityId(), student.getSection().getId())
+                            .orElse(null);
+                }
+                int stageOrder = resolveExecutionStageOrder(relevantAssignment, activity);
+                if (stageOrder > 0 && student.getStage() != stageOrder && student.getCurrentStage() != stageOrder) {
+                    return ApiResponse.error("Student " + student.getFullName() + " is in Stage " + student.getStage()
+                            + " and is not eligible for Stage " + stageOrder + " activities.");
+                }
+            }
         }
 
         int configuredXp = 0;
@@ -269,5 +308,22 @@ public class PenaltyWorkflowService {
         dto.setApprovalTime(p.getApprovedAt());
         dto.setRejectedReason(p.getRejectedReason());
         return dto;
+    }
+
+    /**
+     * Resolve the execution stage order for student eligibility validation.
+     * Priority: assignment.getStage() > activity.getStage() > subgroup stage > 0 (no restriction)
+     */
+    private int resolveExecutionStageOrder(ActivityAssignment assignment, Activity activity) {
+        if (assignment != null && assignment.getStage() != null) {
+            return assignment.getStage().getDisplayOrder();
+        }
+        if (activity != null && activity.getStage() != null) {
+            return activity.getStage().getDisplayOrder();
+        }
+        if (activity != null && activity.getSubgroup() != null && activity.getSubgroup().getStage() != null) {
+            return activity.getSubgroup().getStage().getDisplayOrder();
+        }
+        return 0;
     }
 }

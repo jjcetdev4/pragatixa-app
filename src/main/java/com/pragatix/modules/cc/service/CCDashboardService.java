@@ -4,6 +4,7 @@ import com.pragatix.common.response.ApiResponse;
 import com.pragatix.entity.User;
 import com.pragatix.modules.authentication.repository.UserRepository;
 import com.pragatix.repository.BadgeRequestRepository;
+import com.pragatix.repository.PenaltyRequestRepository;
 import com.pragatix.modules.student.repository.StudentRepository;
 import com.pragatix.modules.activity.repository.ActivityRepository;
 import org.springframework.http.ResponseEntity;
@@ -17,15 +18,18 @@ public class CCDashboardService {
 
     private final UserRepository userRepository;
     private final BadgeRequestRepository badgeRequestRepository;
+    private final PenaltyRequestRepository penaltyRequestRepository;
     private final StudentRepository studentRepository;
     private final ActivityRepository activityRepository;
 
     public CCDashboardService(UserRepository userRepository,
             BadgeRequestRepository badgeRequestRepository,
+            PenaltyRequestRepository penaltyRequestRepository,
             StudentRepository studentRepository,
             ActivityRepository activityRepository) {
         this.userRepository = userRepository;
         this.badgeRequestRepository = badgeRequestRepository;
+        this.penaltyRequestRepository = penaltyRequestRepository;
         this.studentRepository = studentRepository;
         this.activityRepository = activityRepository;
     }
@@ -42,6 +46,7 @@ public class CCDashboardService {
 
         long pendingBadgeRequests = badgeRequestRepository.countByStatusAndDepartmentIdAndSectionId("PENDING", deptId,
                 sectionId);
+        long pendingPenaltyRequests = penaltyRequestRepository.countPendingForCc(user.getId(), deptId, sectionId);
 
         // Scope students based on department and section if methods exist. For now
         // using global count since user specifically asked for badge request scoped
@@ -55,6 +60,7 @@ public class CCDashboardService {
         stats.put("totalActivities", totalActivities);
         stats.put("totalAttendance", totalAttendance);
         stats.put("pendingBadgeRequests", pendingBadgeRequests);
+        stats.put("pendingPenaltyRequests", pendingPenaltyRequests);
 
         return ResponseEntity.ok(ApiResponse.ok("CC Stats loaded", stats));
     }

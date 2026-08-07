@@ -295,4 +295,11 @@ public class ActivityCompletionRequestService {
         dto.setRejectedReason(r.getRejectedReason());
         return dto;
     }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<java.util.Map<String, Object>> getPendingCount(String username) {
+        ApiResponse<List<ActivityCompletionRequestDto>> inboxRes = getInbox(username, "PENDING");
+        int count = (inboxRes != null && inboxRes.getData() != null) ? inboxRes.getData().size() : 0;
+        return ApiResponse.ok("Pending activity requests count", java.util.Map.of("pendingCount", count));
+    }
 }

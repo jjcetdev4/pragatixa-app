@@ -123,6 +123,8 @@ public class AuthService {
                 .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
                 .year(user.getYear())
                 .academicYear(user.getAcademicYear() != null ? user.getAcademicYear().name() : null)
+                .department(user.getDepartment() != null ? user.getDepartment().getName() : "")
+                .departmentId(user.getDepartment() != null ? user.getDepartment().getId() : null)
                 .build();
 
         log.debug("Teacher/Admin logged in successfully: {}", request.getUsername());

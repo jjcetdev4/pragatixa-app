@@ -31,6 +31,13 @@ public class PenaltyController {
         return ResponseEntity.ok(penaltyWorkflowService.submitPenalty(dto, username));
     }
 
+    @GetMapping("/pending-count")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getPendingCount(Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(penaltyWorkflowService.getPendingCount(username));
+    }
+
     @GetMapping("/cc-inbox")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<PenaltyRequestDto>>> getCcInbox(
