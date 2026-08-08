@@ -29,13 +29,47 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found with username: " + username));
 
-        var authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toList());
+        java.util.Set<org.springframework.security.core.GrantedAuthority> authorities = new java.util.HashSet<>();
+
+        if (user.getRoles() != null) {
+            for (com.pragatix.entity.Role role : user.getRoles()) {
+                if (role.getName() == null) continue;
+                String rName = role.getName().trim().toUpperCase();
+                authorities.add(new SimpleGrantedAuthority(rName));
+                if (!rName.startsWith("ROLE_")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + rName));
+                }
+
+                // Handle canonical aliases
+                if (rName.equals("SUPERADMIN") || rName.equals("SUPER_ADMIN") ||
+                    rName.equals("ROLE_SUPERADMIN") || rName.equals("ROLE_SUPER_ADMIN")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_SUPERADMIN"));
+                    authorities.add(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
+                    authorities.add(new SimpleGrantedAuthority("SUPERADMIN"));
+                    authorities.add(new SimpleGrantedAuthority("SUPER_ADMIN"));
+                }
+                if (rName.equals("FACULTY") || rName.equals("TEACHER") ||
+                    rName.equals("ROLE_FACULTY") || rName.equals("ROLE_TEACHER")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_TEACHER"));
+                    authorities.add(new SimpleGrantedAuthority("ROLE_FACULTY"));
+                    authorities.add(new SimpleGrantedAuthority("TEACHER"));
+                    authorities.add(new SimpleGrantedAuthority("FACULTY"));
+                }
+                if (rName.equals("HOD") || rName.equals("ROLE_HOD")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_HOD"));
+                    authorities.add(new SimpleGrantedAuthority("HOD"));
+                }
+                if (rName.equals("ADMIN") || rName.equals("ROLE_ADMIN")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                    authorities.add(new SimpleGrantedAuthority("ADMIN"));
+                }
+            }
+        }
 
         if (user.getSubRoles() != null) {
             for (com.pragatix.entity.SubRole sr : user.getSubRoles()) {
-                String srName = sr.getName().toUpperCase();
+                if (sr.getName() == null) continue;
+                String srName = sr.getName().trim().toUpperCase();
                 authorities.add(new SimpleGrantedAuthority(srName));
                 if (!srName.startsWith("ROLE_")) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + srName));

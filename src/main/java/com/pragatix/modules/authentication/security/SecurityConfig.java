@@ -91,7 +91,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/activity-requests/**")
                         .hasAnyRole("TEACHER", "CLASS_COORDINATOR", "ADMIN", "STUDENT")
                         .requestMatchers("/api/v1/analytics/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ADMIN", "SUPER_ADMIN", "SUPERADMIN")
-                        .requestMatchers("/api/v1/hod/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/v1/hod/**").hasAnyRole("HOD", "ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER")
                         .requestMatchers("/api/v1/profile/**").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

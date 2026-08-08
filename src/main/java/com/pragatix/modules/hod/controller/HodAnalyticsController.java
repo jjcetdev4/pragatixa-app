@@ -18,7 +18,7 @@ public class HodAnalyticsController {
     }
 
     @GetMapping("/dashboard")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('HOD', 'ADMIN', 'SUPERADMIN', 'SUPER_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<HodDashboardResponse>> getDashboardData(
             @RequestParam(required = false) String year) {
         try {

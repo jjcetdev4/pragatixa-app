@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.pragatix.repository.DepartmentRepository;
+import com.pragatix.repository.SectionRepository;
 
 @Service
 public class CCDashboardService {
@@ -21,28 +23,42 @@ public class CCDashboardService {
     private final PenaltyRequestRepository penaltyRequestRepository;
     private final StudentRepository studentRepository;
     private final ActivityRepository activityRepository;
+    private final DepartmentRepository departmentRepository;
+    private final SectionRepository sectionRepository;
 
     public CCDashboardService(UserRepository userRepository,
             BadgeRequestRepository badgeRequestRepository,
             PenaltyRequestRepository penaltyRequestRepository,
             StudentRepository studentRepository,
-            ActivityRepository activityRepository) {
+            ActivityRepository activityRepository,
+            DepartmentRepository departmentRepository,
+            SectionRepository sectionRepository) {
         this.userRepository = userRepository;
         this.badgeRequestRepository = badgeRequestRepository;
         this.penaltyRequestRepository = penaltyRequestRepository;
         this.studentRepository = studentRepository;
         this.activityRepository = activityRepository;
+        this.departmentRepository = departmentRepository;
+        this.sectionRepository = sectionRepository;
     }
 
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboardStats(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("CC not found"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("CC user not found: " + username));
 
-        if (user.getDepartment() == null || user.getSection() == null) {
-            throw new RuntimeException("CC is not assigned to a valid department and section");
+        if (user.getDepartment() == null || user.getDepartment().getId() == null) {
+            throw new IllegalStateException("CC is not assigned to a valid department");
+        }
+        if (user.getSection() == null || user.getSection().getId() == null) {
+            throw new IllegalStateException("CC is not assigned to a valid section");
         }
 
         Long deptId = user.getDepartment().getId();
         Long sectionId = user.getSection().getId();
+
+        if (!departmentRepository.existsById(deptId) || !sectionRepository.existsById(sectionId)) {
+            throw new IllegalStateException("CC assigned department or section does not exist in the database");
+        }
 
         long pendingBadgeRequests = badgeRequestRepository.countByStatusAndDepartmentIdAndSectionId("PENDING", deptId,
                 sectionId);

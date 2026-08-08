@@ -59,7 +59,10 @@ public class AuthUtils {
         if (user == null || user.getRoles() == null)
             return false;
         for (Role role : user.getRoles()) {
-            if ("ROLE_SUPERADMIN".equalsIgnoreCase(role.getName()) || "ROLE_SUPER_ADMIN".equalsIgnoreCase(role.getName())) {
+            if (role.getName() == null) continue;
+            String name = role.getName().trim().toUpperCase();
+            if ("ROLE_SUPERADMIN".equals(name) || "ROLE_SUPER_ADMIN".equals(name) ||
+                "SUPERADMIN".equals(name) || "SUPER_ADMIN".equals(name)) {
                 return true;
             }
         }
@@ -70,7 +73,9 @@ public class AuthUtils {
         if (user == null || user.getRoles() == null)
             return false;
         for (Role role : user.getRoles()) {
-            if ("ROLE_ADMIN".equalsIgnoreCase(role.getName())) {
+            if (role.getName() == null) continue;
+            String name = role.getName().trim().toUpperCase();
+            if ("ROLE_ADMIN".equals(name) || "ADMIN".equals(name)) {
                 return true;
             }
         }

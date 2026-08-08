@@ -30,7 +30,7 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/stats")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Get Dashboard Stats", description = "Get overview metrics for admin dashboard.")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboardStats() {
         return adminDashboardService.getDashboardStats();

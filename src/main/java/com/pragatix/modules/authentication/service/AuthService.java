@@ -100,11 +100,13 @@ public class AuthService {
                 .collect(Collectors.toList());
 
         String userType = "USER";
-        if (roles.contains("ROLE_ADMIN")) {
+        if (roles.contains("ROLE_SUPERADMIN") || roles.contains("ROLE_SUPER_ADMIN") || roles.contains("SUPERADMIN") || roles.contains("SUPER_ADMIN")) {
             userType = "ADMIN";
-        } else if (roles.contains("ROLE_TEACHER")) {
+        } else if (roles.contains("ROLE_ADMIN") || roles.contains("ADMIN")) {
+            userType = "ADMIN";
+        } else if (roles.contains("ROLE_TEACHER") || roles.contains("TEACHER") || roles.contains("ROLE_FACULTY") || roles.contains("FACULTY") || roles.contains("ROLE_HOD") || roles.contains("HOD")) {
             userType = "TEACHER";
-        } else if (roles.contains("ROLE_TRANSPORT")) {
+        } else if (roles.contains("ROLE_TRANSPORT") || roles.contains("TRANSPORT")) {
             userType = "TRANSPORT";
         }
 
