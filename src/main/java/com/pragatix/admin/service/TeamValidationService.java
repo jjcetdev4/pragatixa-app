@@ -21,14 +21,16 @@ public class TeamValidationService {
     public boolean canCreateTeam(User creator, ActivityAssignment assignment) {
         boolean isAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
         boolean isCc = creator.getSubRoles().stream().map(SubRole::getName)
-                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR"));
+        boolean isHod = creator.getSubRoles().stream().map(SubRole::getName)
+                .anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
         boolean isAssignedFaculty = false;
 
         if (assignment != null && assignment.getTeacher() != null) {
             isAssignedFaculty = assignment.getTeacher().getUsername().equals(creator.getUsername());
         }
 
-        return isAdmin || isCc || isAssignedFaculty;
+        return isAdmin || isCc || isHod || isAssignedFaculty;
     }
 
     public boolean canDeleteTeam(User currentUser, ActivityAssignment assignment) {
@@ -36,7 +38,9 @@ public class TeamValidationService {
             return false;
         boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
         boolean isCc = currentUser.getSubRoles().stream().map(SubRole::getName)
-                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR"));
+        boolean isHod = currentUser.getSubRoles().stream().map(SubRole::getName)
+                .anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
         boolean isAssignedFaculty = assignment.getTeacher() != null
                 && assignment.getTeacher().getUsername().equals(currentUser.getUsername());
 
@@ -50,7 +54,14 @@ public class TeamValidationService {
             }
         }
 
-        return isAdmin || isAssignedFaculty || matchesDeptAndSection;
+        boolean matchesHodDept = false;
+        if (isHod && assignment.getDepartment() != null && currentUser.getDepartment() != null) {
+            if (assignment.getDepartment().getId().equals(currentUser.getDepartment().getId())) {
+                matchesHodDept = true;
+            }
+        }
+
+        return isAdmin || isAssignedFaculty || matchesDeptAndSection || matchesHodDept;
     }
 
     public boolean validateTeamAccess(User user, com.pragatix.entity.Team team) {
@@ -68,7 +79,7 @@ public class TeamValidationService {
         }
 
         boolean isCc = user.getSubRoles().stream().map(SubRole::getName)
-                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR"));
         if (isCc) {
             boolean matchesDept = team.getDepartment() != null && user.getDepartment() != null
                     && team.getDepartment().getId().equals(user.getDepartment().getId());
@@ -76,6 +87,16 @@ public class TeamValidationService {
                     && team.getSection().getId().equals(user.getSection().getId());
 
             if (matchesDept && matchesSection) {
+                return true;
+            }
+        }
+
+        boolean isHod = user.getSubRoles().stream().map(SubRole::getName)
+                .anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
+        if (isHod) {
+            boolean matchesDept = team.getDepartment() != null && user.getDepartment() != null
+                    && team.getDepartment().getId().equals(user.getDepartment().getId());
+            if (matchesDept) {
                 return true;
             }
         }
@@ -90,7 +111,7 @@ public class TeamValidationService {
                 return true;
             } else {
                 throw new org.springframework.security.access.AccessDeniedException(
-                        "You do not have permission to view this team's details.");
+                    "You do not have permission to view this team's details.");
             }
         }
 

@@ -1,10 +1,12 @@
 package com.pragatix.admin.service;
 
 import com.pragatix.entity.StageTeam;
+import com.pragatix.entity.Student;
 import com.pragatix.entity.Team;
 import com.pragatix.repository.StageTeamRepository;
 import com.pragatix.repository.TeamRemovalRequestRepository;
 import com.pragatix.repository.TeamRepository;
+import com.pragatix.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -17,16 +19,19 @@ public class TeamCleanupService {
     private final TeamRepository teamRepository;
     private final StageTeamRepository stageTeamRepository;
     private final TeamRemovalRequestRepository teamRemovalRequestRepository;
+    private final StudentRepository studentRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public TeamCleanupService(TeamRepository teamRepository,
             StageTeamRepository stageTeamRepository,
-            TeamRemovalRequestRepository teamRemovalRequestRepository) {
+            TeamRemovalRequestRepository teamRemovalRequestRepository,
+            StudentRepository studentRepository) {
         this.teamRepository = teamRepository;
         this.stageTeamRepository = stageTeamRepository;
         this.teamRemovalRequestRepository = teamRemovalRequestRepository;
+        this.studentRepository = studentRepository;
     }
 
     /**
@@ -38,15 +43,16 @@ public class TeamCleanupService {
      */
     @Transactional
     public boolean autoDeleteEmptyTeam(Team team) {
-        if (team == null)
+        if (team == null || team.getId() == null)
             return false;
 
-        if (team.getCaptain() == null && (team.getMembers() == null || team.getMembers().isEmpty())) {
+        boolean noCaptain = team.getCaptain() == null;
+        List<Student> members = studentRepository.findByTeamId(team.getId());
+        boolean noMembers = members == null || members.isEmpty();
 
-            // In the new business rules: A team must exist ONLY when it has at least one
-            // student.
-            // A Vice Captain is a member of the team, so if members is empty, there is no
-            // vice captain anyway!
+        if (noCaptain && noMembers) {
+            team.setViceCaptain(null);
+
             List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
             if (!stageTeams.isEmpty()) {
                 stageTeamRepository.deleteAll(stageTeams);
@@ -55,9 +61,11 @@ public class TeamCleanupService {
             teamRemovalRequestRepository.deleteAll(teamRemovalRequestRepository.findByTeamId(team.getId()));
 
             if (entityManager != null) {
-                entityManager.createNativeQuery("DELETE FROM team_members WHERE team_id = :tid")
-                        .setParameter("tid", team.getId())
-                        .executeUpdate();
+                try {
+                    entityManager.createNativeQuery("DELETE FROM team_members WHERE team_id = :tid")
+                            .setParameter("tid", team.getId())
+                            .executeUpdate();
+                } catch (Exception ignored) {}
             }
 
             teamRepository.delete(team);
@@ -68,3 +76,4 @@ public class TeamCleanupService {
         return false;
     }
 }
+

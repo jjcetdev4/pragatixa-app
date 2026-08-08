@@ -48,6 +48,9 @@ public class StudentImportService {
     private final StudentGuardianRepository studentGuardianRepository;
     private final ActivityStageRepository activityStageRepository;
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     public StudentImportService(AcademicYearRepository academicYearRepository,
             DepartmentRepository departmentRepository, GenderRepository genderRepository,
             PasswordEncoder passwordEncoder, SectionRepository sectionRepository, SemesterRepository semesterRepository,
@@ -358,8 +361,14 @@ public class StudentImportService {
 
                 if (!teamName.isEmpty()) {
                     String gTrim = teamName.trim();
-                    Team g = teamRepository.findByName(gTrim)
-                            .orElseGet(() -> teamRepository.save(Team.builder().name(gTrim).build()));
+                    Team g = teamRepository.findExactTeam(gTrim, dId, secId, year)
+                            .orElseGet(() -> {
+                                Team.Builder builder = Team.builder().name(gTrim);
+                                if (dId != null) departmentRepository.findById(dId).ifPresent(builder::department);
+                                if (secId != null) sectionRepository.findById(secId).ifPresent(builder::section);
+                                if (year != null && !year.isEmpty()) builder.year(year);
+                                return teamRepository.save(builder.build());
+                            });
                     req.setTeamId(g.getId());
                 }
 
@@ -680,6 +689,20 @@ public class StudentImportService {
             }
             if (!studentsToSave.isEmpty()) {
                 studentRepository.saveAllAndFlush(studentsToSave);
+                if (entityManager != null) {
+                    for (Student s : studentsToSave) {
+                        if (s.getTeam() != null) {
+                            try {
+                                entityManager.createNativeQuery(
+                                        "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                                        .setParameter("tid", s.getTeam().getId())
+                                        .setParameter("sid", s.getId())
+                                        .executeUpdate();
+                            } catch (Exception ignored) {}
+                        }
+                    }
+                }
             }
             if (!guardiansToSave.isEmpty()) {
                 studentGuardianRepository.saveAllAndFlush(guardiansToSave);

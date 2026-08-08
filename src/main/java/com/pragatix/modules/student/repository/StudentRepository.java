@@ -44,6 +44,10 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
+       List<Student> findByTeamId(Long teamId);
+
+       @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
+                     "academicYearRef", "yearRef", "semesterRef", "team" })
        @Query("SELECT s FROM Student s WHERE s.department.id = :departmentId ORDER BY s.fullName ASC, s.regNo ASC")
        List<Student> findByDepartmentId(@Param("departmentId") Long departmentId);
 

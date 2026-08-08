@@ -75,7 +75,7 @@ public class TeamAssignmentService {
 
         Team newTeam = createNextStageTeamIfRequired(newTeamName, student, nextStage);
 
-        removeStudentFromOldStage(student, oldTeam);
+        removeStudentFromAllOldTeams(student);
 
         boolean isCaptainAssigned = newTeam.getCaptain() != null;
         boolean isViceCaptainAssigned = false;
@@ -137,14 +137,27 @@ public class TeamAssignmentService {
     }
 
     public void moveStudent(Student student, Team newTeam, ActivityStage nextStage) {
-        // Prevent cross-team joining by checking if student already has a DIFFERENT
-        // team in this stage
-        // We know student.team is now newTeam or will be updated to newTeam.
+        // Ensure student is unlinked from any previous team
+        if (student.getTeam() != null && !student.getTeam().getId().equals(newTeam.getId())) {
+            removeStudentFromOldStage(student, student.getTeam());
+        }
+
         student.setTeam(newTeam);
         addStudentToStageTeam(student, newTeam);
 
         student.setPromotionTimestamp(LocalDateTime.now());
         studentRepository.save(student);
+
+        if (entityManager != null) {
+            try {
+                entityManager.createNativeQuery(
+                        "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                        .setParameter("tid", newTeam.getId())
+                        .setParameter("sid", student.getId())
+                        .executeUpdate();
+            } catch (Exception ignored) {}
+        }
     }
 
     public void addStudentToStageTeam(Student student, Team newTeam) {
@@ -159,8 +172,25 @@ public class TeamAssignmentService {
         }
     }
 
-    // Removed assignCaptainIfFirstMember and createCaptain as captain selection is
-    // now dynamic
+    public void removeStudentFromAllOldTeams(Student student) {
+        Team oldTeam = student.getTeam();
+        if (oldTeam != null) {
+            removeStudentFromOldStage(student, oldTeam);
+        }
+        java.util.List<Team> otherTeams = teamRepository.findAllTeamsByStudentId(student.getId());
+        for (Team ot : otherTeams) {
+            if (oldTeam == null || !ot.getId().equals(oldTeam.getId())) {
+                removeStudentFromOldStage(student, ot);
+            }
+        }
+        if (entityManager != null) {
+            try {
+                entityManager.createNativeQuery("DELETE FROM team_members WHERE student_id = :sid")
+                        .setParameter("sid", student.getId())
+                        .executeUpdate();
+            } catch (Exception ignored) {}
+        }
+    }
 
     public void removeStudentFromOldStage(Student student, Team oldTeam) {
         if (oldTeam != null) {
@@ -187,13 +217,15 @@ public class TeamAssignmentService {
                 }
             }
 
-            // Brutally clean up any orphaned team_members records left behind
+            // Clean up team_members records for this student and old team
             if (entityManager != null) {
-                entityManager.createNativeQuery(
-                        "DELETE FROM team_members WHERE student_id = :sid AND team_id = :tid")
-                        .setParameter("sid", student.getId())
-                        .setParameter("tid", oldTeam.getId())
-                        .executeUpdate();
+                try {
+                    entityManager.createNativeQuery(
+                            "DELETE FROM team_members WHERE student_id = :sid AND team_id = :tid")
+                            .setParameter("sid", student.getId())
+                            .setParameter("tid", oldTeam.getId())
+                            .executeUpdate();
+                } catch (Exception ignored) {}
             }
 
             teamRepository.save(oldTeam);
@@ -306,7 +338,7 @@ public class TeamAssignmentService {
             assignedTeam = teams.get(teamIndex);
         }
 
-        removeStudentFromOldStage(student, student.getTeam());
+        removeStudentFromAllOldTeams(student);
 
         if (assignedTeam != null) {
             student.setPromotionOrder(null); // Clear legacy counter

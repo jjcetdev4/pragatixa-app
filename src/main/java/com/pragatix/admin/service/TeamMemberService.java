@@ -8,10 +8,12 @@ import com.pragatix.repository.TeamRepository;
 import com.pragatix.enums.TeamRole;
 import com.pragatix.entity.User;
 import com.pragatix.modules.authentication.repository.UserRepository;
+import com.pragatix.entity.StageTeam;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 @Service
 public class TeamMemberService {
@@ -26,6 +28,9 @@ public class TeamMemberService {
     private final com.pragatix.repository.StageTeamRepository stageTeamRepository;
     private final com.pragatix.admin.service.TeamCleanupService teamCleanupService;
     private final com.pragatix.admin.service.LeadershipSyncService leadershipSyncService;
+
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
 
     public TeamMemberService(TeamRepository teamRepository,
             StudentRepository studentRepository,
@@ -68,9 +73,9 @@ public class TeamMemberService {
         Student member = studentRepository.findByRegNo(regNo).orElse(null);
         if (member == null)
             return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
-        if (member.getTeam() != null)
+        if (member.getTeam() != null || !teamRepository.findAllTeamsByStudentId(member.getId()).isEmpty())
             return ResponseEntity.badRequest().body(ApiResponse
-                    .error("Student " + member.getFullName() + " is already in team: " + member.getTeam().getName()));
+                    .error("Student " + member.getFullName() + " already belongs to an existing team."));
 
         long currentMembersCount = team.getMembers().size();
         boolean captainInMembers = team.getMembers().stream()
@@ -83,6 +88,19 @@ public class TeamMemberService {
 
         member.setTeam(team);
         studentRepository.save(member);
+        team.getMembers().add(member);
+        teamRepository.save(team);
+
+        try {
+            if (entityManager != null) {
+                entityManager.createNativeQuery(
+                        "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                        .setParameter("tid", team.getId())
+                        .setParameter("sid", member.getId())
+                        .executeUpdate();
+            }
+        } catch (Exception ignored) {}
 
         return ResponseEntity.ok(ApiResponse.ok("Member added successfully", null));
     }
@@ -110,29 +128,27 @@ public class TeamMemberService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
         if (member.getTeam() == null || !member.getTeam().getId().equals(team.getId()))
             return ResponseEntity.badRequest().body(ApiResponse.error("Student is not a member of this team"));
-        if (team.getCaptain() != null && member.getId().equals(team.getCaptain().getId())) {
-            long nonCaptainMembers = team.getMembers().stream()
-                    .filter(m -> !m.getId().equals(team.getCaptain().getId()))
-                    .count();
-            if (nonCaptainMembers > 0) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(ApiResponse.error("Assign another Captain before removing the current Captain."));
-            } else {
-                team.getMembers().remove(member);
-                member.setTeam(null);
-                studentRepository.save(member);
 
-                team.setCaptain(null);
+        boolean wasCaptain = team.getCaptain() != null && member.getId().equals(team.getCaptain().getId());
+        boolean wasViceCaptain = team.getViceCaptain() != null && member.getId().equals(team.getViceCaptain().getId());
 
-                if (teamCleanupService.autoDeleteEmptyTeam(team)) {
-                    return ResponseEntity
-                            .ok(ApiResponse.ok("Member removed successfully and empty team auto-deleted", null));
-                }
+        if (wasCaptain) {
+            team.setCaptain(null);
+        }
+        if (wasViceCaptain) {
+            team.setViceCaptain(null);
+        }
 
-                teamRepository.save(team);
-
-                return ResponseEntity
-                        .ok(ApiResponse.ok("Member removed successfully", teamMapper.toTeamResponse(team)));
+        // Clean up StageTeam leadership if held by this student
+        List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
+        for (com.pragatix.entity.StageTeam st : stageTeams) {
+            if (st.getCaptain() != null && st.getCaptain().getId().equals(member.getId())) {
+                st.setCaptain(null);
+                stageTeamRepository.save(st);
+            }
+            if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(member.getId())) {
+                st.setViceCaptain(null);
+                stageTeamRepository.save(st);
             }
         }
 
@@ -140,13 +156,29 @@ public class TeamMemberService {
         member.setTeam(null);
         studentRepository.save(member);
 
+        try {
+            if (entityManager != null) {
+                entityManager.createNativeQuery(
+                        "DELETE FROM team_members WHERE student_id = :sid AND team_id = :tid")
+                        .setParameter("sid", member.getId())
+                        .setParameter("tid", team.getId())
+                        .executeUpdate();
+            }
+        } catch (Exception ignored) {}
+
         if (teamCleanupService.autoDeleteEmptyTeam(team)) {
-            return ResponseEntity.ok(ApiResponse.ok("Member removed successfully and empty team auto-deleted", null));
+            return ResponseEntity
+                    .ok(ApiResponse.ok("Member removed successfully and empty team auto-deleted", null));
+        }
+
+        if (wasCaptain) {
+            captainSelectionService.evaluateCaptainForTeam(team);
         }
 
         teamRepository.save(team);
 
-        return ResponseEntity.ok(ApiResponse.ok("Member removed successfully", teamMapper.toTeamResponse(team)));
+        return ResponseEntity
+                .ok(ApiResponse.ok("Member removed successfully", teamMapper.toTeamResponse(team)));
     }
 
     @Transactional
@@ -181,6 +213,9 @@ public class TeamMemberService {
 
         captain.setTeam(team);
         studentRepository.save(captain);
+        if (!team.getMembers().contains(captain)) {
+            team.getMembers().add(captain);
+        }
         leadershipSyncService.syncLeadership(team, captain, team.getViceCaptain());
         return ResponseEntity
                 .ok(ApiResponse.ok("Student assigned as Team Captain successfully", teamMapper.toTeamResponse(team)));
@@ -240,6 +275,9 @@ public class TeamMemberService {
 
         viceCaptain.setTeam(team);
         studentRepository.save(viceCaptain);
+        if (!team.getMembers().contains(viceCaptain)) {
+            team.getMembers().add(viceCaptain);
+        }
         leadershipSyncService.syncLeadership(team, team.getCaptain(), viceCaptain);
         return ResponseEntity.ok(
                 ApiResponse.ok("Student assigned as Team Vice Captain successfully", teamMapper.toTeamResponse(team)));
@@ -279,9 +317,9 @@ public class TeamMemberService {
         Student member = studentRepository.findByRegNo(regNo).orElse(null);
         if (member == null)
             return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
-        if (member.getTeam() != null)
+        if (member.getTeam() != null || !teamRepository.findAllTeamsByStudentId(member.getId()).isEmpty())
             return ResponseEntity.badRequest().body(ApiResponse
-                    .error("Student " + member.getFullName() + " is already in team: " + member.getTeam().getName()));
+                    .error("Student " + member.getFullName() + " already belongs to an existing team."));
 
         long currentMembersCount = team.getMembers().size();
         boolean captainInMembers = team.getMembers().stream()
@@ -294,6 +332,20 @@ public class TeamMemberService {
 
         member.setTeam(team);
         studentRepository.save(member);
+        team.getMembers().add(member);
+        teamRepository.save(team);
+
+        try {
+            if (entityManager != null) {
+                entityManager.createNativeQuery(
+                        "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                        .setParameter("tid", team.getId())
+                        .setParameter("sid", member.getId())
+                        .executeUpdate();
+            }
+        } catch (Exception ignored) {}
+
         return ResponseEntity.ok(ApiResponse.ok("Member added successfully", null));
     }
 

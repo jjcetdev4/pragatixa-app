@@ -65,7 +65,6 @@ public class DebugDataTest {
         System.out.println("END DEBUG DUMP");
         System.out.println("======================================");
     }
-
     @Test
     public void dumpNeopatAndActivities() {
         System.out.println("================== ALL ACTIVITIES ====================");
@@ -180,5 +179,33 @@ public class DebugDataTest {
             System.out.println("ASSIGN ID: " + a.getId() + " | Act: " + (a.getActivity() != null ? a.getActivity().getId() + " (" + a.getActivity().getActivityName() + " - " + a.getActivity().getModeType() + ")" : "null") + " | Stage: " + (a.getStage() != null ? a.getStage().getDisplayOrder() + " (" + a.getStage().getStageName() + ")" : "null") + " | Dept: " + (a.getDepartment() != null ? a.getDepartment().getId() : "null") + " | Sec: " + (a.getSection() != null ? a.getSection().getId() : "null") + " | Year: " + a.getYear() + " | Teacher: " + (a.getTeacher() != null ? a.getTeacher().getUsername() : "null"));
         }
         System.out.println("=========================================================================");
+    }
+
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @Test
+    public void dumpTeamMembersSchema() {
+        System.out.println("======================================");
+        System.out.println("START TEAM MEMBERS SCHEMA DUMP");
+        System.out.println("======================================");
+        try {
+            java.util.List<java.util.Map<String, Object>> res = jdbcTemplate.queryForList("DESCRIBE team_members");
+            for (java.util.Map<String, Object> r : res) {
+                System.out.println(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("======================================");
+        try {
+            java.util.List<java.util.Map<String, Object>> res = jdbcTemplate.queryForList("DESCRIBE team_members");
+            for (java.util.Map<String, Object> r : res) {
+                System.out.println(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("======================================");
     }
 }

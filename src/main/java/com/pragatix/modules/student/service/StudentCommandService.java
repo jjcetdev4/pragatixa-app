@@ -150,6 +150,21 @@ public class StudentCommandService {
 
         Student saved = studentRepository.save(student);
 
+        if (team != null) {
+            team.getMembers().add(saved);
+            teamRepository.save(team);
+            if (entityManager != null) {
+                try {
+                    entityManager.createNativeQuery(
+                            "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                            "ON DUPLICATE KEY UPDATE team_id = :tid")
+                            .setParameter("tid", team.getId())
+                            .setParameter("sid", saved.getId())
+                            .executeUpdate();
+                } catch (Exception ignored) {}
+            }
+        }
+
         StudentGuardian guardian = null;
         if (request.getGuardian() != null) {
             GuardianDTO gDto = request.getGuardian();
@@ -216,6 +231,52 @@ public class StudentCommandService {
             return ApiResponse.error(e.getMessage());
         }
         Team team = request.getTeamId() != null ? teamRepository.findById(request.getTeamId()).orElse(null) : null;
+
+        Team oldTeam = student.getTeam();
+        if (team != null && (oldTeam == null || !oldTeam.getId().equals(team.getId()))) {
+            if (oldTeam != null) {
+                if (oldTeam.getCaptain() != null && oldTeam.getCaptain().getId().equals(student.getId())) {
+                    oldTeam.setCaptain(null);
+                }
+                if (oldTeam.getViceCaptain() != null && oldTeam.getViceCaptain().getId().equals(student.getId())) {
+                    oldTeam.setViceCaptain(null);
+                }
+                oldTeam.getMembers().remove(student);
+                teamRepository.save(oldTeam);
+                teamCleanupService.autoDeleteEmptyTeam(oldTeam);
+            }
+            if (!team.getMembers().contains(student)) {
+                team.getMembers().add(student);
+                teamRepository.save(team);
+            }
+            if (entityManager != null) {
+                try {
+                    entityManager.createNativeQuery(
+                            "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                            "ON DUPLICATE KEY UPDATE team_id = :tid")
+                            .setParameter("tid", team.getId())
+                            .setParameter("sid", student.getId())
+                            .executeUpdate();
+                } catch (Exception ignored) {}
+            }
+        } else if (team == null && oldTeam != null) {
+            if (oldTeam.getCaptain() != null && oldTeam.getCaptain().getId().equals(student.getId())) {
+                oldTeam.setCaptain(null);
+            }
+            if (oldTeam.getViceCaptain() != null && oldTeam.getViceCaptain().getId().equals(student.getId())) {
+                oldTeam.setViceCaptain(null);
+            }
+            oldTeam.getMembers().remove(student);
+            teamRepository.save(oldTeam);
+            if (entityManager != null) {
+                try {
+                    entityManager.createNativeQuery("DELETE FROM team_members WHERE student_id = :sid")
+                            .setParameter("sid", student.getId())
+                            .executeUpdate();
+                } catch (Exception ignored) {}
+            }
+            teamCleanupService.autoDeleteEmptyTeam(oldTeam);
+        }
 
         student.setFullName(request.getFullName().trim());
         student.setEmail(request.getEmail().trim());
@@ -343,6 +404,12 @@ public class StudentCommandService {
         entityManager.createNativeQuery("DELETE FROM streaks WHERE student_id = :sid").setParameter("sid", id)
                 .executeUpdate();
         entityManager.createNativeQuery("UPDATE teams SET captain_id = NULL WHERE captain_id = :sid")
+                .setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("UPDATE teams SET vice_captain_id = NULL WHERE vice_captain_id = :sid")
+                .setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("UPDATE stage_teams SET captain_id = NULL WHERE captain_id = :sid")
+                .setParameter("sid", id).executeUpdate();
+        entityManager.createNativeQuery("UPDATE stage_teams SET vice_captain_id = NULL WHERE vice_captain_id = :sid")
                 .setParameter("sid", id).executeUpdate();
 
         User user = student.getUser();

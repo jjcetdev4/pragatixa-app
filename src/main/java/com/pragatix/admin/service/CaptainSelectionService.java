@@ -41,12 +41,17 @@ public class CaptainSelectionService {
 
     @Transactional
     public void evaluateCaptainForTeam(Team team) {
-        if (team == null || team.getMembers() == null || team.getMembers().isEmpty()) {
+        if (team == null || team.getId() == null) {
+            return;
+        }
+
+        List<Student> teamMembers = studentRepository.findByTeamId(team.getId());
+        if (teamMembers == null || teamMembers.isEmpty()) {
             return;
         }
 
         // Find all active eligible members
-        List<Student> eligibleMembers = team.getMembers().stream()
+        List<Student> eligibleMembers = teamMembers.stream()
                 .filter(Student::isActive)
                 .collect(Collectors.toList());
 

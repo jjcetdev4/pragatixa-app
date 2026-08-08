@@ -4,6 +4,7 @@ import com.pragatix.common.response.ApiResponse;
 import com.pragatix.dto.TeamRemovalRequestDto;
 import com.pragatix.entity.Student;
 import com.pragatix.entity.Team;
+import com.pragatix.entity.StageTeam;
 import com.pragatix.entity.TeamRemovalRequest;
 import com.pragatix.entity.User;
 import com.pragatix.modules.activity.service.AssignmentSecurityService;
@@ -28,19 +29,34 @@ public class TeamRequestService {
     private final AssignmentSecurityService assignmentSecurityService;
     private final TeamMapper mapper;
     private final AuthUtils authUtils;
+    private final com.pragatix.repository.TeamRepository teamRepository;
+    private final com.pragatix.repository.StageTeamRepository stageTeamRepository;
+    private final TeamCleanupService teamCleanupService;
+    private final CaptainSelectionService captainSelectionService;
+
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
 
     public TeamRequestService(TeamRemovalRequestRepository teamRemovalRequestRepository,
             StudentRepository studentRepository,
             UserRepository userRepository,
             AssignmentSecurityService assignmentSecurityService,
             TeamMapper mapper,
-            AuthUtils authUtils) {
+            AuthUtils authUtils,
+            com.pragatix.repository.TeamRepository teamRepository,
+            com.pragatix.repository.StageTeamRepository stageTeamRepository,
+            TeamCleanupService teamCleanupService,
+            CaptainSelectionService captainSelectionService) {
         this.teamRemovalRequestRepository = teamRemovalRequestRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.assignmentSecurityService = assignmentSecurityService;
         this.mapper = mapper;
         this.authUtils = authUtils;
+        this.teamRepository = teamRepository;
+        this.stageTeamRepository = stageTeamRepository;
+        this.teamCleanupService = teamCleanupService;
+        this.captainSelectionService = captainSelectionService;
     }
 
     @Transactional
@@ -136,9 +152,55 @@ public class TeamRequestService {
         Student member = request.getStudent();
         Team team = request.getTeam();
 
-        if (member.getTeam() != null && member.getTeam().getId().equals(team.getId())) {
-            member.setTeam(null);
-            studentRepository.save(member);
+        if (member != null && team != null) {
+            boolean wasCaptain = team.getCaptain() != null && team.getCaptain().getId().equals(member.getId());
+            boolean wasViceCaptain = team.getViceCaptain() != null && team.getViceCaptain().getId().equals(member.getId());
+
+            if (wasCaptain) {
+                team.setCaptain(null);
+            }
+            if (wasViceCaptain) {
+                team.setViceCaptain(null);
+            }
+
+            // Clear from all associated StageTeam records
+            List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
+            for (StageTeam st : stageTeams) {
+                if (st.getCaptain() != null && st.getCaptain().getId().equals(member.getId())) {
+                    st.setCaptain(null);
+                    stageTeamRepository.save(st);
+                }
+                if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(member.getId())) {
+                    st.setViceCaptain(null);
+                    stageTeamRepository.save(st);
+                }
+            }
+
+            if (team.getMembers() != null) {
+                team.getMembers().remove(member);
+            }
+
+            if (member.getTeam() != null && member.getTeam().getId().equals(team.getId())) {
+                member.setTeam(null);
+                studentRepository.save(member);
+            }
+
+            try {
+                if (entityManager != null) {
+                    entityManager.createNativeQuery(
+                            "DELETE FROM team_members WHERE student_id = :sid AND team_id = :tid")
+                            .setParameter("sid", member.getId())
+                            .setParameter("tid", team.getId())
+                            .executeUpdate();
+                }
+            } catch (Exception ignored) {}
+
+            if (!teamCleanupService.autoDeleteEmptyTeam(team)) {
+                if (wasCaptain) {
+                    captainSelectionService.evaluateCaptainForTeam(team);
+                }
+                teamRepository.save(team);
+            }
         }
 
         request.setStatus("APPROVED");

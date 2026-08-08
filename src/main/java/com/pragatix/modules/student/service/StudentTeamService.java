@@ -26,10 +26,17 @@ public class StudentTeamService {
 
     private final StudentRepository studentRepository;
     private final TeamRepository teamRepository;
+    private final com.pragatix.admin.service.LeadershipSyncService leadershipSyncService;
 
-    public StudentTeamService(StudentRepository studentRepository, TeamRepository teamRepository) {
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
+    public StudentTeamService(StudentRepository studentRepository, 
+                              TeamRepository teamRepository,
+                              com.pragatix.admin.service.LeadershipSyncService leadershipSyncService) {
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
+        this.leadershipSyncService = leadershipSyncService;
     }
 
     @Transactional
@@ -42,10 +49,14 @@ public class StudentTeamService {
         Team team = student.getTeam();
         if (team == null) {
             String defaultTeamName = student.getFullName().trim() + "'s Team";
-            if (teamRepository.existsByName(defaultTeamName)) {
+            Long deptId = student.getDepartment() != null ? student.getDepartment().getId() : null;
+            Long secId = student.getSection() != null ? student.getSection().getId() : null;
+            String year = student.getYear();
+
+            if (teamRepository.existsByTeamNameAndClass(defaultTeamName, deptId, year, secId)) {
                 defaultTeamName = student.getFullName().trim() + " (" + student.getRegNo().trim() + ")'s Team";
             }
-            if (teamRepository.existsByName(defaultTeamName)) {
+            if (teamRepository.existsByTeamNameAndClass(defaultTeamName, deptId, year, secId)) {
                 defaultTeamName = student.getFullName().trim() + " Team " + System.currentTimeMillis();
             }
 
@@ -53,14 +64,37 @@ public class StudentTeamService {
                     .name(defaultTeamName)
                     .size(10) // Default max size of 10
                     .captain(student)
+                    .department(student.getDepartment())
+                    .year(student.getYear())
+                    .section(student.getSection())
                     .build();
             team = teamRepository.save(team);
             student.setTeam(team);
             studentRepository.save(student);
+            team.getMembers().add(student);
+            teamRepository.save(team);
         } else {
-            team.setCaptain(student);
+            if (team.getViceCaptain() != null && team.getViceCaptain().getId().equals(student.getId())) {
+                team.setViceCaptain(null);
+            }
+            if (!team.getMembers().contains(student)) {
+                team.getMembers().add(student);
+            }
             teamRepository.save(team);
         }
+
+        if (entityManager != null) {
+            try {
+                entityManager.createNativeQuery(
+                        "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                        .setParameter("tid", team.getId())
+                        .setParameter("sid", student.getId())
+                        .executeUpdate();
+            } catch (Exception ignored) {}
+        }
+
+        leadershipSyncService.syncLeadership(team, student, team.getViceCaptain());
 
         return ApiResponse.ok("Student promoted to Captain of team: " + team.getName(), null);
     }
@@ -81,8 +115,7 @@ public class StudentTeamService {
             return ApiResponse.error("Student is not the Captain of their team");
         }
 
-        team.setCaptain(null);
-        teamRepository.save(team);
+        leadershipSyncService.syncLeadership(team, null, team.getViceCaptain());
 
         return ApiResponse.ok("Student removed from Captain of team: " + team.getName(), null);
     }

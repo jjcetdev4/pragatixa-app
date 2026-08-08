@@ -39,6 +39,9 @@ public class TeamCrudService {
     private final TeamMapper mapper;
     private final StageTeamRepository stageTeamRepository;
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     public TeamCrudService(TeamRepository teamRepository,
             UserRepository userRepository,
             StudentRepository studentRepository,
@@ -93,33 +96,45 @@ public class TeamCrudService {
         if (captain == null)
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Captain student not found with ID: " + request.getCaptainStudentId()));
-        if (captain.getTeam() != null)
+        if (captain.getTeam() != null || !teamRepository.findAllTeamsByStudentId(captain.getId()).isEmpty())
             return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName()
-                    + " is already assigned to team: " + captain.getTeam().getName()));
+                    + " already belongs to an existing team."));
 
-        if (teamRepository.existsByName(request.getName())) {
+        Long deptId = captain.getDepartment() != null ? captain.getDepartment().getId() : null;
+        String year = captain.getYear();
+        Long sectionId = captain.getSection() != null ? captain.getSection().getId() : null;
+
+        if (teamRepository.existsByTeamNameAndClass(request.getName(), deptId, year, sectionId)) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Team name '" + request.getName() + "' already exists."));
+                    .body(ApiResponse.error("Team name '" + request.getName() + "' already exists in this class."));
         }
 
         List<Student> members = new ArrayList<>();
         if (request.getMemberStudentIds() != null && !request.getMemberStudentIds().isEmpty()) {
-            List<String> validIds = new java.util.ArrayList<>();
+            java.util.Set<String> uniqueMemberIds = new java.util.LinkedHashSet<>();
             for (String sid : request.getMemberStudentIds()) {
-                if (!sid.trim().equalsIgnoreCase(captain.getRegNo().trim())) {
-                    validIds.add(sid);
+                if (sid != null && !sid.trim().isEmpty()) {
+                    String cleanSid = sid.trim();
+                    if (cleanSid.equalsIgnoreCase(captain.getRegNo().trim())) {
+                        continue;
+                    }
+                    if (!uniqueMemberIds.add(cleanSid)) {
+                        return ResponseEntity.badRequest()
+                                .body(ApiResponse.error("Duplicate student ID found in members list: " + cleanSid));
+                    }
                 }
             }
-            if (!validIds.isEmpty()) {
-                List<Student> fetchedMembers = studentRepository.findByRegNoIn(validIds);
-                if (fetchedMembers.size() < validIds.size()) {
+            if (!uniqueMemberIds.isEmpty()) {
+                List<Student> fetchedMembers = studentRepository.findByRegNoIn(new ArrayList<>(uniqueMemberIds));
+                if (fetchedMembers.size() < uniqueMemberIds.size()) {
                     return ResponseEntity.badRequest()
                             .body(ApiResponse.error("One or more member students not found."));
                 }
                 for (Student m : fetchedMembers) {
-                    if (m.getTeam() != null)
+                    if (m.getTeam() != null || !teamRepository.findAllTeamsByStudentId(m.getId()).isEmpty()) {
                         return ResponseEntity.badRequest().body(ApiResponse.error("Student " + m.getFullName()
-                                + " is already assigned to team: " + m.getTeam().getName()));
+                                + " is already assigned to a team."));
+                    }
                     members.add(m);
                 }
             }
@@ -151,6 +166,19 @@ public class TeamCrudService {
         toSave.add(captain);
         studentRepository.saveAll(toSave);
 
+        try {
+            if (entityManager != null) {
+                for (Student s : toSave) {
+                    entityManager.createNativeQuery(
+                            "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                            "ON DUPLICATE KEY UPDATE team_id = :tid")
+                            .setParameter("tid", savedTeam.getId())
+                            .setParameter("sid", s.getId())
+                            .executeUpdate();
+                }
+            }
+        } catch (Exception ignored) {}
+
         List<StudentResponse> studentResponses = new ArrayList<>();
         studentResponses.add(mapper.toStudentResponse(captain));
         for (Student m : members)
@@ -177,9 +205,14 @@ public class TeamCrudService {
             }
         }
 
-        if (!team.getName().equalsIgnoreCase(request.getName()) && teamRepository.existsByName(request.getName())) {
+        Long teamDeptId = team.getDepartment() != null ? team.getDepartment().getId() : null;
+        String teamYear = team.getYear();
+        Long teamSectionId = team.getSection() != null ? team.getSection().getId() : null;
+
+        if (!team.getName().trim().equalsIgnoreCase(request.getName().trim())
+                && teamRepository.existsByTeamNameAndClassExcludingId(request.getName(), teamDeptId, teamYear, teamSectionId, team.getId())) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Team name '" + request.getName() + "' already exists."));
+                    .body(ApiResponse.error("Team name '" + request.getName() + "' already exists in this class."));
         }
 
         team.setName(request.getName());
@@ -261,11 +294,27 @@ public class TeamCrudService {
             team.setCaptain(null);
         }
 
+        if (team.getViceCaptain() != null) {
+            Student vc = team.getViceCaptain();
+            team.getMembers().remove(vc);
+            vc.setTeam(null);
+            studentRepository.save(vc);
+            team.setViceCaptain(null);
+        }
+
         // Remove StageTeam mappings
         List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(teamId);
         stageTeamRepository.deleteAll(stageTeams);
 
         teamRemovalRequestRepository.deleteAll(teamRemovalRequestRepository.findByTeamId(teamId));
+
+        try {
+            if (entityManager != null) {
+                entityManager.createNativeQuery("DELETE FROM team_members WHERE team_id = :tid")
+                        .setParameter("tid", teamId)
+                        .executeUpdate();
+            }
+        } catch (Exception ignored) {}
 
         String teamName = team.getName();
         teamRepository.delete(team);
