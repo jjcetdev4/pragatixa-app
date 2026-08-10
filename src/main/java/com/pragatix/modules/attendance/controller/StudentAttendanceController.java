@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.List;
 
@@ -31,9 +33,10 @@ public class StudentAttendanceController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<ApiResponse<List<StudentAttendanceHistoryResponse>>> getHistory() {
+    public ResponseEntity<ApiResponse<List<StudentAttendanceHistoryResponse>>> getHistory(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate date) {
         Long studentId = studentAuthResolver.getLoggedInStudent().getId();
-        List<StudentAttendanceHistoryResponse> history = attendanceService.getHistory(studentId);
+        List<StudentAttendanceHistoryResponse> history = attendanceService.getHistory(studentId, date);
         return ResponseEntity.ok(ApiResponse.ok(history));
     }
 }

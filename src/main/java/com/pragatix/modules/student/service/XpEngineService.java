@@ -218,7 +218,9 @@ public class XpEngineService {
         updateStreakOnSubmission(student, activityName);
         
         // Activity-wise Streak hook
-        activityStreakService.incrementStreak(student, activity);
+        if (activity != null && !Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
+            activityStreakService.incrementStreak(student, activity);
+        }
 
         // 5. Evaluate Captain
         captainSelectionService.evaluateCaptainPromotion(student);

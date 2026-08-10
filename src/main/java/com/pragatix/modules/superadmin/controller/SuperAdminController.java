@@ -33,6 +33,14 @@ public class SuperAdminController {
         return superAdminService.getYearAdmins();
     }
 
+    @PostMapping("/year-admins")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Create new Year Admin")
+    public ResponseEntity<ApiResponse<YearAdminResponse>> createYearAdmin(
+            @org.springframework.web.bind.annotation.RequestBody com.pragatix.modules.superadmin.dto.CreateYearAdminRequest request) {
+        return superAdminService.createYearAdmin(request);
+    }
+
     @PutMapping("/year-admins/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "Assign academic year to admin")
@@ -40,5 +48,12 @@ public class SuperAdminController {
             @PathVariable Long id,
             @RequestBody AssignAcademicYearRequest request) {
         return superAdminService.assignAcademicYear(id, request);
+    }
+
+    @DeleteMapping("/year-admins/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Delete Year Admin")
+    public ResponseEntity<ApiResponse<Void>> deleteYearAdmin(@PathVariable Long id) {
+        return superAdminService.deleteYearAdmin(id);
     }
 }

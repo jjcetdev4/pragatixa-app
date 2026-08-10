@@ -1,62 +1,54 @@
 server:
+  address: 0.0.0.0
   port: 8080
-  tomcat:
-    accesslog:
-      enabled: true
-      directory: /opt/pragatix/access-logs
-      prefix: access_log
-      suffix: .log
-      file-date-format: .yyyy-MM-dd
-      pattern: '%h %l %u %t "%r" %s %b %D'
-      rotate: true
-      max-days: 7
+
 spring:
   application:
-    name: spdms-backend
+    name: pragatix-backend
+  main:
+    banner-mode: "off"
+    log-startup-info: false
+
   datasource:
-    url: ${DB_URL}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://localhost:3307/spdms_lab?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: sharu
+
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
+    open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
+
   security:
     user:
       name: admin
       password: admin
+
 jwt:
   secret: spdms_super_secret_key_must_be_at_least_256_bits_long_for_hs256_algorithm
   expiration: 86400000
   student-expiration: 43200000
-cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://pragatix.in,https://www.pragatix.in,http://localhost:5173,http://localhost:3000}
+
 springdoc:
   api-docs:
-    enabled: ${SWAGGER_ENABLED:false}
-    path: /api/api-docs
+    path: /api-docs
   swagger-ui:
-    enabled: ${SWAGGER_ENABLED:false}
-    path: /api/swagger-ui.html
+    path: /swagger-ui.html
     tags-sorter: alpha
+
 logging:
   level:
-    com.spdms: DEBUG
-    org.springframework.security: INFO
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: when-authorized
-  health:
-    db:
-      enabled: true
+    root: WARN
+    com.pragatix: INFO
+    org.springframework: WARN
+    org.springframework.security: ERROR
+    org.hibernate: WARN
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    com.zaxxer.hikari: WARN

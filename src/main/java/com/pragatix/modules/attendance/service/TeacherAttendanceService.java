@@ -60,6 +60,15 @@ public class TeacherAttendanceService {
     private com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
 
     @Transactional(readOnly = true)
+    public Integer getNextPeriod(LocalDate date, Long yearId, Long departmentId, Long sectionId) {
+        Integer maxPeriod = attendanceRepository.findMaxPeriodForSession(date, yearId, departmentId, sectionId);
+        if (maxPeriod == null) {
+            return 1;
+        }
+        return maxPeriod < 8 ? maxPeriod + 1 : 8;
+    }
+
+    @Transactional(readOnly = true)
     public List<StudentAttendanceListItemResponse> getStudentListWithAttendance(LocalDate date, Integer period,
             Long yearId, Long deptId, Long sectionId) {
         
@@ -189,14 +198,6 @@ public class TeacherAttendanceService {
 
             attendanceRepository.save(attendance);
             count++;
-
-            try {
-                streakService.updateAttendanceStreak(student, request.getDate());
-            } catch (Exception e) {
-                log.error("Failed to update streak", e);
-                throw new RuntimeException(
-                        "Failed to update streak for student " + student.getRegNo() + ": " + e.getMessage(), e);
-            }
 
             if (attendance.getStatus() == Attendance.AttendanceStatus.ABSENT) {
                 try {

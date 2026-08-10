@@ -39,6 +39,12 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId ORDER BY a.attendanceDate DESC, a.periodNo DESC")
     List<Attendance> findByStudentIdOrderByAttendanceDateDescPeriodNoDesc(@Param("studentId") Long studentId);
 
+    @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.attendanceDate = :date ORDER BY a.periodNo DESC")
+    List<Attendance> findByStudentIdAndAttendanceDateOrderByPeriodNoDesc(@Param("studentId") Long studentId, @Param("date") LocalDate date);
+
+    @Query("SELECT MAX(a.periodNo) FROM Attendance a WHERE a.attendanceDate = :date AND a.student.yearRef.id = :yearId AND a.student.department.id = :deptId AND (:sectionId IS NULL OR a.student.section.id = :sectionId)")
+    Integer findMaxPeriodForSession(@Param("date") LocalDate date, @Param("yearId") Long yearId, @Param("deptId") Long deptId, @Param("sectionId") Long sectionId);
+
     @Query("SELECT COUNT(a) FROM Attendance a WHERE a.student.id = :studentId AND FUNCTION('MONTH', a.attendanceDate) = :month AND FUNCTION('YEAR', a.attendanceDate) = :year AND a.status = :status")
     long countByStudentIdAndMonthAndYearAndStatus(@Param("studentId") Long studentId, @Param("month") int month,
             @Param("year") int year, @Param("status") Attendance.AttendanceStatus status);

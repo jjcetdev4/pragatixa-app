@@ -63,19 +63,38 @@ public class StudentController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
-    @Operation(summary = "Get All Students", description = "Returns paginated list of all students.")
+    @Operation(summary = "Get All Students", description = "Returns paginated list of all students with optional filters.")
     public ResponseEntity<ApiResponse<Page<StudentResponse>>> getAllStudents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "1000") int size,
             @RequestParam(defaultValue = "fullName") String sortBy,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String year,
-            @RequestParam(required = false) String section) {
-        ApiResponse<Page<StudentResponse>> response = studentService.getAllStudents(page, size, sortBy);
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long sectionId) {
+        ApiResponse<Page<StudentResponse>> response = studentService.getAllStudents(page, size, sortBy, keyword, year, departmentId, sectionId);
         if (response.getData() != null) {
             log.info("\n=== STUDENT DIRECTORY API ===\nRequested Page: {}, Size: {}\nTotal in DB: {}\nReturned in Page: {}\n",
                     page, size, response.getData().getTotalElements(), response.getData().getNumberOfElements());
         }
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/filters/departments")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @Operation(summary = "Get distinct departments for a specific year", description = "Returns departments that have students in the specified academic year.")
+    public ResponseEntity<ApiResponse<java.util.List<com.pragatix.entity.Department>>> getFilterDepartmentsByYear(
+            @RequestParam(required = false) String year) {
+        return ResponseEntity.ok(ApiResponse.ok("Departments fetched", studentService.getFilterDepartmentsByYear(year)));
+    }
+
+    @GetMapping("/filters/sections")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @Operation(summary = "Get distinct sections for a specific year and department", description = "Returns sections that have students in the specified year and department.")
+    public ResponseEntity<ApiResponse<java.util.List<com.pragatix.entity.Section>>> getFilterSections(
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) Long departmentId) {
+        return ResponseEntity.ok(ApiResponse.ok("Sections fetched", studentService.getFilterSections(year, departmentId)));
     }
 
     @GetMapping("/{id}")
@@ -103,10 +122,12 @@ public class StudentController {
 
     @GetMapping("/team-member-search")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    @Operation(summary = "Smart search for team members", description = "Search active students by name, reg_no, or spr_no for team selection.")
+    @Operation(summary = "Smart search for team members", description = "Search active students by name, reg_no, or spr_no for team selection. Filters by team configuration.")
     public ResponseEntity<ApiResponse<java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO>>> searchActiveStudentsForTeam(
-            @RequestParam String keyword) {
-        return ResponseEntity.ok(studentService.searchActiveStudentsForTeam(keyword));
+            @RequestParam(required = false) String keyword,
+            @RequestParam Long teamId,
+            @RequestParam(required = false, defaultValue = "1") Integer currentStage) {
+        return ResponseEntity.ok(studentService.searchActiveStudentsForTeam(keyword, teamId, currentStage));
     }
 
     @DeleteMapping("/{id}")

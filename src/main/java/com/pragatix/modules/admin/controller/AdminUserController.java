@@ -36,9 +36,10 @@ public class AdminUserController {
 
     @GetMapping("/users")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
-    @Operation(summary = "List All Users", description = "Returns all staff/users (teachers and admins).")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
-        return adminUserService.getAllUsers();
+    @Operation(summary = "List All Users", description = "Returns all staff/users (teachers and admins) with optional department filter.")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(
+            @RequestParam(required = false) Long departmentId) {
+        return adminUserService.getAllUsers(departmentId);
     }
 
     @PostMapping("/users")

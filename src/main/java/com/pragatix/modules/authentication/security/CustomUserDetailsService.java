@@ -26,8 +26,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
+                .orElseGet(() -> userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with username: " + username));
+                        "User not found with username or email: " + username)));
 
         java.util.Set<org.springframework.security.core.GrantedAuthority> authorities = new java.util.HashSet<>();
 

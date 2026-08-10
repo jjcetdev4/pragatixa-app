@@ -2,9 +2,12 @@ package com.pragatix.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "streaks")
+@Table(name = "streaks", uniqueConstraints = {
+        @UniqueConstraint(name = "uq_streak_student_type", columnNames = { "student_id", "streak_type" })
+})
 public class Streak {
 
     @Id
@@ -27,6 +30,9 @@ public class Streak {
 
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
+
+    @Column(name = "last_processed_date")
+    private LocalDate lastProcessedDate;
 
     @Column(name = "is_broken", nullable = false)
     private boolean isBroken = false;
@@ -99,6 +105,14 @@ public class Streak {
 
     public void setPenaltyPerBreak(int penaltyPerBreak) {
         this.penaltyPerBreak = penaltyPerBreak;
+    }
+
+    public LocalDate getLastProcessedDate() {
+        return lastProcessedDate;
+    }
+
+    public void setLastProcessedDate(LocalDate lastProcessedDate) {
+        this.lastProcessedDate = lastProcessedDate;
     }
 
     public static Builder builder() {

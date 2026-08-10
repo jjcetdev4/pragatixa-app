@@ -57,8 +57,13 @@ public class AdminUserService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(Long departmentId) {
         List<User> users = userRepository.findAll();
+        if (departmentId != null) {
+            users = users.stream()
+                         .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(departmentId))
+                         .collect(Collectors.toList());
+        }
         List<UserResponse> responses = users.stream()
                 .map(adminMapper::toUserResponse)
                 .collect(Collectors.toList());

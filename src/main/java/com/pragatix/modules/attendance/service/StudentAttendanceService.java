@@ -54,8 +54,13 @@ public class StudentAttendanceService {
     }
 
     @Transactional(readOnly = true)
-    public List<StudentAttendanceHistoryResponse> getHistory(Long studentId) {
-        List<Attendance> records = attendanceRepository.findByStudentIdOrderByAttendanceDateDescPeriodNoDesc(studentId);
+    public List<StudentAttendanceHistoryResponse> getHistory(Long studentId, LocalDate date) {
+        List<Attendance> records;
+        if (date != null) {
+            records = attendanceRepository.findByStudentIdAndAttendanceDateOrderByPeriodNoDesc(studentId, date);
+        } else {
+            records = attendanceRepository.findByStudentIdOrderByAttendanceDateDescPeriodNoDesc(studentId);
+        }
         return records.stream().map(r -> {
             StudentAttendanceHistoryResponse res = new StudentAttendanceHistoryResponse();
             res.setDate(r.getAttendanceDate());

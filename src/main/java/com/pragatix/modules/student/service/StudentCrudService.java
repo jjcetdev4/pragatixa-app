@@ -34,8 +34,16 @@ public class StudentCrudService {
         return studentQueryService.getStudentById(id);
     }
 
-    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy) {
-        return studentQueryService.getAllStudents(page, size, sortBy);
+    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword, String year, Long departmentId, Long sectionId) {
+        return studentQueryService.getAllStudents(page, size, sortBy, keyword, year, departmentId, sectionId);
+    }
+
+    public java.util.List<com.pragatix.entity.Department> getFilterDepartmentsByYear(String year) {
+        return studentQueryService.getFilterDepartmentsByYear(year);
+    }
+
+    public java.util.List<com.pragatix.entity.Section> getFilterSections(String year, Long departmentId) {
+        return studentQueryService.getFilterSections(year, departmentId);
     }
 
     public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size) {
@@ -43,7 +51,7 @@ public class StudentCrudService {
     }
 
     public ApiResponse<java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(
-            String keyword) {
-        return studentQueryService.searchActiveStudentsForTeam(keyword);
+            String keyword, Long teamId, Integer currentStage) {
+        return studentQueryService.searchActiveStudentsForTeam(keyword, teamId, currentStage);
     }
 }

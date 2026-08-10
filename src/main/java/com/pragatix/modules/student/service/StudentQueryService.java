@@ -30,15 +30,20 @@ public class StudentQueryService {
     private final StudentGuardianRepository studentGuardianRepository;
     private final AuthUtils authUtils;
 
+    private final com.pragatix.repository.TeamRepository teamRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
     public StudentQueryService(StudentRepository studentRepository, UserRepository userRepository,
             YearRepository yearRepository, StudentMapper studentMapper,
-            StudentGuardianRepository studentGuardianRepository, AuthUtils authUtils) {
+            StudentGuardianRepository studentGuardianRepository, AuthUtils authUtils, 
+            com.pragatix.repository.TeamRepository teamRepository) {
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.yearRepository = yearRepository;
         this.studentMapper = studentMapper;
         this.studentGuardianRepository = studentGuardianRepository;
         this.authUtils = authUtils;
+        this.teamRepository = teamRepository;
     }
 
     public ApiResponse<StudentResponse> getStudentById(Long id) {
@@ -75,7 +80,7 @@ public class StudentQueryService {
         return page.map(s -> studentMapper.toResponse(s, guardianMap.get(s.getId())));
     }
 
-    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy) {
+    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword, String year, Long departmentId, Long sectionId) {
         Sort sort = Sort.by(sortBy).ascending();
         if (!"regNo".equalsIgnoreCase(sortBy)) {
             sort = sort.and(Sort.by("regNo").ascending());
@@ -89,7 +94,7 @@ public class StudentQueryService {
         boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
                 .map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
 
-        if (isCc && currentUser != null) {
+        if (isCc && currentUser != null && !authUtils.isSuperAdmin(currentUser)) {
             String userYearStr = currentUser.getYear();
             Byte yearNo = null;
             if (userYearStr != null) {
@@ -110,7 +115,9 @@ public class StudentQueryService {
             Section userSection = currentUser.getSection();
 
             if (currentUser.getDepartment() != null && yearRef != null && userSection != null) {
-                Page<StudentResponse> result = mapWithGuardians(studentRepository.findByDepartmentAndYearAndSection(
+                // CC sees only their own department/year/section, but we can allow search keyword
+                Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudentsByCC(
+                        keyword == null ? "" : keyword,
                         currentUser.getDepartment().getId(),
                         yearRef.getId(),
                         userSection.getId(),
@@ -124,7 +131,8 @@ public class StudentQueryService {
         if (currentUser != null && !authUtils.isSuperAdmin(currentUser) && authUtils.isAdmin(currentUser)) {
             String adminYear = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
             if (adminYear != null) {
-                Page<StudentResponse> result = mapWithGuardians(studentRepository.findAllByYear(adminYear, pageable));
+                // Admin can filter by keyword, department, section, but year is forced to adminYear
+                Page<StudentResponse> result = mapWithGuardians(studentRepository.findByFilters(keyword, adminYear, departmentId, sectionId, pageable));
                 log.info("Admin user '{}' with year '{}': total students in DB = {}, returned in page = {}",
                         username, adminYear, result.getTotalElements(), result.getNumberOfElements());
                 return ApiResponse.ok(result);
@@ -134,10 +142,19 @@ public class StudentQueryService {
             }
         }
 
-        Page<StudentResponse> result = mapWithGuardians(studentRepository.findAll(pageable));
+        // For Super Admin or other roles, apply all filters
+        Page<StudentResponse> result = mapWithGuardians(studentRepository.findByFilters(keyword, year, departmentId, sectionId, pageable));
         log.info("User '{}': total students in DB = {}, returned in page = {}",
                 username, result.getTotalElements(), result.getNumberOfElements());
         return ApiResponse.ok(result);
+    }
+
+    public java.util.List<com.pragatix.entity.Department> getFilterDepartmentsByYear(String year) {
+        return studentRepository.findDistinctDepartmentsByYear(year);
+    }
+
+    public java.util.List<com.pragatix.entity.Section> getFilterSections(String year, Long departmentId) {
+        return studentRepository.findDistinctSectionsByYearAndDepartment(year, departmentId);
     }
 
     public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size) {
@@ -150,7 +167,7 @@ public class StudentQueryService {
         boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
                 .map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
 
-        if (isCc && currentUser != null) {
+        if (isCc && currentUser != null && !authUtils.isSuperAdmin(currentUser)) {
             String userYearStr = currentUser.getYear();
             Byte yearNo = null;
             if (userYearStr != null) {
@@ -199,9 +216,23 @@ public class StudentQueryService {
     }
 
     public ApiResponse<java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(
-            String keyword) {
-        Pageable limit = PageRequest.of(0, 20); // limit to 20
-        java.util.List<Student> students = studentRepository.searchActiveStudentsForTeam(keyword, limit);
+            String keyword, Long teamId, Integer currentStage) {
+        Pageable limit = PageRequest.of(0, 100); // Increased limit for bulk team additions
+
+        Team team = teamRepository.findById(teamId).orElse(null);
+        if (team == null) {
+            return ApiResponse.error("Team not found");
+        }
+
+        String year = team.getYear();
+        Long deptId = team.getDepartment() != null ? team.getDepartment().getId() : null;
+        Long sectionId = team.getSection() != null ? team.getSection().getId() : null;
+
+        if (year == null || deptId == null || sectionId == null) {
+             return ApiResponse.error("Team configuration is incomplete");
+        }
+
+        java.util.List<Student> students = studentRepository.searchEligibleStudentsForTeam(keyword, year, deptId, sectionId, currentStage, limit);
 
         java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO> results = students.stream()
                 .map(s -> {
@@ -217,7 +248,8 @@ public class StudentQueryService {
                     dto.setTeamId(s.getTeam() != null ? s.getTeam().getId() : null);
                     dto.setCurrentStage(s.getCurrentStage());
                     return dto;
-                }).collect(java.util.stream.Collectors.toList());
+                })
+                .toList();
 
         return ApiResponse.ok(results);
     }

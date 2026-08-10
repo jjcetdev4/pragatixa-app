@@ -355,6 +355,80 @@ public class TeamMemberService {
     }
 
     @Transactional
+    public ResponseEntity<ApiResponse<Void>> addMembersByCC(Long id, java.util.List<String> regNos) {
+        return addMembersToTeam(id, regNos);
+    }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<Void>> addMembersToTeam(Long id, java.util.List<String> regNos) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+        if (currentUser == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+
+        Team team = teamRepository.findById(id).orElse(null);
+        if (team == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Team not found"));
+
+        try {
+            validationService.validateTeamAccess(currentUser, team);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+        }
+
+        long currentMembersCount = team.getMembers().size();
+        boolean captainInMembers = team.getMembers().stream()
+                .anyMatch(m -> team.getCaptain() != null && m.getId().equals(team.getCaptain().getId()));
+        long totalSize = currentMembersCount + (captainInMembers ? 0 : 1);
+        
+        if (totalSize + regNos.size() > team.getSize()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Cannot add members. Team size limit of " + team.getSize() + " exceeded."));
+        }
+
+        for (String regNo : regNos) {
+            Student member = studentRepository.findByRegNo(regNo).orElse(null);
+            if (member == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Student not found with ID: " + regNo));
+            }
+            if (member.getTeam() != null || !teamRepository.findAllTeamsByStudentId(member.getId()).isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse
+                        .error("Student " + member.getFullName() + " already belongs to an existing team."));
+            }
+            
+            // Validate configuration match
+            if (team.getYear() != null && member.getYear() != null && !team.getYear().equals(member.getYear())) {
+                 return ResponseEntity.badRequest().body(ApiResponse.error("Student " + member.getFullName() + " is in a different academic year than the team."));
+            }
+            if (team.getDepartment() != null && member.getDepartment() != null && !team.getDepartment().getId().equals(member.getDepartment().getId())) {
+                 return ResponseEntity.badRequest().body(ApiResponse.error("Student " + member.getFullName() + " is in a different department than the team."));
+            }
+            if (team.getSection() != null && member.getSection() != null && !team.getSection().getId().equals(member.getSection().getId())) {
+                 return ResponseEntity.badRequest().body(ApiResponse.error("Student " + member.getFullName() + " is in a different section than the team."));
+            }
+
+            member.setTeam(team);
+            studentRepository.save(member);
+            team.getMembers().add(member);
+            
+            try {
+                if (entityManager != null) {
+                    entityManager.createNativeQuery(
+                            "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                            "ON DUPLICATE KEY UPDATE team_id = :tid")
+                            .setParameter("tid", team.getId())
+                            .setParameter("sid", member.getId())
+                            .executeUpdate();
+                }
+            } catch (Exception ignored) {}
+        }
+        
+        teamRepository.save(team);
+        return ResponseEntity.ok(ApiResponse.ok("Members added successfully", null));
+    }
+
+    @Transactional
     public ResponseEntity<ApiResponse<com.pragatix.dto.TeamResponse>> removeMemberByCC(Long id, String regNo) {
         return removeMemberFromTeam(id, regNo);
     }

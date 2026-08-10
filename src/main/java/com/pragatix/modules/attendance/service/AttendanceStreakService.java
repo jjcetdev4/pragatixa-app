@@ -23,18 +23,10 @@ public class AttendanceStreakService {
     @Autowired
     private StreakRepository streakRepository;
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AttendanceStreakService.class);
+
     @Transactional
-    public void updateAttendanceStreak(Student student, LocalDate date) {
-        long totalRecordsForDay = attendanceRepository.countByStudentIdAndAttendanceDate(student.getId(), date);
-
-        if (totalRecordsForDay != 8) {
-            // Day is incomplete, do not calculate streak yet.
-            return;
-        }
-
-        long presentCount = attendanceRepository.countByStudentIdAndAttendanceDateAndStatus(student.getId(), date,
-                Attendance.AttendanceStatus.PRESENT);
-
+    public void incrementAttendanceStreak(Student student, LocalDate engineDate) {
         Optional<Streak> existingStreak = streakRepository.findByStudentRegNoAndStreakType(student.getRegNo(),
                 "ATTENDANCE");
         Streak streak = existingStreak.orElseGet(() -> Streak.builder()
@@ -46,15 +38,32 @@ public class AttendanceStreakService {
                 .penaltyPerBreak(10)
                 .build());
 
-        if (presentCount == 8) {
-            streak.setCurrentStreak(streak.getCurrentStreak() + 1);
-            streak.setBroken(false);
-        } else {
-            streak.setCurrentStreak(0);
-            streak.setBroken(true);
+        if (streak.getLastProcessedDate() != null && streak.getLastProcessedDate().isEqual(engineDate)) {
+            log.info("ATTENDANCE STREAK ENGINE");
+            log.info("Student ID: {}", student.getId());
+            log.info("Execution Date: {}", engineDate);
+            log.info("Already Processed: true");
+            log.info("Current Streak: {}", streak.getCurrentStreak());
+            log.info("Action: SKIPPED - ALREADY PROCESSED");
+            return;
         }
 
+        int previousStreak = streak.getCurrentStreak();
+        streak.setCurrentStreak(previousStreak + 1);
+        streak.setBroken(false);
         streak.setLastUpdated(LocalDateTime.now());
+        streak.setLastProcessedDate(engineDate);
         streakRepository.save(streak);
+
+        log.info("ATTENDANCE STREAK ENGINE");
+        log.info("Student ID: {}", student.getId());
+        log.info("Execution Date: {}", engineDate);
+        log.info("Working Day: true");
+        log.info("Required Periods: 8");
+        log.info("Present Periods: 8");
+        log.info("Eligible For Streak: true");
+        log.info("Already Processed: false");
+        log.info("Previous Streak: {}", previousStreak);
+        log.info("New Streak: {}", streak.getCurrentStreak());
     }
 }

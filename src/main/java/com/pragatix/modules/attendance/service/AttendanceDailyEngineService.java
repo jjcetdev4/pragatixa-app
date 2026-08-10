@@ -83,6 +83,8 @@ public class AttendanceDailyEngineService {
     private ActivityStageMappingRepository activityStageMappingRepository;
     @Autowired
     private AcademicWeekRepository academicWeekRepository;
+    @Autowired
+    private AttendanceStreakService attendanceStreakService;
     private final ApplicationContext applicationContext;
 
     public AttendanceDailyEngineService(StudentRepository studentRepository,
@@ -212,19 +214,21 @@ public class AttendanceDailyEngineService {
                 AcademicWeek activeWeek = academicWeekRepository.findActiveWeekForDate(academicYear, engineDate)
                         .orElse(null);
 
-                if (activeWeek == null) {
-                    log.info("No active Academic Week configured. Aborting.");
-                    return buildResult("ERROR", "No active Academic Week configured", 0, 0, 0, 0, 0);
-                }
-
-                java.time.LocalDate startDate = activeWeek.getStartDate();
-                java.time.LocalDate endDate = activeWeek.getEndDate();
-
+                boolean executePenaltyConfigured = (activeWeek != null);
+                java.time.LocalDate startDate = null;
+                java.time.LocalDate endDate = null;
                 String todayType = "NORMAL";
-                if (engineDate.isEqual(startDate)) {
-                    todayType = "WEEK_START";
-                } else if (engineDate.isEqual(endDate)) {
-                    todayType = "WEEK_END";
+
+                if (!executePenaltyConfigured) {
+                    log.info("No active Academic Week configured. XP penalties will be skipped, but streak will be processed.");
+                } else {
+                    startDate = activeWeek.getStartDate();
+                    endDate = activeWeek.getEndDate();
+                    if (engineDate.isEqual(startDate)) {
+                        todayType = "WEEK_START";
+                    } else if (engineDate.isEqual(endDate)) {
+                        todayType = "WEEK_END";
+                    }
                 }
 
                 int weekStartFullPenalty = settings.getWeekStartFullPenalty() != null
@@ -350,7 +354,7 @@ public class AttendanceDailyEngineService {
                         }
 
                         // We check != 0 because penalties are negative numbers (e.g., -40)
-                        executeXp = finalPenaltyXp != 0;
+                        executeXp = (finalPenaltyXp != 0) && executePenaltyConfigured;
 
                         // The XP Engine (awardAttendanceXpOnly) adds appliedXp directly, so it must be
                         // negative.
@@ -396,6 +400,14 @@ public class AttendanceDailyEngineService {
                                 
                             } catch (Exception e) {
                                 log.error("XP Execution Error : {}", e.getMessage(), e);
+                            }
+                        }
+
+                        if (totalMarked == 8 && presentCount == 8) {
+                            try {
+                                attendanceStreakService.incrementAttendanceStreak(student, engineDate);
+                            } catch (Exception e) {
+                                log.error("Streak Engine Error for student {}: {}", student.getId(), e.getMessage());
                             }
                         }
 

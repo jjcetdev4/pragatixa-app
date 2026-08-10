@@ -11,5 +11,7 @@ import java.util.Optional;
 public interface StudentActivityStreakRepository extends JpaRepository<StudentActivityStreak, Long> {
     void deleteByActivityId(Long activityId);
     Optional<StudentActivityStreak> findByStudentIdAndActivityId(Long studentId, Long activityId);
+    
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"activity"})
     List<StudentActivityStreak> findByStudentId(Long studentId);
 }

@@ -171,6 +171,13 @@ public class TeamController {
         return teamMemberService.addMemberByCC(id, regNo);
     }
 
+    @PostMapping("/{id}/add-members")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'CC', 'HOD', 'SUPER_ADMIN', 'SUPERADMIN')")
+    @Operation(summary = "Add Multiple Team Members (CC)", description = "Adds multiple students to a specific team (CC/Admin only).")
+    public ResponseEntity<ApiResponse<Void>> addMembersByCC(@PathVariable Long id, @RequestBody java.util.List<String> regNos) {
+        return teamMemberService.addMembersByCC(id, regNos);
+    }
+
     @PostMapping("/{id}/remove-member")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'CC', 'HOD', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Remove Team Member (CC)", description = "Removes a student from a specific team (CC/Admin only).")

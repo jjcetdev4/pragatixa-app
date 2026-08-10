@@ -41,4 +41,15 @@ public class TeacherAttendanceController {
         attendanceService.saveAttendance(principal.getName(), request);
         return ResponseEntity.ok(ApiResponse.ok("Attendance saved successfully"));
     }
+
+    @GetMapping("/next-period")
+    public ResponseEntity<ApiResponse<Integer>> getNextPeriod(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long yearId,
+            @RequestParam Long departmentId,
+            @RequestParam(required = false) Long sectionId) {
+        
+        Integer nextPeriod = attendanceService.getNextPeriod(date, yearId, departmentId, sectionId);
+        return ResponseEntity.ok(ApiResponse.ok(nextPeriod));
+    }
 }

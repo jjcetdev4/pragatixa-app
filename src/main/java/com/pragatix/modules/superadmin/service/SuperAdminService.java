@@ -18,9 +18,13 @@ import java.util.stream.Collectors;
 public class SuperAdminService {
 
     private final UserRepository userRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final com.pragatix.modules.authentication.repository.RoleRepository roleRepository;
 
-    public SuperAdminService(UserRepository userRepository) {
+    public SuperAdminService(UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder, com.pragatix.modules.authentication.repository.RoleRepository roleRepository) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
     }
 
     public ResponseEntity<ApiResponse<List<YearAdminResponse>>> getYearAdmins() {
@@ -41,6 +45,44 @@ public class SuperAdminService {
                 .collect(Collectors.toList());
         System.out.println("----------------------------");
         return ResponseEntity.ok(ApiResponse.ok("Fetched Year Admins", response));
+    }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<YearAdminResponse>> createYearAdmin(com.pragatix.modules.superadmin.dto.CreateYearAdminRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Username already exists"));
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Email already registered"));
+        }
+
+        com.pragatix.entity.Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new RuntimeException("Role ROLE_ADMIN not found"));
+
+        java.util.Set<com.pragatix.entity.Role> roles = new java.util.HashSet<>();
+        roles.add(adminRole);
+
+        User user = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .roles(roles)
+                .academicYear(request.getAcademicYear())
+                .active(request.isActive())
+                .build();
+
+        User savedAdmin = userRepository.save(user);
+        
+        YearAdminResponse resp = new YearAdminResponse(
+                savedAdmin.getId(),
+                savedAdmin.getFullName(),
+                savedAdmin.getUsername(),
+                savedAdmin.getAcademicYear(),
+                savedAdmin.isActive());
+                
+        return ResponseEntity.ok(ApiResponse.ok("Year Admin created successfully", resp));
     }
 
     @Transactional
@@ -80,5 +122,23 @@ public class SuperAdminService {
                 admin.getAcademicYear(),
                 admin.isActive());
         return ResponseEntity.ok(ApiResponse.ok("Academic Year assigned successfully", resp));
+    }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<Void>> deleteYearAdmin(Long id) {
+        User admin = userRepository.findById(id).orElse(null);
+        if (admin == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Admin user not found"));
+        }
+
+        boolean isAdmin = admin.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
+        boolean isSuperAdmin = admin.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
+        
+        if (!isAdmin || isSuperAdmin) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Cannot delete this user via this endpoint"));
+        }
+
+        userRepository.delete(admin);
+        return ResponseEntity.ok(ApiResponse.ok("Year Admin deleted successfully", null));
     }
 }
