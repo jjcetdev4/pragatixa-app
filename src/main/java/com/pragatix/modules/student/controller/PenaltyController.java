@@ -78,4 +78,9 @@ public class PenaltyController {
         String reason = body.getOrDefault("reason", "Rejected by CC");
         return ResponseEntity.ok(penaltyWorkflowService.rejectPenalty(id, username, reason));
     }
+    @GetMapping("/global")
+    @PreAuthorize("hasAnyRole('TEACHER', 'HOD', 'ADMIN')")
+    public ResponseEntity<ApiResponse<List<com.pragatix.modules.student.dto.response.PenaltyActivityDto>>> getGlobalPenaltyActivities() {
+        return ResponseEntity.ok(penaltyWorkflowService.getGlobalPenaltyActivities());
+    }
 }

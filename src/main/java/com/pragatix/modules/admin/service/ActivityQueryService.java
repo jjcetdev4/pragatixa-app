@@ -100,7 +100,7 @@ public class ActivityQueryService {
                         final LocalDate today = LocalDate.now();
                         final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), null, today);
                         activities = activities.stream()
-                                .filter(a -> assignedIds.contains(a.getId()))
+                                .filter(a -> assignedIds.contains(a.getId()) || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
                                 .toList();
                     }
                 }
@@ -187,7 +187,7 @@ public class ActivityQueryService {
                         final LocalDate today = LocalDate.now();
                         final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), null, today);
                         activities = activities.stream()
-                                .filter(a -> assignedIds.contains(a.getId()))
+                                .filter(a -> assignedIds.contains(a.getId()) || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
                                 .toList();
                     }
                 }
@@ -478,7 +478,7 @@ public class ActivityQueryService {
                         final LocalDate today = LocalDate.now();
                         final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), stageId, today);
                         activities = activities.stream()
-                                .filter(a -> assignedIds.contains(a.getId()))
+                                .filter(a -> assignedIds.contains(a.getId()) || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
                                 .toList();
                         System.out.println("Rows After Teacher Assignment Filter for Teacher [" + currentUser.getUsername() + "]: " + activities.size());
                     }

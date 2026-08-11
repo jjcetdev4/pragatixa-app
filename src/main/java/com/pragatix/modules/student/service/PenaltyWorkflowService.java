@@ -5,6 +5,7 @@ import com.pragatix.entity.*;
 import com.pragatix.modules.activity.repository.ActivityRepository;
 import com.pragatix.modules.authentication.repository.UserRepository;
 import com.pragatix.modules.student.dto.request.CreatePenaltyRequestDto;
+import com.pragatix.modules.student.dto.response.PenaltyActivityDto;
 import com.pragatix.modules.student.dto.response.PenaltyRequestDto;
 import com.pragatix.modules.student.repository.StudentRepository;
 import com.pragatix.repository.ActivityAssignmentRepository;
@@ -267,6 +268,24 @@ public class PenaltyWorkflowService {
 
         PenaltyRequest saved = penaltyRequestRepository.save(request);
         return ApiResponse.ok("Penalty rejected", mapToDto(saved));
+    }
+
+        @Transactional(readOnly = true)
+    public ApiResponse<List<PenaltyActivityDto>> getGlobalPenaltyActivities() {
+        List<Activity> allActivities = activityRepository.findAll();
+        List<PenaltyActivityDto> result = allActivities.stream()
+                .filter(a -> Boolean.TRUE.equals(a.getPenaltyEnabled()))
+                .map(a -> {
+                    PenaltyActivityDto dto = new PenaltyActivityDto();
+                    dto.setId(a.getId());
+                    dto.setName(a.getActivityName());
+                    dto.setDescription(a.getDescription());
+                    dto.setPenaltyXp(a.getPenaltyXp());
+                    dto.setPenaltyEnabled(a.getPenaltyEnabled());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        return ApiResponse.ok("Global penalty activities", result);
     }
 
     private PenaltyRequestDto mapToDto(PenaltyRequest p) {

@@ -94,20 +94,43 @@ public class StudentActivityQueryService {
 
         String targetYear = (year == null || year.trim().isEmpty()) ? "1" : year;
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
-        List<Map<String, Object>> depts = allAssignments.stream()
-                .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
-                .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
-                .filter(a -> isYearMatching(targetYear, a.getYear()))
-                .map(ActivityAssignment::getDepartment)
-                .filter(Objects::nonNull)
-                .distinct()
-                .map(d -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("id", d.getId());
-                    map.put("name", d.getName());
-                    return map;
-                })
-                .collect(Collectors.toList());
+
+        // For GLOBAL activities, all teachers can see all departments without assignment filter
+        boolean isGlobalActivity = allAssignments.stream()
+                .anyMatch(a -> a.getAssignmentScope() == com.pragatix.entity.AssignmentScope.GLOBAL
+                        || "GLOBAL".equalsIgnoreCase(a.getActivity() != null ? a.getActivity().getAssignmentMode() : null));
+
+        List<Map<String, Object>> depts;
+        if (isGlobalActivity) {
+            depts = allAssignments.stream()
+                    .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
+                    .filter(a -> isYearMatching(targetYear, a.getYear()))
+                    .map(ActivityAssignment::getDepartment)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .map(d -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("id", d.getId());
+                        map.put("name", d.getName());
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+        } else {
+            depts = allAssignments.stream()
+                    .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
+                    .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
+                    .filter(a -> isYearMatching(targetYear, a.getYear()))
+                    .map(ActivityAssignment::getDepartment)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .map(d -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("id", d.getId());
+                        map.put("name", d.getName());
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+        }
 
         return ResponseEntity.ok(ApiResponse.ok("Departments retrieved successfully", depts));
     }
@@ -126,13 +149,27 @@ public class StudentActivityQueryService {
 
         String targetYear = (year == null || year.trim().isEmpty()) ? "1" : year;
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
-        List<ActivityAssignment> teacherAssignments = allAssignments.stream()
-                .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
-                .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
-                .filter(a -> isYearMatching(targetYear, a.getYear()))
-                .collect(Collectors.toList());
 
-        if (teacherAssignments.isEmpty()) {
+        // For GLOBAL activities, bypass the teacher-assignment security check
+        boolean isGlobalActivity = allAssignments.stream()
+                .anyMatch(a -> a.getAssignmentScope() == com.pragatix.entity.AssignmentScope.GLOBAL
+                        || "GLOBAL".equalsIgnoreCase(a.getActivity() != null ? a.getActivity().getAssignmentMode() : null));
+
+        List<ActivityAssignment> teacherAssignments;
+        if (isGlobalActivity) {
+            teacherAssignments = allAssignments.stream()
+                    .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
+                    .filter(a -> isYearMatching(targetYear, a.getYear()))
+                    .collect(Collectors.toList());
+        } else {
+            teacherAssignments = allAssignments.stream()
+                    .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
+                    .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
+                    .filter(a -> isYearMatching(targetYear, a.getYear()))
+                    .collect(Collectors.toList());
+        }
+
+        if (!isGlobalActivity && teacherAssignments.isEmpty()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse
                     .<List<Map<String, Object>>>error("Access Denied: You are not assigned to this activity."));
         }
@@ -173,16 +210,31 @@ public class StudentActivityQueryService {
                     .body(ApiResponse.<MyActivityStudentsResponse>error("Teacher profile not found"));
 
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
-        List<ActivityAssignment> matching = allAssignments.stream()
-                .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, teacher))
-                .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
-                .filter(a -> year == null || isYearMatching(year, a.getYear()))
-                .filter(a -> departmentId == null || a.getDepartment() == null
-                        || a.getDepartment().getId().equals(departmentId))
-                .filter(a -> sectionId == null || a.getSection() == null || a.getSection().getId().equals(sectionId))
-                .collect(Collectors.toList());
 
-        if (matching.isEmpty())
+        // For GLOBAL activities, bypass the teacher-assignment security check
+        boolean isGlobalActivity = allAssignments.stream()
+                .anyMatch(a -> a.getAssignmentScope() == com.pragatix.entity.AssignmentScope.GLOBAL
+                        || "GLOBAL".equalsIgnoreCase(a.getActivity() != null ? a.getActivity().getAssignmentMode() : null));
+
+        List<ActivityAssignment> matching;
+        if (isGlobalActivity) {
+            matching = allAssignments.stream()
+                    .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
+                    .filter(a -> year == null || isYearMatching(year, a.getYear()))
+                    .filter(a -> departmentId == null || a.getDepartment() == null || a.getDepartment().getId().equals(departmentId))
+                    .filter(a -> sectionId == null || a.getSection() == null || a.getSection().getId().equals(sectionId))
+                    .collect(Collectors.toList());
+        } else {
+            matching = allAssignments.stream()
+                    .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, teacher))
+                    .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
+                    .filter(a -> year == null || isYearMatching(year, a.getYear()))
+                    .filter(a -> departmentId == null || a.getDepartment() == null || a.getDepartment().getId().equals(departmentId))
+                    .filter(a -> sectionId == null || a.getSection() == null || a.getSection().getId().equals(sectionId))
+                    .collect(Collectors.toList());
+        }
+
+        if (!isGlobalActivity && matching.isEmpty())
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse
                     .<MyActivityStudentsResponse>error("Access Denied: You are not assigned to this activity."));
 
