@@ -24,7 +24,7 @@ public class TeamRemovalRequest {
     private Student captain;
 
     @Column(name = "reg_no")
-    private String regNo;
+    private Long regNo;
 
     @Column(nullable = false, length = 500)
     private String reason;
@@ -44,14 +44,14 @@ public class TeamRemovalRequest {
         this.captain = captain;
         this.reason = reason;
         this.status = status;
-        this.regNo = student != null ? String.valueOf(student.getId()) : null;
+        this.regNo = student != null ? student.getId() : null;
     }
 
-    public String getRegNo() {
+    public Long getRegNo() {
         return regNo;
     }
 
-    public void setRegNo(String regNo) {
+    public void setRegNo(Long regNo) {
         this.regNo = regNo;
     }
 

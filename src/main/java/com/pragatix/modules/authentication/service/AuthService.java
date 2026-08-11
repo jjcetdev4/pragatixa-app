@@ -332,37 +332,6 @@ public class AuthService {
         otpTokenRepository.delete(otpToken);
 
         // Generate JWT based on user type
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user != null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-            String token = jwtUtil.generateToken(userDetails);
-            
-            List<String> rolesList = userDetails.getAuthorities().stream()
-                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
-                    .collect(Collectors.toList());
-
-            String userType = "USER";
-            if (rolesList.contains("ROLE_ADMIN") || rolesList.contains("ROLE_SUPER_ADMIN")) {
-                userType = "ADMIN";
-            } else if (rolesList.contains("ROLE_TEACHER")) {
-                userType = "TEACHER";
-            } else if (rolesList.contains("ROLE_TRANSPORT")) {
-                userType = "TRANSPORT";
-            }
-
-            AuthResponse response = AuthResponse.builder()
-                    .token(token)
-                    .type("Bearer")
-                    .username(user.getUsername())
-                    .fullName(user.getFullName())
-                    .email(user.getEmail())
-                    .roles(rolesList)
-                    .subRoles(user.getSubRoles().stream().map(SubRole::getName).collect(Collectors.toList()))
-                    .userType(userType)
-                    .build();
-            return ApiResponse.ok("Login successful", response);
-        }
-
         Student student = studentRepository.findByEmail(email).orElse(null);
         if (student != null) {
             if (!student.isActive()) {
@@ -436,6 +405,44 @@ public class AuthService {
             return ApiResponse.ok("Login successful", response);
         }
 
+        // Handle non-student users (e.g., teachers, admins, staff)
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user != null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+            String token = jwtUtil.generateToken(userDetails);
+
+            List<String> rolesList = userDetails.getAuthorities().stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+
+            String userType = "USER";
+            if (rolesList.contains("ROLE_ADMIN") || rolesList.contains("ROLE_SUPER_ADMIN")) {
+                userType = "ADMIN";
+            } else if (rolesList.contains("ROLE_TEACHER")) {
+                userType = "TEACHER";
+            } else if (rolesList.contains("ROLE_TRANSPORT")) {
+                userType = "TRANSPORT";
+            }
+
+            AuthResponse response = AuthResponse.builder()
+                    .token(token)
+                    .type("Bearer")
+                    .username(user.getUsername())
+                    .fullName(user.getFullName())
+                    .email(user.getEmail())
+                    .roles(rolesList)
+                    .subRoles(user.getSubRoles().stream().map(SubRole::getName).collect(Collectors.toList()))
+                    .userType(userType)
+                    // Additional fields for frontend consistency
+                    .section(user.getSection() != null ? user.getSection().getSectionName() : null)
+                    .sectionId(user.getSection() != null ? user.getSection().getId() : null)
+                    .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
+                    .year(user.getYear() != null ? user.getYear().toString() : null)
+                    .department(user.getDepartment() != null ? user.getDepartment().getName() : "")
+                    .departmentId(user.getDepartment() != null ? user.getDepartment().getId() : null)
+                    .build();
+            return ApiResponse.ok("Login successful", response);
+        }
         return ApiResponse.error("User not found during token generation");
     }
 
