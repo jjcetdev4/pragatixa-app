@@ -25,6 +25,10 @@ public interface ActivityAssignmentRepository extends JpaRepository<ActivityAssi
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
             "teacher", "assignedBy" })
+    List<ActivityAssignment> findByAssignedById(Long assignedById);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
+            "teacher", "assignedBy" })
     Optional<ActivityAssignment> findByActivityIdAndSectionId(Long activityId, Long sectionId);
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",

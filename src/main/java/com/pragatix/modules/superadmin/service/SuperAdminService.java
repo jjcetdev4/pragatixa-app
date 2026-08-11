@@ -20,11 +20,13 @@ public class SuperAdminService {
     private final UserRepository userRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final com.pragatix.modules.authentication.repository.RoleRepository roleRepository;
+    private final com.pragatix.repository.ActivityAssignmentRepository activityAssignmentRepository;
 
-    public SuperAdminService(UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder, com.pragatix.modules.authentication.repository.RoleRepository roleRepository) {
+    public SuperAdminService(UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder, com.pragatix.modules.authentication.repository.RoleRepository roleRepository, com.pragatix.repository.ActivityAssignmentRepository activityAssignmentRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
+        this.activityAssignmentRepository = activityAssignmentRepository;
     }
 
     public ResponseEntity<ApiResponse<List<YearAdminResponse>>> getYearAdmins() {
@@ -86,8 +88,8 @@ public class SuperAdminService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<YearAdminResponse>> assignAcademicYear(Long id,
-            AssignAcademicYearRequest request) {
+    public ResponseEntity<ApiResponse<YearAdminResponse>> updateYearAdmin(Long id,
+            com.pragatix.modules.superadmin.dto.UpdateYearAdminRequest request) {
         User admin = userRepository.findById(id).orElse(null);
         if (admin == null) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Admin user not found"));
@@ -98,22 +100,24 @@ public class SuperAdminService {
             return ResponseEntity.badRequest().body(ApiResponse.error("User is not a Year Admin"));
         }
 
-        AcademicYear year = request.getAcademicYear();
-        if (year == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Academic Year is required"));
+        // Update fields
+        admin.setFullName(request.getFullName());
+        admin.setUsername(request.getUsername());
+        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+            admin.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        admin.setEmail(request.getEmail());
+        admin.setPhone(request.getPhone());
+        admin.setActive(request.isActive());
+        
+        // It's possible academic year is not assigned yet
+        if (request.getAcademicYear() != null) {
+            admin.setAcademicYear(request.getAcademicYear());
+        } else {
+            admin.setAcademicYear(null);
         }
 
-        admin.setAcademicYear(year);
         userRepository.save(admin);
-
-        User savedUser = userRepository.findById(admin.getId()).orElse(null);
-        System.out.println("--- DB UPDATE VERIFICATION ---");
-        if (savedUser != null) {
-            System.out.println("User ID: " + savedUser.getId());
-            System.out.println("Username: " + savedUser.getUsername());
-            System.out.println("Academic Year: " + savedUser.getAcademicYear());
-        }
-        System.out.println("------------------------------");
 
         YearAdminResponse resp = new YearAdminResponse(
                 admin.getId(),
@@ -121,7 +125,7 @@ public class SuperAdminService {
                 admin.getUsername(),
                 admin.getAcademicYear(),
                 admin.isActive());
-        return ResponseEntity.ok(ApiResponse.ok("Academic Year assigned successfully", resp));
+        return ResponseEntity.ok(ApiResponse.ok("Year Admin updated successfully", resp));
     }
 
     @Transactional
@@ -136,6 +140,18 @@ public class SuperAdminService {
         
         if (!isAdmin || isSuperAdmin) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Cannot delete this user via this endpoint"));
+        }
+
+        // Fetch current super admin to re-assign any activity assignments
+        String currentUsername = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentSuperAdmin = userRepository.findByUsername(currentUsername).orElse(null);
+        
+        if (currentSuperAdmin != null) {
+            List<com.pragatix.entity.ActivityAssignment> assignments = activityAssignmentRepository.findByAssignedById(id);
+            for (com.pragatix.entity.ActivityAssignment assignment : assignments) {
+                assignment.setAssignedBy(currentSuperAdmin);
+            }
+            activityAssignmentRepository.saveAll(assignments);
         }
 
         userRepository.delete(admin);
