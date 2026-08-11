@@ -23,6 +23,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import com.pragatix.modules.student.exception.StudentNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -137,6 +138,13 @@ public class GlobalExceptionHandler {
 
     // ==================== 3. Resource & Data Errors (4xx) ====================
 
+    @ExceptionHandler(StudentNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiResponse<Void> handleStudentNotFound(StudentNotFoundException ex) {
+        log.warn("Student not found: {}", ex.getMessage());
+        return ApiResponse.error(ex.getMessage());
+    }
+
     @ExceptionHandler(NoSuchElementException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiResponse<Void> handleNoSuchElement(NoSuchElementException ex) {
@@ -144,10 +152,10 @@ public class GlobalExceptionHandler {
         return ApiResponse.error(ex.getMessage());
     }
 
-    @ExceptionHandler(NoHandlerFoundException.class)
+    @ExceptionHandler({NoHandlerFoundException.class, org.springframework.web.servlet.resource.NoResourceFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiResponse<Void> handleNoHandlerFound(NoHandlerFoundException ex) {
-        log.warn("No handler found for: {}", ex.getRequestURL());
+    public ApiResponse<Void> handleNoHandlerFound(Exception ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
         return ApiResponse.error("Resource not found");
     }
 

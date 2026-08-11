@@ -126,20 +126,24 @@ public class StudentActivityQueryService {
 
         String targetYear = (year == null || year.trim().isEmpty()) ? "1" : year;
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
-        List<ActivityAssignment> matching = allAssignments.stream()
+        List<ActivityAssignment> teacherAssignments = allAssignments.stream()
                 .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, currentUser))
                 .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
                 .filter(a -> isYearMatching(targetYear, a.getYear()))
-                .filter(a -> a.getDepartment() == null || a.getDepartment().getId().equals(departmentId))
                 .collect(Collectors.toList());
 
-        if (matching.isEmpty()) {
+        if (teacherAssignments.isEmpty()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse
                     .<List<Map<String, Object>>>error("Access Denied: You are not assigned to this activity."));
         }
 
+        List<ActivityAssignment> matching = teacherAssignments.stream()
+                .filter(a -> departmentId == null || a.getDepartment() == null
+                        || a.getDepartment().getId().equals(departmentId))
+                .collect(Collectors.toList());
+
         boolean hasDepartmentLevelOrGlobalAssignment = matching.stream().anyMatch(a -> a.getSection() == null);
-        List<com.pragatix.entity.Section> allSections = sectionRepository.findByDepartment_Id(departmentId);
+        List<com.pragatix.entity.Section> allSections = departmentId != null ? sectionRepository.findByDepartment_Id(departmentId) : List.of();
 
         List<Map<String, Object>> sections = allSections.stream()
                 .filter(s -> hasDepartmentLevelOrGlobalAssignment ||

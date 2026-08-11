@@ -11,6 +11,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +58,7 @@ public class XpController {
     /** POST /api/v1/xp/submit – Student submits activity claim */
     @PostMapping("/submit")
     @Operation(summary = "Submit XP Claim", description = "Allows a student to submit evidence link for an activity.")
-    public ResponseEntity<ApiResponse<XpTransaction>> submitXpClaim(@RequestBody ClaimSubmissionRequest request) {
+    public ResponseEntity<ApiResponse<XpTransaction>> submitXpClaim(@Valid @RequestBody ClaimSubmissionRequest request) {
         String regNo = studentAuthResolver.getLoggedInStudent().getRegNo();
         ApiResponse<XpTransaction> response = xpService.submitXpClaim(
                 regNo,
@@ -90,7 +93,7 @@ public class XpController {
     @PostMapping("/penalty")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Log Violation Penalty", description = "Deducts XP points from a student for a discipline infraction. Requires Faculty or Admin role.")
-    public ResponseEntity<ApiResponse<XpTransaction>> logViolation(@RequestBody LogViolationRequest request) {
+    public ResponseEntity<ApiResponse<XpTransaction>> logViolation(@Valid @RequestBody LogViolationRequest request) {
         String appliedBy = SecurityContextHolder.getContext().getAuthentication().getName();
         ApiResponse<XpTransaction> response = xpService.logViolation(
                 request.getRegNo(),
@@ -103,9 +106,16 @@ public class XpController {
 
     // Request DTOs
     public static class ClaimSubmissionRequest {
+        @NotBlank(message = "category is required")
         private String category;
+
+        @NotBlank(message = "activityName is required")
         private String activityName;
+
+        @Min(value = 1, message = "xpPoints must be positive")
         private int xpPoints;
+
+        @NotBlank(message = "evidenceUrl is required")
         private String evidenceUrl;
 
         public String getCategory() {
@@ -142,9 +152,15 @@ public class XpController {
     }
 
     public static class LogViolationRequest {
+        @NotBlank(message = "regNo is required")
         private String regNo;
+
+        @NotBlank(message = "violationType is required")
         private String violationType;
+
+        @Min(value = 1, message = "xpPenalty must be positive")
         private int xpPenalty;
+
         private String description;
 
         public String getRegNo() {

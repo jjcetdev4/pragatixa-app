@@ -1,21 +1,31 @@
-name: Build and Auto-Refresh
+name: Build and Push to S3
 
 on:
   push:
     branches:
       - main
 
+# Required for OIDC authentication
 permissions:
-  id-token: write
-  contents: read
+  id-token: write 
+  contents: read  
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Debug OIDC claims
+        run: |
+          echo "Fetching OIDC token to inspect the sub claim..."
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value')
+          echo "----- DECODED SUB CLAIM -----"
+          echo "$TOKEN" | cut -d '.' -f2 | base64 -d 2>/dev/null | jq -r '.sub'
+          echo "-----------------------------"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -33,145 +43,15 @@ jobs:
           role-to-assume: arn:aws:iam::961408845745:role/jjcetpm-github-pipeline
           aws-region: ap-south-1
 
-      - name: Push JAR to S3 and Auto-Refresh EC2 Instances
+      - name: Push code to S3 bucket
         run: |
           TIMESTAMP=$(date +'%Y-%m-%d_%H-%M-%S')
-          
-          # Upload JAR to S3
           for file in target/*.jar; do
             filename=$(basename "$file")
             name="${filename%.*}"
             aws s3 cp "$file" "s3://${{ vars.S3_BUCKET_NAME }}/backend/${name}_${TIMESTAMP}.jar"
           done
-          
-          echo "✅ JAR uploaded to S3"
-          
-          # Get all running instances with tag App=pragatix
-          INSTANCE_IDS=$(aws ec2 describe-instances \
-            --filters "Name=tag:App,Values=pragatix" \
-                      "Name=instance-state-name,Values=running" \
-            --query 'Reservations[].Instances[].InstanceId' \
-            --output text \
-            --region ap-south-1)
-          
-          if [ -z "$INSTANCE_IDS" ]; then
-            echo "⚠️ No running instances found with tag App=pragatix"
-            exit 0
-          fi
-          
-          echo "🔄 Triggering auto-refresh on instances: $INSTANCE_IDS"
-          
-          # Send SSM command to refresh all instances using cloud-init
-          COMMAND_ID=$(aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=InstanceIds,Values=$INSTANCE_IDS" \
-            --parameters commands="
-              sudo cloud-init clean &&
-              sudo cloud-init init --local &&
-              sudo cloud-init init &&
-              sudo cloud-init modules --mode config &&
-              sudo cloud-init modules --mode final
-            " \
-            --timeout-seconds 600 \
-            --region ap-south-1 \
-            --output text \
-            --query 'Command.CommandId')
-          
-          echo "SSM Command ID: $COMMAND_ID"
-          
-          # Wait for completion
-          echo "⏳ Waiting for deployment to complete..."
-          for i in {1..60}; do
-            STATUS=$(aws ssm list-command-invocations \
-              --command-id "$COMMAND_ID" \
-              --details \
-              --region ap-south-1 \
-              --query 'CommandInvocations[0].Status' \
-              --output text)
-            
-            if [ "$STATUS" == "Success" ]; then
-              echo "✅ Auto-refresh completed successfully!"
-              break
-            elif [ "$STATUS" == "Failed" ] || [ "$STATUS" == "Cancelled" ] || [ "$STATUS" == "TimedOut" ]; then
-              echo "❌ Auto-refresh failed with status: $STATUS"
-              exit 1
-            fi
-            
-            echo "Status: $STATUS - Waiting... ($i/60)"
-            sleep 10
-          done
-          
-          # Show deployment summary
-          echo "📊 Deployment Summary:"
-          aws ssm list-command-invocations \
-            --command-id "$COMMAND_ID" \
-            --details \
-            --region ap-south-1 \
-            --query 'CommandInvocations[*].[InstanceId,Status,StatusDetails]' \
-            --output table
 
-      - name: Health Check Verification
+      - name: Upload React build to S3
         run: |
-          echo "🔍 Performing health checks..."
-          
-          INSTANCE_IPS=$(aws ec2 describe-instances \
-            --filters "Name=tag:App,Values=pragatix" \
-                      "Name=instance-state-name,Values=running" \
-            --query 'Reservations[].Instances[].PublicIpAddress' \
-            --output text \
-            --region ap-south-1)
-          
-          for ip in $INSTANCE_IPS; do
-            if [ "$ip" != "None" ] && [ -n "$ip" ]; then
-              echo "Checking instance: $ip"
-              for i in {1..10}; do
-                if curl -s -f -o /dev/null "http://$ip:8080/actuator/health" 2>/dev/null; then
-                  echo "✅ Instance $ip is healthy"
-                  break
-                elif curl -s -f -o /dev/null "http://$ip:8080/health" 2>/dev/null; then
-                  echo "✅ Instance $ip is healthy"
-                  break
-                elif [ $i -eq 10 ]; then
-                  echo "⚠️ Could not verify health for instance $ip"
-                else
-                  echo "Waiting for instance $ip to become healthy... (attempt $i/10)"
-                  sleep 5
-                fi
-              done
-            fi
-          done
-          
-          echo "✅ Health check completed"
-
-      - name: Cleanup Old JARs from S3
-        run: |
-          echo "🧹 Cleaning up old JARs from S3 (keeping last 5)..."
-          
-          aws s3api list-objects-v2 \
-            --bucket "${{ vars.S3_BUCKET_NAME }}" \
-            --prefix "backend/" \
-            --region ap-south-1 \
-            --query 'sort_by(Contents, &LastModified)[0:-5].Key' \
-            --output text \
-          | while read -r key; do
-            if [ -n "$key" ] && [ "$key" != "None" ]; then
-              echo "Deleting: $key"
-              aws s3 rm "s3://${{ vars.S3_BUCKET_NAME }}/$key" --region ap-south-1
-            fi
-          done
-          
-          echo "✅ Cleanup completed"
-
-      - name: Deployment Success Notification
-        if: success()
-        run: |
-          echo "🎉 Deployment completed successfully!"
-          echo "Version: $(date +'%Y-%m-%d_%H-%M-%S')"
-          echo "Commit: ${{ github.sha }}"
-          echo "Branch: ${{ github.ref_name }}"
-
-      - name: Deployment Failure Notification
-        if: failure()
-        run: |
-          echo "❌ Deployment failed!"
-          echo "Check GitHub Actions logs for details."
+          aws sts get-caller-identity

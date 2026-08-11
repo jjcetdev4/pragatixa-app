@@ -36,9 +36,34 @@ public class XpQueryService {
         this.studentRepository = studentRepository;
     }
 
+    private Student findStudentByIdentifier(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            throw new com.pragatix.modules.student.exception.StudentNotFoundException("Student identifier is required");
+        }
+        String idStr = identifier.trim();
+        java.util.Optional<Student> opt = studentRepository.findByRegNo(idStr);
+        if (opt.isPresent()) return opt.get();
+
+        opt = studentRepository.findBySprNo(idStr);
+        if (opt.isPresent()) return opt.get();
+
+        opt = studentRepository.findByEmail(idStr);
+        if (opt.isPresent()) return opt.get();
+
+        try {
+            Long id = Long.parseLong(idStr);
+            opt = studentRepository.findById(id);
+            if (opt.isPresent()) return opt.get();
+
+            opt = studentRepository.findByUserId(id);
+            if (opt.isPresent()) return opt.get();
+        } catch (NumberFormatException ignored) {}
+
+        throw new com.pragatix.modules.student.exception.StudentNotFoundException("Student not found: " + identifier);
+    }
+
     public Map<String, Integer> getXpSummary(String regNo) {
-        Student student = studentRepository.findByRegNo(regNo)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student student = findStudentByIdentifier(regNo);
 
         Map<String, Integer> summary = new HashMap<>();
         summary.put("totalXp", student.getTotalXp());

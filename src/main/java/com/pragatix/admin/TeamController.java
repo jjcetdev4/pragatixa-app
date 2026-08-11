@@ -110,7 +110,7 @@ public class TeamController {
         return teamMemberService.removeMemberFromTeam(id, regNo);
     }
 
-    @PostMapping("/{id}/captain")
+    @PostMapping({"/{id}/captain", "/{id}/assign-captain"})
     @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'CC', 'HOD', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Assign Team Captain", description = "Assigns/promotes a student to captain of a team.")
     public ResponseEntity<ApiResponse<TeamResponse>> assignTeamCaptain(@PathVariable Long id,
@@ -186,7 +186,7 @@ public class TeamController {
         return teamMemberService.removeMemberByCC(id, regNo);
     }
 
-    @PostMapping("/my-team/remove-request")
+    @PostMapping({"/my-team/remove-request", "/my-team/removal-request"})
     @PreAuthorize("hasRole('STUDENT')")
     @Operation(summary = "Request Team Member Removal", description = "Creates a request to remove a student from the captain's team.")
     public ResponseEntity<ApiResponse<Void>> requestRemoveMember(@RequestParam String regNo,
@@ -222,8 +222,11 @@ public class TeamController {
     @PutMapping("/{id}/limit")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'CC', 'HOD', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Update Team Limit", description = "Updates the maximum size limit of the team (CC/Admin only).")
-    public ResponseEntity<ApiResponse<Void>> updateTeamLimit(@PathVariable Long id, @RequestParam int size) {
-        return teamCrudService.updateTeamLimit(id, size);
+    public ResponseEntity<ApiResponse<Void>> updateTeamLimit(@PathVariable Long id,
+            @RequestParam(value = "size", required = false) Integer size,
+            @RequestParam(value = "limit", required = false) Integer limit) {
+        int finalSize = size != null ? size : (limit != null ? limit : 0);
+        return teamCrudService.updateTeamLimit(id, finalSize);
     }
 
     @DeleteMapping("/{teamId}")

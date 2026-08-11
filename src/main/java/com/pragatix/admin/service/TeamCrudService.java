@@ -105,7 +105,7 @@ public class TeamCrudService {
         Long sectionId = captain.getSection() != null ? captain.getSection().getId() : null;
 
         if (teamRepository.existsByTeamNameAndClass(request.getName(), deptId, year, sectionId)) {
-            return ResponseEntity.badRequest()
+            return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
                     .body(ApiResponse.error("Team name '" + request.getName() + "' already exists in this class."));
         }
 
@@ -211,7 +211,7 @@ public class TeamCrudService {
 
         if (!team.getName().trim().equalsIgnoreCase(request.getName().trim())
                 && teamRepository.existsByTeamNameAndClassExcludingId(request.getName(), teamDeptId, teamYear, teamSectionId, team.getId())) {
-            return ResponseEntity.badRequest()
+            return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
                     .body(ApiResponse.error("Team name '" + request.getName() + "' already exists in this class."));
         }
 
@@ -278,15 +278,15 @@ public class TeamCrudService {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
         }
 
-        boolean isOnlyCaptain = team.getMembers().isEmpty() && team.getCaptain() != null;
-        boolean isEmpty = team.getMembers().isEmpty() && team.getCaptain() == null;
+        boolean hasOtherMembers = team.getMembers().stream()
+                .anyMatch(m -> team.getCaptain() == null || !m.getId().equals(team.getCaptain().getId()));
 
-        if (!isEmpty && !isOnlyCaptain) {
+        if (hasOtherMembers) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiResponse.error("Cannot delete team because it still contains students."));
         }
 
-        if (isOnlyCaptain) {
+        if (team.getCaptain() != null) {
             Student captain = team.getCaptain();
             team.getMembers().remove(captain);
             captain.setTeam(null);

@@ -39,7 +39,10 @@ public class AdminSectionCommandService {
         if (dept == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Department not found"));
         }
-        String sectionName = (String) body.get("sectionName");
+        String sectionName = (String) body.get("name");
+        if (sectionName == null || sectionName.trim().isEmpty()) {
+            sectionName = (String) body.get("sectionName");
+        }
         if (sectionName == null || sectionName.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Section name is required"));
         }

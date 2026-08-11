@@ -99,22 +99,6 @@ public class PenaltyWorkflowService {
         Activity activity = null;
         if (dto.getActivityId() != null) {
             activity = activityRepository.findById(dto.getActivityId()).orElse(null);
-            if (activity != null) {
-                // ── Stage eligibility: use execution stage (assignment), not original activity stage ──
-                // activity.getStage() is the original creation stage. When an activity is reused
-                // in multiple stages, we must validate against the assignment's stage instead.
-                ActivityAssignment relevantAssignment = null;
-                if (student.getSection() != null) {
-                    relevantAssignment = activityAssignmentRepository
-                            .findByActivityIdAndSectionId(dto.getActivityId(), student.getSection().getId())
-                            .orElse(null);
-                }
-                int stageOrder = resolveExecutionStageOrder(relevantAssignment, activity);
-                if (stageOrder > 0 && student.getStage() != stageOrder && student.getCurrentStage() != stageOrder) {
-                    return ApiResponse.error("Student " + student.getFullName() + " is in Stage " + student.getStage()
-                            + " and is not eligible for Stage " + stageOrder + " activities.");
-                }
-            }
         }
 
         int configuredXp = 0;

@@ -13,11 +13,12 @@ public class XpTransaction {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "student_id", nullable = false)
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({ "team" })
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({ "user", "department", "section", "team", "studentGroup", "hibernateLazyInitializer", "handler" })
     private Student student;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "activity_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({ "stage", "subgroup", "hibernateLazyInitializer", "handler" })
     private Activity activity;
 
     @Column(nullable = false, length = 50)

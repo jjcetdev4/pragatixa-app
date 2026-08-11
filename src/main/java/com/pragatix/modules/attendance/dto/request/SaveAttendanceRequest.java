@@ -1,18 +1,35 @@
 package com.pragatix.modules.attendance.dto.request;
 
 import com.pragatix.entity.AttendanceRecord;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public class SaveAttendanceRequest {
+    @NotNull(message = "date is required")
     private LocalDate date;
+
+    @NotNull(message = "period is required")
+    @Min(value = 1, message = "period must be between 1 and 8")
+    @Max(value = 8, message = "period must be between 1 and 8")
     private Integer period;
+
     private Long academicYearId;
+
+    @NotNull(message = "yearId is required")
     private Long yearId;
+
+    @NotNull(message = "departmentId is required")
     private Long departmentId;
+
     private Long sectionId;
 
+    @NotNull(message = "records is required")
+    @Valid
     private List<StudentAttendanceRequest> records;
 
     public SaveAttendanceRequest() {
@@ -75,8 +92,12 @@ public class SaveAttendanceRequest {
     }
 
     public static class StudentAttendanceRequest {
+        @NotNull(message = "studentId is required")
         private Long studentId;
+
+        @NotNull(message = "status is required")
         private AttendanceRecord.AttendanceStatus status;
+
         private String remarks;
 
         public StudentAttendanceRequest() {

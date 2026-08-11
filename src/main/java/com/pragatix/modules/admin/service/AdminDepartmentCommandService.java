@@ -155,20 +155,32 @@ public class AdminDepartmentCommandService {
         dept.setDeptName(request.getName());
         dept.setDescription(request.getDescription());
 
-        Department saved = departmentRepository.save(dept);
-
         if (request.getSections() != null) {
-            sectionRepository.deleteByDepartment_Id(saved.getId());
-            List<Section> sectionsToSave = new ArrayList<>();
-            for (String sec : request.getSections()) {
-                Section section = new Section();
-                section.setDepartment(saved);
-                section.setSectionName(sec);
-                sectionsToSave.add(section);
+            if (dept.getSections() == null) {
+                dept.setSections(new ArrayList<>());
             }
-            List<Section> savedSections = sectionRepository.saveAll(sectionsToSave);
-            saved.setSections(savedSections);
+            java.util.Set<String> existingNames = dept.getSections().stream()
+                    .map(Section::getSectionName)
+                    .filter(java.util.Objects::nonNull)
+                    .map(String::trim)
+                    .map(String::toUpperCase)
+                    .collect(java.util.stream.Collectors.toSet());
+
+            for (String secName : request.getSections()) {
+                if (secName != null && !secName.trim().isEmpty()) {
+                    String trimmedUpper = secName.trim();
+                    if (!existingNames.contains(trimmedUpper.toUpperCase())) {
+                        Section section = new Section();
+                        section.setDepartment(dept);
+                        section.setSectionName(trimmedUpper);
+                        dept.getSections().add(section);
+                        existingNames.add(trimmedUpper.toUpperCase());
+                    }
+                }
+            }
         }
+
+        Department saved = departmentRepository.save(dept);
 
         return ResponseEntity.ok(ApiResponse.ok("Department updated successfully", saved));
     }

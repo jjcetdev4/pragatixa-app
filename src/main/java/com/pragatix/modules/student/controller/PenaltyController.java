@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
@@ -25,10 +26,14 @@ public class PenaltyController {
     @PostMapping
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<PenaltyRequestDto>> submitPenalty(
-            @RequestBody CreatePenaltyRequestDto dto,
+            @Valid @RequestBody CreatePenaltyRequestDto dto,
             Authentication authentication) {
         String username = authentication.getName();
-        return ResponseEntity.ok(penaltyWorkflowService.submitPenalty(dto, username));
+        ApiResponse<PenaltyRequestDto> response = penaltyWorkflowService.submitPenalty(dto, username);
+        if (!response.isSuccess()) {
+            return ResponseEntity.badRequest().body(response);
+        }
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/pending-count")

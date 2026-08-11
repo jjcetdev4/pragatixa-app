@@ -19,6 +19,10 @@ import org.springframework.stereotype.Service;
 import com.pragatix.modules.admin.service.*;
 import com.pragatix.modules.admin.mapper.*;
 
+import com.pragatix.modules.activity.dto.request.EvaluatePromotionsRequest;
+import com.pragatix.modules.activity.repository.ActivityStageRepository;
+import com.pragatix.repository.AcademicYearRepository;
+
 @Service
 public class AdminStageService {
     private static final Logger log = LoggerFactory.getLogger(AdminStageService.class);
@@ -26,16 +30,44 @@ public class AdminStageService {
     private final ActivityStageService activityStageService;
     private final com.pragatix.modules.student.repository.StudentRepository studentRepository;
     private final com.pragatix.modules.student.service.XpEngineService xpEngineService;
+    private final ActivityStageRepository activityStageRepository;
+    private final AcademicYearRepository academicYearRepository;
 
     public AdminStageService(ActivityStageService activityStageService,
             com.pragatix.modules.student.repository.StudentRepository studentRepository,
-            com.pragatix.modules.student.service.XpEngineService xpEngineService) {
+            com.pragatix.modules.student.service.XpEngineService xpEngineService,
+            ActivityStageRepository activityStageRepository,
+            AcademicYearRepository academicYearRepository) {
         this.activityStageService = activityStageService;
         this.studentRepository = studentRepository;
         this.xpEngineService = xpEngineService;
+        this.activityStageRepository = activityStageRepository;
+        this.academicYearRepository = academicYearRepository;
     }
 
     public ResponseEntity<ApiResponse<Void>> evaluatePromotions() {
+        return evaluatePromotions(null);
+    }
+
+    public ResponseEntity<ApiResponse<Void>> evaluatePromotions(EvaluatePromotionsRequest request) {
+        if (request == null || request.getStageId() == null || request.getStageId() <= 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Invalid stage ID"));
+        }
+        if (!activityStageRepository.existsById(request.getStageId())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Stage not found"));
+        }
+
+        if (request.getAcademicYearId() == null || request.getAcademicYearId() <= 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Invalid academic year ID"));
+        }
+        if (!academicYearRepository.existsById(request.getAcademicYearId())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Academic year not found"));
+        }
+
         List<com.pragatix.entity.Student> activeStudents = studentRepository.findByActiveTrue();
         int evaluated = 0;
         for (com.pragatix.entity.Student student : activeStudents) {

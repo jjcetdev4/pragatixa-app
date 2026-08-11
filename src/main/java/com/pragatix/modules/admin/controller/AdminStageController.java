@@ -2,6 +2,7 @@ package com.pragatix.modules.admin.controller;
 
 import com.pragatix.common.response.ApiResponse;
 import com.pragatix.modules.activity.dto.request.ActivityStageRequest;
+import com.pragatix.modules.activity.dto.request.EvaluatePromotionsRequest;
 import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -85,8 +86,9 @@ public class AdminStageController {
     @PostMapping("/stages/evaluate-promotions")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Force evaluate stage promotions for all students")
-    public ResponseEntity<ApiResponse<Void>> evaluatePromotions() {
-        return adminStageService.evaluatePromotions();
+    public ResponseEntity<ApiResponse<Void>> evaluatePromotions(
+            @RequestBody(required = false) EvaluatePromotionsRequest request) {
+        return adminStageService.evaluatePromotions(request);
     }
 
 }

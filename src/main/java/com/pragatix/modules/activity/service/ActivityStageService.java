@@ -84,18 +84,26 @@ public class ActivityStageService {
                         if (activities.isEmpty()) {
                             log.info("Deleting empty duplicate subgroup: {} for stage {}", sub.getName(),
                                     stage.getName());
+                        try {
                             activitySubgroupRepository.delete(sub);
-                        } else {
-                            // If it has activities, move them to the primary subgroup, then delete
-                            ActivitySubgroup primary = uniqueCategories.get(baseCat);
-                            for (Activity act : activities) {
-                                act.setSubgroup(primary);
-                                activityRepository.save(act);
-                            }
-                            log.info("Merged activities and deleting duplicate subgroup: {} for stage {}",
-                                    sub.getName(), stage.getName());
-                            activitySubgroupRepository.delete(sub);
+                        } catch (Exception e) {
+                            log.warn("Could not delete duplicate subgroup {}: {}", sub.getId(), e.getMessage());
                         }
+                    } else {
+                        // If it has activities, move them to the primary subgroup, then delete
+                        ActivitySubgroup primary = uniqueCategories.get(baseCat);
+                        for (Activity act : activities) {
+                            act.setSubgroup(primary);
+                            activityRepository.save(act);
+                        }
+                        log.info("Merged activities and deleting duplicate subgroup: {} for stage {}",
+                                sub.getName(), stage.getName());
+                        try {
+                            activitySubgroupRepository.delete(sub);
+                        } catch (Exception e) {
+                            log.warn("Could not delete duplicate subgroup {}: {}", sub.getId(), e.getMessage());
+                        }
+                    }
                     } else {
                         // Mark as the primary for this category
                         sub.setCategory(baseCat);

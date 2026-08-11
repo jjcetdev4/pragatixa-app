@@ -1,10 +1,19 @@
 package com.pragatix.modules.student.dto.request;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
 public class CreatePenaltyRequestDto {
+    @NotBlank(message = "regNo is required")
     private String regNo;
+
     private Long activityId;
     private String activityName;
+
+    @Min(value = 1, message = "penaltyXP must be positive")
     private int penaltyXP;
+
+    @NotBlank(message = "reason is required")
     private String reason;
 
     public CreatePenaltyRequestDto() {

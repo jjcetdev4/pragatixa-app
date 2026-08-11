@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
-import com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver;
 import com.pragatix.modules.attendance.dto.response.StudentAttendanceMatrixItemResponse;
 import com.pragatix.modules.student.repository.StudentRepository;
 import com.pragatix.entity.Student;
@@ -37,8 +36,6 @@ public class AdminAttendanceService {
     @Autowired
     private YearRepository yearRepository;
 
-    @Autowired
-    private AcademicCalendarResolver academicCalendarResolver;
 
     @Transactional(readOnly = true)
     public AdminAttendanceSummaryResponse getDashboardSummary(LocalDate date, Long yearId, Long deptId,
@@ -54,20 +51,6 @@ public class AdminAttendanceService {
                     yearId = adminYearId;
                 }
             }
-        }
-
-        com.pragatix.entity.Year yearEntity = yearRepository.findById(yearId).orElse(null);
-        com.pragatix.enums.AcademicYear academicYear = null;
-        if (yearEntity != null && yearEntity.getYearNo() != null) {
-            int no = yearEntity.getYearNo();
-            if (no == 1) academicYear = com.pragatix.enums.AcademicYear.FIRST_YEAR;
-            else if (no == 2) academicYear = com.pragatix.enums.AcademicYear.SECOND_YEAR;
-            else if (no == 3) academicYear = com.pragatix.enums.AcademicYear.THIRD_YEAR;
-            else if (no == 4) academicYear = com.pragatix.enums.AcademicYear.FOURTH_YEAR;
-        }
-
-        if (academicCalendarResolver.isHoliday(date, academicYear)) {
-            throw new IllegalArgumentException("Attendance cannot be marked. Today is configured as a Holiday.");
         }
 
         if (yearId == null) {
@@ -95,7 +78,7 @@ public class AdminAttendanceService {
         List<StudentAttendanceMatrixItemResponse> matrixItems = allStudents.stream().map(student -> {
             StudentAttendanceMatrixItemResponse item = new StudentAttendanceMatrixItemResponse();
             item.setStudentId(student.getId());
-            item.setStudentName(student.getUser().getFullName());
+            item.setStudentName(student.getUser() != null ? student.getUser().getFullName() : student.getRegNo());
             item.setRegisterNumber(student.getRegNo());
 
             Map<Integer, String> periodStatuses = new HashMap<>();
