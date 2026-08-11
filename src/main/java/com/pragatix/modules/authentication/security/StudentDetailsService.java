@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
+import com.pragatix.repository.StageTeamRepository;
+import org.springframework.security.core.GrantedAuthority;
 
 /**
  * Dedicated UserDetailsService for Student authentication.
@@ -20,9 +23,11 @@ public class StudentDetailsService implements UserDetailsService {
 
     private static final Logger log = LoggerFactory.getLogger(StudentDetailsService.class);
     private final StudentRepository studentRepository;
+    private final StageTeamRepository stageTeamRepository;
 
-    public StudentDetailsService(StudentRepository studentRepository) {
+    public StudentDetailsService(StudentRepository studentRepository, StageTeamRepository stageTeamRepository) {
         this.studentRepository = studentRepository;
+        this.stageTeamRepository = stageTeamRepository;
     }
 
     @Override
@@ -42,10 +47,45 @@ public class StudentDetailsService implements UserDetailsService {
         log.debug("[StudentDetailsService] Found student: reg_no={}, active={}", student.getRegNo(),
                 student.isActive());
 
+        boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
+                && student.getTeam().getCaptain().getId().equals(student.getId());
+        boolean isViceCap = false;
+
+        if (student.getTeam() != null) {
+            if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+                isViceCap = true;
+            }
+
+            // Check StageTeams for captaincy/vice-captaincy if not already identified
+            if (!isCap || !isViceCap) {
+                List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
+                for (com.pragatix.entity.StageTeam st : stageTeams) {
+                    if (!isCap && st.getCaptain() != null && st.getCaptain().getId().equals(student.getId())) {
+                        isCap = true;
+                    }
+                    if (!isViceCap && st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                        isViceCap = true;
+                    }
+                    if (isCap && isViceCap) break;
+                }
+            }
+        }
+
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_STUDENT"));
+        if (isCap) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_CAPTAIN"));
+            authorities.add(new SimpleGrantedAuthority("CAPTAIN"));
+        }
+        if (isViceCap) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_VICE_CAPTAIN"));
+            authorities.add(new SimpleGrantedAuthority("VICE_CAPTAIN"));
+        }
+
         return User.builder()
                 .username(student.getRegNo())
                 .password(student.getPassword())
-                .authorities(List.of(new SimpleGrantedAuthority("ROLE_STUDENT")))
+                .authorities(authorities)
                 .accountExpired(false)
                 .accountLocked(false)
                 .credentialsExpired(false)

@@ -204,16 +204,23 @@ public class AuthService {
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                 && student.getTeam().getCaptain().getId().equals(student.getId());
         boolean isViceCap = false;
+        
         if (student.getTeam() != null) {
             if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
                 isViceCap = true;
-            } else {
+            }
+
+            // Check StageTeams for captaincy/vice-captaincy if not already identified
+            if (!isCap || !isViceCap) {
                 List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
                 for (com.pragatix.entity.StageTeam st : stageTeams) {
-                    if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
-                        isViceCap = true;
-                        break;
+                    if (!isCap && st.getCaptain() != null && st.getCaptain().getId().equals(student.getId())) {
+                        isCap = true;
                     }
+                    if (!isViceCap && st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                        isViceCap = true;
+                    }
+                    if (isCap && isViceCap) break;
                 }
             }
         }
@@ -330,8 +337,8 @@ public class AuthService {
             UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
             String token = jwtUtil.generateToken(userDetails);
             
-            List<String> rolesList = user.getRoles().stream()
-                    .map(com.pragatix.entity.Role::getName)
+            List<String> rolesList = userDetails.getAuthorities().stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
                     .collect(Collectors.toList());
 
             String userType = "USER";
@@ -362,6 +369,38 @@ public class AuthService {
                 throw new DisabledException("Student account is inactive.");
             }
             String token = jwtUtil.generateStudentToken(student.getRegNo(), student.getEmail());
+            boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
+                    && student.getTeam().getCaptain().getId().equals(student.getId());
+            boolean isViceCap = false;
+            
+            if (student.getTeam() != null) {
+                if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+                    isViceCap = true;
+                }
+
+                // Check StageTeams for captaincy/vice-captaincy if not already identified
+                if (!isCap || !isViceCap) {
+                    List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
+                    for (com.pragatix.entity.StageTeam st : stageTeams) {
+                        if (!isCap && st.getCaptain() != null && st.getCaptain().getId().equals(student.getId())) {
+                            isCap = true;
+                        }
+                        if (!isViceCap && st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                            isViceCap = true;
+                        }
+                        if (isCap && isViceCap) break;
+                    }
+                }
+            }
+            boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
+            int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
+
+            List<String> subRoles = new ArrayList<>();
+            if (isCap)
+                subRoles.add("CAPTAIN");
+            if (isViceCap)
+                subRoles.add("VICE_CAPTAIN");
+
             AuthResponse response = AuthResponse.builder()
                     .token(token)
                     .type("Bearer")
@@ -369,7 +408,30 @@ public class AuthService {
                     .fullName(student.getFullName())
                     .email(student.getEmail())
                     .roles(List.of("ROLE_STUDENT"))
-                    .userType("STUDENT")
+                    .subRoles(subRoles)
+                    .userType(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "STUDENT"))
+                    .section(student.getSection() != null ? student.getSection().getSectionName() : null)
+                    .sectionId(student.getSection() != null ? student.getSection().getId() : null)
+                    .sectionName(student.getSection() != null ? student.getSection().getSectionName() : null)
+                    .year(student.getYearRef() != null ? student.getYearRef().getYearName() : student.getYear())
+                    .department(
+                            student.getDepartment() != null
+                                    ? (student.getDepartment().getName() != null ? student.getDepartment().getName()
+                                            : student.getDepartment().getDeptName())
+                                    : "")
+                    .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
+                    .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName()
+                            : student.getSemester())
+                    .sprNo(student.getSprNo())
+                    .score(student.getScore())
+                    .totalXp(student.getTotalXp())
+                    .stage(student.getStage())
+                    .teamRole(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "MEMBER"))
+                    .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
+                    .rank(rank)
+                    .isCaptain(isCap)
+                    .isViceCaptain(isViceCap)
+                    .isMember(isMem)
                     .build();
             return ApiResponse.ok("Login successful", response);
         }
@@ -377,6 +439,7 @@ public class AuthService {
         return ApiResponse.error("User not found during token generation");
     }
 
+    @Transactional(readOnly = true)
     public ApiResponse<AuthResponse> getUserProfile(String username) {
         Student student = studentRepository.findByRegNo(username).orElse(null);
         if (student == null) {
@@ -396,22 +459,33 @@ public class AuthService {
             boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                     && student.getTeam().getCaptain().getId().equals(student.getId());
             boolean isViceCap = false;
+            
             if (student.getTeam() != null) {
                 if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
                     isViceCap = true;
-                } else {
+                }
+
+                // Check StageTeams for captaincy/vice-captaincy if not already identified
+                if (!isCap || !isViceCap) {
                     List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
                     for (com.pragatix.entity.StageTeam st : stageTeams) {
-                        if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
-                            isViceCap = true;
-                            break;
+                        if (!isCap && st.getCaptain() != null && st.getCaptain().getId().equals(student.getId())) {
+                            isCap = true;
                         }
+                        if (!isViceCap && st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                            isViceCap = true;
+                        }
+                        if (isCap && isViceCap) break;
                     }
                 }
             }
 
             boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
             int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
+
+            List<String> subRoles = new ArrayList<>();
+            if (isCap) subRoles.add("CAPTAIN");
+            if (isViceCap) subRoles.add("VICE_CAPTAIN");
 
             AuthResponse response = AuthResponse.builder()
                     .token(null)
@@ -420,7 +494,7 @@ public class AuthService {
                     .fullName(student.getFullName())
                     .email(student.getEmail())
                     .roles(List.of("ROLE_STUDENT"))
-                    .subRoles(isCap ? List.of("CAPTAIN") : new ArrayList<>())
+                    .subRoles(subRoles)
                     .userType(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "STUDENT"))
                     .section(student.getSection() != null ? student.getSection().getSectionName() : "")
                     .sectionId(student.getSection() != null ? student.getSection().getId() : null)
@@ -464,9 +538,10 @@ public class AuthService {
 
         User user = userRepository.findByUsername(username).orElse(null);
         if (user != null) {
-            List<String> rolesList = user.getRoles().stream()
-                    .map(com.pragatix.entity.Role::getName)
-                    .collect(java.util.stream.Collectors.toList());
+            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+            List<String> rolesList = userDetails.getAuthorities().stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
 
             String userType = "USER";
             if (rolesList.contains("ROLE_ADMIN")) {

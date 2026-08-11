@@ -149,6 +149,10 @@ public class TeamQueryService {
                 role = "VICE_CAPTAIN";
             } else {
                 for (com.pragatix.entity.StageTeam st : stageTeams) {
+                    if (st.getCaptain() != null && st.getCaptain().getId().equals(m.getId())) {
+                        role = "CAPTAIN";
+                        break;
+                    }
                     if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(m.getId())) {
                         role = "VICE_CAPTAIN";
                         break;
