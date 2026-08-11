@@ -43,11 +43,11 @@ public class SuperAdminController {
 
     @PutMapping("/year-admins/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    @Operation(summary = "Assign academic year to admin")
-    public ResponseEntity<ApiResponse<YearAdminResponse>> assignAcademicYear(
+    @Operation(summary = "Update Year Admin details")
+    public ResponseEntity<ApiResponse<YearAdminResponse>> updateYearAdmin(
             @PathVariable Long id,
-            @RequestBody AssignAcademicYearRequest request) {
-        return superAdminService.assignAcademicYear(id, request);
+            @RequestBody com.pragatix.modules.superadmin.dto.UpdateYearAdminRequest request) {
+        return superAdminService.updateYearAdmin(id, request);
     }
 
     @DeleteMapping("/year-admins/{id}")

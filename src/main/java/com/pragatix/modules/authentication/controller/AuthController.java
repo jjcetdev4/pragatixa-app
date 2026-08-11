@@ -77,6 +77,28 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/request-otp")
+    @Operation(summary = "Request Login OTP", description = "Generates and sends a 4-digit OTP to the user's email if valid.")
+    public ResponseEntity<ApiResponse<String>> requestOtp(@Valid @RequestBody com.pragatix.modules.authentication.dto.request.OtpRequest request) {
+        ApiResponse<String> response = authService.requestOtp(request);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    @Operation(summary = "Verify Login OTP", description = "Verifies the 4-digit OTP and returns a JWT token.")
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(@Valid @RequestBody com.pragatix.modules.authentication.dto.request.OtpVerifyRequest request) {
+        ApiResponse<AuthResponse> response = authService.verifyOtp(request);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(401).body(response);
+        }
+    }
+
     @GetMapping("/me")
     @Operation(summary = "Get Current User Profile", description = "Returns profile details of the logged in user based on the JWT token.")
     public ResponseEntity<ApiResponse<AuthResponse>> getProfile() {

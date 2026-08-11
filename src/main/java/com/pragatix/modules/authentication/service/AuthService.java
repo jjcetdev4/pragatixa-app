@@ -35,6 +35,14 @@ import java.util.stream.Collectors;
  * Contains all business logic securely authenticating users.
  * Generates JWT tokens which the Frontend uses to stay logged in.
  */
+import com.pragatix.modules.authentication.repository.OtpTokenRepository;
+import com.pragatix.modules.authentication.service.ZeptoMailService;
+import com.pragatix.entity.OtpToken;
+import com.pragatix.modules.authentication.dto.request.OtpRequest;
+import com.pragatix.modules.authentication.dto.request.OtpVerifyRequest;
+import java.time.LocalDateTime;
+import java.util.Random;
+
 @Service
 public class AuthService {
 
@@ -47,6 +55,8 @@ public class AuthService {
     private final JwtUtil jwtUtil; // Generates Secure JWT Tokens
     private final PasswordEncoder passwordEncoder; // Used to check raw password vs hashed password
     private final StageTeamRepository stageTeamRepository;
+    private final OtpTokenRepository otpTokenRepository;
+    private final ZeptoMailService zeptoMailService;
 
     public AuthService(AuthenticationManager authenticationManager,
             UserDetailsService userDetailsService,
@@ -54,7 +64,9 @@ public class AuthService {
             UserRepository userRepository,
             JwtUtil jwtUtil,
             PasswordEncoder passwordEncoder,
-            StageTeamRepository stageTeamRepository) {
+            StageTeamRepository stageTeamRepository,
+            OtpTokenRepository otpTokenRepository,
+            ZeptoMailService zeptoMailService) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.studentRepository = studentRepository;
@@ -62,6 +74,8 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.stageTeamRepository = stageTeamRepository;
+        this.otpTokenRepository = otpTokenRepository;
+        this.zeptoMailService = zeptoMailService;
     }
 
     // ====================================================================================
@@ -253,7 +267,116 @@ public class AuthService {
         return ApiResponse.ok("Student login successful", response);
     }
 
-    @Transactional(readOnly = true)
+    // ====================================================================================
+    // API: OTP LOGIC
+    // ====================================================================================
+
+    @Transactional
+    public ApiResponse<String> requestOtp(OtpRequest request) {
+        String email = request.getEmail().trim();
+        log.info("Requesting OTP for email: {}", email);
+
+        boolean isUser = userRepository.findByEmail(email).isPresent();
+        boolean isStudent = studentRepository.findByEmail(email).isPresent();
+
+        if (!isUser && !isStudent) {
+            log.warn("OTP request failed. Email not found: {}", email);
+            return ApiResponse.error("Email not found");
+        }
+
+        otpTokenRepository.deleteByEmail(email);
+
+        String generatedOtp = String.format("%04d", new Random().nextInt(10000));
+        
+        boolean emailSent = zeptoMailService.sendOtpEmail(email, generatedOtp);
+        
+        if (!emailSent) {
+            log.warn("Failed to send OTP email to {}", email);
+            // We throw an exception to roll back the transaction so the OTP isn't saved in the DB
+            // Alternatively, we could just return ApiResponse.error but throwing exception is safer
+            // to ensure @Transactional rolls back. 
+            // We will return a proper response.
+            throw new RuntimeException("Unable to send OTP. Please try again later.");
+        }
+
+        OtpToken otpToken = new OtpToken(email, generatedOtp, LocalDateTime.now().plusMinutes(5));
+        otpTokenRepository.save(otpToken);
+
+        return ApiResponse.ok("OTP sent successfully to " + email);
+    }
+
+    @Transactional
+    public ApiResponse<AuthResponse> verifyOtp(OtpVerifyRequest request) {
+        String email = request.getEmail().trim();
+        String otp = request.getOtp().trim();
+        log.info("Verifying OTP for email: {}", email);
+
+        OtpToken otpToken = otpTokenRepository.findByEmailAndOtp(email, otp).orElse(null);
+
+        if (otpToken == null) {
+            return ApiResponse.error("Invalid OTP");
+        }
+
+        if (otpToken.isExpired()) {
+            otpTokenRepository.delete(otpToken);
+            return ApiResponse.error("OTP has expired");
+        }
+
+        otpTokenRepository.delete(otpToken);
+
+        // Generate JWT based on user type
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user != null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+            String token = jwtUtil.generateToken(userDetails);
+            
+            List<String> rolesList = user.getRoles().stream()
+                    .map(com.pragatix.entity.Role::getName)
+                    .collect(Collectors.toList());
+
+            String userType = "USER";
+            if (rolesList.contains("ROLE_ADMIN") || rolesList.contains("ROLE_SUPER_ADMIN")) {
+                userType = "ADMIN";
+            } else if (rolesList.contains("ROLE_TEACHER")) {
+                userType = "TEACHER";
+            } else if (rolesList.contains("ROLE_TRANSPORT")) {
+                userType = "TRANSPORT";
+            }
+
+            AuthResponse response = AuthResponse.builder()
+                    .token(token)
+                    .type("Bearer")
+                    .username(user.getUsername())
+                    .fullName(user.getFullName())
+                    .email(user.getEmail())
+                    .roles(rolesList)
+                    .subRoles(user.getSubRoles().stream().map(SubRole::getName).collect(Collectors.toList()))
+                    .userType(userType)
+                    .build();
+            return ApiResponse.ok("Login successful", response);
+        }
+
+        Student student = studentRepository.findByEmail(email).orElse(null);
+        if (student != null) {
+            if (!student.isActive()) {
+                throw new DisabledException("Student account is inactive.");
+            }
+            String token = jwtUtil.generateStudentToken(student.getRegNo(), student.getEmail());
+            AuthResponse response = AuthResponse.builder()
+                    .token(token)
+                    .type("Bearer")
+                    .username(student.getRegNo())
+                    .fullName(student.getFullName())
+                    .email(student.getEmail())
+                    .roles(List.of("ROLE_STUDENT"))
+                    .userType("STUDENT")
+                    .build();
+            return ApiResponse.ok("Login successful", response);
+        }
+
+        return ApiResponse.error("User not found during token generation");
+    }
+
     public ApiResponse<AuthResponse> getUserProfile(String username) {
         Student student = studentRepository.findByRegNo(username).orElse(null);
         if (student == null) {

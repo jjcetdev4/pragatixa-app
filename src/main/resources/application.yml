@@ -35,6 +35,14 @@ jwt:
   expiration: 86400000
   student-expiration: 43200000
 
+zepto:
+  mail:
+    url: https://api.zeptomail.in/v1.1/email
+    token: ${ZEPTO_MAIL_TOKEN:Zoho-enczapikey PHtE6r1bRb3ojDYpoUAFtPGwRcOiZN8o++hheANCtYYUCPVQHk1R/9svlDS3qBwtUfNAHabPyt1vsbiY5emFJ2e7Nm9LCmqyqK3sx/VYSPOZsbq6x00fuVwZf0HVUoDpdNRu1ybevN7dNA==} # Replace this value with the actual token in deployment
+    template-key: 2518b.27e5cd5171e7cdd6.k1.3c2208d0-9356-11f1-8e34-d2cf08f4ca8c.19fe29d81dd
+    sender-address: noreply@pragatix.in
+    sender-name: Pragatix
+
 springdoc:
   api-docs:
     path: /api-docs
