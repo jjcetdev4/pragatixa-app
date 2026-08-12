@@ -16,7 +16,13 @@ public class CreateTeamRequest {
 
     private String captainStudentId;
 
-    private List<String> memberStudentIds; // other member student IDs
+    private List<String> memberStudentIds;
+
+    private Long departmentId;
+
+    private Long sectionId;
+
+    private String academicYear;
 
     public CreateTeamRequest() {
     }
@@ -59,5 +65,29 @@ public class CreateTeamRequest {
 
     public void setMemberStudentIds(List<String> memberStudentIds) {
         this.memberStudentIds = memberStudentIds;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public Long getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(Long sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public String getAcademicYear() {
+        return academicYear;
+    }
+
+    public void setAcademicYear(String academicYear) {
+        this.academicYear = academicYear;
     }
 }

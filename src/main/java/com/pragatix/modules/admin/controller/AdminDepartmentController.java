@@ -90,6 +90,14 @@ public class AdminDepartmentController {
         return adminDepartmentService.deleteSection(id, sectionId);
     }
 
+    @DeleteMapping("/sections/{sectionId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete Section directly")
+    public ResponseEntity<ApiResponse<Void>> deleteSectionDirectly(
+            @PathVariable Long sectionId) {
+        return adminDepartmentService.deleteSection(sectionId);
+    }
+
     @GetMapping("/departments/class-coordinators")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
     @Operation(summary = "Get all class coordinators mapped by department and section")

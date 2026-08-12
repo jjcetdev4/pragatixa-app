@@ -47,6 +47,7 @@ public class TeamMapper {
                 .teamId(teamId)
                 .teamName(teamName)
                 .teamRole(resolveTeamRole(student))
+                .currentStage(student.getCurrentStage())
                 .build();
     }
 

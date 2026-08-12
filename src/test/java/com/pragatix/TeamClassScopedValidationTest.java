@@ -54,6 +54,10 @@ public class TeamClassScopedValidationTest {
     private TeamMapper teamMapper;
     @Mock
     private StageTeamRepository stageTeamRepository;
+    @Mock
+    private DepartmentRepository departmentRepository;
+    @Mock
+    private SectionRepository sectionRepository;
 
     private TeamCrudService teamCrudService;
 
@@ -75,7 +79,9 @@ public class TeamClassScopedValidationTest {
                 teamRemovalRequestRepository,
                 validationService,
                 teamMapper,
-                stageTeamRepository
+                stageTeamRepository,
+                departmentRepository,
+                sectionRepository
         );
 
         adminUser = new User();

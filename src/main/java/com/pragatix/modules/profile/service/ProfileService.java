@@ -113,24 +113,25 @@ public class ProfileService {
         response.setRole(primaryRole);
 
         // Populate Role-Specific Details
-        switch (primaryRole) {
-            case "SUPER_ADMIN":
-                response.setSuperAdminDetails(buildSuperAdminDetails(user));
-                break;
-            case "ADMIN":
-                response.setAdminDetails(buildAdminDetails(user));
-                break;
-            case "HOD":
+        if (authUtils.isSuperAdmin(user)) {
+            response.setSuperAdminDetails(buildSuperAdminDetails(user));
+        } else if (authUtils.isAdmin(user)) {
+            response.setAdminDetails(buildAdminDetails(user));
+        }
+
+        // For teachers, populate all applicable roles (Teacher, CC, HOD)
+        boolean isTeacher = user.getRoles().stream().anyMatch(r -> "ROLE_TEACHER".equals(r.getName()));
+        if (isTeacher) {
+            response.setTeacherDetails(buildTeacherDetails(user));
+        }
+
+        for (com.pragatix.entity.SubRole sr : user.getSubRoles()) {
+            if ("HOD".equalsIgnoreCase(sr.getName())) {
                 response.setHodDetails(buildHodDetails(user));
-                break;
-            case "CC":
+            }
+            if ("CC".equalsIgnoreCase(sr.getName()) || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName())) {
                 response.setCcDetails(buildCcDetails(user));
-                break;
-            case "TEACHER":
-                response.setTeacherDetails(buildTeacherDetails(user));
-                break;
-            default:
-                break;
+            }
         }
 
         return response;
@@ -149,10 +150,10 @@ public class ProfileService {
             if ("ROLE_STUDENT".equals(r.getName()))
                 isStudent = true;
         }
-        for (SubRole sr : user.getSubRoles()) {
-            if ("HOD".equals(sr.getName()))
+        for (com.pragatix.entity.SubRole sr : user.getSubRoles()) {
+            if ("HOD".equalsIgnoreCase(sr.getName()))
                 return "HOD";
-            if ("CLASS_COORDINATOR".equals(sr.getName()))
+            if ("CC".equalsIgnoreCase(sr.getName()) || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName()))
                 return "CC";
         }
         if (isTeacher)
@@ -188,19 +189,48 @@ public class ProfileService {
 
     private ProfileResponse.HodDetails buildHodDetails(User user) {
         ProfileResponse.HodDetails d = new ProfileResponse.HodDetails();
-        d.setTotalFaculty(0);
-        d.setTotalStudents(0);
+        
+        long totalFaculty = 0;
+        long totalStudents = 0;
+        
+        if (user.getDepartment() != null) {
+            totalFaculty = facultyRepository.countByDepartmentId(user.getDepartment().getId());
+            totalStudents = studentRepository.countByDepartmentId(user.getDepartment().getId());
+        }
+        
+        d.setTotalFaculty((int) totalFaculty);
+        d.setTotalStudents((int) totalStudents);
         d.setTotalSections(0);
         d.setTotalSubjects(0);
         d.setPermissions(List.of("Manage Faculty", "View Students", "Assign Faculty"));
         return d;
     }
 
+    private String normalizeYear(String year) {
+        if (year == null) return null;
+        switch (year.toUpperCase().trim()) {
+            case "I": return "1";
+            case "II": return "2";
+            case "III": return "3";
+            case "IV": return "4";
+            case "V": return "5";
+            default: return year;
+        }
+    }
+
     private ProfileResponse.CcDetails buildCcDetails(User user) {
         ProfileResponse.CcDetails d = new ProfileResponse.CcDetails();
         d.setSection(user.getSection() != null ? user.getSection().getSectionName() : "N/A");
         d.setAcademicYear(user.getYear());
-        d.setTotalStudents(0);
+        
+        long totalStudents = 0;
+        if (user.getDepartment() != null && user.getYear() != null && user.getSection() != null) {
+            String studentYear = normalizeYear(user.getYear());
+            totalStudents = studentRepository.countByDepartmentIdAndYearAndSectionId(
+                user.getDepartment().getId(), studentYear, user.getSection().getId());
+        }
+        
+        d.setTotalStudents((int) totalStudents);
         d.setTotalActivities(0);
         d.setPermissions(List.of("Manage Class", "View Attendance", "View Student Progress"));
         return d;

@@ -31,6 +31,10 @@ public class StudentBadgeRequestController {
         try {
             BadgeRequestDto result = badgeRequestService.createRequest(dto, username);
             return ResponseEntity.ok(ApiResponse.ok("Badge request submitted successfully", result));
+        } catch (IllegalArgumentException e) {
+            log.warn("Business validation failed for badge request: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Failed to submit badge request", e.getMessage()));
         } catch (Exception e) {
             log.error("Error submitting badge request", e);
             return ResponseEntity.badRequest()

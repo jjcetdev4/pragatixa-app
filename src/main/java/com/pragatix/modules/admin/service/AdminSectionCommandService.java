@@ -69,4 +69,13 @@ public class AdminSectionCommandService {
         sectionRepository.deleteById(sectionId);
         return ResponseEntity.ok(ApiResponse.ok("Section deleted successfully", null));
     }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<Void>> deleteSection(Long sectionId) {
+        if (!sectionRepository.existsById(sectionId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Section not found"));
+        }
+        sectionRepository.deleteById(sectionId);
+        return ResponseEntity.ok(ApiResponse.ok("Section deleted successfully", null));
+    }
 }

@@ -24,15 +24,18 @@ public class StudentStageFacade {
     private final ActivityRepository activityRepository;
     private final StudentAssignmentResolver assignmentResolver;
     private final StudentStageAssembler stageAssembler;
+    private final com.pragatix.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository;
 
     public StudentStageFacade(ActivityStageService activityStageService,
             ActivityRepository activityRepository,
             StudentAssignmentResolver assignmentResolver,
-            StudentStageAssembler stageAssembler) {
+            StudentStageAssembler stageAssembler,
+            com.pragatix.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository) {
         this.activityStageService = activityStageService;
         this.activityRepository = activityRepository;
         this.assignmentResolver = assignmentResolver;
         this.stageAssembler = stageAssembler;
+        this.activityStageMappingRepository = activityStageMappingRepository;
     }
 
     @Transactional(readOnly = true)
@@ -60,7 +63,26 @@ public class StudentStageFacade {
                             activitiesBySubgroup.computeIfAbsent(act.getSubgroup().getId(), k -> new ArrayList<>())
                                     .add(act);
                         }
-                        allActivityIds.add(act.getId());
+                        if (!allActivityIds.contains(act.getId())) {
+                            allActivityIds.add(act.getId());
+                        }
+                    }
+                    
+                    // Also fetch activities mapped to these subgroups via ActivityStageMapping
+                    List<com.pragatix.entity.ActivityStageMapping> allMappings = activityStageMappingRepository.findAll();
+                    for (com.pragatix.entity.ActivityStageMapping mapping : allMappings) {
+                        if (mapping.getSubgroup() != null && subgroupIds.contains(mapping.getSubgroup().getId())) {
+                            if (mapping.getActivity() != null) {
+                                List<Activity> subActs = activitiesBySubgroup.computeIfAbsent(mapping.getSubgroup().getId(), k -> new ArrayList<>());
+                                boolean exists = subActs.stream().anyMatch(a -> a.getId().equals(mapping.getActivity().getId()));
+                                if (!exists) {
+                                    subActs.add(mapping.getActivity());
+                                }
+                                if (!allActivityIds.contains(mapping.getActivity().getId())) {
+                                    allActivityIds.add(mapping.getActivity().getId());
+                                }
+                            }
+                        }
                     }
                 }
 

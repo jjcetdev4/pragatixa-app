@@ -56,4 +56,11 @@ public class SuperAdminController {
     public ResponseEntity<ApiResponse<Void>> deleteYearAdmin(@PathVariable Long id) {
         return superAdminService.deleteYearAdmin(id);
     }
+
+    @PostMapping("/cache/refresh")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Refresh DB Cache")
+    public ResponseEntity<ApiResponse<Void>> refreshDbCache() {
+        return superAdminService.refreshDbCache();
+    }
 }

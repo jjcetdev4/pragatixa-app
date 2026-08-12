@@ -81,7 +81,7 @@ public class StudentController {
     }
 
     @GetMapping("/filters/departments")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
     @Operation(summary = "Get distinct departments for a specific year", description = "Returns departments that have students in the specified academic year.")
     public ResponseEntity<ApiResponse<java.util.List<com.pragatix.entity.Department>>> getFilterDepartmentsByYear(
             @RequestParam(required = false) String year) {
@@ -89,7 +89,7 @@ public class StudentController {
     }
 
     @GetMapping("/filters/sections")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
     @Operation(summary = "Get distinct sections for a specific year and department", description = "Returns sections that have students in the specified year and department.")
     public ResponseEntity<ApiResponse<java.util.List<com.pragatix.entity.Section>>> getFilterSections(
             @RequestParam(required = false) String year,

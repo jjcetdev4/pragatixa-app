@@ -48,13 +48,17 @@ public class BadgeRequestService {
         Badge badge = badgeRepository.findById(dto.getBadgeId())
                 .orElseThrow(() -> new RuntimeException("Badge not found"));
 
-        if (studentBadgeRepository.existsByStudentIdAndBadgeId(student.getId(), badge.getId())) {
-            throw new RuntimeException("Student already has this badge");
+        List<StudentBadge> earnedBadges = studentBadgeRepository.findByStudentIdAndBadgeId(student.getId(), badge.getId());
+        if (earnedBadges.stream().anyMatch(b -> "APPROVED".equalsIgnoreCase(b.getStatus()))) {
+            throw new IllegalArgumentException("Student already has this badge");
+        }
+        if (earnedBadges.stream().anyMatch(b -> "PENDING".equalsIgnoreCase(b.getStatus()))) {
+            throw new IllegalArgumentException("A pending request already exists for this badge");
         }
 
         List<BadgeRequest> existing = badgeRequestRepository.findByStudentIdAndBadgeId(student.getId(), badge.getId());
         if (existing.stream().anyMatch(r -> "PENDING".equals(r.getStatus()))) {
-            throw new RuntimeException("A pending request already exists for this badge");
+            throw new IllegalArgumentException("A pending request already exists for this badge");
         }
 
         BadgeRequest request = new BadgeRequest();

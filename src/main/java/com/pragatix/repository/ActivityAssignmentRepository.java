@@ -15,6 +15,13 @@ public interface ActivityAssignmentRepository extends JpaRepository<ActivityAssi
 
     long countByActivityId(Long activityId);
 
+    long countByDepartmentId(Long departmentId);
+    
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query("DELETE FROM ActivityAssignment a WHERE a.department.id = :departmentId")
+    void deleteByDepartmentId(@org.springframework.data.repository.query.Param("departmentId") Long departmentId);
+
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "activity", "stage", "department", "section",
             "teacher", "assignedBy" })
     List<ActivityAssignment> findByActivityId(Long activityId);

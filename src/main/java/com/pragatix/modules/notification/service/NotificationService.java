@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class NotificationService {
@@ -44,8 +45,16 @@ public class NotificationService {
      */
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void sendAbsenceNotification(Long studentId, LocalDate date) {
+    public void sendAbsenceNotification(Long studentId, LocalDate date, Integer periodNo) {
         try {
+            LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+            LocalDateTime endOfDay = LocalDate.now().atTime(23, 59, 59, 999999999);
+            
+            if (smsNotificationRepository.existsByStudentIdAndCreatedAtBetween(studentId, startOfDay, endOfDay)) {
+                log.info("SMS already sent today to student {}. Skipping.", studentId);
+                return;
+            }
+
             Student student = studentRepository.findById(studentId).orElse(null);
             if (student == null) {
                 log.warn("Student {} not found for SMS notification", studentId);
@@ -59,7 +68,7 @@ public class NotificationService {
             }
 
             String phone = guardian.getPhoneNo().trim();
-            String messageContent = templateService.buildAbsentStudentMessage(student, date);
+            String messageContent = templateService.buildAbsentStudentMessage(student, date, periodNo);
 
             SmsNotification logEntry = new SmsNotification();
             logEntry.setStudentId(student.getId());

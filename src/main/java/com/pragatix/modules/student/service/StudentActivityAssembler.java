@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentActivityAssembler {
@@ -23,7 +24,8 @@ public class StudentActivityAssembler {
             Student student,
             List<Activity> activities,
             Map<Long, List<ActivityAssignment>> assignmentsByActivity,
-            StudentXpAggregator.AggregatedXp aggregatedXp) {
+            StudentXpAggregator.AggregatedXp aggregatedXp,
+            Long stageId) {
 
         List<ActivityResponse> enrichedActivities = new ArrayList<>();
 
@@ -40,8 +42,14 @@ public class StudentActivityAssembler {
             actMap.setActivityName(currentActivityName);
             actMap.setDescription(
                     act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
-            int rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp() : act.getMaxPoints();
+            int rewardXp;
+            if ("Penalty".equalsIgnoreCase(act.getXpType())) {
+                rewardXp = (act.getPenaltyXp() != null && act.getPenaltyXp() > 0) ? act.getPenaltyXp() : act.getMaxPoints();
+            } else {
+                rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp() : act.getMaxPoints();
+            }
             actMap.setRewardXp(rewardXp);
+            actMap.setPenaltyXp(act.getPenaltyXp());
 
             int sumXp = 0;
             if (aggregatedXp.xpByActivityId.containsKey(act.getId())) {
@@ -74,6 +82,13 @@ public class StudentActivityAssembler {
 
             List<ActivityAssignment> assignments = assignmentsByActivity.getOrDefault(act.getId(),
                     java.util.Collections.emptyList());
+            
+            if (stageId != null) {
+                assignments = assignments.stream()
+                        .filter(a -> a.getStage() != null && a.getStage().getId().equals(stageId))
+                        .collect(Collectors.toList());
+            }
+
             ActivityAssignment bestAssignment = assignmentResolver.resolveBestAssignment(student, assignments);
 
             if (bestAssignment != null && bestAssignment.getTeacher() != null) {
@@ -98,6 +113,7 @@ public class StudentActivityAssembler {
             actMap.setAttendanceEngineEnabled(act.getAttendanceEngineEnabled());
             actMap.setAttendanceRule(act.getAttendanceRule());
             actMap.setManualEvidenceName(act.getManualEvidenceName());
+            actMap.setXpType(act.getXpType());
 
             enrichedActivities.add(actMap);
         }

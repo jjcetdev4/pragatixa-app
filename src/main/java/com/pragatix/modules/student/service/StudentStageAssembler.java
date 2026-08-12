@@ -8,6 +8,8 @@ import com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse;
 import com.pragatix.modules.activity.dto.response.StageValidationResponse;
 import com.pragatix.modules.activity.service.StageValidationService;
 import com.pragatix.modules.activity.dto.response.ActivityResponse;
+import com.pragatix.modules.activity.repository.ActivityStageMappingRepository;
+import com.pragatix.entity.ActivityStageMapping;
 import com.pragatix.modules.student.dto.StageXpSummary;
 import com.pragatix.modules.student.service.StageXpSummaryService;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentStageAssembler {
@@ -23,15 +26,18 @@ public class StudentStageAssembler {
     private final StudentActivityAssembler activityAssembler;
     private final StageXpSummaryService stageXpSummaryService;
     private final StudentXpAggregator xpAggregator;
+    private final ActivityStageMappingRepository activityStageMappingRepository;
 
     public StudentStageAssembler(StageValidationService stageValidationService,
             StudentActivityAssembler activityAssembler,
             StageXpSummaryService stageXpSummaryService,
-            StudentXpAggregator xpAggregator) {
+            StudentXpAggregator xpAggregator,
+            ActivityStageMappingRepository activityStageMappingRepository) {
         this.stageValidationService = stageValidationService;
         this.activityAssembler = activityAssembler;
         this.stageXpSummaryService = stageXpSummaryService;
         this.xpAggregator = xpAggregator;
+        this.activityStageMappingRepository = activityStageMappingRepository;
     }
 
     public void assembleStages(Student student,
@@ -81,10 +87,23 @@ public class StudentStageAssembler {
             if (stage.getSubgroups() != null) {
                 for (ActivitySubgroupResponse subgroup : stage.getSubgroups()) {
                     Long subId = subgroup.getId();
+                    
+                    List<com.pragatix.entity.ActivityStageMapping> mappings = activityStageMappingRepository.findByStageId(stage.getId());
+                    java.util.Set<Long> mappedActivityIds = mappings.stream()
+                            .filter(m -> m.getActivity() != null)
+                            .map(m -> m.getActivity().getId())
+                            .collect(Collectors.toSet());
+
                     List<Activity> activities = activitiesBySubgroup.getOrDefault(subId,
-                            java.util.Collections.emptyList());
+                            java.util.Collections.emptyList())
+                            .stream()
+                            .filter(a -> {
+                                if (a.getStage() != null && a.getStage().getId().equals(stage.getId())) return true;
+                                return mappedActivityIds.contains(a.getId());
+                            })
+                            .collect(java.util.stream.Collectors.toList());
                     List<ActivityResponse> enrichedActs = activityAssembler.enrichActivities(student, activities,
-                            assignmentsByActivity, aggregatedXp);
+                            assignmentsByActivity, aggregatedXp, stage.getId());
 
                     // Use the subgroup's name directly, with Title Case on the frontend
                     // Here we just map its properties

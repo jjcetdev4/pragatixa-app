@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 public class SuperAdminService {
@@ -22,11 +24,27 @@ public class SuperAdminService {
     private final com.pragatix.modules.authentication.repository.RoleRepository roleRepository;
     private final com.pragatix.repository.ActivityAssignmentRepository activityAssignmentRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     public SuperAdminService(UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder, com.pragatix.modules.authentication.repository.RoleRepository roleRepository, com.pragatix.repository.ActivityAssignmentRepository activityAssignmentRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
+    }
+
+    public ResponseEntity<ApiResponse<Void>> refreshDbCache() {
+        entityManager.clear();
+        try {
+            if (entityManager.getEntityManagerFactory().getCache() != null) {
+                entityManager.getEntityManagerFactory().getCache().evictAll();
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to evict L2 cache: " + e.getMessage());
+        }
+        System.out.println("--- DB CACHE REFRESHED ---");
+        return ResponseEntity.ok(ApiResponse.ok("Database cache refreshed successfully", null));
     }
 
     public ResponseEntity<ApiResponse<List<YearAdminResponse>>> getYearAdmins() {

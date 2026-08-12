@@ -5,6 +5,7 @@ public class ActivityResponse {
     private String activityName;
     private String description;
     private Integer rewardXp;
+    private Integer penaltyXp;
     private String facultyName;
     private Long facultyId;
     private String frequency;
@@ -17,6 +18,7 @@ public class ActivityResponse {
     private Boolean allowStudentRequest;
     private Boolean attendanceEngineEnabled;
     private String attendanceRule;
+    private String xpType;
 
     public ActivityResponse() {
     }
@@ -157,5 +159,21 @@ public class ActivityResponse {
 
     public void setManualEvidenceName(String manualEvidenceName) {
         this.manualEvidenceName = manualEvidenceName;
+    }
+
+    public String getXpType() {
+        return xpType;
+    }
+
+    public void setXpType(String xpType) {
+        this.xpType = xpType;
+    }
+
+    public Integer getPenaltyXp() {
+        return penaltyXp;
+    }
+
+    public void setPenaltyXp(Integer penaltyXp) {
+        this.penaltyXp = penaltyXp;
     }
 }

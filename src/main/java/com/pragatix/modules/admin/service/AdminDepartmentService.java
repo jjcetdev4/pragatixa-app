@@ -53,6 +53,10 @@ public class AdminDepartmentService {
         return adminSectionCommandService.deleteSection(id, sectionId);
     }
 
+    public ResponseEntity<ApiResponse<Void>> deleteSection(Long sectionId) {
+        return adminSectionCommandService.deleteSection(sectionId);
+    }
+
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getClassCoordinators() {
         return adminClassCoordinatorQueryService.getClassCoordinators();
     }

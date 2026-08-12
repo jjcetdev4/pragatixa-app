@@ -201,7 +201,7 @@ public class TeacherAttendanceService {
 
             if (attendance.getStatus() == Attendance.AttendanceStatus.ABSENT) {
                 try {
-                    notificationService.sendAbsenceNotification(student.getId(), request.getDate());
+                    notificationService.sendAbsenceNotification(student.getId(), request.getDate(), request.getPeriod());
                 } catch (Exception e) {
                     log.error("Failed to queue SMS notification for student {}", student.getRegNo(), e);
                 }

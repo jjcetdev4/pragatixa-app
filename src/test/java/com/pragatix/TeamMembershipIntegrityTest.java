@@ -64,6 +64,10 @@ public class TeamMembershipIntegrityTest {
     private CaptainSelectionService captainSelectionService;
     @Mock
     private LeadershipSyncService leadershipSyncService;
+    @Mock
+    private DepartmentRepository departmentRepository;
+    @Mock
+    private SectionRepository sectionRepository;
 
     private TeamCrudService teamCrudService;
     private TeamMemberService teamMemberService;
@@ -94,7 +98,9 @@ public class TeamMembershipIntegrityTest {
                 teamRemovalRequestRepository,
                 validationService,
                 teamMapper,
-                stageTeamRepository
+                stageTeamRepository,
+                departmentRepository,
+                sectionRepository
         );
 
         teamMemberService = new TeamMemberService(

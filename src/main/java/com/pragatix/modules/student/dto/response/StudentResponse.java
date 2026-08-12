@@ -34,12 +34,21 @@ public class StudentResponse {
     private String teamName;
     private String teamRole;
     private GuardianDTO guardian;
+    private int currentStage = 1;
 
     public StudentResponse() {
     }
 
     public String getTeamRole() {
         return teamRole;
+    }
+
+    public int getCurrentStage() {
+        return currentStage;
+    }
+
+    public void setCurrentStage(int currentStage) {
+        this.currentStage = currentStage;
     }
 
     public void setTeamRole(String teamRole) {
@@ -401,6 +410,11 @@ public class StudentResponse {
 
         public Builder teamRole(String v) {
             r.teamRole = v;
+            return this;
+        }
+
+        public Builder currentStage(int v) {
+            r.currentStage = v;
             return this;
         }
 

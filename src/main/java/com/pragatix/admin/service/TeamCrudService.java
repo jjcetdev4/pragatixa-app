@@ -13,6 +13,8 @@ import com.pragatix.repository.GroupDeletionAuditLogRepository;
 import com.pragatix.repository.TeamRemovalRequestRepository;
 import com.pragatix.repository.TeamRepository;
 import com.pragatix.repository.StageTeamRepository;
+import com.pragatix.repository.DepartmentRepository;
+import com.pragatix.repository.SectionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -38,6 +40,8 @@ public class TeamCrudService {
     private final TeamValidationService validationService;
     private final TeamMapper mapper;
     private final StageTeamRepository stageTeamRepository;
+    private final DepartmentRepository departmentRepository;
+    private final SectionRepository sectionRepository;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -51,7 +55,9 @@ public class TeamCrudService {
             TeamRemovalRequestRepository teamRemovalRequestRepository,
             TeamValidationService validationService,
             TeamMapper mapper,
-            StageTeamRepository stageTeamRepository) {
+            StageTeamRepository stageTeamRepository,
+            DepartmentRepository departmentRepository,
+            SectionRepository sectionRepository) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -62,6 +68,8 @@ public class TeamCrudService {
         this.validationService = validationService;
         this.mapper = mapper;
         this.stageTeamRepository = stageTeamRepository;
+        this.departmentRepository = departmentRepository;
+        this.sectionRepository = sectionRepository;
     }
 
     @Transactional
@@ -100,9 +108,9 @@ public class TeamCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName()
                     + " already belongs to an existing team."));
 
-        Long deptId = captain.getDepartment() != null ? captain.getDepartment().getId() : null;
-        String year = captain.getYear();
-        Long sectionId = captain.getSection() != null ? captain.getSection().getId() : null;
+        Long deptId = request.getDepartmentId() != null ? request.getDepartmentId() : (captain.getDepartment() != null ? captain.getDepartment().getId() : null);
+        String year = (request.getAcademicYear() != null && !request.getAcademicYear().trim().isEmpty()) ? request.getAcademicYear() : captain.getYear();
+        Long sectionId = request.getSectionId() != null ? request.getSectionId() : (captain.getSection() != null ? captain.getSection().getId() : null);
 
         if (teamRepository.existsByTeamNameAndClass(request.getName(), deptId, year, sectionId)) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
@@ -146,13 +154,22 @@ public class TeamCrudService {
                     + " members (including captain) because the team size limit is " + request.getSize() + "."));
         }
 
+        Department department = null;
+        if (deptId != null) {
+            department = departmentRepository.findById(deptId).orElse(null);
+        }
+        Section section = null;
+        if (sectionId != null) {
+            section = sectionRepository.findById(sectionId).orElse(null);
+        }
+
         Team team = Team.builder()
                 .name(request.getName())
                 .size(request.getSize())
                 .captain(captain)
-                .department(captain.getDepartment())
-                .year(captain.getYear())
-                .section(captain.getSection())
+                .department(department)
+                .year(year)
+                .section(section)
                 .createdBy(creator)
                 .build();
         Team savedTeam = teamRepository.save(team);

@@ -12,6 +12,7 @@ import com.pragatix.repository.SubjectRepository;
 import com.pragatix.repository.SectionRepository;
 import com.pragatix.modules.faculty.repository.FacultyRepository;
 import com.pragatix.modules.student.repository.StudentGroupRepository;
+import com.pragatix.repository.ActivityAssignmentRepository;
 import com.pragatix.modules.authentication.security.AuthUtils;
 import com.pragatix.repository.YearRepository;
 import com.pragatix.entity.User;
@@ -29,6 +30,7 @@ import java.util.Map;
 public class AdminDepartmentCommandService {
 
     private final ActivitySubgroupRepository activitySubgroupRepository;
+    private final ActivityAssignmentRepository activityAssignmentRepository;
     private final DepartmentRepository departmentRepository;
     private final FacultyRepository facultyRepository;
     private final SectionRepository sectionRepository;
@@ -40,11 +42,13 @@ public class AdminDepartmentCommandService {
     private final YearRepository yearRepository;
 
     public AdminDepartmentCommandService(ActivitySubgroupRepository activitySubgroupRepository,
+            ActivityAssignmentRepository activityAssignmentRepository,
             DepartmentRepository departmentRepository, FacultyRepository facultyRepository,
             SectionRepository sectionRepository, StudentGroupRepository studentGroupRepository,
             StudentRepository studentRepository, SubjectRepository subjectRepository, UserRepository userRepository,
             AuthUtils authUtils, YearRepository yearRepository) {
         this.activitySubgroupRepository = activitySubgroupRepository;
+        this.activityAssignmentRepository = activityAssignmentRepository;
         this.departmentRepository = departmentRepository;
         this.facultyRepository = facultyRepository;
         this.sectionRepository = sectionRepository;
@@ -200,8 +204,6 @@ public class AdminDepartmentCommandService {
         long groups = studentGroupRepository.countByDepartmentId(id);
 
         java.util.List<String> deps = new java.util.ArrayList<>();
-        if (sections > 0)
-            deps.add(sections + " Section(s)");
         if (students > 0)
             deps.add(students + " Student(s)");
         if (faculty > 0)
@@ -220,6 +222,9 @@ public class AdminDepartmentCommandService {
                     + ". Remove or reassign them first.";
             return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(msg));
         }
+
+        // Delete associated activity assignments before deleting the department
+        activityAssignmentRepository.deleteByDepartmentId(id);
 
         departmentRepository.deleteById(id);
         return ResponseEntity.ok(ApiResponse.ok("Department deleted successfully", null));
