@@ -3,16 +3,17 @@ server:
   tomcat:
     accesslog:
       enabled: true
-      directory: /opt/pragatix/access-logs
+      directory: /opt/pragatix/access-logs # Make sure this exists or override for Windows local testing
       prefix: access_log
       suffix: .log
       file-date-format: .yyyy-MM-dd
       pattern: '%h %l %u %t "%r" %s %b %D'
       rotate: true
       max-days: 7
+
 spring:
   application:
-    name: spdms-backend
+    name: pragatix-backend # or spdms-backend
   datasource:
     url: ${DB_URL}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME}
@@ -30,12 +31,16 @@ spring:
     user:
       name: admin
       password: admin
+
 jwt:
   secret: spdms_super_secret_key_must_be_at_least_256_bits_long_for_hs256_algorithm
   expiration: 57600000
   student-expiration: 57600000
+
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:https://pragatix.in,https://www.pragatix.in}
+
+springdoc:
   api-docs:
     enabled: ${SWAGGER_ENABLED:false}
     path: /api/api-docs
@@ -43,9 +48,10 @@ cors:
     enabled: ${SWAGGER_ENABLED:false}
     path: /api/swagger-ui.html
     tags-sorter: alpha
+
 logging:
   level:
-    com.spdms: DEBUG
+    com.pragatix: DEBUG
     org.springframework.security: INFO
 
 management:
@@ -59,7 +65,7 @@ management:
   health:
     db:
       enabled: true
-      enabled: true
+
 zepto:
   mail:
     url: https://api.zeptomail.in/v1.1/email
