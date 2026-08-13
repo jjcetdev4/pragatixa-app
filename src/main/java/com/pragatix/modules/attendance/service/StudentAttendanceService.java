@@ -1,11 +1,11 @@
-package com.pragatix.modules.attendance.service;
+package jjcet.PragatiX.modules.attendance.service;
 
-import com.pragatix.entity.Attendance;
-import com.pragatix.modules.attendance.dto.response.StudentAttendanceHistoryResponse;
-import com.pragatix.modules.attendance.dto.response.StudentAttendanceSummaryResponse;
-import com.pragatix.modules.attendance.repository.AttendanceRepository;
-import com.pragatix.repository.StreakRepository;
-import com.pragatix.entity.Streak;
+import jjcet.PragatiX.entity.Attendance;
+import jjcet.PragatiX.modules.attendance.dto.response.StudentAttendanceHistoryResponse;
+import jjcet.PragatiX.modules.attendance.dto.response.StudentAttendanceSummaryResponse;
+import jjcet.PragatiX.modules.attendance.repository.AttendanceRepository;
+import jjcet.PragatiX.repository.StreakRepository;
+import jjcet.PragatiX.entity.Streak;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,7 +65,7 @@ public class StudentAttendanceService {
             StudentAttendanceHistoryResponse res = new StudentAttendanceHistoryResponse();
             res.setDate(r.getAttendanceDate());
             res.setPeriod(r.getPeriodNo());
-            res.setStatus(com.pragatix.entity.AttendanceRecord.AttendanceStatus.valueOf(r.getStatus().name()));
+            res.setStatus(jjcet.PragatiX.entity.AttendanceRecord.AttendanceStatus.valueOf(r.getStatus().name()));
             res.setRemarks(r.getRemarks());
             return res;
         }).collect(Collectors.toList());

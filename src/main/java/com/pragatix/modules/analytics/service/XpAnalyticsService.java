@@ -1,9 +1,9 @@
-package com.pragatix.modules.analytics.service;
+package jjcet.PragatiX.modules.analytics.service;
 
-import com.pragatix.entity.User;
-import com.pragatix.modules.analytics.dto.*;
-import com.pragatix.modules.analytics.repository.XpAnalyticsRepository;
-import com.pragatix.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.analytics.dto.*;
+import jjcet.PragatiX.modules.analytics.repository.XpAnalyticsRepository;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -34,48 +34,64 @@ public class XpAnalyticsService {
         return providedYearNo;
     }
 
-
-
-
-    public List<XpAwardVsPenaltyDTO> getAwardVsPenalty(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate) {
-        return xpAnalyticsRepository.getAwardVsPenalty(determineYearFilter(yearNo), departmentId, stage, sectionId, startDate, endDate);
+    public List<XpAwardVsPenaltyDTO> getAwardVsPenalty(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate) {
+        return xpAnalyticsRepository.getAwardVsPenalty(determineYearFilter(yearNo), departmentId, stage, sectionId,
+                startDate, endDate);
     }
 
-    public List<GroupedXpDTO> getDepartmentRanking(String yearNo, Integer stage, LocalDate startDate, LocalDate endDate) {
+    public List<GroupedXpDTO> getDepartmentRanking(String yearNo, Integer stage, LocalDate startDate,
+            LocalDate endDate) {
         return xpAnalyticsRepository.getDepartmentRanking(determineYearFilter(yearNo), stage, startDate, endDate);
     }
 
-    public List<GroupedXpDTO> getSectionRanking(String yearNo, Long departmentId, Integer stage, LocalDate startDate, LocalDate endDate) {
-        return xpAnalyticsRepository.getSectionRanking(determineYearFilter(yearNo), departmentId, stage, startDate, endDate);
+    public List<GroupedXpDTO> getSectionRanking(String yearNo, Long departmentId, Integer stage, LocalDate startDate,
+            LocalDate endDate) {
+        return xpAnalyticsRepository.getSectionRanking(determineYearFilter(yearNo), departmentId, stage, startDate,
+                endDate);
     }
 
-    public List<XpHeatmapDTO> getMonthlyHeatmap(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate) {
-        return xpAnalyticsRepository.getMonthlyHeatmap(determineYearFilter(yearNo), departmentId, stage, sectionId, startDate, endDate);
+    public List<XpHeatmapDTO> getMonthlyHeatmap(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate) {
+        return xpAnalyticsRepository.getMonthlyHeatmap(determineYearFilter(yearNo), departmentId, stage, sectionId,
+                startDate, endDate);
     }
 
-    public List<XpTopPerformerDTO> getTopPerformers(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate) {
-        return xpAnalyticsRepository.getTopPerformers(determineYearFilter(yearNo), departmentId, stage, sectionId, startDate, endDate);
+    public List<XpTopPerformerDTO> getTopPerformers(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate) {
+        return xpAnalyticsRepository.getTopPerformers(determineYearFilter(yearNo), departmentId, stage, sectionId,
+                startDate, endDate);
     }
 
-    public List<LowXpStudentDTO> getLowXpStudents(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, Long threshold) {
-        return xpAnalyticsRepository.getLowXpStudents(determineYearFilter(yearNo), departmentId, stage, sectionId, startDate, endDate, threshold);
+    public List<LowXpStudentDTO> getLowXpStudents(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate, Long threshold) {
+        return xpAnalyticsRepository.getLowXpStudents(determineYearFilter(yearNo), departmentId, stage, sectionId,
+                startDate, endDate, threshold);
     }
 
-    public List<ActivityXpContributionDTO> getActivityXpContribution(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, String category) {
-        return xpAnalyticsRepository.getActivityXpContribution(determineYearFilter(yearNo), departmentId, stage, sectionId, startDate, endDate, category);
+    public List<ActivityXpContributionDTO> getActivityXpContribution(String yearNo, Long departmentId, Integer stage,
+            Long sectionId, LocalDate startDate, LocalDate endDate, String category) {
+        return xpAnalyticsRepository.getActivityXpContribution(determineYearFilter(yearNo), departmentId, stage,
+                sectionId, startDate, endDate, category);
     }
 
-    public List<XpHistoryDTO> getXpHistory(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, String activityName, String type, int limit, int offset) {
-        return xpAnalyticsRepository.getXpHistory(determineYearFilter(yearNo), departmentId, stage, sectionId, startDate, endDate, activityName, type, limit, offset);
-    }
-    
-    public long getXpHistoryCount(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, String activityName, String type) {
-        return xpAnalyticsRepository.getXpHistoryCount(determineYearFilter(yearNo), departmentId, stage, sectionId, startDate, endDate, activityName, type);
+    public List<XpHistoryDTO> getXpHistory(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate, String activityName, String type, int limit, int offset) {
+        return xpAnalyticsRepository.getXpHistory(determineYearFilter(yearNo), departmentId, stage, sectionId,
+                startDate, endDate, activityName, type, limit, offset);
     }
 
-    public byte[] exportXpHistory(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, String activityName, String type) {
+    public long getXpHistoryCount(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate,
+            LocalDate endDate, String activityName, String type) {
+        return xpAnalyticsRepository.getXpHistoryCount(determineYearFilter(yearNo), departmentId, stage, sectionId,
+                startDate, endDate, activityName, type);
+    }
+
+    public byte[] exportXpHistory(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate,
+            LocalDate endDate, String activityName, String type) {
         // Fetch all data for export (no pagination limit)
-        List<XpHistoryDTO> data = getXpHistory(yearNo, departmentId, stage, sectionId, startDate, endDate, activityName, type, Integer.MAX_VALUE, 0);
+        List<XpHistoryDTO> data = getXpHistory(yearNo, departmentId, stage, sectionId, startDate, endDate, activityName,
+                type, Integer.MAX_VALUE, 0);
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("XP History");
@@ -90,8 +106,9 @@ public class XpAnalyticsService {
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
             Row headerRow = sheet.createRow(0);
-            String[] columns = {"Date", "Student", "Register No", "Department", "Section", "Activity", "Award XP", "Penalty XP", "Net XP", "Current Total XP", "Approved By"};
-            
+            String[] columns = { "Date", "Student", "Register No", "Department", "Section", "Activity", "Award XP",
+                    "Penalty XP", "Net XP", "Current Total XP", "Approved By" };
+
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(columns[i]);

@@ -1,16 +1,16 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.dto.*;
-import com.pragatix.modules.activity.dto.request.*;
-import com.pragatix.modules.activity.dto.response.*;
-import com.pragatix.modules.student.dto.request.*;
-import com.pragatix.modules.student.dto.response.*;
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.*;
-import com.pragatix.repository.*;
-import com.pragatix.modules.activity.repository.*;
-import com.pragatix.modules.faculty.repository.*;
-import com.pragatix.modules.student.repository.*;
+import jjcet.PragatiX.dto.*;
+import jjcet.PragatiX.modules.activity.dto.request.*;
+import jjcet.PragatiX.modules.activity.dto.response.*;
+import jjcet.PragatiX.modules.student.dto.request.*;
+import jjcet.PragatiX.modules.student.dto.response.*;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.modules.activity.repository.*;
+import jjcet.PragatiX.modules.faculty.repository.*;
+import jjcet.PragatiX.modules.student.repository.*;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,17 +55,18 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword, String year, Long departmentId, Long sectionId) {
+    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword,
+            String year, Long departmentId, Long sectionId) {
         return studentCrudService.getAllStudents(page, size, sortBy, keyword, year, departmentId, sectionId);
     }
 
     @Transactional(readOnly = true)
-    public java.util.List<com.pragatix.entity.Department> getFilterDepartmentsByYear(String year) {
+    public java.util.List<jjcet.PragatiX.entity.Department> getFilterDepartmentsByYear(String year) {
         return studentCrudService.getFilterDepartmentsByYear(year);
     }
 
     @Transactional(readOnly = true)
-    public java.util.List<com.pragatix.entity.Section> getFilterSections(String year, Long departmentId) {
+    public java.util.List<jjcet.PragatiX.entity.Section> getFilterSections(String year, Long departmentId) {
         return studentCrudService.getFilterSections(year, departmentId);
     }
 
@@ -109,7 +110,7 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<com.pragatix.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(
+    public ApiResponse<List<jjcet.PragatiX.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(
             String keyword, Long teamId, Integer currentStage) {
         return studentCrudService.searchActiveStudentsForTeam(keyword, teamId, currentStage);
     }

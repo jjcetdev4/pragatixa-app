@@ -1,4 +1,4 @@
-package com.pragatix.modules.analytics.dto;
+package jjcet.PragatiX.modules.analytics.dto;
 
 public class AttendanceSummaryRowDTO {
     private String departmentName;
@@ -11,7 +11,8 @@ public class AttendanceSummaryRowDTO {
     public AttendanceSummaryRowDTO() {
     }
 
-    public AttendanceSummaryRowDTO(String departmentName, Integer present, Integer partial, Integer absent, Double attendancePercentage, Integer totalStudents) {
+    public AttendanceSummaryRowDTO(String departmentName, Integer present, Integer partial, Integer absent,
+            Double attendancePercentage, Integer totalStudents) {
         this.departmentName = departmentName;
         this.present = present;
         this.partial = partial;

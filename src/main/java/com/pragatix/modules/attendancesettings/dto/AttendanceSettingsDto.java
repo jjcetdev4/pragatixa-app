@@ -1,8 +1,8 @@
-package com.pragatix.modules.attendancesettings.dto;
+package jjcet.PragatiX.modules.attendancesettings.dto;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import com.pragatix.enums.AcademicYear;
+import jjcet.PragatiX.enums.AcademicYear;
 
 public class AttendanceSettingsDto {
 
@@ -15,7 +15,6 @@ public class AttendanceSettingsDto {
     private Integer partialDayPenalty;
     private Integer fullDayPenalty;
     private Integer perfectWeekReward;
-    
 
     private Integer weekStartFullPenalty;
     private Integer weekStartPartialPenalty;
@@ -24,10 +23,10 @@ public class AttendanceSettingsDto {
 
     // Engine Control Center
     private Boolean testModeEnabled;
-    private String testDate;       // "yyyy-MM-dd"
-    private String testTime;       // "HH:mm:ss"
-    private String lastDailyRun;   // ISO datetime string
-    private String lastWeeklyRun;  // ISO datetime string
+    private String testDate; // "yyyy-MM-dd"
+    private String testTime; // "HH:mm:ss"
+    private String lastDailyRun; // ISO datetime string
+    private String lastWeeklyRun; // ISO datetime string
     private String dailyEngineStatus;
     private String weeklyEngineStatus;
 
@@ -105,38 +104,91 @@ public class AttendanceSettingsDto {
         this.perfectWeekReward = perfectWeekReward;
     }
 
+    public Integer getWeekStartFullPenalty() {
+        return weekStartFullPenalty;
+    }
 
+    public void setWeekStartFullPenalty(Integer weekStartFullPenalty) {
+        this.weekStartFullPenalty = weekStartFullPenalty;
+    }
 
-    public Integer getWeekStartFullPenalty() { return weekStartFullPenalty; }
-    public void setWeekStartFullPenalty(Integer weekStartFullPenalty) { this.weekStartFullPenalty = weekStartFullPenalty; }
+    public Integer getWeekStartPartialPenalty() {
+        return weekStartPartialPenalty;
+    }
 
-    public Integer getWeekStartPartialPenalty() { return weekStartPartialPenalty; }
-    public void setWeekStartPartialPenalty(Integer weekStartPartialPenalty) { this.weekStartPartialPenalty = weekStartPartialPenalty; }
+    public void setWeekStartPartialPenalty(Integer weekStartPartialPenalty) {
+        this.weekStartPartialPenalty = weekStartPartialPenalty;
+    }
 
-    public Integer getWeekEndFullPenalty() { return weekEndFullPenalty; }
-    public void setWeekEndFullPenalty(Integer weekEndFullPenalty) { this.weekEndFullPenalty = weekEndFullPenalty; }
+    public Integer getWeekEndFullPenalty() {
+        return weekEndFullPenalty;
+    }
 
-    public Integer getWeekEndPartialPenalty() { return weekEndPartialPenalty; }
-    public void setWeekEndPartialPenalty(Integer weekEndPartialPenalty) { this.weekEndPartialPenalty = weekEndPartialPenalty; }
+    public void setWeekEndFullPenalty(Integer weekEndFullPenalty) {
+        this.weekEndFullPenalty = weekEndFullPenalty;
+    }
 
-    public Boolean getTestModeEnabled() { return testModeEnabled; }
-    public void setTestModeEnabled(Boolean testModeEnabled) { this.testModeEnabled = testModeEnabled; }
+    public Integer getWeekEndPartialPenalty() {
+        return weekEndPartialPenalty;
+    }
 
-    public String getTestDate() { return testDate; }
-    public void setTestDate(String testDate) { this.testDate = testDate; }
+    public void setWeekEndPartialPenalty(Integer weekEndPartialPenalty) {
+        this.weekEndPartialPenalty = weekEndPartialPenalty;
+    }
 
-    public String getTestTime() { return testTime; }
-    public void setTestTime(String testTime) { this.testTime = testTime; }
+    public Boolean getTestModeEnabled() {
+        return testModeEnabled;
+    }
 
-    public String getLastDailyRun() { return lastDailyRun; }
-    public void setLastDailyRun(String lastDailyRun) { this.lastDailyRun = lastDailyRun; }
+    public void setTestModeEnabled(Boolean testModeEnabled) {
+        this.testModeEnabled = testModeEnabled;
+    }
 
-    public String getLastWeeklyRun() { return lastWeeklyRun; }
-    public void setLastWeeklyRun(String lastWeeklyRun) { this.lastWeeklyRun = lastWeeklyRun; }
+    public String getTestDate() {
+        return testDate;
+    }
 
-    public String getDailyEngineStatus() { return dailyEngineStatus; }
-    public void setDailyEngineStatus(String dailyEngineStatus) { this.dailyEngineStatus = dailyEngineStatus; }
+    public void setTestDate(String testDate) {
+        this.testDate = testDate;
+    }
 
-    public String getWeeklyEngineStatus() { return weeklyEngineStatus; }
-    public void setWeeklyEngineStatus(String weeklyEngineStatus) { this.weeklyEngineStatus = weeklyEngineStatus; }
+    public String getTestTime() {
+        return testTime;
+    }
+
+    public void setTestTime(String testTime) {
+        this.testTime = testTime;
+    }
+
+    public String getLastDailyRun() {
+        return lastDailyRun;
+    }
+
+    public void setLastDailyRun(String lastDailyRun) {
+        this.lastDailyRun = lastDailyRun;
+    }
+
+    public String getLastWeeklyRun() {
+        return lastWeeklyRun;
+    }
+
+    public void setLastWeeklyRun(String lastWeeklyRun) {
+        this.lastWeeklyRun = lastWeeklyRun;
+    }
+
+    public String getDailyEngineStatus() {
+        return dailyEngineStatus;
+    }
+
+    public void setDailyEngineStatus(String dailyEngineStatus) {
+        this.dailyEngineStatus = dailyEngineStatus;
+    }
+
+    public String getWeeklyEngineStatus() {
+        return weeklyEngineStatus;
+    }
+
+    public void setWeeklyEngineStatus(String weeklyEngineStatus) {
+        this.weeklyEngineStatus = weeklyEngineStatus;
+    }
 }

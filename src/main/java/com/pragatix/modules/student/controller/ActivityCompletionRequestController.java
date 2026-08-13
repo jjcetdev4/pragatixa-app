@@ -1,9 +1,9 @@
-package com.pragatix.modules.student.controller;
+package jjcet.PragatiX.modules.student.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.student.dto.request.CreateActivityCompletionRequestDto;
-import com.pragatix.modules.student.dto.response.ActivityCompletionRequestDto;
-import com.pragatix.modules.student.service.ActivityCompletionRequestService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.student.dto.request.CreateActivityCompletionRequestDto;
+import jjcet.PragatiX.modules.student.dto.response.ActivityCompletionRequestDto;
+import jjcet.PragatiX.modules.student.service.ActivityCompletionRequestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

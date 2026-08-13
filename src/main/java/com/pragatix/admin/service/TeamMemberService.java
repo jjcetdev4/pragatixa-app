@@ -1,14 +1,14 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.Team;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.TeamRepository;
-import com.pragatix.enums.TeamRole;
-import com.pragatix.entity.User;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.entity.StageTeam;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.Team;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.TeamRepository;
+import jjcet.PragatiX.enums.TeamRole;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.entity.StageTeam;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,11 +23,11 @@ public class TeamMemberService {
     private final UserRepository userRepository;
 
     private final TeamValidationService validationService;
-    private final com.pragatix.admin.service.CaptainSelectionService captainSelectionService;
-    private final com.pragatix.admin.service.TeamMapper teamMapper;
-    private final com.pragatix.repository.StageTeamRepository stageTeamRepository;
-    private final com.pragatix.admin.service.TeamCleanupService teamCleanupService;
-    private final com.pragatix.admin.service.LeadershipSyncService leadershipSyncService;
+    private final jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService;
+    private final jjcet.PragatiX.admin.service.TeamMapper teamMapper;
+    private final jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository;
+    private final jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService;
+    private final jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -36,11 +36,11 @@ public class TeamMemberService {
             StudentRepository studentRepository,
             UserRepository userRepository,
             TeamValidationService validationService,
-            com.pragatix.admin.service.CaptainSelectionService captainSelectionService,
-            com.pragatix.admin.service.TeamMapper teamMapper,
-            com.pragatix.repository.StageTeamRepository stageTeamRepository,
-            com.pragatix.admin.service.TeamCleanupService teamCleanupService,
-            com.pragatix.admin.service.LeadershipSyncService leadershipSyncService) {
+            jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService,
+            jjcet.PragatiX.admin.service.TeamMapper teamMapper,
+            jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository,
+            jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService,
+            jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService) {
         this.teamRepository = teamRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
@@ -95,18 +95,19 @@ public class TeamMemberService {
             if (entityManager != null) {
                 entityManager.createNativeQuery(
                         "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
-                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                                "ON DUPLICATE KEY UPDATE team_id = :tid")
                         .setParameter("tid", team.getId())
                         .setParameter("sid", member.getId())
                         .executeUpdate();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return ResponseEntity.ok(ApiResponse.ok("Member added successfully", null));
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<com.pragatix.dto.TeamResponse>> removeMemberFromTeam(Long id, String regNo) {
+    public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.TeamResponse>> removeMemberFromTeam(Long id, String regNo) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
@@ -140,8 +141,8 @@ public class TeamMemberService {
         }
 
         // Clean up StageTeam leadership if held by this student
-        List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
-        for (com.pragatix.entity.StageTeam st : stageTeams) {
+        List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
+        for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
             if (st.getCaptain() != null && st.getCaptain().getId().equals(member.getId())) {
                 st.setCaptain(null);
                 stageTeamRepository.save(st);
@@ -164,7 +165,8 @@ public class TeamMemberService {
                         .setParameter("tid", team.getId())
                         .executeUpdate();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         if (teamCleanupService.autoDeleteEmptyTeam(team)) {
             return ResponseEntity
@@ -182,7 +184,7 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<com.pragatix.dto.TeamResponse>> assignTeamCaptain(Long id, String regNo) {
+    public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.TeamResponse>> assignTeamCaptain(Long id, String regNo) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
@@ -222,7 +224,7 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<com.pragatix.dto.TeamResponse>> removeTeamCaptain(Long id) {
+    public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.TeamResponse>> removeTeamCaptain(Long id) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
@@ -244,7 +246,7 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<com.pragatix.dto.TeamResponse>> assignTeamViceCaptain(Long id, String regNo) {
+    public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.TeamResponse>> assignTeamViceCaptain(Long id, String regNo) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
@@ -284,7 +286,7 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<com.pragatix.dto.TeamResponse>> removeTeamViceCaptain(Long id) {
+    public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.TeamResponse>> removeTeamViceCaptain(Long id) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
@@ -339,12 +341,13 @@ public class TeamMemberService {
             if (entityManager != null) {
                 entityManager.createNativeQuery(
                         "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
-                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                                "ON DUPLICATE KEY UPDATE team_id = :tid")
                         .setParameter("tid", team.getId())
                         .setParameter("sid", member.getId())
                         .executeUpdate();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return ResponseEntity.ok(ApiResponse.ok("Member added successfully", null));
     }
@@ -381,7 +384,7 @@ public class TeamMemberService {
         boolean captainInMembers = team.getMembers().stream()
                 .anyMatch(m -> team.getCaptain() != null && m.getId().equals(team.getCaptain().getId()));
         long totalSize = currentMembersCount + (captainInMembers ? 0 : 1);
-        
+
         if (totalSize + regNos.size() > team.getSize()) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Cannot add members. Team size limit of " + team.getSize() + " exceeded."));
@@ -396,40 +399,46 @@ public class TeamMemberService {
                 return ResponseEntity.badRequest().body(ApiResponse
                         .error("Student " + member.getFullName() + " already belongs to an existing team."));
             }
-            
+
             // Validate configuration match
             if (team.getYear() != null && member.getYear() != null && !team.getYear().equals(member.getYear())) {
-                 return ResponseEntity.badRequest().body(ApiResponse.error("Student " + member.getFullName() + " is in a different academic year than the team."));
+                return ResponseEntity.badRequest().body(ApiResponse
+                        .error("Student " + member.getFullName() + " is in a different academic year than the team."));
             }
-            if (team.getDepartment() != null && member.getDepartment() != null && !team.getDepartment().getId().equals(member.getDepartment().getId())) {
-                 return ResponseEntity.badRequest().body(ApiResponse.error("Student " + member.getFullName() + " is in a different department than the team."));
+            if (team.getDepartment() != null && member.getDepartment() != null
+                    && !team.getDepartment().getId().equals(member.getDepartment().getId())) {
+                return ResponseEntity.badRequest().body(ApiResponse
+                        .error("Student " + member.getFullName() + " is in a different department than the team."));
             }
-            if (team.getSection() != null && member.getSection() != null && !team.getSection().getId().equals(member.getSection().getId())) {
-                 return ResponseEntity.badRequest().body(ApiResponse.error("Student " + member.getFullName() + " is in a different section than the team."));
+            if (team.getSection() != null && member.getSection() != null
+                    && !team.getSection().getId().equals(member.getSection().getId())) {
+                return ResponseEntity.badRequest().body(ApiResponse
+                        .error("Student " + member.getFullName() + " is in a different section than the team."));
             }
 
             member.setTeam(team);
             studentRepository.save(member);
             team.getMembers().add(member);
-            
+
             try {
                 if (entityManager != null) {
                     entityManager.createNativeQuery(
                             "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
-                            "ON DUPLICATE KEY UPDATE team_id = :tid")
+                                    "ON DUPLICATE KEY UPDATE team_id = :tid")
                             .setParameter("tid", team.getId())
                             .setParameter("sid", member.getId())
                             .executeUpdate();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
-        
+
         teamRepository.save(team);
         return ResponseEntity.ok(ApiResponse.ok("Members added successfully", null));
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<com.pragatix.dto.TeamResponse>> removeMemberByCC(Long id, String regNo) {
+    public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.TeamResponse>> removeMemberByCC(Long id, String regNo) {
         return removeMemberFromTeam(id, regNo);
     }
 

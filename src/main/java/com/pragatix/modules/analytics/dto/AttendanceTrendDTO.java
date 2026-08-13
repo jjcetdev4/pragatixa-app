@@ -1,4 +1,4 @@
-package com.pragatix.modules.analytics.dto;
+package jjcet.PragatiX.modules.analytics.dto;
 
 import java.time.LocalDate;
 

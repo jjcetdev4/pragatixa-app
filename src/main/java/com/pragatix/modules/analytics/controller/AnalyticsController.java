@@ -1,4 +1,4 @@
-package com.pragatix.modules.analytics.controller;
+package jjcet.PragatiX.modules.analytics.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

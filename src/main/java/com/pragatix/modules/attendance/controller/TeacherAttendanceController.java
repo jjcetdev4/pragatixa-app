@@ -1,9 +1,9 @@
-package com.pragatix.modules.attendance.controller;
+package jjcet.PragatiX.modules.attendance.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.attendance.dto.request.SaveAttendanceRequest;
-import com.pragatix.modules.attendance.dto.response.StudentAttendanceListItemResponse;
-import com.pragatix.modules.attendance.service.TeacherAttendanceService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.attendance.dto.request.SaveAttendanceRequest;
+import jjcet.PragatiX.modules.attendance.dto.response.StudentAttendanceListItemResponse;
+import jjcet.PragatiX.modules.attendance.service.TeacherAttendanceService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -51,7 +51,7 @@ public class TeacherAttendanceController {
             @RequestParam(required = false) Long yearId,
             @RequestParam Long departmentId,
             @RequestParam(required = false) Long sectionId) {
-        
+
         Integer nextPeriod = attendanceService.getNextPeriod(date, yearId, departmentId, sectionId);
         return ResponseEntity.ok(ApiResponse.ok(nextPeriod));
     }

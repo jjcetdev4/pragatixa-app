@@ -1,11 +1,11 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.DayOfWeek;
-import com.pragatix.enums.AcademicYear;
+import jjcet.PragatiX.enums.AcademicYear;
 
 @Entity
 @Table(name = "attendance_settings")
@@ -39,7 +39,6 @@ public class AttendanceSettings {
 
     @Column(name = "perfect_week_reward")
     private Integer perfectWeekReward;
-
 
     @Column(name = "week_start_full_penalty")
     private Integer weekStartFullPenalty;
@@ -166,7 +165,6 @@ public class AttendanceSettings {
     public void setPerfectWeekReward(Integer perfectWeekReward) {
         this.perfectWeekReward = perfectWeekReward;
     }
-
 
     public Integer getWeekStartFullPenalty() {
         return weekStartFullPenalty;

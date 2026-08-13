@@ -1,14 +1,14 @@
-package com.pragatix.student;
+package jjcet.PragatiX.student;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.Streak;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.XpTransaction;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.student.service.XpEngineService;
-import com.pragatix.repository.XpTransactionRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.Streak;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.XpTransaction;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.student.service.XpEngineService;
+import jjcet.PragatiX.repository.XpTransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

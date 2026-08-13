@@ -1,11 +1,11 @@
-package com.pragatix.modules.academiccalendar.controller;
+package jjcet.PragatiX.modules.academiccalendar.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.academiccalendar.dto.AcademicHolidayDto;
-import com.pragatix.modules.academiccalendar.dto.AcademicMonthDto;
-import com.pragatix.modules.academiccalendar.dto.AcademicWeekDto;
-import com.pragatix.modules.academiccalendar.dto.AlternateWorkingDayDto;
-import com.pragatix.modules.academiccalendar.service.AcademicCalendarService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.academiccalendar.dto.AcademicHolidayDto;
+import jjcet.PragatiX.modules.academiccalendar.dto.AcademicMonthDto;
+import jjcet.PragatiX.modules.academiccalendar.dto.AcademicWeekDto;
+import jjcet.PragatiX.modules.academiccalendar.dto.AlternateWorkingDayDto;
+import jjcet.PragatiX.modules.academiccalendar.service.AcademicCalendarService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,17 +22,17 @@ public class AcademicCalendarController {
     private AcademicCalendarService calendarService;
 
     @Autowired
-    private com.pragatix.modules.authentication.security.AuthUtils authUtils;
+    private jjcet.PragatiX.modules.authentication.security.AuthUtils authUtils;
 
     @GetMapping("/month")
     public ResponseEntity<ApiResponse<AcademicMonthDto>> getOrCreateMonth(
             @RequestParam Integer month,
             @RequestParam Integer year,
-            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
-        
-        com.pragatix.entity.User user = authUtils.getCurrentUser();
-        com.pragatix.enums.AcademicYear targetYear;
-        
+            @RequestParam(required = false) jjcet.PragatiX.enums.AcademicYear academicYear) {
+
+        jjcet.PragatiX.entity.User user = authUtils.getCurrentUser();
+        jjcet.PragatiX.enums.AcademicYear targetYear;
+
         if (authUtils.isSuperAdmin(user)) {
             if (academicYear == null) {
                 throw new IllegalArgumentException("Academic Year is required for Super Admin");
@@ -69,7 +69,8 @@ public class AcademicCalendarController {
     }
 
     @PutMapping("/weeks/{id}")
-    public ResponseEntity<ApiResponse<AcademicWeekDto>> updateWeek(@PathVariable Long id, @RequestBody AcademicWeekDto dto) {
+    public ResponseEntity<ApiResponse<AcademicWeekDto>> updateWeek(@PathVariable Long id,
+            @RequestBody AcademicWeekDto dto) {
         try {
             AcademicWeekDto result = calendarService.updateWeek(id, dto);
             return ResponseEntity.ok(ApiResponse.ok("Week updated successfully", result));
@@ -102,7 +103,8 @@ public class AcademicCalendarController {
     }
 
     @PutMapping("/holidays/{id}")
-    public ResponseEntity<ApiResponse<AcademicHolidayDto>> updateHoliday(@PathVariable Long id, @RequestBody AcademicHolidayDto dto) {
+    public ResponseEntity<ApiResponse<AcademicHolidayDto>> updateHoliday(@PathVariable Long id,
+            @RequestBody AcademicHolidayDto dto) {
         try {
             AcademicHolidayDto result = calendarService.updateHoliday(id, dto);
             return ResponseEntity.ok(ApiResponse.ok("Holiday updated successfully", result));
@@ -119,13 +121,15 @@ public class AcademicCalendarController {
 
     // --- Alternate Working Days ---
     @GetMapping("/month/{monthId}/alternate-working-days")
-    public ResponseEntity<ApiResponse<List<AlternateWorkingDayDto>>> getAlternateWorkingDays(@PathVariable Long monthId) {
+    public ResponseEntity<ApiResponse<List<AlternateWorkingDayDto>>> getAlternateWorkingDays(
+            @PathVariable Long monthId) {
         List<AlternateWorkingDayDto> result = calendarService.getAlternateWorkingDaysForMonth(monthId);
         return ResponseEntity.ok(ApiResponse.ok("Alternate working days retrieved successfully", result));
     }
 
     @PostMapping("/alternate-working-days")
-    public ResponseEntity<ApiResponse<AlternateWorkingDayDto>> addAlternateWorkingDay(@RequestBody AlternateWorkingDayDto dto) {
+    public ResponseEntity<ApiResponse<AlternateWorkingDayDto>> addAlternateWorkingDay(
+            @RequestBody AlternateWorkingDayDto dto) {
         try {
             AlternateWorkingDayDto result = calendarService.addAlternateWorkingDay(dto);
             return ResponseEntity.ok(ApiResponse.ok("Alternate working day added successfully", result));
@@ -135,7 +139,8 @@ public class AcademicCalendarController {
     }
 
     @PutMapping("/alternate-working-days/{id}")
-    public ResponseEntity<ApiResponse<AlternateWorkingDayDto>> updateAlternateWorkingDay(@PathVariable Long id, @RequestBody AlternateWorkingDayDto dto) {
+    public ResponseEntity<ApiResponse<AlternateWorkingDayDto>> updateAlternateWorkingDay(@PathVariable Long id,
+            @RequestBody AlternateWorkingDayDto dto) {
         try {
             AlternateWorkingDayDto result = calendarService.updateAlternateWorkingDay(id, dto);
             return ResponseEntity.ok(ApiResponse.ok("Alternate working day updated successfully", result));
@@ -153,7 +158,8 @@ public class AcademicCalendarController {
             return ResponseEntity.ok(ApiResponse.ok("Alternate working day deleted successfully", null));
         } catch (Exception e) {
             System.err.println("Failed to remove Alternate Working Day: " + e.getMessage());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Unable to remove Alternate Working Day. Please try again."));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Unable to remove Alternate Working Day. Please try again."));
         }
     }
 }

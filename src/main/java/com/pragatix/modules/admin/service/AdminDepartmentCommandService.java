@@ -1,21 +1,21 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.admin.dto.request.CreateDepartmentRequest;
-import com.pragatix.entity.Department;
-import com.pragatix.entity.Section;
-import com.pragatix.repository.DepartmentRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
-import com.pragatix.repository.SubjectRepository;
-import com.pragatix.repository.SectionRepository;
-import com.pragatix.modules.faculty.repository.FacultyRepository;
-import com.pragatix.modules.student.repository.StudentGroupRepository;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.modules.authentication.security.AuthUtils;
-import com.pragatix.repository.YearRepository;
-import com.pragatix.entity.User;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.admin.dto.request.CreateDepartmentRequest;
+import jjcet.PragatiX.entity.Department;
+import jjcet.PragatiX.entity.Section;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivitySubgroupRepository;
+import jjcet.PragatiX.repository.SubjectRepository;
+import jjcet.PragatiX.repository.SectionRepository;
+import jjcet.PragatiX.modules.faculty.repository.FacultyRepository;
+import jjcet.PragatiX.modules.student.repository.StudentGroupRepository;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.repository.YearRepository;
+import jjcet.PragatiX.entity.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -63,7 +63,7 @@ public class AdminDepartmentCommandService {
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments() {
         List<Department> depts = departmentRepository.findAll();
-        
+
         List<Map<String, Object>> response = new ArrayList<>();
 
         List<Section> allSections = sectionRepository.findAll();

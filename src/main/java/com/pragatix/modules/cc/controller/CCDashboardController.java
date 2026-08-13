@@ -1,7 +1,7 @@
-package com.pragatix.modules.cc.controller;
+package jjcet.PragatiX.modules.cc.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.cc.service.CCDashboardService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.cc.service.CCDashboardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;

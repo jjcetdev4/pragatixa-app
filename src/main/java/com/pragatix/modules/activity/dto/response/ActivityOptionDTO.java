@@ -1,4 +1,4 @@
-package com.pragatix.modules.activity.dto.response;
+package jjcet.PragatiX.modules.activity.dto.response;
 
 public class ActivityOptionDTO {
     private Long id;

@@ -1,11 +1,12 @@
-package com.pragatix.modules.analytics.dto;
+package jjcet.PragatiX.modules.analytics.dto;
 
 public class LowAttendanceStudentDTO {
     private String rollNo;
     private String name;
     private Double attendancePercentage;
 
-    public LowAttendanceStudentDTO() {}
+    public LowAttendanceStudentDTO() {
+    }
 
     public LowAttendanceStudentDTO(String rollNo, String name, Double attendancePercentage) {
         this.rollNo = rollNo;

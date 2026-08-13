@@ -1,4 +1,4 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -42,34 +42,75 @@ public class StudentActivityStreak {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public StudentActivityStreak() {}
+    public StudentActivityStreak() {
+    }
 
     public StudentActivityStreak(Student student, Activity activity) {
         this.student = student;
         this.activity = activity;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Activity getActivity() { return activity; }
-    public void setActivity(Activity activity) { this.activity = activity; }
+    public Student getStudent() {
+        return student;
+    }
 
-    public int getCurrentStreak() { return currentStreak; }
-    public void setCurrentStreak(int currentStreak) { this.currentStreak = currentStreak; }
+    public void setStudent(Student student) {
+        this.student = student;
+    }
 
-    public int getLongestStreak() { return longestStreak; }
-    public void setLongestStreak(int longestStreak) { this.longestStreak = longestStreak; }
+    public Activity getActivity() {
+        return activity;
+    }
 
-    public LocalDate getLastCompletedDate() { return lastCompletedDate; }
-    public void setLastCompletedDate(LocalDate lastCompletedDate) { this.lastCompletedDate = lastCompletedDate; }
+    public void setActivity(Activity activity) {
+        this.activity = activity;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public int getCurrentStreak() {
+        return currentStreak;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setCurrentStreak(int currentStreak) {
+        this.currentStreak = currentStreak;
+    }
+
+    public int getLongestStreak() {
+        return longestStreak;
+    }
+
+    public void setLongestStreak(int longestStreak) {
+        this.longestStreak = longestStreak;
+    }
+
+    public LocalDate getLastCompletedDate() {
+        return lastCompletedDate;
+    }
+
+    public void setLastCompletedDate(LocalDate lastCompletedDate) {
+        this.lastCompletedDate = lastCompletedDate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

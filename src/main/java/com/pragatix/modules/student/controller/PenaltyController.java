@@ -1,9 +1,9 @@
-package com.pragatix.modules.student.controller;
+package jjcet.PragatiX.modules.student.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.student.dto.request.CreatePenaltyRequestDto;
-import com.pragatix.modules.student.dto.response.PenaltyRequestDto;
-import com.pragatix.modules.student.service.PenaltyWorkflowService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.student.dto.request.CreatePenaltyRequestDto;
+import jjcet.PragatiX.modules.student.dto.response.PenaltyRequestDto;
+import jjcet.PragatiX.modules.student.service.PenaltyWorkflowService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -78,9 +78,10 @@ public class PenaltyController {
         String reason = body.getOrDefault("reason", "Rejected by CC");
         return ResponseEntity.ok(penaltyWorkflowService.rejectPenalty(id, username, reason));
     }
+
     @GetMapping("/global")
     @PreAuthorize("hasAnyRole('TEACHER', 'HOD', 'ADMIN')")
-    public ResponseEntity<ApiResponse<List<com.pragatix.modules.student.dto.response.PenaltyActivityDto>>> getGlobalPenaltyActivities() {
+    public ResponseEntity<ApiResponse<List<jjcet.PragatiX.modules.student.dto.response.PenaltyActivityDto>>> getGlobalPenaltyActivities() {
         return ResponseEntity.ok(penaltyWorkflowService.getGlobalPenaltyActivities());
     }
 }

@@ -1,4 +1,4 @@
-package com.pragatix.dto;
+package jjcet.PragatiX.dto;
 
 import java.time.LocalDateTime;
 

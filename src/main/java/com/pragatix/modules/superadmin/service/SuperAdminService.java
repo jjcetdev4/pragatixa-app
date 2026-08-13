@@ -1,11 +1,11 @@
-package com.pragatix.modules.superadmin.service;
+package jjcet.PragatiX.modules.superadmin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.User;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.superadmin.dto.YearAdminResponse;
-import com.pragatix.modules.superadmin.dto.AssignAcademicYearRequest;
-import com.pragatix.enums.AcademicYear;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.superadmin.dto.YearAdminResponse;
+import jjcet.PragatiX.modules.superadmin.dto.AssignAcademicYearRequest;
+import jjcet.PragatiX.enums.AcademicYear;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,13 +21,16 @@ public class SuperAdminService {
 
     private final UserRepository userRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
-    private final com.pragatix.modules.authentication.repository.RoleRepository roleRepository;
-    private final com.pragatix.repository.ActivityAssignmentRepository activityAssignmentRepository;
+    private final jjcet.PragatiX.modules.authentication.repository.RoleRepository roleRepository;
+    private final jjcet.PragatiX.repository.ActivityAssignmentRepository activityAssignmentRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    public SuperAdminService(UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder, com.pragatix.modules.authentication.repository.RoleRepository roleRepository, com.pragatix.repository.ActivityAssignmentRepository activityAssignmentRepository) {
+    public SuperAdminService(UserRepository userRepository,
+            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
+            jjcet.PragatiX.modules.authentication.repository.RoleRepository roleRepository,
+            jjcet.PragatiX.repository.ActivityAssignmentRepository activityAssignmentRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
@@ -68,7 +71,8 @@ public class SuperAdminService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<YearAdminResponse>> createYearAdmin(com.pragatix.modules.superadmin.dto.CreateYearAdminRequest request) {
+    public ResponseEntity<ApiResponse<YearAdminResponse>> createYearAdmin(
+            jjcet.PragatiX.modules.superadmin.dto.CreateYearAdminRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Username already exists"));
         }
@@ -76,10 +80,10 @@ public class SuperAdminService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Email already registered"));
         }
 
-        com.pragatix.entity.Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+        jjcet.PragatiX.entity.Role adminRole = roleRepository.findByName("ROLE_ADMIN")
                 .orElseThrow(() -> new RuntimeException("Role ROLE_ADMIN not found"));
 
-        java.util.Set<com.pragatix.entity.Role> roles = new java.util.HashSet<>();
+        java.util.Set<jjcet.PragatiX.entity.Role> roles = new java.util.HashSet<>();
         roles.add(adminRole);
 
         User user = User.builder()
@@ -94,20 +98,20 @@ public class SuperAdminService {
                 .build();
 
         User savedAdmin = userRepository.save(user);
-        
+
         YearAdminResponse resp = new YearAdminResponse(
                 savedAdmin.getId(),
                 savedAdmin.getFullName(),
                 savedAdmin.getUsername(),
                 savedAdmin.getAcademicYear(),
                 savedAdmin.isActive());
-                
+
         return ResponseEntity.ok(ApiResponse.ok("Year Admin created successfully", resp));
     }
 
     @Transactional
     public ResponseEntity<ApiResponse<YearAdminResponse>> updateYearAdmin(Long id,
-            com.pragatix.modules.superadmin.dto.UpdateYearAdminRequest request) {
+            jjcet.PragatiX.modules.superadmin.dto.UpdateYearAdminRequest request) {
         User admin = userRepository.findById(id).orElse(null);
         if (admin == null) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Admin user not found"));
@@ -127,7 +131,7 @@ public class SuperAdminService {
         admin.setEmail(request.getEmail());
         admin.setPhone(request.getPhone());
         admin.setActive(request.isActive());
-        
+
         // It's possible academic year is not assigned yet
         if (request.getAcademicYear() != null) {
             admin.setAcademicYear(request.getAcademicYear());
@@ -155,18 +159,20 @@ public class SuperAdminService {
 
         boolean isAdmin = admin.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
         boolean isSuperAdmin = admin.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
-        
+
         if (!isAdmin || isSuperAdmin) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Cannot delete this user via this endpoint"));
         }
 
         // Fetch current super admin to re-assign any activity assignments
-        String currentUsername = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        String currentUsername = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
         User currentSuperAdmin = userRepository.findByUsername(currentUsername).orElse(null);
-        
+
         if (currentSuperAdmin != null) {
-            List<com.pragatix.entity.ActivityAssignment> assignments = activityAssignmentRepository.findByAssignedById(id);
-            for (com.pragatix.entity.ActivityAssignment assignment : assignments) {
+            List<jjcet.PragatiX.entity.ActivityAssignment> assignments = activityAssignmentRepository
+                    .findByAssignedById(id);
+            for (jjcet.PragatiX.entity.ActivityAssignment assignment : assignments) {
                 assignment.setAssignedBy(currentSuperAdmin);
             }
             activityAssignmentRepository.saveAll(assignments);

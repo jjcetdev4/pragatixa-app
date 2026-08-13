@@ -1,8 +1,8 @@
-package com.pragatix.student;
+package jjcet.PragatiX.student;
 
-import com.pragatix.entity.Student;
-import com.pragatix.entity.XpTransaction;
-import com.pragatix.repository.XpTransactionRepository;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.XpTransaction;
+import jjcet.PragatiX.repository.XpTransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;

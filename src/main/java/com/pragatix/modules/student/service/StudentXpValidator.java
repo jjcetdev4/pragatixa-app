@@ -1,11 +1,11 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.StudentActivityXp;
-import com.pragatix.modules.student.repository.StudentActivityXpRepository;
-import com.pragatix.repository.TeamRepository;
-import com.pragatix.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.StudentActivityXp;
+import jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository;
+import jjcet.PragatiX.repository.TeamRepository;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
 public class StudentXpValidator {
 
     private final StudentActivityXpRepository studentActivityXpRepository;
-    private final com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
+    private final jjcet.PragatiX.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
     private final TeamRepository teamRepository;
     private final ActivityAssignmentRepository activityAssignmentRepository;
 
     public StudentXpValidator(StudentActivityXpRepository studentActivityXpRepository,
-                              com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver,
-                              TeamRepository teamRepository,
-                              ActivityAssignmentRepository activityAssignmentRepository) {
+            jjcet.PragatiX.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver,
+            TeamRepository teamRepository,
+            ActivityAssignmentRepository activityAssignmentRepository) {
         this.studentActivityXpRepository = studentActivityXpRepository;
         this.academicCalendarResolver = academicCalendarResolver;
         this.teamRepository = teamRepository;
@@ -40,19 +40,23 @@ public class StudentXpValidator {
         // Resolve Assignment ID
         Long assignmentId = null;
         if (activityAssignmentRepository != null) {
-            java.util.List<com.pragatix.entity.ActivityAssignment> assignments = activityAssignmentRepository.findByActivityId(activity.getId());
-            com.pragatix.entity.ActivityAssignment assignment = assignments.stream()
-                .filter(a -> {
-                    if (a.getAssignmentScope() == com.pragatix.entity.AssignmentScope.GLOBAL) return true;
-                    if (a.getAssignmentScope() == com.pragatix.entity.AssignmentScope.DEPARTMENT 
-                        && student.getDepartment() != null && a.getDepartment() != null 
-                        && student.getDepartment().getId().equals(a.getDepartment().getId())) return true;
-                    if (a.getAssignmentScope() == com.pragatix.entity.AssignmentScope.SECTION 
-                        && student.getSection() != null && a.getSection() != null 
-                        && student.getSection().getId().equals(a.getSection().getId())) return true;
-                    return false;
-                })
-                .findFirst().orElse(null);
+            java.util.List<jjcet.PragatiX.entity.ActivityAssignment> assignments = activityAssignmentRepository
+                    .findByActivityId(activity.getId());
+            jjcet.PragatiX.entity.ActivityAssignment assignment = assignments.stream()
+                    .filter(a -> {
+                        if (a.getAssignmentScope() == jjcet.PragatiX.entity.AssignmentScope.GLOBAL)
+                            return true;
+                        if (a.getAssignmentScope() == jjcet.PragatiX.entity.AssignmentScope.DEPARTMENT
+                                && student.getDepartment() != null && a.getDepartment() != null
+                                && student.getDepartment().getId().equals(a.getDepartment().getId()))
+                            return true;
+                        if (a.getAssignmentScope() == jjcet.PragatiX.entity.AssignmentScope.SECTION
+                                && student.getSection() != null && a.getSection() != null
+                                && student.getSection().getId().equals(a.getSection().getId()))
+                            return true;
+                        return false;
+                    })
+                    .findFirst().orElse(null);
             if (assignment != null) {
                 assignmentId = assignment.getId();
             }
@@ -61,7 +65,7 @@ public class StudentXpValidator {
         // Resolve Team ID
         Long teamId = null;
         if (teamRepository != null) {
-            com.pragatix.entity.Team team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
+            jjcet.PragatiX.entity.Team team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
             if (team != null) {
                 teamId = team.getId();
             }
@@ -74,16 +78,19 @@ public class StudentXpValidator {
         boolean transactionExists = !history.isEmpty();
 
         // Determine if this is a group activity
-        boolean isGroupActivity = activity.isGroupXpEligible() 
-            || (activity.getSubgroup() != null && "group".equalsIgnoreCase(activity.getSubgroup().getCategory()))
-            || "GROUP".equalsIgnoreCase(activity.getModeType());
+        boolean isGroupActivity = activity.isGroupXpEligible()
+                || (activity.getSubgroup() != null && "group".equalsIgnoreCase(activity.getSubgroup().getCategory()))
+                || "GROUP".equalsIgnoreCase(activity.getModeType());
 
         // Repeatable logic:
         // 1. If activity.isRepeatAllowed() is true -> repeatable.
-        // 2. If it is a group activity, and not explicitly marked as One Time or Manual -> default behavior is repeatable.
+        // 2. If it is a group activity, and not explicitly marked as One Time or Manual
+        // -> default behavior is repeatable.
         // 3. Otherwise -> not repeatable.
         boolean repeatableFlag = activity.isRepeatAllowed();
-        boolean isRepeatable = repeatableFlag || (isGroupActivity && !"One Time".equalsIgnoreCase(activity.getAwardFrequency()) && !"Manual".equalsIgnoreCase(activity.getAwardFrequency()));
+        boolean isRepeatable = repeatableFlag
+                || (isGroupActivity && !"One Time".equalsIgnoreCase(activity.getAwardFrequency())
+                        && !"Manual".equalsIgnoreCase(activity.getAwardFrequency()));
 
         String validationDecision = "ALLOW";
         String validationError = null;
@@ -95,13 +102,16 @@ public class StudentXpValidator {
             if ("Weekly".equalsIgnoreCase(awardFrequency)) {
                 String awardDays = activity.getAwardDays();
                 if (awardDays != null && !awardDays.trim().isEmpty()) {
-                    com.pragatix.enums.AcademicYear academicYear = com.pragatix.enums.AcademicYear.fromStudent(student);
-                    java.time.DayOfWeek today = academicCalendarResolver.getEffectiveAcademicDay(LocalDate.now(), academicYear);
+                    jjcet.PragatiX.enums.AcademicYear academicYear = jjcet.PragatiX.enums.AcademicYear
+                            .fromStudent(student);
+                    java.time.DayOfWeek today = academicCalendarResolver.getEffectiveAcademicDay(LocalDate.now(),
+                            academicYear);
                     if (today == null) {
                         validationDecision = "BLOCK (Holiday)";
                         validationError = "Activity cannot be performed. Today is configured as a Holiday.";
                     } else {
-                        String todayName = today.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH);
+                        String todayName = today.getDisplayName(java.time.format.TextStyle.FULL,
+                                java.util.Locale.ENGLISH);
                         boolean dayAllowed = java.util.Arrays.stream(awardDays.split(","))
                                 .map(String::trim)
                                 .anyMatch(d -> d.equalsIgnoreCase(todayName));
@@ -109,7 +119,8 @@ public class StudentXpValidator {
                             String daysFormatted = java.util.Arrays.stream(awardDays.split(","))
                                     .map(String::trim).collect(Collectors.joining(", "));
                             validationDecision = "BLOCK (Day not allowed)";
-                            validationError = "XP can only be awarded on the configured Award Days: " + daysFormatted + ". Today is "
+                            validationError = "XP can only be awarded on the configured Award Days: " + daysFormatted
+                                    + ". Today is "
                                     + todayName + ".";
                         }
                     }
@@ -120,7 +131,8 @@ public class StudentXpValidator {
                 if ("One Time".equalsIgnoreCase(awardFrequency)) {
                     if (!history.isEmpty()) {
                         validationDecision = "BLOCK (One-time limit reached)";
-                        validationError = "Student " + student.getFullName() + " has already been awarded XP for this one-time activity.";
+                        validationError = "Student " + student.getFullName()
+                                + " has already been awarded XP for this one-time activity.";
                     }
                 } else if ("Per Assignment".equalsIgnoreCase(awardFrequency)) {
                     validationDecision = "ALLOW";
@@ -148,7 +160,8 @@ public class StudentXpValidator {
                         windowLabel = "today";
                         cap = 8;
                     } else if ("Weekly".equalsIgnoreCase(awardFrequency)) {
-                        windowStart = now.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+                        windowStart = now
+                                .with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
                                 .atStartOfDay();
                         windowLabel = "this week";
                     } else if ("Monthly".equalsIgnoreCase(awardFrequency)) {
@@ -161,7 +174,8 @@ public class StudentXpValidator {
                         } else {
                             if (history.size() >= cap) {
                                 validationDecision = "BLOCK (Cap reached)";
-                                validationError = "Student " + student.getFullName() + " has reached the maximum cap (" + cap
+                                validationError = "Student " + student.getFullName() + " has reached the maximum cap ("
+                                        + cap
                                         + ") for this activity.";
                             }
                         }
@@ -177,7 +191,8 @@ public class StudentXpValidator {
 
                         if (awardsInWindow >= cap) {
                             validationDecision = "BLOCK (Window cap reached)";
-                            validationError = "Student " + student.getFullName() + " has already reached the maximum allowed XP awards ("
+                            validationError = "Student " + student.getFullName()
+                                    + " has already reached the maximum allowed XP awards ("
                                     + cap + ") for " + windowLabel + ".";
                         }
                     }
@@ -197,4 +212,3 @@ public class StudentXpValidator {
         return validationError;
     }
 }
-

@@ -1,14 +1,14 @@
-package com.pragatix.modules.attendance.service;
+package jjcet.PragatiX.modules.attendance.service;
 
-import com.pragatix.entity.*;
-import com.pragatix.modules.attendance.dto.request.SaveAttendanceRequest;
-import com.pragatix.modules.attendance.dto.response.StudentAttendanceListItemResponse;
-import com.pragatix.modules.attendance.repository.AttendanceRepository;
-import com.pragatix.modules.attendance.repository.AttendanceRepository;
-import com.pragatix.repository.*;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.faculty.repository.FacultyRepository;
-import com.pragatix.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.attendance.dto.request.SaveAttendanceRequest;
+import jjcet.PragatiX.modules.attendance.dto.response.StudentAttendanceListItemResponse;
+import jjcet.PragatiX.modules.attendance.repository.AttendanceRepository;
+import jjcet.PragatiX.modules.attendance.repository.AttendanceRepository;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.faculty.repository.FacultyRepository;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,13 +51,13 @@ public class TeacherAttendanceService {
     private AttendanceStreakService streakService;
 
     @Autowired
-    private com.pragatix.modules.notification.service.NotificationService notificationService;
+    private jjcet.PragatiX.modules.notification.service.NotificationService notificationService;
 
     @Autowired
     private AuthUtils authUtils;
 
     @Autowired
-    private com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
+    private jjcet.PragatiX.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
 
     @Transactional(readOnly = true)
     public Integer getNextPeriod(LocalDate date, Long yearId, Long departmentId, Long sectionId) {
@@ -71,13 +71,13 @@ public class TeacherAttendanceService {
     @Transactional(readOnly = true)
     public List<StudentAttendanceListItemResponse> getStudentListWithAttendance(LocalDate date, Integer period,
             Long yearId, Long deptId, Long sectionId) {
-        
+
         User currentUser = authUtils.getCurrentUser();
         if (currentUser != null && authUtils.isAdmin(currentUser) && !authUtils.isSuperAdmin(currentUser)) {
             String adminYearStr = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
             if (adminYearStr != null) {
                 Long adminYearId = yearRepository.findByYearNo(Byte.parseByte(adminYearStr))
-                        .map(com.pragatix.entity.Year::getId)
+                        .map(jjcet.PragatiX.entity.Year::getId)
                         .orElse(null);
                 if (adminYearId != null) {
                     yearId = adminYearId;
@@ -89,14 +89,18 @@ public class TeacherAttendanceService {
             throw new IllegalArgumentException("yearId is required");
         }
 
-        com.pragatix.entity.Year yearEntity = yearRepository.findById(yearId).orElse(null);
-        com.pragatix.enums.AcademicYear academicYear = null;
+        jjcet.PragatiX.entity.Year yearEntity = yearRepository.findById(yearId).orElse(null);
+        jjcet.PragatiX.enums.AcademicYear academicYear = null;
         if (yearEntity != null && yearEntity.getYearNo() != null) {
             int no = yearEntity.getYearNo();
-            if (no == 1) academicYear = com.pragatix.enums.AcademicYear.FIRST_YEAR;
-            else if (no == 2) academicYear = com.pragatix.enums.AcademicYear.SECOND_YEAR;
-            else if (no == 3) academicYear = com.pragatix.enums.AcademicYear.THIRD_YEAR;
-            else if (no == 4) academicYear = com.pragatix.enums.AcademicYear.FOURTH_YEAR;
+            if (no == 1)
+                academicYear = jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
+            else if (no == 2)
+                academicYear = jjcet.PragatiX.enums.AcademicYear.SECOND_YEAR;
+            else if (no == 3)
+                academicYear = jjcet.PragatiX.enums.AcademicYear.THIRD_YEAR;
+            else if (no == 4)
+                academicYear = jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR;
         }
 
         if (academicCalendarResolver.isHoliday(date, academicYear)) {
@@ -118,11 +122,11 @@ public class TeacherAttendanceService {
             Optional<Attendance> recordOpt = attendanceRepository.findByStudentIdAndAttendanceDateAndPeriodNo(s.getId(),
                     date, period);
             if (recordOpt.isPresent()) {
-                res.setStatus(com.pragatix.entity.AttendanceRecord.AttendanceStatus
+                res.setStatus(jjcet.PragatiX.entity.AttendanceRecord.AttendanceStatus
                         .valueOf(recordOpt.get().getStatus().name()));
                 res.setRemarks(recordOpt.get().getRemarks());
             } else {
-                res.setStatus(com.pragatix.entity.AttendanceRecord.AttendanceStatus.PRESENT); // Default if not marked
+                res.setStatus(jjcet.PragatiX.entity.AttendanceRecord.AttendanceStatus.PRESENT); // Default if not marked
             }
             responseList.add(res);
         }
@@ -135,14 +139,18 @@ public class TeacherAttendanceService {
         log.info("Starting saveAttendance for user: {}, records count: {}", username,
                 request.getRecords() != null ? request.getRecords().size() : 0);
 
-        com.pragatix.entity.Year reqYear = yearRepository.findById(request.getYearId()).orElse(null);
-        com.pragatix.enums.AcademicYear reqAcademicYear = null;
+        jjcet.PragatiX.entity.Year reqYear = yearRepository.findById(request.getYearId()).orElse(null);
+        jjcet.PragatiX.enums.AcademicYear reqAcademicYear = null;
         if (reqYear != null && reqYear.getYearNo() != null) {
             int no = reqYear.getYearNo();
-            if (no == 1) reqAcademicYear = com.pragatix.enums.AcademicYear.FIRST_YEAR;
-            else if (no == 2) reqAcademicYear = com.pragatix.enums.AcademicYear.SECOND_YEAR;
-            else if (no == 3) reqAcademicYear = com.pragatix.enums.AcademicYear.THIRD_YEAR;
-            else if (no == 4) reqAcademicYear = com.pragatix.enums.AcademicYear.FOURTH_YEAR;
+            if (no == 1)
+                reqAcademicYear = jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
+            else if (no == 2)
+                reqAcademicYear = jjcet.PragatiX.enums.AcademicYear.SECOND_YEAR;
+            else if (no == 3)
+                reqAcademicYear = jjcet.PragatiX.enums.AcademicYear.THIRD_YEAR;
+            else if (no == 4)
+                reqAcademicYear = jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR;
         }
 
         if (academicCalendarResolver.isHoliday(request.getDate(), reqAcademicYear)) {
@@ -170,7 +178,8 @@ public class TeacherAttendanceService {
             boolean alreadyMarked = attendanceRepository.existsByStudentIdInAndAttendanceDateAndPeriodNo(
                     studentIds, request.getDate(), request.getPeriod());
             if (alreadyMarked) {
-                throw new IllegalArgumentException("Attendance for this class in period " + request.getPeriod() + " has already been marked.");
+                throw new IllegalArgumentException(
+                        "Attendance for this class in period " + request.getPeriod() + " has already been marked.");
             }
         }
 
@@ -201,7 +210,8 @@ public class TeacherAttendanceService {
 
             if (attendance.getStatus() == Attendance.AttendanceStatus.ABSENT) {
                 try {
-                    notificationService.sendAbsenceNotification(student.getId(), request.getDate(), request.getPeriod());
+                    notificationService.sendAbsenceNotification(student.getId(), request.getDate(),
+                            request.getPeriod());
                 } catch (Exception e) {
                     log.error("Failed to queue SMS notification for student {}", student.getRegNo(), e);
                 }

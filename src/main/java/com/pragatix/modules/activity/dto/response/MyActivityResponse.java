@@ -1,4 +1,4 @@
-package com.pragatix.modules.activity.dto.response;
+package jjcet.PragatiX.modules.activity.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,7 +33,7 @@ public class MyActivityResponse {
     private Integer cap; // max awards per frequency window
     private String awardFrequency; // One Time | Daily | Weekly | Monthly | Manual | Per Assignment
     private String awardDays; // comma-separated days, set when Weekly
-    
+
     // ── Attendance Engine Mapping ──────────────────────────────────────────────
     private Boolean attendanceEngineEnabled;
     private String attendanceRule;
@@ -566,7 +566,8 @@ public class MyActivityResponse {
                     xp, type, justification, departmentId, departmentName, sectionId, sectionName,
                     assignedBy, assignedAt, assignedFacultyName, assignmentMode, xpCategory, awardXp, awardEnabled,
                     penaltyEnabled, penaltyXp, awardType, repeatAllowed, xpType,
-                    cap, awardFrequency, awardDays, attendanceEngineEnabled, attendanceRule, manualEvidenceName, streakEnabled);
+                    cap, awardFrequency, awardDays, attendanceEngineEnabled, attendanceRule, manualEvidenceName,
+                    streakEnabled);
         }
     }
 }

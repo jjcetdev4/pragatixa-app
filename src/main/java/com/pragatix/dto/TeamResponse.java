@@ -1,8 +1,8 @@
-package com.pragatix.dto;
+package jjcet.PragatiX.dto;
 
 import java.util.List;
 
-import com.pragatix.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
 
 public class TeamResponse {
     private Long teamId;

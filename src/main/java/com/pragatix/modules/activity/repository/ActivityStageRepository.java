@@ -1,6 +1,6 @@
-package com.pragatix.modules.activity.repository;
+package jjcet.PragatiX.modules.activity.repository;
 
-import com.pragatix.entity.ActivityStage;
+import jjcet.PragatiX.entity.ActivityStage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -14,13 +14,13 @@ public interface ActivityStageRepository extends JpaRepository<ActivityStage, Lo
 
     boolean existsByNameAndIdNot(String name, Long id);
 
-    List<ActivityStage> findByStatus(com.pragatix.enums.StageStatus status);
+    List<ActivityStage> findByStatus(jjcet.PragatiX.enums.StageStatus status);
 
     List<ActivityStage> findAllByOrderByDisplayOrderAsc();
 
-    List<ActivityStage> findByAcademicYearOrderByDisplayOrderAsc(com.pragatix.enums.AcademicYear academicYear);
+    List<ActivityStage> findByAcademicYearOrderByDisplayOrderAsc(jjcet.PragatiX.enums.AcademicYear academicYear);
 
-    List<ActivityStage> findByAcademicYear(com.pragatix.enums.AcademicYear academicYear);
+    List<ActivityStage> findByAcademicYear(jjcet.PragatiX.enums.AcademicYear academicYear);
 
     Optional<ActivityStage> findByDisplayOrder(int displayOrder);
 

@@ -1,15 +1,15 @@
-package com.pragatix.modules.attendancesettings.controller;
+package jjcet.PragatiX.modules.attendancesettings.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.attendancesettings.dto.AttendanceSettingsDto;
-import com.pragatix.modules.attendancesettings.service.AttendanceSettingsService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.attendancesettings.dto.AttendanceSettingsDto;
+import jjcet.PragatiX.modules.attendancesettings.service.AttendanceSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import com.pragatix.enums.AcademicYear;
-import com.pragatix.modules.authentication.security.AuthUtils;
-import com.pragatix.entity.User;
+import jjcet.PragatiX.enums.AcademicYear;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.entity.User;
 import java.util.List;
 
 @RestController
@@ -26,7 +26,8 @@ public class AttendanceSettingsController {
     // --- Settings ---
 
     @GetMapping
-    public ResponseEntity<ApiResponse<AttendanceSettingsDto>> getSettings(@RequestParam(required = false) AcademicYear academicYear) {
+    public ResponseEntity<ApiResponse<AttendanceSettingsDto>> getSettings(
+            @RequestParam(required = false) AcademicYear academicYear) {
         User currentUser = authUtils.getCurrentUser();
         if (academicYear == null && authUtils.isAdmin(currentUser) && !authUtils.isSuperAdmin(currentUser)) {
             academicYear = currentUser.getAcademicYear();
@@ -36,7 +37,8 @@ public class AttendanceSettingsController {
     }
 
     @PutMapping
-    public ResponseEntity<ApiResponse<AttendanceSettingsDto>> updateSettings(@RequestBody AttendanceSettingsDto dto, @RequestParam(required = false) AcademicYear academicYear) {
+    public ResponseEntity<ApiResponse<AttendanceSettingsDto>> updateSettings(@RequestBody AttendanceSettingsDto dto,
+            @RequestParam(required = false) AcademicYear academicYear) {
         User currentUser = authUtils.getCurrentUser();
         if (academicYear == null && authUtils.isAdmin(currentUser) && !authUtils.isSuperAdmin(currentUser)) {
             academicYear = currentUser.getAcademicYear();

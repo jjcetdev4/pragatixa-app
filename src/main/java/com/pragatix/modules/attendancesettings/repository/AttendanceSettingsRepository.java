@@ -1,10 +1,10 @@
-package com.pragatix.modules.attendancesettings.repository;
+package jjcet.PragatiX.modules.attendancesettings.repository;
 
-import com.pragatix.entity.AttendanceSettings;
+import jjcet.PragatiX.entity.AttendanceSettings;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.pragatix.enums.AcademicYear;
+import jjcet.PragatiX.enums.AcademicYear;
 import java.util.Optional;
 
 @Repository

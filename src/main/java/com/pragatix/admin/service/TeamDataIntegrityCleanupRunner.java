@@ -1,11 +1,11 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.entity.StageTeam;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.Team;
-import com.pragatix.repository.StageTeamRepository;
-import com.pragatix.repository.TeamRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.StageTeam;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.Team;
+import jjcet.PragatiX.repository.StageTeamRepository;
+import jjcet.PragatiX.repository.TeamRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -28,11 +28,11 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
     private final JdbcTemplate jdbcTemplate;
 
     public TeamDataIntegrityCleanupRunner(TeamRepository teamRepository,
-                                         StageTeamRepository stageTeamRepository,
-                                         StudentRepository studentRepository,
-                                         TeamCleanupService teamCleanupService,
-                                         CaptainSelectionService captainSelectionService,
-                                         JdbcTemplate jdbcTemplate) {
+            StageTeamRepository stageTeamRepository,
+            StudentRepository studentRepository,
+            TeamCleanupService teamCleanupService,
+            CaptainSelectionService captainSelectionService,
+            JdbcTemplate jdbcTemplate) {
         this.teamRepository = teamRepository;
         this.stageTeamRepository = stageTeamRepository;
         this.studentRepository = studentRepository;
@@ -60,16 +60,15 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
                 try {
                     List<String> singleColIndexes = jdbcTemplate.query(
                             "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS " +
-                            "WHERE TABLE_SCHEMA = DATABASE() " +
-                            "AND TABLE_NAME = 'teams' " +
-                            "AND COLUMN_NAME = 'name' " +
-                            "AND NON_UNIQUE = 0 " +
-                            "AND INDEX_NAME != 'PRIMARY' " +
-                            "AND INDEX_NAME != 'uk_team_name_class' " +
-                            "GROUP BY INDEX_NAME " +
-                            "HAVING COUNT(*) = 1",
-                            (rs, rowNum) -> rs.getString("INDEX_NAME")
-                    );
+                                    "WHERE TABLE_SCHEMA = DATABASE() " +
+                                    "AND TABLE_NAME = 'teams' " +
+                                    "AND COLUMN_NAME = 'name' " +
+                                    "AND NON_UNIQUE = 0 " +
+                                    "AND INDEX_NAME != 'PRIMARY' " +
+                                    "AND INDEX_NAME != 'uk_team_name_class' " +
+                                    "GROUP BY INDEX_NAME " +
+                                    "HAVING COUNT(*) = 1",
+                            (rs, rowNum) -> rs.getString("INDEX_NAME"));
 
                     for (String idxName : singleColIndexes) {
                         log.info("INTEGRITY FIX: Dropping legacy global unique index on teams.name: {}", idxName);
@@ -88,14 +87,13 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
                 try {
                     Integer count = jdbcTemplate.queryForObject(
                             "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS " +
-                            "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'teams' AND INDEX_NAME = 'uk_team_name_class'",
-                            Integer.class
-                    );
+                                    "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'teams' AND INDEX_NAME = 'uk_team_name_class'",
+                            Integer.class);
                     if (count == null || count == 0) {
                         jdbcTemplate.execute(
-                                "ALTER TABLE teams ADD CONSTRAINT uk_team_name_class UNIQUE (name, department_id, year, section_id)"
-                        );
-                        log.info("Successfully added composite unique constraint uk_team_name_class on teams(name, department_id, year, section_id)");
+                                "ALTER TABLE teams ADD CONSTRAINT uk_team_name_class UNIQUE (name, department_id, year, section_id)");
+                        log.info(
+                                "Successfully added composite unique constraint uk_team_name_class on teams(name, department_id, year, section_id)");
                     }
                 } catch (Exception ex) {
                     log.debug("Composite constraint check skipped/failed: {}", ex.getMessage());
@@ -106,9 +104,8 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
                     // 1. Find all foreign keys on reg_no
                     List<String> fkNames = jdbcTemplate.query(
                             "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE " +
-                            "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'team_members' AND COLUMN_NAME = 'reg_no' AND REFERENCED_TABLE_NAME IS NOT NULL",
-                            (rs, rowNum) -> rs.getString("CONSTRAINT_NAME")
-                    );
+                                    "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'team_members' AND COLUMN_NAME = 'reg_no' AND REFERENCED_TABLE_NAME IS NOT NULL",
+                            (rs, rowNum) -> rs.getString("CONSTRAINT_NAME"));
                     for (String fk : fkNames) {
                         try {
                             jdbcTemplate.execute("ALTER TABLE team_members DROP FOREIGN KEY `" + fk + "`");
@@ -117,7 +114,7 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
                             log.warn("Could not drop foreign key {}: {}", fk, e.getMessage());
                         }
                     }
-                    
+
                     // 2. Drop the reg_no column entirely
                     jdbcTemplate.execute("ALTER TABLE team_members DROP COLUMN reg_no");
                     log.info("INTEGRITY FIX: Dropped legacy column team_members.reg_no to avoid Error 1364.");
@@ -138,7 +135,8 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
             if (team.getCaptain() != null) {
                 Student cap = team.getCaptain();
                 if (cap.getTeam() == null || !cap.getTeam().getId().equals(team.getId())) {
-                    log.warn("INTEGRITY FIX: Student {} ({}) is marked as Captain of Team '{}' (ID: {}), but student's active team is '{}' (ID: {}). Unlinking stale captaincy.",
+                    log.warn(
+                            "INTEGRITY FIX: Student {} ({}) is marked as Captain of Team '{}' (ID: {}), but student's active team is '{}' (ID: {}). Unlinking stale captaincy.",
                             cap.getFullName(), cap.getRegNo(), team.getName(), team.getId(),
                             cap.getTeam() != null ? cap.getTeam().getName() : "NONE",
                             cap.getTeam() != null ? cap.getTeam().getId() : null);
@@ -152,7 +150,8 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
             if (team.getViceCaptain() != null) {
                 Student vc = team.getViceCaptain();
                 if (vc.getTeam() == null || !vc.getTeam().getId().equals(team.getId())) {
-                    log.warn("INTEGRITY FIX: Student {} ({}) is marked as Vice Captain of Team '{}' (ID: {}), but student's active team is '{}' (ID: {}). Unlinking stale vice-captaincy.",
+                    log.warn(
+                            "INTEGRITY FIX: Student {} ({}) is marked as Vice Captain of Team '{}' (ID: {}), but student's active team is '{}' (ID: {}). Unlinking stale vice-captaincy.",
                             vc.getFullName(), vc.getRegNo(), team.getName(), team.getId(),
                             vc.getTeam() != null ? vc.getTeam().getName() : "NONE",
                             vc.getTeam() != null ? vc.getTeam().getId() : null);
@@ -175,7 +174,8 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
             if (st.getCaptain() != null) {
                 Student cap = st.getCaptain();
                 if (cap.getTeam() == null || !cap.getTeam().getId().equals(st.getTeam().getId())) {
-                    log.warn("INTEGRITY FIX: Student {} ({}) is marked as Stage Captain for Team '{}' in Stage '{}', but student's active team is '{}'. Unlinking stale stage captaincy.",
+                    log.warn(
+                            "INTEGRITY FIX: Student {} ({}) is marked as Stage Captain for Team '{}' in Stage '{}', but student's active team is '{}'. Unlinking stale stage captaincy.",
                             cap.getFullName(), cap.getRegNo(), st.getTeam().getName(),
                             st.getStage() != null ? st.getStage().getStageName() : "N/A",
                             cap.getTeam() != null ? cap.getTeam().getName() : "NONE");
@@ -188,7 +188,8 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
             if (st.getViceCaptain() != null) {
                 Student vc = st.getViceCaptain();
                 if (vc.getTeam() == null || !vc.getTeam().getId().equals(st.getTeam().getId())) {
-                    log.warn("INTEGRITY FIX: Student {} ({}) is marked as Stage Vice Captain for Team '{}' in Stage '{}', but student's active team is '{}'. Unlinking stale stage vice-captaincy.",
+                    log.warn(
+                            "INTEGRITY FIX: Student {} ({}) is marked as Stage Vice Captain for Team '{}' in Stage '{}', but student's active team is '{}'. Unlinking stale stage vice-captaincy.",
                             vc.getFullName(), vc.getRegNo(), st.getTeam().getName(),
                             st.getStage() != null ? st.getStage().getStageName() : "N/A",
                             vc.getTeam() != null ? vc.getTeam().getName() : "NONE");
@@ -209,19 +210,18 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
                 // Delete rows from team_members where the student does not belong to that team
                 int removedJoinRows = jdbcTemplate.update(
                         "DELETE tm FROM team_members tm " +
-                        "LEFT JOIN students s ON s.id = tm.student_id " +
-                        "WHERE s.id IS NULL OR s.team_id IS NULL OR s.team_id != tm.team_id"
-                );
+                                "LEFT JOIN students s ON s.id = tm.student_id " +
+                                "WHERE s.id IS NULL OR s.team_id IS NULL OR s.team_id != tm.team_id");
 
                 if (removedJoinRows > 0) {
-                    log.warn("INTEGRITY FIX: Removed {} stale/duplicate row(s) from team_members table.", removedJoinRows);
+                    log.warn("INTEGRITY FIX: Removed {} stale/duplicate row(s) from team_members table.",
+                            removedJoinRows);
                 }
 
                 // Ensure every student with a team has a row in team_members
                 jdbcTemplate.update(
                         "INSERT IGNORE INTO team_members (team_id, student_id) " +
-                        "SELECT s.team_id, s.id FROM students s WHERE s.team_id IS NOT NULL"
-                );
+                                "SELECT s.team_id, s.id FROM students s WHERE s.team_id IS NOT NULL");
             }
         } catch (Exception e) {
             log.debug("team_members table sync skipped or not present: {}", e.getMessage());

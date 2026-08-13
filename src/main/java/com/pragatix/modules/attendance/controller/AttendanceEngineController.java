@@ -1,13 +1,13 @@
-package com.pragatix.modules.attendance.controller;
+package jjcet.PragatiX.modules.attendance.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.enums.AcademicYear;
-import com.pragatix.modules.attendance.service.AttendanceDailyEngineService;
-import com.pragatix.modules.attendance.service.AttendanceWeeklyEngineService;
-import com.pragatix.modules.attendancesettings.dto.AttendanceSettingsDto;
-import com.pragatix.modules.attendancesettings.repository.AttendanceSettingsRepository;
-import com.pragatix.modules.attendancesettings.service.AttendanceSettingsService;
-import com.pragatix.modules.attendancesettings.service.EngineClockService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.enums.AcademicYear;
+import jjcet.PragatiX.modules.attendance.service.AttendanceDailyEngineService;
+import jjcet.PragatiX.modules.attendance.service.AttendanceWeeklyEngineService;
+import jjcet.PragatiX.modules.attendancesettings.dto.AttendanceSettingsDto;
+import jjcet.PragatiX.modules.attendancesettings.repository.AttendanceSettingsRepository;
+import jjcet.PragatiX.modules.attendancesettings.service.AttendanceSettingsService;
+import jjcet.PragatiX.modules.attendancesettings.service.EngineClockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +19,8 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * AttendanceEngineController - REST API for the Attendance Engine Control Center.
+ * AttendanceEngineController - REST API for the Attendance Engine Control
+ * Center.
  *
  * Provides endpoints to:
  * - Get engine status for an Academic Year
@@ -35,11 +36,16 @@ public class AttendanceEngineController {
 
     private static final Logger log = LoggerFactory.getLogger(AttendanceEngineController.class);
 
-    @Autowired private AttendanceDailyEngineService dailyEngineService;
-    @Autowired private AttendanceWeeklyEngineService weeklyEngineService;
-    @Autowired private AttendanceSettingsService settingsService;
-    @Autowired private AttendanceSettingsRepository settingsRepository;
-    @Autowired private EngineClockService clockService;
+    @Autowired
+    private AttendanceDailyEngineService dailyEngineService;
+    @Autowired
+    private AttendanceWeeklyEngineService weeklyEngineService;
+    @Autowired
+    private AttendanceSettingsService settingsService;
+    @Autowired
+    private AttendanceSettingsRepository settingsRepository;
+    @Autowired
+    private EngineClockService clockService;
 
     /**
      * GET /api/v1/attendance-engine/status?academicYear=SECOND_YEAR
@@ -48,19 +54,22 @@ public class AttendanceEngineController {
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<AttendanceSettingsDto>> getStatus(
             @RequestParam(required = false) AcademicYear academicYear) {
-        if (academicYear == null) academicYear = AcademicYear.FIRST_YEAR;
+        if (academicYear == null)
+            academicYear = AcademicYear.FIRST_YEAR;
         AttendanceSettingsDto dto = settingsService.getSettings(academicYear);
         return ResponseEntity.ok(ApiResponse.ok("Engine status retrieved", dto));
     }
 
     /**
      * POST /api/v1/attendance-engine/run-daily?academicYear=SECOND_YEAR
-     * Manually triggers the Daily Attendance Engine using the effective date (test or production).
+     * Manually triggers the Daily Attendance Engine using the effective date (test
+     * or production).
      */
     @PostMapping("/run-daily")
     public ResponseEntity<ApiResponse<Map<String, Object>>> runDaily(
             @RequestParam(required = false) AcademicYear academicYear) {
-        if (academicYear == null) academicYear = AcademicYear.FIRST_YEAR;
+        if (academicYear == null)
+            academicYear = AcademicYear.FIRST_YEAR;
         log.info("[TRACE] ======================================================");
         log.info("[TRACE] |  MANUAL TRIGGER: Daily Engine via REST API          |");
         log.info("[TRACE] ======================================================");
@@ -78,7 +87,8 @@ public class AttendanceEngineController {
     @PostMapping("/run-weekly")
     public ResponseEntity<ApiResponse<Map<String, Object>>> runWeekly(
             @RequestParam(required = false) AcademicYear academicYear) {
-        if (academicYear == null) academicYear = AcademicYear.FIRST_YEAR;
+        if (academicYear == null)
+            academicYear = AcademicYear.FIRST_YEAR;
         log.info("[TRACE] ======================================================");
         log.info("[TRACE] |  MANUAL TRIGGER: Weekly Engine via REST API         |");
         log.info("[TRACE] ======================================================");
@@ -96,14 +106,14 @@ public class AttendanceEngineController {
     @PostMapping("/run-both")
     public ResponseEntity<ApiResponse<Map<String, Object>>> runBoth(
             @RequestParam(required = false) AcademicYear academicYear) {
-        if (academicYear == null) academicYear = AcademicYear.FIRST_YEAR;
+        if (academicYear == null)
+            academicYear = AcademicYear.FIRST_YEAR;
         log.info("Manual trigger: Both Engines for {}", academicYear);
         Map<String, Object> dailyResult = dailyEngineService.execute(academicYear);
         Map<String, Object> weeklyResult = weeklyEngineService.execute(academicYear);
         Map<String, Object> combined = Map.of(
-            "daily", dailyResult,
-            "weekly", weeklyResult
-        );
+                "daily", dailyResult,
+                "weekly", weeklyResult);
         return ResponseEntity.ok(ApiResponse.ok("Both engines executed", combined));
     }
 
@@ -114,7 +124,8 @@ public class AttendanceEngineController {
     @PostMapping("/reset")
     public ResponseEntity<ApiResponse<AttendanceSettingsDto>> resetState(
             @RequestParam(required = false) AcademicYear academicYear) {
-        if (academicYear == null) academicYear = AcademicYear.FIRST_YEAR;
+        if (academicYear == null)
+            academicYear = AcademicYear.FIRST_YEAR;
         final AcademicYear finalYear = academicYear;
         log.info("Engine state reset for {}", academicYear);
 

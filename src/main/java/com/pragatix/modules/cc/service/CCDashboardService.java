@@ -1,19 +1,19 @@
-package com.pragatix.modules.cc.service;
+package jjcet.PragatiX.modules.cc.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.User;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.repository.BadgeRequestRepository;
-import com.pragatix.repository.PenaltyRequestRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.repository.BadgeRequestRepository;
+import jjcet.PragatiX.repository.PenaltyRequestRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
-import com.pragatix.repository.DepartmentRepository;
-import com.pragatix.repository.SectionRepository;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.repository.SectionRepository;
 
 @Service
 public class CCDashboardService {

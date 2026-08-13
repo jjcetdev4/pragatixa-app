@@ -1,9 +1,9 @@
-package com.pragatix.modules.activity.dto.response;
+package jjcet.PragatiX.modules.activity.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.pragatix.enums.StageStatus;
+import jjcet.PragatiX.enums.StageStatus;
 
 public class ActivityStageResponse {
     private Long id;
@@ -373,13 +373,13 @@ public class ActivityStageResponse {
         this.overallPercentage = overallPercentage;
     }
 
-    private com.pragatix.enums.AcademicYear academicYear;
+    private jjcet.PragatiX.enums.AcademicYear academicYear;
 
-    public com.pragatix.enums.AcademicYear getAcademicYear() {
+    public jjcet.PragatiX.enums.AcademicYear getAcademicYear() {
         return academicYear;
     }
 
-    public void setAcademicYear(com.pragatix.enums.AcademicYear academicYear) {
+    public void setAcademicYear(jjcet.PragatiX.enums.AcademicYear academicYear) {
         this.academicYear = academicYear;
     }
 }

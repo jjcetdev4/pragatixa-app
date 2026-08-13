@@ -1,9 +1,9 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.entity.*;
-import com.pragatix.repository.*;
-import com.pragatix.modules.authentication.repository.*;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.modules.authentication.repository.*;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -38,17 +38,17 @@ public class TestDataSeederRunner implements ApplicationRunner {
     private final SectionRepository sectionRepository;
 
     public TestDataSeederRunner(UserRepository userRepository,
-                                StudentRepository studentRepository,
-                                RoleRepository roleRepository,
-                                SubRoleRepository subRoleRepository,
-                                PasswordEncoder passwordEncoder,
-                                DepartmentRepository departmentRepository,
-                                GenderRepository genderRepository,
-                                AcademicYearRepository academicYearRepository,
-                                YearRepository yearRepository,
-                                SemesterRepository semesterRepository,
-                                TeamRepository teamRepository,
-                                SectionRepository sectionRepository) {
+            StudentRepository studentRepository,
+            RoleRepository roleRepository,
+            SubRoleRepository subRoleRepository,
+            PasswordEncoder passwordEncoder,
+            DepartmentRepository departmentRepository,
+            GenderRepository genderRepository,
+            AcademicYearRepository academicYearRepository,
+            YearRepository yearRepository,
+            SemesterRepository semesterRepository,
+            TeamRepository teamRepository,
+            SectionRepository sectionRepository) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.roleRepository = roleRepository;
@@ -93,24 +93,32 @@ public class TestDataSeederRunner implements ApplicationRunner {
             String defaultHashedPassword = passwordEncoder.encode("password");
 
             // Super Admin: test1@gmail.com
-            seedUser("test1@gmail.com", "superadmin_test", "Test Super Admin", defaultHashedPassword, Set.of(superAdminRole), Set.of(), dept, sec);
+            seedUser("test1@gmail.com", "superadmin_test", "Test Super Admin", defaultHashedPassword,
+                    Set.of(superAdminRole), Set.of(), dept, sec);
 
             // Admin: test2@gmail.com
-            seedUser("test2@gmail.com", "admin_test", "Test Admin", defaultHashedPassword, Set.of(adminRole), Set.of(), dept, sec);
+            seedUser("test2@gmail.com", "admin_test", "Test Admin", defaultHashedPassword, Set.of(adminRole), Set.of(),
+                    dept, sec);
 
             // HOD: test3@gmail.com
-            seedUser("test3@gmail.com", "hod_test", "Test HOD", defaultHashedPassword, Set.of(hodRole), Set.of(), dept, sec);
+            seedUser("test3@gmail.com", "hod_test", "Test HOD", defaultHashedPassword, Set.of(hodRole), Set.of(), dept,
+                    sec);
 
             // CC: test4@gmail.com
-            seedUser("test4@gmail.com", "cc_test", "Test Class Coordinator", defaultHashedPassword, Set.of(teacherRole), Set.of(ccSubRole), dept, sec);
+            seedUser("test4@gmail.com", "cc_test", "Test Class Coordinator", defaultHashedPassword, Set.of(teacherRole),
+                    Set.of(ccSubRole), dept, sec);
 
             // Teacher: test5@gmail.com
-            seedUser("test5@gmail.com", "teacher_test", "Test Teacher", defaultHashedPassword, Set.of(teacherRole), Set.of(), dept, sec);
+            seedUser("test5@gmail.com", "teacher_test", "Test Teacher", defaultHashedPassword, Set.of(teacherRole),
+                    Set.of(), dept, sec);
 
             // 5. Seed Students & Team
-            Student captain = seedStudent("test6@gmail.com", "test6", "spr6", "Test Captain", defaultHashedPassword, dept, sec, gen, ay, yr, sem, true);
-            Student viceCaptain = seedStudent("test7@gmail.com", "test7", "spr7", "Test Vice Captain", defaultHashedPassword, dept, sec, gen, ay, yr, sem, false);
-            Student member = seedStudent("test8@gmail.com", "test8", "spr8", "Test Member", defaultHashedPassword, dept, sec, gen, ay, yr, sem, false);
+            Student captain = seedStudent("test6@gmail.com", "test6", "spr6", "Test Captain", defaultHashedPassword,
+                    dept, sec, gen, ay, yr, sem, true);
+            Student viceCaptain = seedStudent("test7@gmail.com", "test7", "spr7", "Test Vice Captain",
+                    defaultHashedPassword, dept, sec, gen, ay, yr, sem, false);
+            Student member = seedStudent("test8@gmail.com", "test8", "spr8", "Test Member", defaultHashedPassword, dept,
+                    sec, gen, ay, yr, sem, false);
 
             // Resolve Team
             User teamCreator = userRepository.findByEmail("test4@gmail.com").orElse(null);
@@ -137,7 +145,8 @@ public class TestDataSeederRunner implements ApplicationRunner {
         log.info("=================================================================");
     }
 
-    private void seedUser(String email, String username, String fullName, String password, Set<Role> roles, Set<SubRole> subRoles, Department dept, Section sec) {
+    private void seedUser(String email, String username, String fullName, String password, Set<Role> roles,
+            Set<SubRole> subRoles, Department dept, Section sec) {
         Optional<User> existing = userRepository.findByEmail(email);
         if (existing.isPresent()) {
             log.debug("User already exists: {}", email);
@@ -158,7 +167,8 @@ public class TestDataSeederRunner implements ApplicationRunner {
         log.info("Seeded User: {} ({})", fullName, email);
     }
 
-    private Student seedStudent(String email, String regNo, String sprNo, String fullName, String password, Department dept, Section sec, Gender gen, AcademicYear ay, Year yr, Semester sem, boolean isCaptain) {
+    private Student seedStudent(String email, String regNo, String sprNo, String fullName, String password,
+            Department dept, Section sec, Gender gen, AcademicYear ay, Year yr, Semester sem, boolean isCaptain) {
         Optional<Student> existing = studentRepository.findByEmail(email);
         if (existing.isPresent()) {
             log.debug("Student already exists: {}", email);
@@ -261,11 +271,13 @@ public class TestDataSeederRunner implements ApplicationRunner {
 
     private Role getOrCreateRole(String name) {
         Optional<Role> r = roleRepository.findByName(name);
-        if (r.isPresent()) return r.get();
+        if (r.isPresent())
+            return r.get();
 
         String rawName = name.replace("ROLE_", "");
         Optional<Role> rRaw = roleRepository.findByName(rawName);
-        if (rRaw.isPresent()) return rRaw.get();
+        if (rRaw.isPresent())
+            return rRaw.get();
 
         Role newRole = new Role();
         newRole.setName(name);

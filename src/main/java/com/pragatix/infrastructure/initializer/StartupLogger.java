@@ -1,4 +1,4 @@
-package com.pragatix.infrastructure.initializer;
+package jjcet.PragatiX.infrastructure.initializer;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;

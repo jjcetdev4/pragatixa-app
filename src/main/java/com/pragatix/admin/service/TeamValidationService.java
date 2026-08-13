@@ -1,19 +1,19 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.SubRole;
-import com.pragatix.entity.User;
-import com.pragatix.modules.activity.service.AssignmentSecurityService;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.SubRole;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.activity.service.AssignmentSecurityService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TeamValidationService {
 
     private final AssignmentSecurityService assignmentSecurityService;
-    private final com.pragatix.modules.authentication.security.AuthUtils authUtils;
+    private final jjcet.PragatiX.modules.authentication.security.AuthUtils authUtils;
 
     public TeamValidationService(AssignmentSecurityService assignmentSecurityService,
-            com.pragatix.modules.authentication.security.AuthUtils authUtils) {
+            jjcet.PragatiX.modules.authentication.security.AuthUtils authUtils) {
         this.assignmentSecurityService = assignmentSecurityService;
         this.authUtils = authUtils;
     }
@@ -64,12 +64,12 @@ public class TeamValidationService {
         return isAdmin || isAssignedFaculty || matchesDeptAndSection || matchesHodDept;
     }
 
-    public boolean validateTeamAccess(User user, com.pragatix.entity.Team team) {
+    public boolean validateTeamAccess(User user, jjcet.PragatiX.entity.Team team) {
         if (authUtils.isSuperAdmin(user))
             return true;
 
         if (authUtils.isAdmin(user)) {
-            String adminYear = com.pragatix.modules.authentication.security.AuthUtils
+            String adminYear = jjcet.PragatiX.modules.authentication.security.AuthUtils
                     .getAssignedYearString(user.getAcademicYear());
             if (adminYear != null && adminYear.equals(team.getYear())) {
                 return true;
@@ -111,7 +111,7 @@ public class TeamValidationService {
                 return true;
             } else {
                 throw new org.springframework.security.access.AccessDeniedException(
-                    "You do not have permission to view this team's details.");
+                        "You do not have permission to view this team's details.");
             }
         }
 

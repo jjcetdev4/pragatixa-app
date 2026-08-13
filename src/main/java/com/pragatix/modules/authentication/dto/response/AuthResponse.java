@@ -1,4 +1,4 @@
-package com.pragatix.modules.authentication.dto.response;
+package jjcet.PragatiX.modules.authentication.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;

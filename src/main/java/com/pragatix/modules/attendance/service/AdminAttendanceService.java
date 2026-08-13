@@ -1,9 +1,9 @@
-package com.pragatix.modules.attendance.service;
+package jjcet.PragatiX.modules.attendance.service;
 
-import com.pragatix.entity.Attendance;
-import com.pragatix.modules.attendance.dto.response.AdminAttendanceSummaryResponse;
-import com.pragatix.modules.attendance.dto.response.StudentAttendanceListItemResponse;
-import com.pragatix.modules.attendance.repository.AttendanceRepository;
+import jjcet.PragatiX.entity.Attendance;
+import jjcet.PragatiX.modules.attendance.dto.response.AdminAttendanceSummaryResponse;
+import jjcet.PragatiX.modules.attendance.dto.response.StudentAttendanceListItemResponse;
+import jjcet.PragatiX.modules.attendance.repository.AttendanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
-import com.pragatix.modules.attendance.dto.response.StudentAttendanceMatrixItemResponse;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.entity.Student;
-import com.pragatix.modules.authentication.security.AuthUtils;
-import com.pragatix.entity.User;
-import com.pragatix.repository.YearRepository;
+import jjcet.PragatiX.modules.attendance.dto.response.StudentAttendanceMatrixItemResponse;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.repository.YearRepository;
 import org.springframework.security.access.AccessDeniedException;
 
 @Service
@@ -36,7 +36,6 @@ public class AdminAttendanceService {
     @Autowired
     private YearRepository yearRepository;
 
-
     @Transactional(readOnly = true)
     public AdminAttendanceSummaryResponse getDashboardSummary(LocalDate date, Long yearId, Long deptId,
             Long sectionId) {
@@ -45,7 +44,7 @@ public class AdminAttendanceService {
             String adminYearStr = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
             if (adminYearStr != null) {
                 Long adminYearId = yearRepository.findByYearNo(Byte.parseByte(adminYearStr))
-                        .map(com.pragatix.entity.Year::getId)
+                        .map(jjcet.PragatiX.entity.Year::getId)
                         .orElse(null);
                 if (adminYearId != null) {
                     yearId = adminYearId;
@@ -115,8 +114,10 @@ public class AdminAttendanceService {
         }).collect(Collectors.toList());
 
         for (StudentAttendanceMatrixItemResponse item : matrixItems) {
-            boolean hasPresent = item.getPeriodStatuses().values().stream().anyMatch(s -> s.equals("P") || s.equals("OD"));
-            boolean hasAbsent = item.getPeriodStatuses().values().stream().anyMatch(s -> s.equals("A") || s.equals("L"));
+            boolean hasPresent = item.getPeriodStatuses().values().stream()
+                    .anyMatch(s -> s.equals("P") || s.equals("OD"));
+            boolean hasAbsent = item.getPeriodStatuses().values().stream()
+                    .anyMatch(s -> s.equals("A") || s.equals("L"));
             if (hasPresent) {
                 presentCount++;
             } else if (hasAbsent) {

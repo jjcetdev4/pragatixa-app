@@ -1,9 +1,9 @@
-package com.pragatix.modules.activity.service;
+package jjcet.PragatiX.modules.activity.service;
 
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.StudentActivityStreak;
-import com.pragatix.entity.Student;
-import com.pragatix.repository.StudentActivityStreakRepository;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.StudentActivityStreak;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.repository.StudentActivityStreakRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
-import com.pragatix.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
 
 @Service
 public class ActivityStreakService {
@@ -19,7 +19,8 @@ public class ActivityStreakService {
     private final StudentActivityStreakRepository streakRepository;
     private final ActivityRepository activityRepository;
 
-    public ActivityStreakService(StudentActivityStreakRepository streakRepository, ActivityRepository activityRepository) {
+    public ActivityStreakService(StudentActivityStreakRepository streakRepository,
+            ActivityRepository activityRepository) {
         this.streakRepository = streakRepository;
         this.activityRepository = activityRepository;
     }
@@ -31,26 +32,28 @@ public class ActivityStreakService {
         }
 
         LocalDate today = LocalDate.now();
-        Optional<StudentActivityStreak> streakOpt = streakRepository.findByStudentIdAndActivityId(student.getId(), activity.getId());
+        Optional<StudentActivityStreak> streakOpt = streakRepository.findByStudentIdAndActivityId(student.getId(),
+                activity.getId());
         StudentActivityStreak streak;
 
         if (streakOpt.isPresent()) {
             streak = streakOpt.get();
             LocalDate lastDate = streak.getLastCompletedDate();
-            
+
             if (lastDate != null && lastDate.equals(today)) {
                 // Already completed today, do nothing to streak count
                 return;
             }
-            
+
             // Simplified Consecutive Check based on standard daily progression
             // Ideally, we could parse activity.getResetPeriod() (e.g. "Weekly", "Daily")
             boolean isConsecutive = false;
-            
+
             if (lastDate != null) {
-                String resetPeriod = activity.getResetPeriod() != null ? activity.getResetPeriod().trim().toLowerCase() : "daily";
+                String resetPeriod = activity.getResetPeriod() != null ? activity.getResetPeriod().trim().toLowerCase()
+                        : "daily";
                 long daysBetween = ChronoUnit.DAYS.between(lastDate, today);
-                
+
                 if (resetPeriod.equals("weekly") || resetPeriod.equals("week")) {
                     isConsecutive = daysBetween <= 7;
                 } else if (resetPeriod.equals("monthly") || resetPeriod.equals("month")) {
@@ -77,7 +80,7 @@ public class ActivityStreakService {
         streak.setLastCompletedDate(today);
         streakRepository.save(streak);
     }
-    
+
     public List<StudentActivityStreak> getStudentActivityStreaks(Long studentId) {
         List<Activity> streakEnabledActivities = activityRepository.findByStreakEnabledTrue();
         List<StudentActivityStreak> existingStreaks = streakRepository.findByStudentId(studentId);

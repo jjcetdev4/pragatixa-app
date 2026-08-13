@@ -1,4 +1,4 @@
-package com.pragatix.modules.authentication.service;
+package jjcet.PragatiX.modules.authentication.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,19 +46,22 @@ public class ZeptoMailService {
         // Safe Diagnostic Logging
         log.info("ZeptoMail Diagnostics - URL Configured: {}", (mailUrl != null && !mailUrl.isEmpty()));
         log.info("ZeptoMail Diagnostics - Token Length: {}", mailToken != null ? mailToken.length() : 0);
-        log.info("ZeptoMail Diagnostics - Token Starts with Zoho-enczapikey: {}", mailToken != null && mailToken.trim().toLowerCase().startsWith("zoho-enczapikey"));
-        log.info("ZeptoMail Diagnostics - Sender Address Configured: {}", (senderAddress != null && !senderAddress.isEmpty()));
-        log.info("ZeptoMail Diagnostics - Template Key Present: {}", (templateKey != null && !templateKey.trim().isEmpty()));
+        log.info("ZeptoMail Diagnostics - Token Starts with Zoho-enczapikey: {}",
+                mailToken != null && mailToken.trim().toLowerCase().startsWith("zoho-enczapikey"));
+        log.info("ZeptoMail Diagnostics - Sender Address Configured: {}",
+                (senderAddress != null && !senderAddress.isEmpty()));
+        log.info("ZeptoMail Diagnostics - Template Key Present: {}",
+                (templateKey != null && !templateKey.trim().isEmpty()));
 
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            
+
             String token = mailToken.trim();
             if (!token.toLowerCase().startsWith("zoho-enczapikey")) {
                 token = "Zoho-enczapikey " + token;
             }
-            
+
             headers.set("Authorization", token);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
@@ -83,7 +86,7 @@ public class ZeptoMailService {
                 mergeInfo.put("otp", otp); // Lowercase variable
                 mergeInfo.put("OTP", otp); // Uppercase variable
                 requestBody.put("merge_info", mergeInfo);
-                
+
                 // Switch endpoint URL for templates if not already set
                 if (targetUrl.endsWith("/email")) {
                     targetUrl = targetUrl + "/template";
@@ -107,7 +110,8 @@ public class ZeptoMailService {
                 log.info("OTP email sent successfully to {}", toEmail);
                 return true;
             } else {
-                log.error("Failed to send OTP email. Status: {}, Response: {}", response.getStatusCode(), response.getBody());
+                log.error("Failed to send OTP email. Status: {}, Response: {}", response.getStatusCode(),
+                        response.getBody());
                 return false;
             }
 

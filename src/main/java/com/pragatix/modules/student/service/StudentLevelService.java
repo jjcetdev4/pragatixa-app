@@ -1,10 +1,10 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.Level;
-import com.pragatix.entity.Student;
-import com.pragatix.modules.student.dto.response.StudentProgressionDto;
-import com.pragatix.repository.LevelRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.Level;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.modules.student.dto.response.StudentProgressionDto;
+import jjcet.PragatiX.repository.LevelRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +17,10 @@ public class StudentLevelService {
 
     private final StudentRepository studentRepository;
     private final LevelRepository levelRepository;
-    private final com.pragatix.student.XpQueryService xpQueryService;
+    private final jjcet.PragatiX.student.XpQueryService xpQueryService;
 
     public StudentLevelService(StudentRepository studentRepository, LevelRepository levelRepository,
-            com.pragatix.student.XpQueryService xpQueryService) {
+            jjcet.PragatiX.student.XpQueryService xpQueryService) {
         this.studentRepository = studentRepository;
         this.levelRepository = levelRepository;
         this.xpQueryService = xpQueryService;

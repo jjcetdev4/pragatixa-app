@@ -1,7 +1,7 @@
-package com.pragatix.modules.activity.dto.request;
+package jjcet.PragatiX.modules.activity.dto.request;
 
 import jakarta.validation.constraints.NotNull;
-import com.pragatix.entity.AssignmentScope;
+import jjcet.PragatiX.entity.AssignmentScope;
 
 public class AssignmentRequest {
 

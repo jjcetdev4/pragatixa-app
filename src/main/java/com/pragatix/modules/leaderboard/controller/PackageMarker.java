@@ -1,4 +1,4 @@
-package com.pragatix.modules.leaderboard.controller;
+package jjcet.PragatiX.modules.leaderboard.controller;
 
 public final class PackageMarker {
 }

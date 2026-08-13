@@ -1,6 +1,6 @@
-package com.pragatix.modules.authentication.repository;
+package jjcet.PragatiX.modules.authentication.repository;
 
-import com.pragatix.entity.Role;
+import jjcet.PragatiX.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

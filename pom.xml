@@ -11,7 +11,7 @@
     <relativePath/>
   </parent>
 
-  <groupId>com.pragatix</groupId>
+  <groupId>jjcet.PragatiX</groupId>
   <artifactId>pragatix-backend</artifactId>
   <version>1.0.0</version>
   <name>SPDMS Backend</name>
@@ -180,7 +180,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>com.pragatix.SpdmsApplication</mainClass>
+          <mainClass>jjcet.PragatiX.SpdmsApplication</mainClass>
         </configuration>
       </plugin>
     </plugins>

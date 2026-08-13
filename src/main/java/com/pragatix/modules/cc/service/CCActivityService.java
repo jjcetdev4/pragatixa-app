@@ -1,19 +1,19 @@
-package com.pragatix.modules.cc.service;
+package jjcet.PragatiX.modules.cc.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.*;
-import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.modules.admin.service.ActivityQueryService;
-import com.pragatix.modules.admin.service.AdminAssignmentService;
-import com.pragatix.modules.admin.service.AdminStageService;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.modules.cc.dto.CCActivityAssignRequest;
-import com.pragatix.modules.cc.dto.CCTeacherAssignRequest;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.repository.ActivityTemporaryAssignmentRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityStageResponse;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.modules.admin.service.ActivityQueryService;
+import jjcet.PragatiX.modules.admin.service.AdminAssignmentService;
+import jjcet.PragatiX.modules.admin.service.AdminStageService;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.modules.cc.dto.CCActivityAssignRequest;
+import jjcet.PragatiX.modules.cc.dto.CCTeacherAssignRequest;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.repository.ActivityTemporaryAssignmentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -42,14 +42,14 @@ public class CCActivityService {
     private final ActivityQueryService activityQueryService;
 
     public CCActivityService(UserRepository userRepository,
-                             ActivityRepository activityRepository,
-                             ActivityAssignmentRepository activityAssignmentRepository,
-                             ActivityTemporaryAssignmentRepository activityTemporaryAssignmentRepository,
-                             ActivityStageRepository activityStageRepository,
-                             StudentRepository studentRepository,
-                             AdminAssignmentService adminAssignmentService,
-                             AdminStageService adminStageService,
-                             ActivityQueryService activityQueryService) {
+            ActivityRepository activityRepository,
+            ActivityAssignmentRepository activityAssignmentRepository,
+            ActivityTemporaryAssignmentRepository activityTemporaryAssignmentRepository,
+            ActivityStageRepository activityStageRepository,
+            StudentRepository studentRepository,
+            AdminAssignmentService adminAssignmentService,
+            AdminStageService adminStageService,
+            ActivityQueryService activityQueryService) {
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
@@ -87,26 +87,27 @@ public class CCActivityService {
                     .body(ApiResponse.error("Access Denied: Only Class Coordinators can access this module."));
         }
 
-        com.pragatix.enums.AcademicYear targetYear = null;
+        jjcet.PragatiX.enums.AcademicYear targetYear = null;
         if (academicYear != null && !academicYear.trim().isEmpty()) {
-            targetYear = com.pragatix.enums.AcademicYear.fromString(academicYear);
+            targetYear = jjcet.PragatiX.enums.AcademicYear.fromString(academicYear);
         }
         if (targetYear == null) {
-            targetYear = com.pragatix.enums.AcademicYear.fromUser(ccUser);
+            targetYear = jjcet.PragatiX.enums.AcademicYear.fromUser(ccUser);
         }
 
         return adminStageService.getAllStages(targetYear);
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<ApiResponse<List<Activity>>> getActiveActivities(String username, Long stageId, String subgroup) {
+    public ResponseEntity<ApiResponse<List<Activity>>> getActiveActivities(String username, Long stageId,
+            String subgroup) {
         User ccUser = validateAndGetCCUser(username);
         if (ccUser == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("Access Denied: Only Class Coordinators can access this module."));
         }
 
-        com.pragatix.enums.AcademicYear ccAcademicYear = com.pragatix.enums.AcademicYear.fromUser(ccUser);
+        jjcet.PragatiX.enums.AcademicYear ccAcademicYear = jjcet.PragatiX.enums.AcademicYear.fromUser(ccUser);
 
         List<Activity> rawActivities;
         if (stageId != null) {
@@ -119,10 +120,13 @@ public class CCActivityService {
         Long secId = ccUser.getSection() != null ? ccUser.getSection().getId() : null;
         LocalDate today = LocalDate.now();
 
-        // 1. Gather all activity IDs that have an active teacher assignment for this CC / section
+        // 1. Gather all activity IDs that have an active teacher assignment for this CC
+        // / section
         Set<Long> assignedActivityIds = new HashSet<>();
-        assignedActivityIds.addAll(activityAssignmentRepository.findActivityIdsWithAssignedTeacher(stageId, deptId, secId));
-        assignedActivityIds.addAll(activityTemporaryAssignmentRepository.findActivityIdsWithActiveTemporaryTeacher(stageId, deptId, secId, today));
+        assignedActivityIds
+                .addAll(activityAssignmentRepository.findActivityIdsWithAssignedTeacher(stageId, deptId, secId));
+        assignedActivityIds.addAll(activityTemporaryAssignmentRepository
+                .findActivityIdsWithActiveTemporaryTeacher(stageId, deptId, secId, today));
 
         // 2. Filter raw activities:
         // - Active status
@@ -132,7 +136,8 @@ public class CCActivityService {
         List<Activity> activeActivities = rawActivities.stream()
                 .filter(a -> a.getStatus() == null || "ACTIVE".equalsIgnoreCase(a.getStatus()))
                 .filter(a -> !Boolean.TRUE.equals(a.getAttendanceEngineEnabled()))
-                .filter(a -> ccAcademicYear == null || a.getAcademicYear() == null || a.getAcademicYear() == ccAcademicYear)
+                .filter(a -> ccAcademicYear == null || a.getAcademicYear() == null
+                        || a.getAcademicYear() == ccAcademicYear)
                 .filter(a -> assignedActivityIds.contains(a.getId()))
                 .collect(Collectors.toList());
 
@@ -182,7 +187,8 @@ public class CCActivityService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getClassStudents(String username, Long activityId, Long stageId) {
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getClassStudents(String username, Long activityId,
+            Long stageId) {
         User ccUser = validateAndGetCCUser(username);
         if (ccUser == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -229,9 +235,13 @@ public class CCActivityService {
         List<Map<String, Object>> result = students.stream()
                 .filter(Student::isActive)
                 .filter(s -> isYearMatching(s.getYear(), year))
-                .filter(s -> activityStageOrder <= 0 || s.getStage() == activityStageOrder || s.getCurrentStage() == activityStageOrder)
-                .sorted(Comparator.comparing((Student s) -> s.getFullName() != null ? s.getFullName().trim() : "", String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing((Student s) -> s.getRegNo() != null ? s.getRegNo().trim() : "", String.CASE_INSENSITIVE_ORDER))
+                .filter(s -> activityStageOrder <= 0 || s.getStage() == activityStageOrder
+                        || s.getCurrentStage() == activityStageOrder)
+                .sorted(Comparator
+                        .comparing((Student s) -> s.getFullName() != null ? s.getFullName().trim() : "",
+                                String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing((Student s) -> s.getRegNo() != null ? s.getRegNo().trim() : "",
+                                String.CASE_INSENSITIVE_ORDER))
                 .map(s -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", s.getId());
@@ -253,7 +263,7 @@ public class CCActivityService {
 
     @Transactional
     public ResponseEntity<ApiResponse<Map<String, Object>>> assignActivity(String username, Long activityId,
-                                                                          CCActivityAssignRequest request) {
+            CCActivityAssignRequest request) {
         User ccUser = validateAndGetCCUser(username);
         if (ccUser == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -283,8 +293,10 @@ public class CCActivityService {
         }
 
         // ── Fetch any existing assignment first so we can use the execution stage ──
-        // For activities reused across stages, the assignment's stage is the execution stage.
-        // activity.getStage() is the original creation stage and must not be used for eligibility.
+        // For activities reused across stages, the assignment's stage is the execution
+        // stage.
+        // activity.getStage() is the original creation stage and must not be used for
+        // eligibility.
         List<ActivityAssignment> existingAssignments = activityAssignmentRepository.findByActivityId(activity.getId());
         ActivityAssignment existingAssignment = existingAssignments.stream()
                 .filter(a -> a.getDepartment() != null && a.getDepartment().getId().equals(dept.getId())
@@ -293,7 +305,8 @@ public class CCActivityService {
                 .findFirst()
                 .orElse(null);
 
-        // Resolve the stage to validate against: prefer existing assignment stage, fall back to activity stage
+        // Resolve the stage to validate against: prefer existing assignment stage, fall
+        // back to activity stage
         int stageOrder = 0;
         if (existingAssignment != null && existingAssignment.getStage() != null) {
             stageOrder = existingAssignment.getStage().getDisplayOrder();
@@ -314,24 +327,25 @@ public class CCActivityService {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(
                             "Security Violation: Student " + s.getRegNo() + " (" + s.getFullName()
                                     + ") does not belong to your assigned Class (" + dept.getName() + " - Section "
-                                    + sec.getSectionName() + ")."
-                    ));
+                                    + sec.getSectionName() + ")."));
                 }
-                if (activityStageOrder > 0 && s.getStage() != activityStageOrder && s.getCurrentStage() != activityStageOrder) {
+                if (activityStageOrder > 0 && s.getStage() != activityStageOrder
+                        && s.getCurrentStage() != activityStageOrder) {
                     return ResponseEntity.badRequest().body(ApiResponse.error(
                             "Student " + s.getFullName() + " (" + s.getRegNo() + ") is in Stage " + s.getStage()
-                                    + " and is not eligible for Stage " + activityStageOrder + " activities."
-                    ));
+                                    + " and is not eligible for Stage " + activityStageOrder + " activities."));
                 }
             }
         } else {
             List<Student> allClassStudents = (activityStageOrder > 0)
-                    ? studentRepository.findByDepartmentIdAndSectionIdAndStage(dept.getId(), sec.getId(), activityStageOrder)
+                    ? studentRepository.findByDepartmentIdAndSectionIdAndStage(dept.getId(), sec.getId(),
+                            activityStageOrder)
                     : studentRepository.findByDepartmentIdAndSectionId(dept.getId(), sec.getId());
             assignedStudents = allClassStudents.stream()
                     .filter(Student::isActive)
                     .filter(s -> isYearMatching(s.getYear(), year))
-                    .filter(s -> activityStageOrder <= 0 || s.getStage() == activityStageOrder || s.getCurrentStage() == activityStageOrder)
+                    .filter(s -> activityStageOrder <= 0 || s.getStage() == activityStageOrder
+                            || s.getCurrentStage() == activityStageOrder)
                     .collect(Collectors.toList());
         }
 
@@ -375,7 +389,8 @@ public class CCActivityService {
         result.put("year", year);
         result.put("section", sec.getSectionName());
 
-        return ResponseEntity.ok(ApiResponse.ok("Activity successfully assigned to " + assignedStudents.size() + " students.", result));
+        return ResponseEntity.ok(
+                ApiResponse.ok("Activity successfully assigned to " + assignedStudents.size() + " students.", result));
     }
 
     @Transactional(readOnly = true)
@@ -390,8 +405,7 @@ public class CCActivityService {
         List<Map<String, Object>> teachersList = allTeachers.stream()
                 .filter(u -> u != null && u.isActive())
                 .filter(u -> u.getRoles().stream().anyMatch(r -> "ROLE_TEACHER".equalsIgnoreCase(r.getName())))
-                .filter(u -> u.getRoles().stream().noneMatch(r ->
-                        "ROLE_ADMIN".equalsIgnoreCase(r.getName()) ||
+                .filter(u -> u.getRoles().stream().noneMatch(r -> "ROLE_ADMIN".equalsIgnoreCase(r.getName()) ||
                         "ROLE_SUPER_ADMIN".equalsIgnoreCase(r.getName()) ||
                         "ROLE_STUDENT".equalsIgnoreCase(r.getName())))
                 .sorted(Comparator.comparing(User::getFullName, String.CASE_INSENSITIVE_ORDER))
@@ -418,7 +432,7 @@ public class CCActivityService {
 
     @Transactional
     public ResponseEntity<ApiResponse<Map<String, Object>>> assignTeacherToActivity(String username, Long activityId,
-                                                                                    CCTeacherAssignRequest request) {
+            CCTeacherAssignRequest request) {
         User ccUser = validateAndGetCCUser(username);
         if (ccUser == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -491,7 +505,8 @@ public class CCActivityService {
         Map<String, Object> result = new HashMap<>();
 
         if ("ONLY_TODAY".equals(duration) || "TEMPORARY".equals(duration)) {
-            // Cancel any prior active temporary assignments for this activity/dept/sec today
+            // Cancel any prior active temporary assignments for this activity/dept/sec
+            // today
             List<ActivityTemporaryAssignment> priorTemp = activityTemporaryAssignmentRepository.findActiveAssignments(
                     activity.getId(), dept.getId(), sec.getId(), today);
             for (ActivityTemporaryAssignment p : priorTemp) {
@@ -544,7 +559,8 @@ public class CCActivityService {
             result.put("year", year);
             result.put("section", sec.getSectionName());
 
-            return ResponseEntity.ok(ApiResponse.ok("Temporary assignment active for today: " + teacher.getFullName() + ".", result));
+            return ResponseEntity.ok(
+                    ApiResponse.ok("Temporary assignment active for today: " + teacher.getFullName() + ".", result));
         } else {
             // Permanent Assignment
             // Cancel any active temporary assignments so permanent takes effect immediately
@@ -605,24 +621,39 @@ public class CCActivityService {
     }
 
     private String formatYearDisplay(String year) {
-        if (year == null || year.trim().isEmpty()) return "1st Year";
+        if (year == null || year.trim().isEmpty())
+            return "1st Year";
         String y = year.trim().toUpperCase();
-        if (y.equals("1") || y.equals("I") || y.contains("1ST")) return "1st Year";
-        if (y.equals("2") || y.equals("II") || y.contains("2ND")) return "2nd Year";
-        if (y.equals("3") || y.equals("III") || y.contains("3RD")) return "3rd Year";
-        if (y.equals("4") || y.equals("IV") || y.contains("4TH")) return "4th Year";
+        if (y.equals("1") || y.equals("I") || y.contains("1ST"))
+            return "1st Year";
+        if (y.equals("2") || y.equals("II") || y.contains("2ND"))
+            return "2nd Year";
+        if (y.equals("3") || y.equals("III") || y.contains("3RD"))
+            return "3rd Year";
+        if (y.equals("4") || y.equals("IV") || y.contains("4TH"))
+            return "4th Year";
         return year;
     }
 
     private boolean isYearMatching(String studentYear, String ccYear) {
-        if (studentYear == null || ccYear == null) return true;
+        if (studentYear == null || ccYear == null)
+            return true;
         String s = studentYear.trim().toUpperCase();
         String c = ccYear.trim().toUpperCase();
-        if (s.equals(c)) return true;
-        if ((s.equals("1") || s.equals("I") || s.contains("1ST")) && (c.equals("1") || c.equals("I") || c.contains("1ST"))) return true;
-        if ((s.equals("2") || s.equals("II") || s.contains("2ND")) && (c.equals("2") || c.equals("II") || c.contains("2ND"))) return true;
-        if ((s.equals("3") || s.equals("III") || s.contains("3RD")) && (c.equals("3") || c.equals("III") || c.contains("3RD"))) return true;
-        if ((s.equals("4") || s.equals("IV") || s.contains("4TH")) && (c.equals("4") || c.equals("IV") || c.contains("4TH"))) return true;
+        if (s.equals(c))
+            return true;
+        if ((s.equals("1") || s.equals("I") || s.contains("1ST"))
+                && (c.equals("1") || c.equals("I") || c.contains("1ST")))
+            return true;
+        if ((s.equals("2") || s.equals("II") || s.contains("2ND"))
+                && (c.equals("2") || c.equals("II") || c.contains("2ND")))
+            return true;
+        if ((s.equals("3") || s.equals("III") || s.contains("3RD"))
+                && (c.equals("3") || c.equals("III") || c.contains("3RD")))
+            return true;
+        if ((s.equals("4") || s.equals("IV") || s.contains("4TH"))
+                && (c.equals("4") || c.equals("IV") || c.contains("4TH")))
+            return true;
         return false;
     }
 }

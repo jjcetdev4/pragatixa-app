@@ -1,4 +1,4 @@
-package com.pragatix.modules.activity.service;
+package jjcet.PragatiX.modules.activity.service;
 
 public final class PackageMarker {
 }

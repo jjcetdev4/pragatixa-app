@@ -1,6 +1,6 @@
-package com.pragatix.modules.activity.repository;
+package jjcet.PragatiX.modules.activity.repository;
 
-import com.pragatix.entity.ActivitySubgroup;
+import jjcet.PragatiX.entity.ActivitySubgroup;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;

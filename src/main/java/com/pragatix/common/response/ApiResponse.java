@@ -1,4 +1,4 @@
-package com.pragatix.common.response;
+package jjcet.PragatiX.common.response;
 
 public class ApiResponse<T> {
     private boolean success;

@@ -1,18 +1,18 @@
-package com.pragatix.modules.authentication.service;
+package jjcet.PragatiX.modules.authentication.service;
 
-import com.pragatix.repository.StageTeamRepository;
-import com.pragatix.entity.StageTeam;
+import jjcet.PragatiX.repository.StageTeamRepository;
+import jjcet.PragatiX.entity.StageTeam;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.authentication.dto.response.AuthResponse;
-import com.pragatix.modules.authentication.dto.request.LoginRequest;
-import com.pragatix.modules.authentication.dto.request.StudentLoginRequest;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.User;
-import com.pragatix.entity.SubRole;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.authentication.security.JwtUtil;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.authentication.dto.response.AuthResponse;
+import jjcet.PragatiX.modules.authentication.dto.request.LoginRequest;
+import jjcet.PragatiX.modules.authentication.dto.request.StudentLoginRequest;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.entity.SubRole;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.authentication.security.JwtUtil;
 import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +35,11 @@ import java.util.stream.Collectors;
  * Contains all business logic securely authenticating users.
  * Generates JWT tokens which the Frontend uses to stay logged in.
  */
-import com.pragatix.modules.authentication.repository.OtpTokenRepository;
-import com.pragatix.modules.authentication.service.ZeptoMailService;
-import com.pragatix.entity.OtpToken;
-import com.pragatix.modules.authentication.dto.request.OtpRequest;
-import com.pragatix.modules.authentication.dto.request.OtpVerifyRequest;
+import jjcet.PragatiX.modules.authentication.repository.OtpTokenRepository;
+import jjcet.PragatiX.modules.authentication.service.ZeptoMailService;
+import jjcet.PragatiX.entity.OtpToken;
+import jjcet.PragatiX.modules.authentication.dto.request.OtpRequest;
+import jjcet.PragatiX.modules.authentication.dto.request.OtpVerifyRequest;
 import java.time.LocalDateTime;
 import java.util.Random;
 
@@ -114,11 +114,13 @@ public class AuthService {
                 .collect(Collectors.toList());
 
         String userType = "USER";
-        if (roles.contains("ROLE_SUPERADMIN") || roles.contains("ROLE_SUPER_ADMIN") || roles.contains("SUPERADMIN") || roles.contains("SUPER_ADMIN")) {
+        if (roles.contains("ROLE_SUPERADMIN") || roles.contains("ROLE_SUPER_ADMIN") || roles.contains("SUPERADMIN")
+                || roles.contains("SUPER_ADMIN")) {
             userType = "ADMIN";
         } else if (roles.contains("ROLE_ADMIN") || roles.contains("ADMIN")) {
             userType = "ADMIN";
-        } else if (roles.contains("ROLE_TEACHER") || roles.contains("TEACHER") || roles.contains("ROLE_FACULTY") || roles.contains("FACULTY") || roles.contains("ROLE_HOD") || roles.contains("HOD")) {
+        } else if (roles.contains("ROLE_TEACHER") || roles.contains("TEACHER") || roles.contains("ROLE_FACULTY")
+                || roles.contains("FACULTY") || roles.contains("ROLE_HOD") || roles.contains("HOD")) {
             userType = "TEACHER";
         } else if (roles.contains("ROLE_TRANSPORT") || roles.contains("TRANSPORT")) {
             userType = "TRANSPORT";
@@ -171,7 +173,8 @@ public class AuthService {
 
         if (studentOpt.isEmpty()) {
             log.warn("[Student Login] Authentication failed: Student not found with identifier: {}", identity);
-            throw new org.springframework.security.core.userdetails.UsernameNotFoundException("Invalid student ID, email, register number, or SPR number");
+            throw new org.springframework.security.core.userdetails.UsernameNotFoundException(
+                    "Invalid student ID, email, register number, or SPR number");
         }
 
         Student student = studentOpt.get();
@@ -204,23 +207,27 @@ public class AuthService {
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                 && student.getTeam().getCaptain().getId().equals(student.getId());
         boolean isViceCap = false;
-        
+
         if (student.getTeam() != null) {
-            if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+            if (student.getTeam().getViceCaptain() != null
+                    && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
                 isViceCap = true;
             }
 
             // Check StageTeams for captaincy/vice-captaincy if not already identified
             if (!isCap || !isViceCap) {
-                List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
-                for (com.pragatix.entity.StageTeam st : stageTeams) {
+                List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository
+                        .findByTeamId(student.getTeam().getId());
+                for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
                     if (!isCap && st.getCaptain() != null && st.getCaptain().getId().equals(student.getId())) {
                         isCap = true;
                     }
-                    if (!isViceCap && st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                    if (!isViceCap && st.getViceCaptain() != null
+                            && st.getViceCaptain().getId().equals(student.getId())) {
                         isViceCap = true;
                     }
-                    if (isCap && isViceCap) break;
+                    if (isCap && isViceCap)
+                        break;
                 }
             }
         }
@@ -294,9 +301,8 @@ public class AuthService {
         otpTokenRepository.deleteByEmail(email);
 
         java.util.List<String> testEmails = java.util.List.of(
-            "test1@gmail.com", "test2@gmail.com", "test3@gmail.com", "test4@gmail.com",
-            "test5@gmail.com", "test6@gmail.com", "test7@gmail.com", "test8@gmail.com"
-        );
+                "test1@gmail.com", "test2@gmail.com", "test3@gmail.com", "test4@gmail.com",
+                "test5@gmail.com", "test6@gmail.com", "test7@gmail.com", "test8@gmail.com");
 
         if (testEmails.contains(email.toLowerCase())) {
             OtpToken otpToken = new OtpToken(email, "1234", LocalDateTime.now().plusYears(1));
@@ -305,14 +311,16 @@ public class AuthService {
         }
 
         String generatedOtp = String.format("%04d", new Random().nextInt(10000));
-        
+
         boolean emailSent = zeptoMailService.sendOtpEmail(email, generatedOtp);
-        
+
         if (!emailSent) {
             log.warn("Failed to send OTP email to {}", email);
-            // We throw an exception to roll back the transaction so the OTP isn't saved in the DB
-            // Alternatively, we could just return ApiResponse.error but throwing exception is safer
-            // to ensure @Transactional rolls back. 
+            // We throw an exception to roll back the transaction so the OTP isn't saved in
+            // the DB
+            // Alternatively, we could just return ApiResponse.error but throwing exception
+            // is safer
+            // to ensure @Transactional rolls back.
             // We will return a proper response.
             throw new RuntimeException("Unable to send OTP. Please try again later.");
         }
@@ -330,9 +338,8 @@ public class AuthService {
         log.info("Verifying OTP for email: {}", email);
 
         java.util.List<String> testEmails = java.util.List.of(
-            "test1@gmail.com", "test2@gmail.com", "test3@gmail.com", "test4@gmail.com",
-            "test5@gmail.com", "test6@gmail.com", "test7@gmail.com", "test8@gmail.com"
-        );
+                "test1@gmail.com", "test2@gmail.com", "test3@gmail.com", "test4@gmail.com",
+                "test5@gmail.com", "test6@gmail.com", "test7@gmail.com", "test8@gmail.com");
 
         boolean isTestUser = testEmails.contains(email.toLowerCase()) && "1234".equals(otp);
 
@@ -363,23 +370,27 @@ public class AuthService {
             boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                     && student.getTeam().getCaptain().getId().equals(student.getId());
             boolean isViceCap = false;
-            
+
             if (student.getTeam() != null) {
-                if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+                if (student.getTeam().getViceCaptain() != null
+                        && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
                     isViceCap = true;
                 }
 
                 // Check StageTeams for captaincy/vice-captaincy if not already identified
                 if (!isCap || !isViceCap) {
-                    List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
-                    for (com.pragatix.entity.StageTeam st : stageTeams) {
+                    List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository
+                            .findByTeamId(student.getTeam().getId());
+                    for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
                         if (!isCap && st.getCaptain() != null && st.getCaptain().getId().equals(student.getId())) {
                             isCap = true;
                         }
-                        if (!isViceCap && st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                        if (!isViceCap && st.getViceCaptain() != null
+                                && st.getViceCaptain().getId().equals(student.getId())) {
                             isViceCap = true;
                         }
-                        if (isCap && isViceCap) break;
+                        if (isCap && isViceCap)
+                            break;
                     }
                 }
             }
@@ -488,23 +499,27 @@ public class AuthService {
             boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                     && student.getTeam().getCaptain().getId().equals(student.getId());
             boolean isViceCap = false;
-            
+
             if (student.getTeam() != null) {
-                if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+                if (student.getTeam().getViceCaptain() != null
+                        && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
                     isViceCap = true;
                 }
 
                 // Check StageTeams for captaincy/vice-captaincy if not already identified
                 if (!isCap || !isViceCap) {
-                    List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
-                    for (com.pragatix.entity.StageTeam st : stageTeams) {
+                    List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository
+                            .findByTeamId(student.getTeam().getId());
+                    for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
                         if (!isCap && st.getCaptain() != null && st.getCaptain().getId().equals(student.getId())) {
                             isCap = true;
                         }
-                        if (!isViceCap && st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                        if (!isViceCap && st.getViceCaptain() != null
+                                && st.getViceCaptain().getId().equals(student.getId())) {
                             isViceCap = true;
                         }
-                        if (isCap && isViceCap) break;
+                        if (isCap && isViceCap)
+                            break;
                     }
                 }
             }
@@ -513,8 +528,10 @@ public class AuthService {
             int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
 
             List<String> subRoles = new ArrayList<>();
-            if (isCap) subRoles.add("CAPTAIN");
-            if (isViceCap) subRoles.add("VICE_CAPTAIN");
+            if (isCap)
+                subRoles.add("CAPTAIN");
+            if (isViceCap)
+                subRoles.add("VICE_CAPTAIN");
 
             AuthResponse response = AuthResponse.builder()
                     .token(null)

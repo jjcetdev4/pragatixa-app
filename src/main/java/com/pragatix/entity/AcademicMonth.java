@@ -1,4 +1,4 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -19,7 +19,7 @@ public class AcademicMonth {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "academic_year_enum", nullable = false)
-    private com.pragatix.enums.AcademicYear academicYearEnum;
+    private jjcet.PragatiX.enums.AcademicYear academicYearEnum;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -39,16 +39,51 @@ public class AcademicMonth {
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Integer getMonth() { return month; }
-    public void setMonth(Integer month) { this.month = month; }
-    public Integer getYear() { return year; }
-    public void setYear(Integer year) { this.year = year; }
-    public com.pragatix.enums.AcademicYear getAcademicYearEnum() { return academicYearEnum; }
-    public void setAcademicYearEnum(com.pragatix.enums.AcademicYear academicYearEnum) { this.academicYearEnum = academicYearEnum; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Integer getMonth() {
+        return month;
+    }
+
+    public void setMonth(Integer month) {
+        this.month = month;
+    }
+
+    public Integer getYear() {
+        return year;
+    }
+
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
+    public jjcet.PragatiX.enums.AcademicYear getAcademicYearEnum() {
+        return academicYearEnum;
+    }
+
+    public void setAcademicYearEnum(jjcet.PragatiX.enums.AcademicYear academicYearEnum) {
+        this.academicYearEnum = academicYearEnum;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

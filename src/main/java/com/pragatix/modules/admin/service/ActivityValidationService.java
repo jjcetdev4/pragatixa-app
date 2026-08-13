@@ -1,7 +1,7 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.repository.CustomFrequencyRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.repository.CustomFrequencyRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;

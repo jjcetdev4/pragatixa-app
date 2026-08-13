@@ -1,4 +1,4 @@
-package com.pragatix.dto;
+package jjcet.PragatiX.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

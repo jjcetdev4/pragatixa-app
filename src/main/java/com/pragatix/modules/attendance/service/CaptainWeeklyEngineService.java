@@ -1,14 +1,14 @@
-package com.pragatix.modules.attendance.service;
+package jjcet.PragatiX.modules.attendance.service;
 
-import com.pragatix.entity.*;
-import com.pragatix.enums.AcademicYear;
-import com.pragatix.modules.academiccalendar.repository.AcademicWeekRepository;
-import com.pragatix.modules.attendance.repository.CaptainRewardSettingsRepository;
-import com.pragatix.repository.StageTeamRepository;
-import com.pragatix.repository.TeamRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.XpTransactionRepository;
-import com.pragatix.modules.attendancesettings.service.EngineClockService;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.enums.AcademicYear;
+import jjcet.PragatiX.modules.academiccalendar.repository.AcademicWeekRepository;
+import jjcet.PragatiX.modules.attendance.repository.CaptainRewardSettingsRepository;
+import jjcet.PragatiX.repository.StageTeamRepository;
+import jjcet.PragatiX.repository.TeamRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.XpTransactionRepository;
+import jjcet.PragatiX.modules.attendancesettings.service.EngineClockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +77,8 @@ public class CaptainWeeklyEngineService {
         }
 
         // 5. Duplicate Detection - Last Execution Date
-        if (settings.getLastExecutionDate() != null && settings.getLastExecutionDate().toLocalDate().isEqual(currentDate)) {
+        if (settings.getLastExecutionDate() != null
+                && settings.getLastExecutionDate().toLocalDate().isEqual(currentDate)) {
             return;
         }
 
@@ -86,10 +87,10 @@ public class CaptainWeeklyEngineService {
         String viceCaptainActivityName = "Vice Captain Weekly Reward - " + weekName;
 
         // Duplicate Detection - Check XP Transactions for today
-        boolean alreadyExecuted = xpTransactionRepository.findAll().stream().anyMatch(t -> 
-                (captainActivityName.equals(t.getActivityName()) || viceCaptainActivityName.equals(t.getActivityName())) &&
-                t.getSubmittedAt().toLocalDate().isEqual(currentDate)
-        );
+        boolean alreadyExecuted = xpTransactionRepository.findAll().stream()
+                .anyMatch(t -> (captainActivityName.equals(t.getActivityName())
+                        || viceCaptainActivityName.equals(t.getActivityName())) &&
+                        t.getSubmittedAt().toLocalDate().isEqual(currentDate));
 
         if (alreadyExecuted) {
             log.info("Captain Reward Engine: Duplicate execution detected for date {}", currentDate);
@@ -99,8 +100,10 @@ public class CaptainWeeklyEngineService {
         }
 
         log.info("Captain Reward Engine: Settings Loaded for Academic Year: {}", year);
-        log.info("Captain Reward Engine: Academic Week Loaded: {} ({} to {})", weekName, activeWeek.getStartDate(), activeWeek.getEndDate());
-        log.info("Captain Reward Engine: Current Week End Date: {}, Current Time: {}", activeWeek.getEndDate(), currentTime);
+        log.info("Captain Reward Engine: Academic Week Loaded: {} ({} to {})", weekName, activeWeek.getStartDate(),
+                activeWeek.getEndDate());
+        log.info("Captain Reward Engine: Current Week End Date: {}, Current Time: {}", activeWeek.getEndDate(),
+                currentTime);
 
         int captainXp = settings.getCaptainXp() != null ? settings.getCaptainXp() : 0;
         int viceCaptainXp = settings.getViceCaptainXp() != null ? settings.getViceCaptainXp() : 0;
@@ -143,11 +146,14 @@ public class CaptainWeeklyEngineService {
             }
         }
 
-        // C. From Students table (in case student.isCaptain flag or student.team is present)
+        // C. From Students table (in case student.isCaptain flag or student.team is
+        // present)
         List<Student> allStudents = studentRepository.findAll();
         for (Student s : allStudents) {
-            if (!s.isActive()) continue;
-            if (AcademicYear.fromStudent(s) != year) continue;
+            if (!s.isActive())
+                continue;
+            if (AcademicYear.fromStudent(s) != year)
+                continue;
 
             if (s.isCaptain()) {
                 captainMap.put(s.getId(), s);
@@ -200,8 +206,10 @@ public class CaptainWeeklyEngineService {
 
                     captainsRewarded++;
                     totalXpAwarded += captainXp;
-                    captainLogLines.add(String.format("%s\n+%d XP", student.getRegNo() != null ? student.getRegNo() : student.getFullName(), captainXp));
-                    log.info("Award Success: Captain {} (ID: {}) awarded {} XP", student.getRegNo(), student.getId(), captainXp);
+                    captainLogLines.add(String.format("%s\n+%d XP",
+                            student.getRegNo() != null ? student.getRegNo() : student.getFullName(), captainXp));
+                    log.info("Award Success: Captain {} (ID: {}) awarded {} XP", student.getRegNo(), student.getId(),
+                            captainXp);
                 }
             } catch (Exception e) {
                 log.error("Award Failure for Captain ID {}: {}", student.getId(), e.getMessage());
@@ -231,8 +239,10 @@ public class CaptainWeeklyEngineService {
 
                     viceCaptainsRewarded++;
                     totalXpAwarded += viceCaptainXp;
-                    viceCaptainLogLines.add(String.format("%s\n+%d XP", student.getRegNo() != null ? student.getRegNo() : student.getFullName(), viceCaptainXp));
-                    log.info("Award Success: Vice Captain {} (ID: {}) awarded {} XP", student.getRegNo(), student.getId(), viceCaptainXp);
+                    viceCaptainLogLines.add(String.format("%s\n+%d XP",
+                            student.getRegNo() != null ? student.getRegNo() : student.getFullName(), viceCaptainXp));
+                    log.info("Award Success: Vice Captain {} (ID: {}) awarded {} XP", student.getRegNo(),
+                            student.getId(), viceCaptainXp);
                 }
             } catch (Exception e) {
                 log.error("Award Failure for Vice Captain ID {}: {}", student.getId(), e.getMessage());
@@ -251,7 +261,8 @@ public class CaptainWeeklyEngineService {
         report.append("=====================================\n");
         report.append("Academic Week\n");
         report.append(weekName).append("\n");
-        report.append(activeWeek.getStartDate().format(dtf)).append(" - ").append(activeWeek.getEndDate().format(dtf)).append("\n\n");
+        report.append(activeWeek.getStartDate().format(dtf)).append(" - ").append(activeWeek.getEndDate().format(dtf))
+                .append("\n\n");
 
         if (!captainLogLines.isEmpty()) {
             report.append("Captain\n\n");

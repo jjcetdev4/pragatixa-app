@@ -1,8 +1,8 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Role;
-import com.pragatix.modules.authentication.repository.RoleRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Role;
+import jjcet.PragatiX.modules.authentication.repository.RoleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -15,8 +15,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @Service
 public class AdminRoleService {

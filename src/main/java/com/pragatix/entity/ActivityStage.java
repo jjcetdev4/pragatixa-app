@@ -1,8 +1,8 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import com.pragatix.enums.StageStatus;
+import jjcet.PragatiX.enums.StageStatus;
 
 @Entity
 @Table(name = "activity_stages", uniqueConstraints = {
@@ -69,7 +69,7 @@ public class ActivityStage {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "academic_year")
-    private com.pragatix.enums.AcademicYear academicYear;
+    private jjcet.PragatiX.enums.AcademicYear academicYear;
 
     public ActivityStage() {
     }
@@ -223,11 +223,11 @@ public class ActivityStage {
         return updatedAt;
     }
 
-    public com.pragatix.enums.AcademicYear getAcademicYear() {
+    public jjcet.PragatiX.enums.AcademicYear getAcademicYear() {
         return academicYear;
     }
 
-    public void setAcademicYear(com.pragatix.enums.AcademicYear academicYear) {
+    public void setAcademicYear(jjcet.PragatiX.enums.AcademicYear academicYear) {
         this.academicYear = academicYear;
     }
 
@@ -318,7 +318,7 @@ public class ActivityStage {
             return this;
         }
 
-        public Builder academicYear(com.pragatix.enums.AcademicYear v) {
+        public Builder academicYear(jjcet.PragatiX.enums.AcademicYear v) {
             stage.academicYear = v;
             return this;
         }

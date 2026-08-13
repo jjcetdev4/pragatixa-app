@@ -1,17 +1,17 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.Student;
-import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
-import com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse;
-import com.pragatix.modules.activity.dto.response.StageValidationResponse;
-import com.pragatix.modules.activity.service.StageValidationService;
-import com.pragatix.modules.activity.dto.response.ActivityResponse;
-import com.pragatix.modules.activity.repository.ActivityStageMappingRepository;
-import com.pragatix.entity.ActivityStageMapping;
-import com.pragatix.modules.student.dto.StageXpSummary;
-import com.pragatix.modules.student.service.StageXpSummaryService;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityStageResponse;
+import jjcet.PragatiX.modules.activity.dto.response.ActivitySubgroupResponse;
+import jjcet.PragatiX.modules.activity.dto.response.StageValidationResponse;
+import jjcet.PragatiX.modules.activity.service.StageValidationService;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityResponse;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository;
+import jjcet.PragatiX.entity.ActivityStageMapping;
+import jjcet.PragatiX.modules.student.dto.StageXpSummary;
+import jjcet.PragatiX.modules.student.service.StageXpSummaryService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -46,8 +46,9 @@ public class StudentStageAssembler {
             Map<Long, List<ActivityAssignment>> assignmentsByActivity) {
 
         for (ActivityStageResponse stage : stages) {
-            StudentXpAggregator.AggregatedXp aggregatedXp = xpAggregator.aggregateXpForStudentAndStage(student.getId(), stage.getDisplayOrder());
-            
+            StudentXpAggregator.AggregatedXp aggregatedXp = xpAggregator.aggregateXpForStudentAndStage(student.getId(),
+                    stage.getDisplayOrder());
+
             StageValidationResponse validation = stageValidationService.validateStage(student.getId(), stage.getId());
             stage.setValidation(validation);
             stage.setVisible(validation.isVisible());
@@ -87,8 +88,9 @@ public class StudentStageAssembler {
             if (stage.getSubgroups() != null) {
                 for (ActivitySubgroupResponse subgroup : stage.getSubgroups()) {
                     Long subId = subgroup.getId();
-                    
-                    List<com.pragatix.entity.ActivityStageMapping> mappings = activityStageMappingRepository.findByStageId(stage.getId());
+
+                    List<jjcet.PragatiX.entity.ActivityStageMapping> mappings = activityStageMappingRepository
+                            .findByStageId(stage.getId());
                     java.util.Set<Long> mappedActivityIds = mappings.stream()
                             .filter(m -> m.getActivity() != null)
                             .map(m -> m.getActivity().getId())
@@ -98,7 +100,8 @@ public class StudentStageAssembler {
                             java.util.Collections.emptyList())
                             .stream()
                             .filter(a -> {
-                                if (a.getStage() != null && a.getStage().getId().equals(stage.getId())) return true;
+                                if (a.getStage() != null && a.getStage().getId().equals(stage.getId()))
+                                    return true;
                                 return mappedActivityIds.contains(a.getId());
                             })
                             .collect(java.util.stream.Collectors.toList());
@@ -107,7 +110,8 @@ public class StudentStageAssembler {
 
                     // Use the subgroup's name directly, with Title Case on the frontend
                     // Here we just map its properties
-                    // Removed usage of subgroup.getThreshold() as ActivityStage is the single source of truth for thresholds.
+                    // Removed usage of subgroup.getThreshold() as ActivityStage is the single
+                    // source of truth for thresholds.
 
                     // Since studentXP properties are hardcoded in the Student table for now
                     // (MustXp, IndividualXp, GroupXp),
@@ -115,7 +119,7 @@ public class StudentStageAssembler {
                     // If subgroup name does not match, we'll calculate from completed activities.
                     int studentCategoryXp = 0;
                     String subName = subgroup.getName() != null ? subgroup.getName().toLowerCase() : "";
-                    
+
                     int thresh = 0;
 
                     if (subName.contains("must") || subName.contains("mandatory")) {

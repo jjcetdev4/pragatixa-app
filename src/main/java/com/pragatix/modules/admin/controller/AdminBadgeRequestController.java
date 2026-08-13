@@ -1,9 +1,9 @@
-package com.pragatix.modules.admin.controller;
+package jjcet.PragatiX.modules.admin.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.BadgeRequestDto;
-import com.pragatix.dto.BadgeRequestStatusUpdateDto;
-import com.pragatix.modules.badge.service.BadgeRequestService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.BadgeRequestDto;
+import jjcet.PragatiX.dto.BadgeRequestStatusUpdateDto;
+import jjcet.PragatiX.modules.badge.service.BadgeRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

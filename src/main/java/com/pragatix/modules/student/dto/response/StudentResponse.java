@@ -1,9 +1,9 @@
-package com.pragatix.modules.student.dto.response;
+package jjcet.PragatiX.modules.student.dto.response;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalDateTime;
-import com.pragatix.modules.student.dto.request.GuardianDTO;
+import jjcet.PragatiX.modules.student.dto.request.GuardianDTO;
 
 public class StudentResponse {
     private Long id;

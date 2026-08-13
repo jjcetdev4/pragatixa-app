@@ -1,7 +1,7 @@
-package com.pragatix.modules.activity.dto.response;
+package jjcet.PragatiX.modules.activity.dto.response;
 
 import java.util.List;
-import com.pragatix.modules.activity.dto.response.ActivityResponse;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityResponse;
 
 public class ActivitySubgroupResponse {
     private Long id;

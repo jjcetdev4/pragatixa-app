@@ -1,20 +1,20 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.CreateTeamRequest;
-import com.pragatix.dto.TeamResponse;
-import com.pragatix.entity.*;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.dto.response.StudentResponse;
-import com.pragatix.modules.student.repository.StudentActivityXpRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.GroupDeletionAuditLogRepository;
-import com.pragatix.repository.TeamRemovalRequestRepository;
-import com.pragatix.repository.TeamRepository;
-import com.pragatix.repository.StageTeamRepository;
-import com.pragatix.repository.DepartmentRepository;
-import com.pragatix.repository.SectionRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.CreateTeamRequest;
+import jjcet.PragatiX.dto.TeamResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.GroupDeletionAuditLogRepository;
+import jjcet.PragatiX.repository.TeamRemovalRequestRepository;
+import jjcet.PragatiX.repository.TeamRepository;
+import jjcet.PragatiX.repository.StageTeamRepository;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.repository.SectionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -108,9 +108,13 @@ public class TeamCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName()
                     + " already belongs to an existing team."));
 
-        Long deptId = request.getDepartmentId() != null ? request.getDepartmentId() : (captain.getDepartment() != null ? captain.getDepartment().getId() : null);
-        String year = (request.getAcademicYear() != null && !request.getAcademicYear().trim().isEmpty()) ? request.getAcademicYear() : captain.getYear();
-        Long sectionId = request.getSectionId() != null ? request.getSectionId() : (captain.getSection() != null ? captain.getSection().getId() : null);
+        Long deptId = request.getDepartmentId() != null ? request.getDepartmentId()
+                : (captain.getDepartment() != null ? captain.getDepartment().getId() : null);
+        String year = (request.getAcademicYear() != null && !request.getAcademicYear().trim().isEmpty())
+                ? request.getAcademicYear()
+                : captain.getYear();
+        Long sectionId = request.getSectionId() != null ? request.getSectionId()
+                : (captain.getSection() != null ? captain.getSection().getId() : null);
 
         if (teamRepository.existsByTeamNameAndClass(request.getName(), deptId, year, sectionId)) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
@@ -188,13 +192,14 @@ public class TeamCrudService {
                 for (Student s : toSave) {
                     entityManager.createNativeQuery(
                             "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
-                            "ON DUPLICATE KEY UPDATE team_id = :tid")
+                                    "ON DUPLICATE KEY UPDATE team_id = :tid")
                             .setParameter("tid", savedTeam.getId())
                             .setParameter("sid", s.getId())
                             .executeUpdate();
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         List<StudentResponse> studentResponses = new ArrayList<>();
         studentResponses.add(mapper.toStudentResponse(captain));
@@ -227,7 +232,8 @@ public class TeamCrudService {
         Long teamSectionId = team.getSection() != null ? team.getSection().getId() : null;
 
         if (!team.getName().trim().equalsIgnoreCase(request.getName().trim())
-                && teamRepository.existsByTeamNameAndClassExcludingId(request.getName(), teamDeptId, teamYear, teamSectionId, team.getId())) {
+                && teamRepository.existsByTeamNameAndClassExcludingId(request.getName(), teamDeptId, teamYear,
+                        teamSectionId, team.getId())) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
                     .body(ApiResponse.error("Team name '" + request.getName() + "' already exists in this class."));
         }
@@ -331,7 +337,8 @@ public class TeamCrudService {
                         .setParameter("tid", teamId)
                         .executeUpdate();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         String teamName = team.getName();
         teamRepository.delete(team);

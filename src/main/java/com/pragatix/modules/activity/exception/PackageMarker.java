@@ -1,4 +1,4 @@
-package com.pragatix.modules.activity.exception;
+package jjcet.PragatiX.modules.activity.exception;
 
 public final class PackageMarker {
 }

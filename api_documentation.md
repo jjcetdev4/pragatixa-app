@@ -3,7 +3,7 @@
 ## XpController
 --------------------------------------------------
 **Controller Name:** XpController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/xp/{studentId}/summary
 **Java Method:** getXpSummary
@@ -21,7 +21,7 @@
 **Response Codes:** 200 OK, 401 Unauthorized, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** XpController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/xp/{studentId}/history
 **Java Method:** getXpHistory
@@ -39,7 +39,7 @@
 **Response Codes:** 200 OK, 401 Unauthorized
 --------------------------------------------------
 **Controller Name:** XpController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/xp/{studentId}/streaks
 **Java Method:** getStudentStreaks
@@ -57,7 +57,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** XpController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/xp/submit
 **Java Method:** submitXpClaim
@@ -75,7 +75,7 @@
 **Response Codes:** 200 OK, 400 Bad Request
 --------------------------------------------------
 **Controller Name:** XpController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/xp/{id}/approve
 **Java Method:** approveXpClaim
@@ -93,7 +93,7 @@
 **Response Codes:** 200 OK, 400 Bad Request, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** XpController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/xp/{id}/reject
 **Java Method:** rejectXpClaim
@@ -111,7 +111,7 @@
 **Response Codes:** 200 OK, 400 Bad Request, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** XpController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/xp/penalty
 **Java Method:** logViolation
@@ -131,7 +131,7 @@
 ## LevelBadgeController
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/levels
 **Java Method:** getAllLevels
@@ -149,7 +149,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/levels/student/{studentId}/current
 **Java Method:** getCurrentLevelForStudent
@@ -167,7 +167,7 @@
 **Response Codes:** 200 OK, 404 Not Found
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/levels/me/current
 **Java Method:** getCurrentLoggedInLevel
@@ -185,7 +185,7 @@
 **Response Codes:** 200 OK, 404 Not Found
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/badges
 **Java Method:** getAllBadges
@@ -203,7 +203,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/badges/student/me
 **Java Method:** getMyBadges
@@ -221,7 +221,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/badges/student/{studentId}
 **Java Method:** getBadgesForStudent
@@ -239,7 +239,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/badges/submit
 **Java Method:** submitBadgeClaim
@@ -257,7 +257,7 @@
 **Response Codes:** 200 OK, 400 Bad Request
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/badges/{id}/approve
 **Java Method:** approveBadgeClaim
@@ -275,7 +275,7 @@
 **Response Codes:** 200 OK, 400 Bad Request, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/badges/{id}/reject
 **Java Method:** rejectBadgeClaim
@@ -293,7 +293,7 @@
 **Response Codes:** 200 OK, 400 Bad Request, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** LevelBadgeController
-**Package:** com.pragatix.student
+**Package:** jjcet.PragatiX.student
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/badges/pending
 **Java Method:** getPendingBadgeClaims
@@ -313,7 +313,7 @@
 ## StudentXpController
 --------------------------------------------------
 **Controller Name:** StudentXpController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/my-activities/{activityId}/years
 **Java Method:** getYearsForActivity
@@ -331,7 +331,7 @@
 **Response Codes:** 200 OK, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** StudentXpController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/my-activities/{activityId}/departments
 **Java Method:** getDepartmentsForActivity
@@ -349,7 +349,7 @@
 **Response Codes:** 200 OK, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** StudentXpController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/my-activities/{activityId}/sections
 **Java Method:** getSectionsForActivity
@@ -367,7 +367,7 @@
 **Response Codes:** 200 OK, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** StudentXpController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/my-activities/{activityId}/students
 **Java Method:** getStudentsForActivity
@@ -385,7 +385,7 @@
 **Response Codes:** 200 OK, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** StudentXpController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/student-xp/award
 **Java Method:** awardStudentXp
@@ -403,7 +403,7 @@
 **Response Codes:** 200 OK, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** StudentXpController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/student-xp/award/batch
 **Java Method:** awardStudentXpBatch
@@ -423,7 +423,7 @@
 ## StudentController
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/students
 **Java Method:** createStudent
@@ -441,7 +441,7 @@
 **Response Codes:** 201 Created, 400 Bad Request, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/students
 **Java Method:** getAllStudents
@@ -459,7 +459,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/students/{id}
 **Java Method:** getStudentById
@@ -477,7 +477,7 @@
 **Response Codes:** 200 OK, 404 Not Found
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/students/search
 **Java Method:** searchStudents
@@ -495,7 +495,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/students/{id}
 **Java Method:** deleteStudent
@@ -513,7 +513,7 @@
 **Response Codes:** 200 OK, 404 Not Found, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/students/{id}
 **Java Method:** updateStudent
@@ -531,7 +531,7 @@
 **Response Codes:** 200 OK, 404 Not Found
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/students/bulk-parse
 **Java Method:** bulkParseStudents
@@ -549,7 +549,7 @@
 **Response Codes:** 200 OK, 400 Bad Request
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/students/bulk-import
 **Java Method:** bulkImportStudents
@@ -567,7 +567,7 @@
 **Response Codes:** 200 OK, 400 Bad Request
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/students/{id}/adjust-points
 **Java Method:** adjustPoints
@@ -585,7 +585,7 @@
 **Response Codes:** 200 OK, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/students/{id}/discipline-logs
 **Java Method:** getDisciplineLogs
@@ -603,7 +603,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/students/department-performance
 **Java Method:** getDepartmentPerformance
@@ -621,7 +621,7 @@
 **Response Codes:** 200 OK, 403 Forbidden
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/students/{id}/make-captain
 **Java Method:** promoteToTeamCaptain
@@ -639,7 +639,7 @@
 **Response Codes:** 200 OK, 400 Bad Request
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/students/{id}/remove-captain
 **Java Method:** removeTeamCaptain
@@ -657,7 +657,7 @@
 **Response Codes:** 200 OK, 400 Bad Request
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/students/stages
 **Java Method:** getStudentStages
@@ -675,7 +675,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** StudentController
-**Package:** com.pragatix.modules.student.controller
+**Package:** jjcet.PragatiX.modules.student.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/students/subgroups/{subgroupId}/activities
 **Java Method:** getActivitiesBySubgroup
@@ -695,7 +695,7 @@
 ## GroupActivityController
 --------------------------------------------------
 **Controller Name:** GroupActivityController
-**Package:** com.pragatix.modules.activity.controller
+**Package:** jjcet.PragatiX.modules.activity.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/group-activities/assignments/{assignmentId}/teams
 **Java Method:** getTeamsForAssignment
@@ -713,7 +713,7 @@
 **Response Codes:** 200 OK, 404 Not Found
 --------------------------------------------------
 **Controller Name:** GroupActivityController
-**Package:** com.pragatix.modules.activity.controller
+**Package:** jjcet.PragatiX.modules.activity.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/group-activities/teams/{teamId}/award-xp
 **Java Method:** awardXpToTeam
@@ -733,7 +733,7 @@
 ## AuthController
 --------------------------------------------------
 **Controller Name:** AuthController
-**Package:** com.pragatix.modules.authentication.controller
+**Package:** jjcet.PragatiX.modules.authentication.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/auth/login
 **Java Method:** login
@@ -751,7 +751,7 @@
 **Response Codes:** 200 OK, 401 Unauthorized
 --------------------------------------------------
 **Controller Name:** AuthController
-**Package:** com.pragatix.modules.authentication.controller
+**Package:** jjcet.PragatiX.modules.authentication.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/auth/student-login
 **Java Method:** studentLogin
@@ -769,7 +769,7 @@
 **Response Codes:** 200 OK, 401 Unauthorized
 --------------------------------------------------
 **Controller Name:** AuthController
-**Package:** com.pragatix.modules.authentication.controller
+**Package:** jjcet.PragatiX.modules.authentication.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/auth/me
 **Java Method:** getProfile
@@ -789,7 +789,7 @@
 ## AdminDashboardController
 --------------------------------------------------
 **Controller Name:** AdminDashboardController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/stats
 **Java Method:** getDashboardStats
@@ -809,7 +809,7 @@
 ## AdminLookupController
 --------------------------------------------------
 **Controller Name:** AdminLookupController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/academic-years
 **Java Method:** getAllAcademicYears
@@ -827,7 +827,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminLookupController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/years
 **Java Method:** getAllYears
@@ -845,7 +845,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminLookupController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/semesters
 **Java Method:** getAllSemesters
@@ -863,7 +863,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminLookupController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/genders
 **Java Method:** getAllGenders
@@ -881,7 +881,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminLookupController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/sections
 **Java Method:** getAllSections
@@ -901,7 +901,7 @@
 ## AdminFacultyController
 --------------------------------------------------
 **Controller Name:** AdminFacultyController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/admin/subgroups/{id}/assign-faculty
 **Java Method:** assignFacultyToSubgroup
@@ -921,7 +921,7 @@
 ## AdminStageController
 --------------------------------------------------
 **Controller Name:** AdminStageController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/stages
 **Java Method:** getAllStages
@@ -939,7 +939,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminStageController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/stages
 **Java Method:** createStage
@@ -957,7 +957,7 @@
 **Response Codes:** 201 Created
 --------------------------------------------------
 **Controller Name:** AdminStageController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/stages/{id}
 **Java Method:** getStage
@@ -975,7 +975,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminStageController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/admin/stages/{id}
 **Java Method:** editStage
@@ -993,7 +993,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminStageController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/stages/{id}/report
 **Java Method:** getStageReport
@@ -1011,7 +1011,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminStageController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/admin/stages/{id}
 **Java Method:** deleteStage
@@ -1031,7 +1031,7 @@
 ## AdminRoleController
 --------------------------------------------------
 **Controller Name:** AdminRoleController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/roles
 **Java Method:** getAllRoles
@@ -1049,7 +1049,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminRoleController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/roles
 **Java Method:** createRole
@@ -1069,7 +1069,7 @@
 ## AdminDepartmentController
 --------------------------------------------------
 **Controller Name:** AdminDepartmentController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/departments
 **Java Method:** getAllDepartments
@@ -1087,7 +1087,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminDepartmentController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/departments
 **Java Method:** createDepartment
@@ -1105,7 +1105,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminDepartmentController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/admin/departments/{id}
 **Java Method:** updateDepartment
@@ -1123,7 +1123,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminDepartmentController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/admin/departments/{id}
 **Java Method:** deleteDepartment
@@ -1141,7 +1141,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminDepartmentController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/departments/{id}/sections
 **Java Method:** getSectionsOfDept
@@ -1159,7 +1159,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminDepartmentController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/departments/{id}/sections
 **Java Method:** createSection
@@ -1177,7 +1177,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminDepartmentController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/admin/departments/{id}/sections/{sectionId}
 **Java Method:** deleteSection
@@ -1195,7 +1195,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminDepartmentController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/departments/class-coordinators
 **Java Method:** getClassCoordinators
@@ -1215,7 +1215,7 @@
 ## AdminSubgroupController
 --------------------------------------------------
 **Controller Name:** AdminSubgroupController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/stages/{stageId}/subgroups
 **Java Method:** createSubgroup
@@ -1233,7 +1233,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminSubgroupController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/admin/subgroups/{id}
 **Java Method:** updateSubgroup
@@ -1251,7 +1251,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminSubgroupController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/admin/subgroups/{id}
 **Java Method:** deleteSubgroup
@@ -1271,7 +1271,7 @@
 ## AdminSubjectController
 --------------------------------------------------
 **Controller Name:** AdminSubjectController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/subjects
 **Java Method:** getAllSubjects
@@ -1289,7 +1289,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminSubjectController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/subjects
 **Java Method:** createSubject
@@ -1307,7 +1307,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminSubjectController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/admin/subjects/{id}
 **Java Method:** deleteSubject
@@ -1327,7 +1327,7 @@
 ## AdminActivityController
 --------------------------------------------------
 **Controller Name:** AdminActivityController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/my-activities
 **Java Method:** getMyActivities
@@ -1345,7 +1345,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminActivityController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/subgroups/{subgroupId}/activities
 **Java Method:** getActivitiesBySubgroup
@@ -1363,7 +1363,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminActivityController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/subgroups/{subgroupId}/activities
 **Java Method:** createActivity
@@ -1381,7 +1381,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminActivityController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/admin/activities/{activityId}
 **Java Method:** updateActivity
@@ -1399,7 +1399,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminActivityController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/activities/{id}/assign
 **Java Method:** assignActivity
@@ -1417,7 +1417,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminActivityController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/admin/activities/{activityId}
 **Java Method:** deleteActivity
@@ -1435,7 +1435,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminActivityController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/frequencies/custom
 **Java Method:** getCustomFrequencies
@@ -1453,7 +1453,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminActivityController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/frequencies/custom
 **Java Method:** createCustomFrequency
@@ -1473,7 +1473,7 @@
 ## AdminUserController
 --------------------------------------------------
 **Controller Name:** AdminUserController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/admin/users
 **Java Method:** getAllUsers
@@ -1491,7 +1491,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminUserController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/admin/users
 **Java Method:** createUser
@@ -1509,7 +1509,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminUserController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/admin/users/{id}
 **Java Method:** updateUser
@@ -1527,7 +1527,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** AdminUserController
-**Package:** com.pragatix.modules.admin.controller
+**Package:** jjcet.PragatiX.modules.admin.controller
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/admin/users/{id}
 **Java Method:** deleteUser
@@ -1547,7 +1547,7 @@
 ## TeamController
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/teams
 **Java Method:** createTeam
@@ -1565,7 +1565,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/teams
 **Java Method:** getAllTeams
@@ -1583,7 +1583,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/teams/my-team
 **Java Method:** getMyTeam
@@ -1601,7 +1601,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/teams/{id}
 **Java Method:** getTeamById
@@ -1619,7 +1619,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/teams/{id}
 **Java Method:** updateTeam
@@ -1637,7 +1637,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/teams/{id}/members
 **Java Method:** addMemberToTeam
@@ -1655,7 +1655,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/teams/{id}/members/{studentId}
 **Java Method:** removeMemberFromTeam
@@ -1673,7 +1673,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/teams/{id}/captain
 **Java Method:** assignTeamCaptain
@@ -1691,7 +1691,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/teams/my-classmates
 **Java Method:** getMyClassmates
@@ -1709,7 +1709,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/teams/my-team/add-member
 **Java Method:** addMember
@@ -1727,7 +1727,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/teams/{id}/add-member
 **Java Method:** addMemberByCC
@@ -1745,7 +1745,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/teams/{id}/remove-member
 **Java Method:** removeMemberByCC
@@ -1763,7 +1763,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** POST
 **Complete Endpoint URL:** /api/v1/teams/my-team/remove-request
 **Java Method:** requestRemoveMember
@@ -1781,7 +1781,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** GET
 **Complete Endpoint URL:** /api/v1/teams/removal-requests/pending
 **Java Method:** getPendingRemovalRequests
@@ -1799,7 +1799,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/teams/removal-requests/{id}/approve
 **Java Method:** approveRemovalRequest
@@ -1817,7 +1817,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/teams/removal-requests/{id}/reject
 **Java Method:** rejectRemovalRequest
@@ -1835,7 +1835,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** PUT
 **Complete Endpoint URL:** /api/v1/teams/{id}/limit
 **Java Method:** updateTeamLimit
@@ -1853,7 +1853,7 @@
 **Response Codes:** 200 OK
 --------------------------------------------------
 **Controller Name:** TeamController
-**Package:** com.pragatix.admin
+**Package:** jjcet.PragatiX.admin
 **HTTP Method:** DELETE
 **Complete Endpoint URL:** /api/v1/teams/{teamId}
 **Java Method:** deleteTeam

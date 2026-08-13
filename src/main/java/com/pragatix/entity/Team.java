@@ -1,4 +1,4 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;

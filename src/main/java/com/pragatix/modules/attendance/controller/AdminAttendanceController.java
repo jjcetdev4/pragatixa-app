@@ -1,8 +1,8 @@
-package com.pragatix.modules.attendance.controller;
+package jjcet.PragatiX.modules.attendance.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.attendance.dto.response.AdminAttendanceSummaryResponse;
-import com.pragatix.modules.attendance.service.AdminAttendanceService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.attendance.dto.response.AdminAttendanceSummaryResponse;
+import jjcet.PragatiX.modules.attendance.service.AdminAttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;

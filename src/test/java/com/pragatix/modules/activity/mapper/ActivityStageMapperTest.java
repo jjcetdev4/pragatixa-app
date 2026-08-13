@@ -1,9 +1,9 @@
-package com.pragatix.modules.activity.mapper;
+package jjcet.PragatiX.modules.activity.mapper;
 
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.enums.StageStatus;
-import com.pragatix.modules.activity.dto.request.ActivityStageRequest;
-import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.enums.StageStatus;
+import jjcet.PragatiX.modules.activity.dto.request.ActivityStageRequest;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityStageResponse;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

@@ -1,13 +1,13 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.entity.ActivitySubgroup;
-import com.pragatix.entity.Activity;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.repository.DisciplineLogRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.entity.ActivitySubgroup;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivitySubgroupRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.repository.DisciplineLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @Service
 public class AdminSubgroupService {
@@ -31,11 +31,11 @@ public class AdminSubgroupService {
     private final ActivitySubgroupRepository activitySubgroupRepository;
     private final DisciplineLogRepository disciplineLogRepository;
 
-    private final com.pragatix.modules.authentication.repository.UserRepository userRepository;
+    private final jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository;
 
     public AdminSubgroupService(ActivityRepository activityRepository, ActivityStageRepository activityStageRepository,
             ActivitySubgroupRepository activitySubgroupRepository, DisciplineLogRepository disciplineLogRepository,
-            com.pragatix.modules.authentication.repository.UserRepository userRepository) {
+            jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository) {
         this.activityRepository = activityRepository;
         this.activityStageRepository = activityStageRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
@@ -43,12 +43,12 @@ public class AdminSubgroupService {
         this.userRepository = userRepository;
     }
 
-    private void validateAdminAcademicYearAccess(com.pragatix.enums.AcademicYear targetYear) {
+    private void validateAdminAcademicYearAccess(jjcet.PragatiX.enums.AcademicYear targetYear) {
         if (targetYear == null)
             return;
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
-        com.pragatix.entity.User user = userRepository.findByUsername(username).orElse(null);
+        jjcet.PragatiX.entity.User user = userRepository.findByUsername(username).orElse(null);
         if (user != null) {
             boolean isSuperAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
             boolean isAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));

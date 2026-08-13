@@ -1,19 +1,19 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.AwardXpRequest;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.AssignmentScope;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.User;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.modules.activity.service.AssignmentSecurityService;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.PenaltyRequestRepository;
-import com.pragatix.entity.PenaltyRequest;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.AwardXpRequest;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.AssignmentScope;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.modules.activity.service.AssignmentSecurityService;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.PenaltyRequestRepository;
+import jjcet.PragatiX.entity.PenaltyRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -55,22 +55,22 @@ public class StudentXpService {
         this.penaltyRequestRepository = penaltyRequestRepository;
     }
 
-    public com.pragatix.entity.ActivityAssignment findMatchingAssignmentForStudent(
-            java.util.List<com.pragatix.entity.ActivityAssignment> matching, com.pragatix.entity.Student student) {
+    public jjcet.PragatiX.entity.ActivityAssignment findMatchingAssignmentForStudent(
+            java.util.List<jjcet.PragatiX.entity.ActivityAssignment> matching, jjcet.PragatiX.entity.Student student) {
         if (student == null)
             return null;
-        for (com.pragatix.entity.ActivityAssignment a : matching) {
-            com.pragatix.entity.AssignmentScope scope = a.getAssignmentScope();
-            if (scope == com.pragatix.entity.AssignmentScope.GLOBAL
-                    || scope == com.pragatix.entity.AssignmentScope.SPECIFIC_FACULTY) {
+        for (jjcet.PragatiX.entity.ActivityAssignment a : matching) {
+            jjcet.PragatiX.entity.AssignmentScope scope = a.getAssignmentScope();
+            if (scope == jjcet.PragatiX.entity.AssignmentScope.GLOBAL
+                    || scope == jjcet.PragatiX.entity.AssignmentScope.SPECIFIC_FACULTY) {
                 return a;
             }
-            if (scope == com.pragatix.entity.AssignmentScope.DEPARTMENT &&
+            if (scope == jjcet.PragatiX.entity.AssignmentScope.DEPARTMENT &&
                     student.getDepartment() != null && a.getDepartment() != null &&
                     student.getDepartment().getId().equals(a.getDepartment().getId())) {
                 return a;
             }
-            if (scope == com.pragatix.entity.AssignmentScope.SECTION &&
+            if (scope == jjcet.PragatiX.entity.AssignmentScope.SECTION &&
                     student.getSection() != null && a.getSection() != null &&
                     student.getSection().getId().equals(a.getSection().getId())) {
                 return a;
@@ -80,9 +80,9 @@ public class StudentXpService {
     }
 
     @org.springframework.transaction.annotation.Transactional
-    public org.springframework.http.ResponseEntity<com.pragatix.common.response.ApiResponse<Void>> awardStudentXp(
-            com.pragatix.dto.AwardXpRequest request, String username) {
-        com.pragatix.entity.User teacher = userRepository.findByUsername(username).orElse(null);
+    public org.springframework.http.ResponseEntity<jjcet.PragatiX.common.response.ApiResponse<Void>> awardStudentXp(
+            jjcet.PragatiX.dto.AwardXpRequest request, String username) {
+        jjcet.PragatiX.entity.User teacher = userRepository.findByUsername(username).orElse(null);
         if (teacher == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.<Void>error("Teacher profile not found"));
@@ -100,7 +100,7 @@ public class StudentXpService {
                     .body(ApiResponse.<Void>error("Attendance Engine activities cannot be awarded manually."));
         }
 
-        if (activity.getStage() != null && activity.getStage().getStatus() != com.pragatix.enums.StageStatus.ACTIVE) {
+        if (activity.getStage() != null && activity.getStage().getStatus() != jjcet.PragatiX.enums.StageStatus.ACTIVE) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.<Void>error("Cannot award XP for an activity in a non-active stage."));
         }
@@ -110,7 +110,8 @@ public class StudentXpService {
                     .body(ApiResponse.<Void>error("Subgroup not found for Activity " + activity.getId()));
         }
 
-        // ── Resolve assignment FIRST so we can use the execution stage for eligibility ──
+        // ── Resolve assignment FIRST so we can use the execution stage for eligibility
+        // ──
         // The execution stage lives on the assignment, not on the activity itself.
         // activity.getStage() is the original creation stage and must NOT be used for
         // student eligibility when the activity is reused across multiple stages.
@@ -134,7 +135,8 @@ public class StudentXpService {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.<Void>error(
                     "Access Denied: You are not authorized to award XP to this student for this activity."));
 
-        // ── Stage eligibility: use execution stage (assignment), not original activity stage ──
+        // ── Stage eligibility: use execution stage (assignment), not original activity
+        // stage ──
         int stageOrder = resolveExecutionStageOrder(assignment, activity);
 
         // ── DIAGNOSTIC LOG: Execution stage validation ──
@@ -143,10 +145,18 @@ public class StudentXpService {
         System.out.println("Activity ID             : " + activity.getId());
         System.out.println("Assignment ID (request) : " + request.getAssignmentId());
         System.out.println("Assignment ID (resolved): " + (assignment != null ? assignment.getId() : "null"));
-        System.out.println("Original Activity Stage : " + (activity.getStage() != null ? activity.getStage().getName() + " (order=" + activity.getStage().getDisplayOrder() + ")" : "null"));
-        System.out.println("Assignment Stage        : " + (assignment != null && assignment.getStage() != null ? assignment.getStage().getName() + " (order=" + assignment.getStage().getDisplayOrder() + ")" : "null"));
-        System.out.println("Student Current Stage   : " + student.getStage() + " (currentStage=" + student.getCurrentStage() + ")");
-        System.out.println("Validation Using Stage  : " + stageOrder + (stageOrder > 0 && assignment != null && assignment.getStage() != null && assignment.getStage().getDisplayOrder() == stageOrder ? "  <-- CORRECT (assignment stage)" : (stageOrder > 0 ? "  <-- WARNING (not from assignment)" : "  (no restriction)")));
+        System.out.println("Original Activity Stage : " + (activity.getStage() != null
+                ? activity.getStage().getName() + " (order=" + activity.getStage().getDisplayOrder() + ")"
+                : "null"));
+        System.out.println("Assignment Stage        : " + (assignment != null && assignment.getStage() != null
+                ? assignment.getStage().getName() + " (order=" + assignment.getStage().getDisplayOrder() + ")"
+                : "null"));
+        System.out.println("Student Current Stage   : " + student.getStage() + " (currentStage="
+                + student.getCurrentStage() + ")");
+        System.out.println("Validation Using Stage  : " + stageOrder
+                + (stageOrder > 0 && assignment != null && assignment.getStage() != null
+                        && assignment.getStage().getDisplayOrder() == stageOrder ? "  <-- CORRECT (assignment stage)"
+                                : (stageOrder > 0 ? "  <-- WARNING (not from assignment)" : "  (no restriction)")));
         System.out.println("======================================================");
 
         if (stageOrder > 0 && student.getStage() != stageOrder && student.getCurrentStage() != stageOrder) {
@@ -183,11 +193,12 @@ public class StudentXpService {
                 return buildErrorResponse("Activity not found", request, null, 0);
 
             if (Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
-                return buildErrorResponse("Attendance Engine activities cannot be awarded manually.", request, activity, 0);
+                return buildErrorResponse("Attendance Engine activities cannot be awarded manually.", request, activity,
+                        0);
             }
 
             if (activity.getStage() != null
-                    && activity.getStage().getStatus() != com.pragatix.enums.StageStatus.ACTIVE) {
+                    && activity.getStage().getStatus() != jjcet.PragatiX.enums.StageStatus.ACTIVE) {
                 return buildErrorResponse("Cannot award XP for an activity in a non-active stage.", request, activity,
                         0);
             }
@@ -231,17 +242,21 @@ public class StudentXpService {
                 }
 
                 // ── Resolve assignment FIRST so we can use the execution stage ──
-                // Priority: request.assignmentId (direct) → findMatchingAssignmentForStudent (fallback)
-                // activity.getStage() is the original creation stage — NEVER use it for eligibility.
+                // Priority: request.assignmentId (direct) → findMatchingAssignmentForStudent
+                // (fallback)
+                // activity.getStage() is the original creation stage — NEVER use it for
+                // eligibility.
                 ActivityAssignment assignment;
                 if (request.getAssignmentId() != null) {
-                    // Load by ID directly to guarantee stage is populated (bypasses entity graph omission)
+                    // Load by ID directly to guarantee stage is populated (bypasses entity graph
+                    // omission)
                     assignment = activityAssignmentRepository.findById(request.getAssignmentId()).orElse(null);
                 } else {
                     assignment = findMatchingAssignmentForStudent(matching, student);
                 }
 
-                // ── Stage eligibility: use execution stage (assignment), not original activity stage ──
+                // ── Stage eligibility: use execution stage (assignment), not original activity
+                // stage ──
                 int batchStageOrder = resolveExecutionStageOrder(assignment, activity);
 
                 // ── DIAGNOSTIC LOG: Execution stage validation ──
@@ -250,15 +265,26 @@ public class StudentXpService {
                 System.out.println("Activity ID             : " + activity.getId());
                 System.out.println("Assignment ID (request) : " + request.getAssignmentId());
                 System.out.println("Assignment ID (resolved): " + (assignment != null ? assignment.getId() : "null"));
-                System.out.println("Original Activity Stage : " + (activity.getStage() != null ? activity.getStage().getName() + " (order=" + activity.getStage().getDisplayOrder() + ")" : "null"));
-                System.out.println("Assignment Stage        : " + (assignment != null && assignment.getStage() != null ? assignment.getStage().getName() + " (order=" + assignment.getStage().getDisplayOrder() + ")" : "null"));
+                System.out.println("Original Activity Stage : " + (activity.getStage() != null
+                        ? activity.getStage().getName() + " (order=" + activity.getStage().getDisplayOrder() + ")"
+                        : "null"));
+                System.out.println("Assignment Stage        : " + (assignment != null && assignment.getStage() != null
+                        ? assignment.getStage().getName() + " (order=" + assignment.getStage().getDisplayOrder() + ")"
+                        : "null"));
                 System.out.println("Student ID              : " + student.getId());
                 System.out.println("Student Name            : " + student.getFullName());
-                System.out.println("Student Current Stage   : " + student.getStage() + " (currentStage=" + student.getCurrentStage() + ")");
-                System.out.println("Validation Using Stage  : " + batchStageOrder + (batchStageOrder > 0 && assignment != null && assignment.getStage() != null && assignment.getStage().getDisplayOrder() == batchStageOrder ? "  <-- CORRECT (assignment stage)" : (batchStageOrder > 0 ? "  <-- WARNING (not from assignment)" : "  (no restriction)")));
+                System.out.println("Student Current Stage   : " + student.getStage() + " (currentStage="
+                        + student.getCurrentStage() + ")");
+                System.out.println("Validation Using Stage  : " + batchStageOrder
+                        + (batchStageOrder > 0 && assignment != null && assignment.getStage() != null
+                                && assignment.getStage().getDisplayOrder() == batchStageOrder
+                                        ? "  <-- CORRECT (assignment stage)"
+                                        : (batchStageOrder > 0 ? "  <-- WARNING (not from assignment)"
+                                                : "  (no restriction)")));
                 System.out.println("======================================================");
 
-                if (batchStageOrder > 0 && student.getStage() != batchStageOrder && student.getCurrentStage() != batchStageOrder) {
+                if (batchStageOrder > 0 && student.getStage() != batchStageOrder
+                        && student.getCurrentStage() != batchStageOrder) {
                     errors.add("Student " + student.getFullName() + " is in Stage " + student.getStage()
                             + " and is not eligible for Stage " + batchStageOrder + " activities.");
                     continue;
@@ -460,12 +486,15 @@ public class StudentXpService {
      * Resolve the execution stage order for student eligibility validation.
      *
      * Priority:
-     *   1. assignment.getStage()   — the stage in which this execution is happening (most specific)
-     *   2. activity.getStage()     — the activity's original creation stage (fallback only)
-     *   3. subgroup's stage        — last resort
-     *   4. 0                       — no stage restriction
+     * 1. assignment.getStage() — the stage in which this execution is happening
+     * (most specific)
+     * 2. activity.getStage() — the activity's original creation stage (fallback
+     * only)
+     * 3. subgroup's stage — last resort
+     * 4. 0 — no stage restriction
      *
-     * This ensures a reused activity's original creation stage never incorrectly blocks
+     * This ensures a reused activity's original creation stage never incorrectly
+     * blocks
      * a student who is in the correct execution stage.
      */
     private int resolveExecutionStageOrder(ActivityAssignment assignment, Activity activity) {

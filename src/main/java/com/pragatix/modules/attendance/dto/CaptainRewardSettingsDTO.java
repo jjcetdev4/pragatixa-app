@@ -1,8 +1,8 @@
-package com.pragatix.modules.attendance.dto;
+package jjcet.PragatiX.modules.attendance.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalTime;
-import com.pragatix.enums.AcademicYear;
+import jjcet.PragatiX.enums.AcademicYear;
 import java.time.LocalDateTime;
 
 public class CaptainRewardSettingsDTO {

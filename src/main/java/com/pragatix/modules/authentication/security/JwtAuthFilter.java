@@ -1,8 +1,8 @@
-package com.pragatix.modules.authentication.security;
+package jjcet.PragatiX.modules.authentication.security;
 
-import com.pragatix.modules.authentication.security.JwtUtil;
-import com.pragatix.modules.authentication.security.StudentDetailsService;
-import com.pragatix.modules.authentication.security.CustomUserDetailsService;
+import jjcet.PragatiX.modules.authentication.security.JwtUtil;
+import jjcet.PragatiX.modules.authentication.security.StudentDetailsService;
+import jjcet.PragatiX.modules.authentication.security.CustomUserDetailsService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -80,7 +80,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                 userDetails, null, userDetails.getAuthorities());
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
-                        
+
                         if (request.getRequestURI().contains("/api/v1/analytics")) {
                             System.out.println("\n====== FORENSIC: JWT AUTHENTICATION ======");
                             System.out.println("Requested URI: " + request.getRequestURI());
@@ -106,8 +106,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            
-            com.pragatix.common.response.ApiResponse<Void> apiResponse = com.pragatix.common.response.ApiResponse.error("Unauthorized. Please login.");
+
+            jjcet.PragatiX.common.response.ApiResponse<Void> apiResponse = jjcet.PragatiX.common.response.ApiResponse
+                    .error("Unauthorized. Please login.");
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             response.getWriter().write(mapper.writeValueAsString(apiResponse));
             return;

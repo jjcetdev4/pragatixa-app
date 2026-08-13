@@ -1,9 +1,9 @@
-package com.pragatix.student;
+package jjcet.PragatiX.student;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Badge;
-import com.pragatix.entity.Level;
-import com.pragatix.modules.student.dto.response.StudentBadgeResponse;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Badge;
+import jjcet.PragatiX.entity.Level;
+import jjcet.PragatiX.modules.student.dto.response.StudentBadgeResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,10 +20,10 @@ import java.util.List;
 public class LevelBadgeController {
 
     private final LevelBadgeService levelBadgeService;
-    private final com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver;
+    private final jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
     public LevelBadgeController(LevelBadgeService levelBadgeService,
-            com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
+            jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.levelBadgeService = levelBadgeService;
         this.studentAuthResolver = studentAuthResolver;
     }

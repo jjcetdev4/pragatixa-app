@@ -1,4 +1,4 @@
-package com.pragatix.dto;
+package jjcet.PragatiX.dto;
 
 public class BadgeRequestStatusUpdateDto {
     private String remarks;

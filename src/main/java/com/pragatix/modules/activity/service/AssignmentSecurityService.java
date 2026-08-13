@@ -1,11 +1,11 @@
-package com.pragatix.modules.activity.service;
+package jjcet.PragatiX.modules.activity.service;
 
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.ActivityTemporaryAssignment;
-import com.pragatix.entity.AssignmentScope;
-import com.pragatix.entity.User;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.repository.ActivityTemporaryAssignmentRepository;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.ActivityTemporaryAssignment;
+import jjcet.PragatiX.entity.AssignmentScope;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.repository.ActivityTemporaryAssignmentRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -18,7 +18,7 @@ public class AssignmentSecurityService {
     private final ActivityTemporaryAssignmentRepository temporaryAssignmentRepository;
 
     public AssignmentSecurityService(UserRepository userRepository,
-                                     ActivityTemporaryAssignmentRepository temporaryAssignmentRepository) {
+            ActivityTemporaryAssignmentRepository temporaryAssignmentRepository) {
         this.userRepository = userRepository;
         this.temporaryAssignmentRepository = temporaryAssignmentRepository;
     }
@@ -26,7 +26,8 @@ public class AssignmentSecurityService {
     /**
      * Determines whether the given User is the assigned faculty for the given
      * ActivityAssignment.
-     * Checks temporary assignments for today first, then falls back to permanent assignment.
+     * Checks temporary assignments for today first, then falls back to permanent
+     * assignment.
      * Admin users always return true.
      */
     public boolean isUserAssignedFaculty(ActivityAssignment assignment, User user) {
@@ -49,16 +50,18 @@ public class AssignmentSecurityService {
                     assignment.getActivity().getId(),
                     deptId,
                     secId,
-                    today
-            );
+                    today);
 
             if (!tempAssignments.isEmpty()) {
                 ActivityTemporaryAssignment activeTemp = tempAssignments.get(0);
-                if (activeTemp.getTemporaryTeacher() != null && activeTemp.getTemporaryTeacher().getId().equals(user.getId())) {
+                if (activeTemp.getTemporaryTeacher() != null
+                        && activeTemp.getTemporaryTeacher().getId().equals(user.getId())) {
                     return true;
                 }
-                // If user is the original/permanent teacher replaced for today, they do not have active assignment today
-                if (activeTemp.getOriginalTeacher() != null && activeTemp.getOriginalTeacher().getId().equals(user.getId())) {
+                // If user is the original/permanent teacher replaced for today, they do not
+                // have active assignment today
+                if (activeTemp.getOriginalTeacher() != null
+                        && activeTemp.getOriginalTeacher().getId().equals(user.getId())) {
                     return false;
                 }
                 if (assignment.getTeacher() != null && assignment.getTeacher().getId().equals(user.getId())) {
@@ -81,7 +84,8 @@ public class AssignmentSecurityService {
         if (assignment.getAssignmentScope() == AssignmentScope.DEPARTMENT
                 || assignment.getAssignmentScope() == AssignmentScope.SECTION) {
 
-            // 5a. If a specific teacher is directly assigned on this record, authorise that teacher.
+            // 5a. If a specific teacher is directly assigned on this record, authorise that
+            // teacher.
             if (assignment.getTeacher() != null && assignment.getTeacher().getId().equals(user.getId())) {
                 return true;
             }

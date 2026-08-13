@@ -1,14 +1,14 @@
-package com.pragatix.modules.activity.controller;
+package jjcet.PragatiX.modules.activity.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.student.dto.response.StudentResponse;
-import com.pragatix.dto.TeamResponse;
-import com.pragatix.entity.*;
-import com.pragatix.repository.*;
-import com.pragatix.modules.activity.repository.*;
-import com.pragatix.modules.student.repository.*;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.service.XpEngineService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.dto.TeamResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.modules.activity.repository.*;
+import jjcet.PragatiX.modules.student.repository.*;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.service.XpEngineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -77,7 +77,7 @@ public class GroupActivityController {
         boolean canDelete = false;
         if (currentUser != null) {
             boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-            boolean isCc = currentUser.getSubRoles().stream().map(com.pragatix.entity.SubRole::getName)
+            boolean isCc = currentUser.getSubRoles().stream().map(jjcet.PragatiX.entity.SubRole::getName)
                     .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
             boolean isAssignedFaculty = assignment.getTeacher() != null
                     && assignment.getTeacher().getUsername().equals(username);
@@ -114,7 +114,8 @@ public class GroupActivityController {
             } else if (activity != null && activity.getStage() != null) {
                 stageOrder = activity.getStage().getDisplayOrder();
                 targetStageId = activity.getStage().getId();
-            } else if (activity != null && activity.getSubgroup() != null && activity.getSubgroup().getStage() != null) {
+            } else if (activity != null && activity.getSubgroup() != null
+                    && activity.getSubgroup().getStage() != null) {
                 stageOrder = activity.getSubgroup().getStage().getDisplayOrder();
                 targetStageId = activity.getSubgroup().getStage().getId();
             }
@@ -140,10 +141,12 @@ public class GroupActivityController {
                 if (!t.getDepartment().getId().equals(assignment.getDepartment().getId()))
                     return false;
                 if (assignment.getAssignmentScope() != AssignmentScope.DEPARTMENT) {
-                    // Use fuzzy year matching — teams may store "I" while assignment stores "1", etc.
+                    // Use fuzzy year matching — teams may store "I" while assignment stores "1",
+                    // etc.
                     int teamYearNo = normalizeYearToInt(t.getYear());
                     int assignYearNo = normalizeYearToInt(assignment.getYear());
-                    // If assignment has no year set, skip year filter (include all years for dept/section)
+                    // If assignment has no year set, skip year filter (include all years for
+                    // dept/section)
                     if (assignYearNo != -1 && (teamYearNo == -1 || teamYearNo != assignYearNo))
                         return false;
                     if (t.getSection() == null || assignment.getSection() == null
@@ -157,7 +160,8 @@ public class GroupActivityController {
                 List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(t.getId());
                 if (stageTeams != null && !stageTeams.isEmpty()) {
                     boolean stageMatches = stageTeams.stream().anyMatch(st -> {
-                        if (st.getStage() == null) return false;
+                        if (st.getStage() == null)
+                            return false;
                         if (finalTargetStageId != null && st.getStage().getId().equals(finalTargetStageId)) {
                             return true;
                         }
@@ -170,7 +174,8 @@ public class GroupActivityController {
                     // No StageTeam link found in DB -> evaluate team stage from captain or members
                     int teamCurrentStage = 1; // Default to Stage 1
                     if (t.getCaptain() != null) {
-                        int capStage = t.getCaptain().getCurrentStage() > 0 ? t.getCaptain().getCurrentStage() : t.getCaptain().getStage();
+                        int capStage = t.getCaptain().getCurrentStage() > 0 ? t.getCaptain().getCurrentStage()
+                                : t.getCaptain().getStage();
                         teamCurrentStage = capStage > 0 ? capStage : 1;
                     } else if (t.getMembers() != null && !t.getMembers().isEmpty()) {
                         int memStage = t.getMembers().stream()
@@ -195,12 +200,16 @@ public class GroupActivityController {
             List<StudentResponse> studentResponses = g.getMembers().stream()
                     .filter(Student::isActive)
                     .filter(s -> {
-                        if (activityStageOrder <= 0) return true;
+                        if (activityStageOrder <= 0)
+                            return true;
                         int sStage = s.getCurrentStage() > 0 ? s.getCurrentStage() : s.getStage();
                         return sStage == activityStageOrder;
                     })
-                    .sorted(Comparator.comparing((Student s) -> s.getFullName() != null ? s.getFullName().trim() : "", String.CASE_INSENSITIVE_ORDER)
-                            .thenComparing((Student s) -> s.getRegNo() != null ? s.getRegNo().trim() : "", String.CASE_INSENSITIVE_ORDER))
+                    .sorted(Comparator
+                            .comparing((Student s) -> s.getFullName() != null ? s.getFullName().trim() : "",
+                                    String.CASE_INSENSITIVE_ORDER)
+                            .thenComparing((Student s) -> s.getRegNo() != null ? s.getRegNo().trim() : "",
+                                    String.CASE_INSENSITIVE_ORDER))
                     .map(this::toStudentResponse)
                     .collect(Collectors.toList());
 
@@ -208,7 +217,8 @@ public class GroupActivityController {
             String captainName = null;
 
             if (g.getCaptain() != null && g.getCaptain().isActive()) {
-                int capStage = g.getCaptain().getCurrentStage() > 0 ? g.getCaptain().getCurrentStage() : g.getCaptain().getStage();
+                int capStage = g.getCaptain().getCurrentStage() > 0 ? g.getCaptain().getCurrentStage()
+                        : g.getCaptain().getStage();
                 if (activityStageOrder <= 0 || capStage == activityStageOrder) {
                     final String finalCaptainId = g.getCaptain().getRegNo();
                     captainId = finalCaptainId;
@@ -232,8 +242,10 @@ public class GroupActivityController {
                     assignment.getActivity() != null ? assignment.getActivity().getActivityName() : "",
                     finalCanDelete);
         })
-        .sorted(Comparator.comparing((TeamResponse tr) -> tr.getTeamName() != null ? tr.getTeamName().trim() : "", String.CASE_INSENSITIVE_ORDER))
-        .collect(Collectors.toList());
+                .sorted(Comparator.comparing(
+                        (TeamResponse tr) -> tr.getTeamName() != null ? tr.getTeamName().trim() : "",
+                        String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(ApiResponse.ok(responses));
     }
@@ -266,7 +278,7 @@ public class GroupActivityController {
         }
 
         Activity activity = assignment.getActivity();
-        if (activity.getStage() != null && activity.getStage().getStatus() != com.pragatix.enums.StageStatus.ACTIVE) {
+        if (activity.getStage() != null && activity.getStage().getStatus() != jjcet.PragatiX.enums.StageStatus.ACTIVE) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Cannot award XP for an activity in a non-active stage."));
         }
@@ -343,12 +355,17 @@ public class GroupActivityController {
      * to an integer (1-4). Returns -1 if the year cannot be determined.
      */
     private int normalizeYearToInt(String year) {
-        if (year == null || year.trim().isEmpty()) return -1;
+        if (year == null || year.trim().isEmpty())
+            return -1;
         String y = year.trim().toUpperCase();
-        if (y.equals("1") || y.equals("I") || y.contains("FIRST") || y.startsWith("1ST")) return 1;
-        if (y.equals("2") || y.equals("II") || y.contains("SECOND") || y.startsWith("2ND")) return 2;
-        if (y.equals("3") || y.equals("III") || y.contains("THIRD") || y.startsWith("3RD")) return 3;
-        if (y.equals("4") || y.equals("IV") || y.contains("FOURTH") || y.startsWith("4TH")) return 4;
+        if (y.equals("1") || y.equals("I") || y.contains("FIRST") || y.startsWith("1ST"))
+            return 1;
+        if (y.equals("2") || y.equals("II") || y.contains("SECOND") || y.startsWith("2ND"))
+            return 2;
+        if (y.equals("3") || y.equals("III") || y.contains("THIRD") || y.startsWith("3RD"))
+            return 3;
+        if (y.equals("4") || y.equals("IV") || y.contains("FOURTH") || y.startsWith("4TH"))
+            return 4;
         return -1;
     }
 }

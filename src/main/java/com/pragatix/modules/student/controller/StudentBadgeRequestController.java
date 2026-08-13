@@ -1,9 +1,9 @@
-package com.pragatix.modules.student.controller;
+package jjcet.PragatiX.modules.student.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.BadgeRequestCreateDto;
-import com.pragatix.dto.BadgeRequestDto;
-import com.pragatix.modules.badge.service.BadgeRequestService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.BadgeRequestCreateDto;
+import jjcet.PragatiX.dto.BadgeRequestDto;
+import jjcet.PragatiX.modules.badge.service.BadgeRequestService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

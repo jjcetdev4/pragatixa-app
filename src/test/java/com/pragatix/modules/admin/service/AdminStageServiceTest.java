@@ -1,12 +1,12 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.activity.dto.request.EvaluatePromotionsRequest;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.modules.activity.service.ActivityStageService;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.student.service.XpEngineService;
-import com.pragatix.repository.AcademicYearRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.activity.dto.request.EvaluatePromotionsRequest;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.modules.activity.service.ActivityStageService;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.student.service.XpEngineService;
+import jjcet.PragatiX.repository.AcademicYearRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,8 +49,7 @@ public class AdminStageServiceTest {
                 studentRepository,
                 xpEngineService,
                 activityStageRepository,
-                academicYearRepository
-        );
+                academicYearRepository);
     }
 
     @Test

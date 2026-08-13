@@ -1,4 +1,4 @@
-package com.pragatix.modules.analytics.dto;
+package jjcet.PragatiX.modules.analytics.dto;
 
 public class AttendanceDistributionDTO {
     private Double presentPercentage;
@@ -8,7 +8,8 @@ public class AttendanceDistributionDTO {
     public AttendanceDistributionDTO() {
     }
 
-    public AttendanceDistributionDTO(Double presentPercentage, Double partialAbsentPercentage, Double fullAbsentPercentage) {
+    public AttendanceDistributionDTO(Double presentPercentage, Double partialAbsentPercentage,
+            Double fullAbsentPercentage) {
         this.presentPercentage = presentPercentage;
         this.partialAbsentPercentage = partialAbsentPercentage;
         this.fullAbsentPercentage = fullAbsentPercentage;

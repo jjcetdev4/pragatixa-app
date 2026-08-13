@@ -1,4 +1,4 @@
-package com.pragatix.modules.authentication.security;
+package jjcet.PragatiX.modules.authentication.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

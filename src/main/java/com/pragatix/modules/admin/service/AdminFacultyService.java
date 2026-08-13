@@ -1,10 +1,10 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.User;
-import com.pragatix.entity.ActivitySubgroup;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.entity.ActivitySubgroup;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivitySubgroupRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @Service
 public class AdminFacultyService {

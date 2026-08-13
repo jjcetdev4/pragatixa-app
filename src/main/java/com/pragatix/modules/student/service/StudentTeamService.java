@@ -1,16 +1,16 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.dto.*;
-import com.pragatix.modules.activity.dto.request.*;
-import com.pragatix.modules.activity.dto.response.*;
-import com.pragatix.modules.student.dto.request.*;
-import com.pragatix.modules.student.dto.response.*;
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.*;
-import com.pragatix.repository.*;
-import com.pragatix.modules.activity.repository.*;
-import com.pragatix.modules.faculty.repository.*;
-import com.pragatix.modules.student.repository.*;
+import jjcet.PragatiX.dto.*;
+import jjcet.PragatiX.modules.activity.dto.request.*;
+import jjcet.PragatiX.modules.activity.dto.response.*;
+import jjcet.PragatiX.modules.student.dto.request.*;
+import jjcet.PragatiX.modules.student.dto.response.*;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.modules.activity.repository.*;
+import jjcet.PragatiX.modules.faculty.repository.*;
+import jjcet.PragatiX.modules.student.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -26,14 +26,14 @@ public class StudentTeamService {
 
     private final StudentRepository studentRepository;
     private final TeamRepository teamRepository;
-    private final com.pragatix.admin.service.LeadershipSyncService leadershipSyncService;
+    private final jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
 
-    public StudentTeamService(StudentRepository studentRepository, 
-                              TeamRepository teamRepository,
-                              com.pragatix.admin.service.LeadershipSyncService leadershipSyncService) {
+    public StudentTeamService(StudentRepository studentRepository,
+            TeamRepository teamRepository,
+            jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService) {
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
         this.leadershipSyncService = leadershipSyncService;
@@ -87,11 +87,12 @@ public class StudentTeamService {
             try {
                 entityManager.createNativeQuery(
                         "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
-                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                                "ON DUPLICATE KEY UPDATE team_id = :tid")
                         .setParameter("tid", team.getId())
                         .setParameter("sid", student.getId())
                         .executeUpdate();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         leadershipSyncService.syncLeadership(team, student, team.getViceCaptain());

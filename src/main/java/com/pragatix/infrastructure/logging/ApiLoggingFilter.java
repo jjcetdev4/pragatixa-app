@@ -1,4 +1,4 @@
-package com.pragatix.infrastructure.logging;
+package jjcet.PragatiX.infrastructure.logging;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

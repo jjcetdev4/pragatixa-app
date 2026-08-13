@@ -1,13 +1,13 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.Student;
-import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
-import com.pragatix.modules.activity.dto.response.ActivitySubgroupResponse;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.modules.activity.service.ActivityStageService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityStageResponse;
+import jjcet.PragatiX.modules.activity.dto.response.ActivitySubgroupResponse;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.modules.activity.service.ActivityStageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +24,13 @@ public class StudentStageFacade {
     private final ActivityRepository activityRepository;
     private final StudentAssignmentResolver assignmentResolver;
     private final StudentStageAssembler stageAssembler;
-    private final com.pragatix.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository;
+    private final jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository;
 
     public StudentStageFacade(ActivityStageService activityStageService,
             ActivityRepository activityRepository,
             StudentAssignmentResolver assignmentResolver,
             StudentStageAssembler stageAssembler,
-            com.pragatix.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository) {
+            jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository) {
         this.activityStageService = activityStageService;
         this.activityRepository = activityRepository;
         this.assignmentResolver = assignmentResolver;
@@ -41,7 +41,7 @@ public class StudentStageFacade {
     @Transactional(readOnly = true)
     public ResponseEntity<?> getStudentStages(Student student) {
         try {
-            com.pragatix.enums.AcademicYear acYear = com.pragatix.enums.AcademicYear.fromStudent(student);
+            jjcet.PragatiX.enums.AcademicYear acYear = jjcet.PragatiX.enums.AcademicYear.fromStudent(student);
             List<ActivityStageResponse> stages = activityStageService.getAllStages(acYear);
 
             if (stages != null && !stages.isEmpty()) {
@@ -67,14 +67,17 @@ public class StudentStageFacade {
                             allActivityIds.add(act.getId());
                         }
                     }
-                    
+
                     // Also fetch activities mapped to these subgroups via ActivityStageMapping
-                    List<com.pragatix.entity.ActivityStageMapping> allMappings = activityStageMappingRepository.findAll();
-                    for (com.pragatix.entity.ActivityStageMapping mapping : allMappings) {
+                    List<jjcet.PragatiX.entity.ActivityStageMapping> allMappings = activityStageMappingRepository
+                            .findAll();
+                    for (jjcet.PragatiX.entity.ActivityStageMapping mapping : allMappings) {
                         if (mapping.getSubgroup() != null && subgroupIds.contains(mapping.getSubgroup().getId())) {
                             if (mapping.getActivity() != null) {
-                                List<Activity> subActs = activitiesBySubgroup.computeIfAbsent(mapping.getSubgroup().getId(), k -> new ArrayList<>());
-                                boolean exists = subActs.stream().anyMatch(a -> a.getId().equals(mapping.getActivity().getId()));
+                                List<Activity> subActs = activitiesBySubgroup
+                                        .computeIfAbsent(mapping.getSubgroup().getId(), k -> new ArrayList<>());
+                                boolean exists = subActs.stream()
+                                        .anyMatch(a -> a.getId().equals(mapping.getActivity().getId()));
                                 if (!exists) {
                                     subActs.add(mapping.getActivity());
                                 }

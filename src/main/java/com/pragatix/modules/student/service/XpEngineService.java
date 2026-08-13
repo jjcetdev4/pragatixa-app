@@ -1,11 +1,11 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.*;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.modules.activity.service.StageValidationService;
-import com.pragatix.modules.student.repository.StudentActivityXpRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.XpTransactionRepository;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.modules.activity.service.StageValidationService;
+import jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.XpTransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +20,9 @@ public class XpEngineService {
     private final ActivityStageRepository activityStageRepository;
     private final StageValidationService stageValidationService;
     private final TeamAssignmentService teamAssignmentService;
-    private final com.pragatix.admin.service.CaptainSelectionService captainSelectionService;
-    private final com.pragatix.repository.StreakRepository streakRepository;
-    private final com.pragatix.modules.activity.service.ActivityStreakService activityStreakService;
+    private final jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService;
+    private final jjcet.PragatiX.repository.StreakRepository streakRepository;
+    private final jjcet.PragatiX.modules.activity.service.ActivityStreakService activityStreakService;
 
     public XpEngineService(StudentRepository studentRepository,
             StudentActivityXpRepository studentActivityXpRepository,
@@ -30,9 +30,9 @@ public class XpEngineService {
             ActivityStageRepository activityStageRepository,
             StageValidationService stageValidationService,
             TeamAssignmentService teamAssignmentService,
-            com.pragatix.admin.service.CaptainSelectionService captainSelectionService,
-            com.pragatix.repository.StreakRepository streakRepository,
-            com.pragatix.modules.activity.service.ActivityStreakService activityStreakService) {
+            jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService,
+            jjcet.PragatiX.repository.StreakRepository streakRepository,
+            jjcet.PragatiX.modules.activity.service.ActivityStreakService activityStreakService) {
         this.studentRepository = studentRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
         this.xpTransactionRepository = xpTransactionRepository;
@@ -52,7 +52,8 @@ public class XpEngineService {
 
     @Transactional
     public Student awardXp(Student student, Activity activity, User authorizedUser, ActivityAssignment assignment,
-            int requestXp, String remarks, com.pragatix.modules.attendance.dto.AttendanceXpExecutionRequest attendanceReq) {
+            int requestXp, String remarks,
+            jjcet.PragatiX.modules.attendance.dto.AttendanceXpExecutionRequest attendanceReq) {
 
         System.out.println("=====================================================");
         System.out.println("XP ENGINE: Processing Award for Student: " + student.getId());
@@ -64,7 +65,7 @@ public class XpEngineService {
         if (activity != null) {
             resolvedCategory = "";
             activityName = activity.getName();
-            com.pragatix.entity.ActivitySubgroup subgroup = activity.getSubgroup();
+            jjcet.PragatiX.entity.ActivitySubgroup subgroup = activity.getSubgroup();
             if (subgroup != null) {
                 resolvedCategory += (subgroup.getCategory() != null ? subgroup.getCategory() : "") + " " +
                         (subgroup.getName() != null ? subgroup.getName() : "");
@@ -88,19 +89,22 @@ public class XpEngineService {
             System.out.println("Attendance Rule\n" + attendanceReq.getAttendanceRule());
             System.out.println("Calculated XP\n" + attendanceReq.getCalculatedXp());
             System.out.println("Activity Award XP (Ignored)\n" + (activity != null ? activity.getAwardXp() : "null"));
-            System.out.println("Activity Penalty XP (Ignored)\n" + (activity != null ? activity.getPenaltyXp() : "null"));
+            System.out
+                    .println("Activity Penalty XP (Ignored)\n" + (activity != null ? activity.getPenaltyXp() : "null"));
             System.out.println("Applied XP\n" + attendanceReq.getCalculatedXp());
             System.out.println("Reason\n" + attendanceReq.getReason());
 
             configuredXp = Math.abs(attendanceReq.getCalculatedXp());
             penaltyFlag = attendanceReq.getIsPenalty();
-            appliedXp = attendanceReq.getCalculatedXp(); // Note: we assume Attendance engine passes signed XP correctly (-40 for penalties)
+            appliedXp = attendanceReq.getCalculatedXp(); // Note: we assume Attendance engine passes signed XP correctly
+                                                         // (-40 for penalties)
         } else {
             System.out.println("Attendance Override = FALSE");
-            
+
             if (activity != null) {
                 if (Boolean.TRUE.equals(activity.getAttendanceEngineEnabled()) ||
-                   (Boolean.TRUE.equals(activity.getAwardEnabled()) && Boolean.TRUE.equals(activity.getPenaltyEnabled()))) {
+                        (Boolean.TRUE.equals(activity.getAwardEnabled())
+                                && Boolean.TRUE.equals(activity.getPenaltyEnabled()))) {
                     penaltyFlag = requestXp < 0;
                 } else {
                     penaltyFlag = (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled())
@@ -150,21 +154,22 @@ public class XpEngineService {
                 student.setMustXp(student.getMustXp() + appliedXp);
                 addedToMust = true;
             }
-            
+
             if (activity.isIndividualXpEligible()) {
                 student.setIndividualXp(student.getIndividualXp() + appliedXp);
                 addedToInd = true;
             }
-            
+
             if (activity.isGroupXpEligible()) {
                 student.setGroupXp(student.getGroupXp() + appliedXp);
                 addedToGrp = true;
             }
         }
-        
+
         System.out.println("Activity ID\n" + (activity != null ? activity.getId() : "null"));
         System.out.println("XP Type\n" + (activity != null ? activity.getXpType() : "null"));
-        System.out.println("Subgroup\n" + (activity != null && activity.getSubgroup() != null ? activity.getSubgroup().getName() : "null"));
+        System.out.println("Subgroup\n"
+                + (activity != null && activity.getSubgroup() != null ? activity.getSubgroup().getName() : "null"));
         System.out.println("Mode Type\n" + (activity != null ? activity.getModeType() : "null"));
         System.out.println("Awarded XP\n" + appliedXp);
         System.out.println("Added to Must XP?\n" + addedToMust);
@@ -216,7 +221,7 @@ public class XpEngineService {
 
         // Update streak
         updateStreakOnSubmission(student, activityName);
-        
+
         // Activity-wise Streak hook
         if (activity != null && !Boolean.TRUE.equals(activity.getAttendanceEngineEnabled())) {
             activityStreakService.incrementStreak(student, activity);
@@ -243,7 +248,7 @@ public class XpEngineService {
         System.out.println("Current Stage: " + student.getStage());
 
         ActivityStage currentStage = activityStageRepository.findByDisplayOrder(student.getStage()).orElse(null);
-        if (currentStage == null || currentStage.getStatus() != com.pragatix.enums.StageStatus.ACTIVE) {
+        if (currentStage == null || currentStage.getStatus() != jjcet.PragatiX.enums.StageStatus.ACTIVE) {
             System.out.println("Stage Engine: Current stage not found or inactive.");
             return;
         }

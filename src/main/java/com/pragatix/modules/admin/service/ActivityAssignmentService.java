@@ -1,19 +1,19 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.AssignmentScope;
-import com.pragatix.entity.Department;
-import com.pragatix.entity.Section;
-import com.pragatix.entity.User;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.repository.DepartmentRepository;
-import com.pragatix.repository.SectionRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.activity.dto.request.AssignmentRequest;
-import com.pragatix.modules.activity.dto.response.ActivityAssignmentResponse;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.AssignmentScope;
+import jjcet.PragatiX.entity.Department;
+import jjcet.PragatiX.entity.Section;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.repository.SectionRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.activity.dto.request.AssignmentRequest;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityAssignmentResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,12 +25,12 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.pragatix.modules.student.repository.StudentActivityXpRepository;
+import jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository;
 
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.entity.ActivityStageMapping;
-import com.pragatix.modules.activity.repository.ActivityStageMappingRepository;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.entity.ActivityStageMapping;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository;
 
 @Service
 public class ActivityAssignmentService {
@@ -79,7 +79,8 @@ public class ActivityAssignmentService {
         if (body != null && body.containsKey("stageId") && body.get("stageId") != null) {
             try {
                 targetStageId = Long.valueOf(body.get("stageId").toString());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         ActivityStage targetStage = null;
@@ -90,15 +91,18 @@ public class ActivityAssignmentService {
         } else {
             existingAssignments = activityAssignmentRepository.findByActivityId(id);
         }
-        
-        log.info("DELETE LOG: Method=assignActivity Class=ActivityAssignmentService Reason=Fetching Existing Assignments TotalFound={}", existingAssignments.size());
+
+        log.info(
+                "DELETE LOG: Method=assignActivity Class=ActivityAssignmentService Reason=Fetching Existing Assignments TotalFound={}",
+                existingAssignments.size());
 
         boolean ccEnabled = Boolean.TRUE.equals(body.get("ccEnabled"));
         boolean globalEnabled = Boolean.TRUE.equals(body.get("globalEnabled"));
 
         if (ccEnabled) {
             if (targetStageId != null) {
-                ActivityStageMapping mapping = activityStageMappingRepository.findByStageIdAndActivityId(targetStageId, id).orElse(null);
+                ActivityStageMapping mapping = activityStageMappingRepository
+                        .findByStageIdAndActivityId(targetStageId, id).orElse(null);
                 if (mapping != null) {
                     mapping.setAssignmentMode("CLASS_COORDINATOR");
                     activityStageMappingRepository.save(mapping);
@@ -160,7 +164,8 @@ public class ActivityAssignmentService {
 
         } else if (globalEnabled) {
             if (targetStageId != null) {
-                ActivityStageMapping mapping = activityStageMappingRepository.findByStageIdAndActivityId(targetStageId, id).orElse(null);
+                ActivityStageMapping mapping = activityStageMappingRepository
+                        .findByStageIdAndActivityId(targetStageId, id).orElse(null);
                 if (mapping != null) {
                     mapping.setAssignmentMode("GLOBAL");
                     activityStageMappingRepository.save(mapping);
@@ -171,8 +176,8 @@ public class ActivityAssignmentService {
             }
 
             List<ActivityAssignment> globalsExisting = existingAssignments.stream()
-                .filter(a -> a.getAssignmentScope() == AssignmentScope.GLOBAL)
-                .collect(java.util.stream.Collectors.toList());
+                    .filter(a -> a.getAssignmentScope() == AssignmentScope.GLOBAL)
+                    .collect(java.util.stream.Collectors.toList());
 
             List<Department> allDepts = departmentRepository.findAll();
             List<ActivityAssignment> assignmentsToSave = new ArrayList<>();
@@ -189,13 +194,15 @@ public class ActivityAssignmentService {
             }
             syncAssignments(globalsExisting, assignmentsToSave);
             logAttendanceEngineLink(activity, assignmentsToSave);
-            return ResponseEntity.ok(ApiResponse.ok("Activity successfully assigned globally (Section assignments retained)", null));
+            return ResponseEntity
+                    .ok(ApiResponse.ok("Activity successfully assigned globally (Section assignments retained)", null));
 
         } else {
             // MANUAL ASSIGNMENT MODE
 
             if (targetStageId != null) {
-                ActivityStageMapping mapping = activityStageMappingRepository.findByStageIdAndActivityId(targetStageId, id).orElse(null);
+                ActivityStageMapping mapping = activityStageMappingRepository
+                        .findByStageIdAndActivityId(targetStageId, id).orElse(null);
                 if (mapping != null) {
                     mapping.setAssignmentMode("MANUAL");
                     activityStageMappingRepository.save(mapping);
@@ -253,23 +260,30 @@ public class ActivityAssignmentService {
 
         String stageName = activity.getStage() != null ? activity.getStage().getName() : "Unknown";
         String academicYear = activity.getAcademicYear() != null ? activity.getAcademicYear().name() : "Unknown";
-        
+
         List<String> departments = new ArrayList<>();
         List<String> sections = new ArrayList<>();
         List<String> teachers = new ArrayList<>();
-        
+
         for (ActivityAssignment aa : assignments) {
-            if (aa.getDepartment() != null) departments.add(aa.getDepartment().getName());
-            if (aa.getSection() != null) sections.add(aa.getSection().getSectionName());
-            if (aa.getTeacher() != null) teachers.add(aa.getTeacher().getFullName());
+            if (aa.getDepartment() != null)
+                departments.add(aa.getDepartment().getName());
+            if (aa.getSection() != null)
+                sections.add(aa.getSection().getSectionName());
+            if (aa.getTeacher() != null)
+                teachers.add(aa.getTeacher().getFullName());
         }
-        
-        String deptsStr = departments.isEmpty() ? "None" : String.join(", ", departments.stream().distinct().collect(java.util.stream.Collectors.toList()));
-        String secsStr = sections.isEmpty() ? "None" : String.join(", ", sections.stream().distinct().collect(java.util.stream.Collectors.toList()));
-        String teachersStr = teachers.isEmpty() ? "None" : String.join(", ", teachers.stream().distinct().collect(java.util.stream.Collectors.toList()));
+
+        String deptsStr = departments.isEmpty() ? "None"
+                : String.join(", ", departments.stream().distinct().collect(java.util.stream.Collectors.toList()));
+        String secsStr = sections.isEmpty() ? "None"
+                : String.join(", ", sections.stream().distinct().collect(java.util.stream.Collectors.toList()));
+        String teachersStr = teachers.isEmpty() ? "None"
+                : String.join(", ", teachers.stream().distinct().collect(java.util.stream.Collectors.toList()));
 
         boolean resolvedSuccessfully = activity.getStage() != null && !assignments.isEmpty();
-        String reason = resolvedSuccessfully ? "Successfully mapped to Stage and Assignments" : "Missing Stage or Assignments";
+        String reason = resolvedSuccessfully ? "Successfully mapped to Stage and Assignments"
+                : "Missing Stage or Assignments";
 
         log.info("=============================");
         log.info("ATTENDANCE ENGINE LINK");
@@ -316,16 +330,15 @@ public class ActivityAssignmentService {
         log.info("========================");
         log.info("GET API LOG: /admin/activities/{}/assignments?stageId={}", activityId, stageId);
         log.info("Fetched {} assignments from database.", assignments.size());
-        
+
         for (ActivityAssignment aa : assignments) {
             log.info("Assignment DB Row -> ID: {}, Activity ID: {}, Stage ID: {}, Dept: {}, Sec: {}, Teacher: {}",
-                aa.getId(),
-                aa.getActivity() != null ? aa.getActivity().getId() : "NULL",
-                aa.getStage() != null ? aa.getStage().getId() : "NULL",
-                aa.getDepartment() != null ? aa.getDepartment().getId() : "NULL",
-                aa.getSection() != null ? aa.getSection().getId() : "NULL",
-                aa.getTeacher() != null ? aa.getTeacher().getId() : "NULL"
-            );
+                    aa.getId(),
+                    aa.getActivity() != null ? aa.getActivity().getId() : "NULL",
+                    aa.getStage() != null ? aa.getStage().getId() : "NULL",
+                    aa.getDepartment() != null ? aa.getDepartment().getId() : "NULL",
+                    aa.getSection() != null ? aa.getSection().getId() : "NULL",
+                    aa.getTeacher() != null ? aa.getTeacher().getId() : "NULL");
         }
 
         List<ActivityAssignmentResponse> response = assignments.stream().map(a -> {
@@ -335,7 +348,7 @@ public class ActivityAssignmentService {
             Long teachId = a.getTeacher() != null ? a.getTeacher().getId() : null;
             String tName = a.getTeacher() != null ? a.getTeacher().getFullName() : null;
             String aScope = a.getAssignmentScope() != null ? a.getAssignmentScope().name() : null;
-            
+
             log.info("DTO Mapping -> teacherId: {}", teachId);
             log.info("DTO Mapping -> teacherName: {}", tName);
             log.info("DTO Mapping -> sectionId: {}", secId);
@@ -343,22 +356,22 @@ public class ActivityAssignmentService {
             log.info("DTO Mapping -> stageId: {}", a.getStage() != null ? a.getStage().getId() : null);
             log.info("DTO Mapping -> mappingId: N/A");
             log.info("DTO Mapping -> assignmentMode: {}", aScope);
-            
+
             return new ActivityAssignmentResponse(
-                a.getId(),
-                a.getActivity().getId(),
-                a.getActivity().getName(),
-                deptId,
-                a.getDepartment() != null ? a.getDepartment().getName() : null,
-                secId,
-                a.getSection() != null ? a.getSection().getSectionName() : null,
-                teachId,
-                tName,
-                a.getTeacher() != null ? a.getTeacher().getUsername() : null,
-                a.getAssignedBy() != null ? a.getAssignedBy().getFullName() : "System",
-                a.getAssignedAt(),
-                a.getYear(),
-                aScope);
+                    a.getId(),
+                    a.getActivity().getId(),
+                    a.getActivity().getName(),
+                    deptId,
+                    a.getDepartment() != null ? a.getDepartment().getName() : null,
+                    secId,
+                    a.getSection() != null ? a.getSection().getSectionName() : null,
+                    teachId,
+                    tName,
+                    a.getTeacher() != null ? a.getTeacher().getUsername() : null,
+                    a.getAssignedBy() != null ? a.getAssignedBy().getFullName() : "System",
+                    a.getAssignedAt(),
+                    a.getYear(),
+                    aScope);
         }).collect(java.util.stream.Collectors.toList());
         log.info("========================");
 
@@ -436,35 +449,36 @@ public class ActivityAssignmentService {
         log.info("SERVICE LOG: Before saving assignment");
         log.info("Loaded Activity = {}", activity != null ? activity.getId() : "NULL");
         log.info("Loaded Stage = {}", targetStage != null ? targetStage.getId() : "NULL");
-        
+
         // Let's load StageActivityMapping just for logging since user asked for it
         if (targetStage != null && activity != null) {
-            ActivityStageMapping mapping = activityStageMappingRepository.findByStageIdAndActivityId(targetStage.getId(), activity.getId()).orElse(null);
+            ActivityStageMapping mapping = activityStageMappingRepository
+                    .findByStageIdAndActivityId(targetStage.getId(), activity.getId()).orElse(null);
             log.info("Loaded StageActivityMapping = {}", mapping != null ? mapping.getId() : "NULL");
         } else {
             log.info("Loaded StageActivityMapping = NULL (stage or activity is null)");
         }
-        
+
         log.info("Loaded Teacher = {}", aa.getTeacher() != null ? aa.getTeacher().getId() : "NULL");
         log.info("Loaded Department = {}", aa.getDepartment() != null ? aa.getDepartment().getId() : "NULL");
         log.info("Loaded Section = {}", aa.getSection() != null ? aa.getSection().getId() : "NULL");
-        
+
         log.info("REPOSITORY LOG: Before save()");
         log.info("Existing Assignment Count = {}", existing.size());
-        log.info("Existing Assignment IDs = {}", existing.stream().map(ActivityAssignment::getId).collect(java.util.stream.Collectors.toList()));
-        
+        log.info("Existing Assignment IDs = {}",
+                existing.stream().map(ActivityAssignment::getId).collect(java.util.stream.Collectors.toList()));
+
         ActivityAssignment saved = activityAssignmentRepository.save(aa);
         log.info("REPOSITORY LOG: After save()");
         log.info("Saved Assignment ID = {}", saved.getId());
         log.info("Database Row -> ID: {}, Activity: {}, Stage: {}, Dept: {}, Sec: {}, Teacher: {}, Scope: {}",
-            saved.getId(),
-            saved.getActivity() != null ? saved.getActivity().getId() : "NULL",
-            saved.getStage() != null ? saved.getStage().getId() : "NULL",
-            saved.getDepartment() != null ? saved.getDepartment().getId() : "NULL",
-            saved.getSection() != null ? saved.getSection().getId() : "NULL",
-            saved.getTeacher() != null ? saved.getTeacher().getId() : "NULL",
-            saved.getAssignmentScope()
-        );
+                saved.getId(),
+                saved.getActivity() != null ? saved.getActivity().getId() : "NULL",
+                saved.getStage() != null ? saved.getStage().getId() : "NULL",
+                saved.getDepartment() != null ? saved.getDepartment().getId() : "NULL",
+                saved.getSection() != null ? saved.getSection().getId() : "NULL",
+                saved.getTeacher() != null ? saved.getTeacher().getId() : "NULL",
+                saved.getAssignmentScope());
         log.info("========================");
 
         ActivityAssignmentResponse resp = new ActivityAssignmentResponse(
@@ -508,7 +522,8 @@ public class ActivityAssignmentService {
         }
         if (stageId != null) {
             activityAssignmentRepository.deleteByActivityIdAndStageId(activityId, stageId);
-            ActivityStageMapping mapping = activityStageMappingRepository.findByStageIdAndActivityId(stageId, activityId).orElse(null);
+            ActivityStageMapping mapping = activityStageMappingRepository
+                    .findByStageIdAndActivityId(stageId, activityId).orElse(null);
             if (mapping != null) {
                 mapping.setAssignmentMode(null);
                 activityStageMappingRepository.save(mapping);
@@ -527,9 +542,11 @@ public class ActivityAssignmentService {
         return ResponseEntity.ok(ApiResponse.ok("All faculty assignments removed successfully", null));
     }
 
-    private void syncAssignments(List<ActivityAssignment> existingAssignments, List<ActivityAssignment> incomingAssignments) {
+    private void syncAssignments(List<ActivityAssignment> existingAssignments,
+            List<ActivityAssignment> incomingAssignments) {
         log.info("========== ASSIGNMENT SYNC ==========");
-        log.info("Activity ID : {}", incomingAssignments.isEmpty() ? "N/A" : incomingAssignments.get(0).getActivity().getId());
+        log.info("Activity ID : {}",
+                incomingAssignments.isEmpty() ? "N/A" : incomingAssignments.get(0).getActivity().getId());
         log.info("Existing Assignments : {}", existingAssignments.size());
         log.info("Incoming Assignments : {}", incomingAssignments.size());
 
@@ -546,8 +563,8 @@ public class ActivityAssignmentService {
 
         for (ActivityAssignment incoming : incomingAssignments) {
             ActivityAssignment exactMatch = unhandledExisting.stream()
-                .filter(e -> isSameAssignment(e, incoming))
-                .findFirst().orElse(null);
+                    .filter(e -> isSameAssignment(e, incoming))
+                    .findFirst().orElse(null);
 
             if (exactMatch != null) {
                 exactMatch.setAssignedBy(incoming.getAssignedBy());
@@ -558,8 +575,8 @@ public class ActivityAssignmentService {
                 retainedCount++;
             } else {
                 ActivityAssignment similar = unhandledExisting.stream()
-                    .filter(e -> e.getAssignmentScope() == incoming.getAssignmentScope())
-                    .findFirst().orElse(null);
+                        .filter(e -> e.getAssignmentScope() == incoming.getAssignmentScope())
+                        .findFirst().orElse(null);
 
                 if (similar != null) {
                     similar.setDepartment(incoming.getDepartment());
@@ -606,10 +623,20 @@ public class ActivityAssignmentService {
     }
 
     private boolean isSameAssignment(ActivityAssignment a, ActivityAssignment b) {
-        if (a.getAssignmentScope() != b.getAssignmentScope()) return false;
-        if (a.getDepartment() != null ? !a.getDepartment().getId().equals(b.getDepartment() != null ? b.getDepartment().getId() : null) : b.getDepartment() != null) return false;
-        if (a.getSection() != null ? !a.getSection().getId().equals(b.getSection() != null ? b.getSection().getId() : null) : b.getSection() != null) return false;
-        if (a.getTeacher() != null ? !a.getTeacher().getId().equals(b.getTeacher() != null ? b.getTeacher().getId() : null) : b.getTeacher() != null) return false;
+        if (a.getAssignmentScope() != b.getAssignmentScope())
+            return false;
+        if (a.getDepartment() != null
+                ? !a.getDepartment().getId().equals(b.getDepartment() != null ? b.getDepartment().getId() : null)
+                : b.getDepartment() != null)
+            return false;
+        if (a.getSection() != null
+                ? !a.getSection().getId().equals(b.getSection() != null ? b.getSection().getId() : null)
+                : b.getSection() != null)
+            return false;
+        if (a.getTeacher() != null
+                ? !a.getTeacher().getId().equals(b.getTeacher() != null ? b.getTeacher().getId() : null)
+                : b.getTeacher() != null)
+            return false;
         return true;
     }
 }

@@ -1,8 +1,8 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalTime;
-import com.pragatix.enums.AcademicYear;
+import jjcet.PragatiX.enums.AcademicYear;
 import java.time.LocalDateTime;
 
 @Entity

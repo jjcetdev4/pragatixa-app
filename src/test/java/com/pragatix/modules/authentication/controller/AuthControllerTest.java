@@ -1,9 +1,9 @@
-package com.pragatix.modules.authentication.controller;
+package jjcet.PragatiX.modules.authentication.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pragatix.BaseIntegrationTest;
-import com.pragatix.modules.authentication.dto.request.LoginRequest;
-import com.pragatix.modules.authentication.dto.request.StudentLoginRequest;
+import jjcet.PragatiX.BaseIntegrationTest;
+import jjcet.PragatiX.modules.authentication.dto.request.LoginRequest;
+import jjcet.PragatiX.modules.authentication.dto.request.StudentLoginRequest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

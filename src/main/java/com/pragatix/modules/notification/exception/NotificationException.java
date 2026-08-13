@@ -1,4 +1,4 @@
-package com.pragatix.modules.notification.exception;
+package jjcet.PragatiX.modules.notification.exception;
 
 public class NotificationException extends RuntimeException {
     public NotificationException(String message) {

@@ -1,7 +1,7 @@
 # SPDMS Modularization Strategy
 
 ## Current Architecture
-The current SPDMS backend uses a flat, functional package structure under `com.pragatix` (e.g., all controllers in one package, all entities in another). While functional, this monolithic structure makes the codebase harder to maintain, scale, and understand as the domain grows.
+The current SPDMS backend uses a flat, functional package structure under `jjcet.PragatiX` (e.g., all controllers in one package, all entities in another). While functional, this monolithic structure makes the codebase harder to maintain, scale, and understand as the domain grows.
 
 ## Target Architecture
 The system will be refactored into a **Modular Monolith** architecture. This divides the application into distinct, cohesive business modules (Authentication, Student, Activity, XP, Badge, Team, Faculty, Leaderboard, Notification, Admin).

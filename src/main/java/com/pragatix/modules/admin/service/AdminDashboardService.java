@@ -1,16 +1,16 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.repository.DepartmentRepository;
-import com.pragatix.repository.BadgeRequestRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.repository.BadgeRequestRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.pragatix.entity.User;
-import com.pragatix.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,8 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @Service
 public class AdminDashboardService {
@@ -28,12 +28,12 @@ public class AdminDashboardService {
     private final DepartmentRepository departmentRepository;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
-    private final com.pragatix.repository.DisciplineLogRepository disciplineLogRepository;
+    private final jjcet.PragatiX.repository.DisciplineLogRepository disciplineLogRepository;
     private final BadgeRequestRepository badgeRequestRepository;
     private final AuthUtils authUtils;
 
     public AdminDashboardService(DepartmentRepository departmentRepository, StudentRepository studentRepository,
-            UserRepository userRepository, com.pragatix.repository.DisciplineLogRepository disciplineLogRepository,
+            UserRepository userRepository, jjcet.PragatiX.repository.DisciplineLogRepository disciplineLogRepository,
             BadgeRequestRepository badgeRequestRepository, AuthUtils authUtils) {
         this.departmentRepository = departmentRepository;
         this.studentRepository = studentRepository;
@@ -59,7 +59,9 @@ public class AdminDashboardService {
             }
         } else {
             totalStudents = studentRepository.count();
-            log.info("\nCurrent User Role:\nSUPER_ADMIN\n\nStudent Count Query:\nALL STUDENTS\n\nDatabase Result:\n{}\n\nReturned to Flutter:\n{}\n", totalStudents, totalStudents);
+            log.info(
+                    "\nCurrent User Role:\nSUPER_ADMIN\n\nStudent Count Query:\nALL STUDENTS\n\nDatabase Result:\n{}\n\nReturned to Flutter:\n{}\n",
+                    totalStudents, totalStudents);
         }
 
         long teachersCount = userRepository.countActiveGenuineTeachers();

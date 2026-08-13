@@ -1,9 +1,9 @@
-package com.pragatix.student;
+package jjcet.PragatiX.student;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.XpTransactionDto;
-import com.pragatix.entity.XpTransaction;
-import com.pragatix.dto.StreakResponse;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.XpTransactionDto;
+import jjcet.PragatiX.entity.XpTransaction;
+import jjcet.PragatiX.dto.StreakResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +22,10 @@ import java.util.Map;
 public class XpController {
 
     private final XpService xpService;
-    private final com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver;
+    private final jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
     public XpController(XpService xpService,
-            com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
+            jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.xpService = xpService;
         this.studentAuthResolver = studentAuthResolver;
     }
@@ -58,7 +58,8 @@ public class XpController {
     /** POST /api/v1/xp/submit – Student submits activity claim */
     @PostMapping("/submit")
     @Operation(summary = "Submit XP Claim", description = "Allows a student to submit evidence link for an activity.")
-    public ResponseEntity<ApiResponse<XpTransaction>> submitXpClaim(@Valid @RequestBody ClaimSubmissionRequest request) {
+    public ResponseEntity<ApiResponse<XpTransaction>> submitXpClaim(
+            @Valid @RequestBody ClaimSubmissionRequest request) {
         String regNo = studentAuthResolver.getLoggedInStudent().getRegNo();
         ApiResponse<XpTransaction> response = xpService.submitXpClaim(
                 regNo,

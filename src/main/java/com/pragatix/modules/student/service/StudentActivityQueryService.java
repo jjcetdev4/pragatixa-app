@@ -1,19 +1,19 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.entity.AssignmentScope;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.User;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.modules.activity.service.AssignmentSecurityService;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.dto.response.MyActivityStudentsResponse;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.SectionRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.entity.AssignmentScope;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.modules.activity.service.AssignmentSecurityService;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.dto.response.MyActivityStudentsResponse;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.SectionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -58,7 +58,8 @@ public class StudentActivityQueryService {
         return getYearsForActivity(activityId, username, null);
     }
 
-    public ResponseEntity<ApiResponse<List<String>>> getYearsForActivity(Long activityId, String username, Long stageId) {
+    public ResponseEntity<ApiResponse<List<String>>> getYearsForActivity(Long activityId, String username,
+            Long stageId) {
         User currentUser = getCurrentUser(username);
         if (currentUser == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -95,10 +96,12 @@ public class StudentActivityQueryService {
         String targetYear = (year == null || year.trim().isEmpty()) ? "1" : year;
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findByActivityId(activityId);
 
-        // For GLOBAL activities, all teachers can see all departments without assignment filter
+        // For GLOBAL activities, all teachers can see all departments without
+        // assignment filter
         boolean isGlobalActivity = allAssignments.stream()
-                .anyMatch(a -> a.getAssignmentScope() == com.pragatix.entity.AssignmentScope.GLOBAL
-                        || "GLOBAL".equalsIgnoreCase(a.getActivity() != null ? a.getActivity().getAssignmentMode() : null));
+                .anyMatch(a -> a.getAssignmentScope() == jjcet.PragatiX.entity.AssignmentScope.GLOBAL
+                        || "GLOBAL".equalsIgnoreCase(
+                                a.getActivity() != null ? a.getActivity().getAssignmentMode() : null));
 
         List<Map<String, Object>> depts;
         if (isGlobalActivity) {
@@ -152,8 +155,9 @@ public class StudentActivityQueryService {
 
         // For GLOBAL activities, bypass the teacher-assignment security check
         boolean isGlobalActivity = allAssignments.stream()
-                .anyMatch(a -> a.getAssignmentScope() == com.pragatix.entity.AssignmentScope.GLOBAL
-                        || "GLOBAL".equalsIgnoreCase(a.getActivity() != null ? a.getActivity().getAssignmentMode() : null));
+                .anyMatch(a -> a.getAssignmentScope() == jjcet.PragatiX.entity.AssignmentScope.GLOBAL
+                        || "GLOBAL".equalsIgnoreCase(
+                                a.getActivity() != null ? a.getActivity().getAssignmentMode() : null));
 
         List<ActivityAssignment> teacherAssignments;
         if (isGlobalActivity) {
@@ -180,7 +184,9 @@ public class StudentActivityQueryService {
                 .collect(Collectors.toList());
 
         boolean hasDepartmentLevelOrGlobalAssignment = matching.stream().anyMatch(a -> a.getSection() == null);
-        List<com.pragatix.entity.Section> allSections = departmentId != null ? sectionRepository.findByDepartment_Id(departmentId) : List.of();
+        List<jjcet.PragatiX.entity.Section> allSections = departmentId != null
+                ? sectionRepository.findByDepartment_Id(departmentId)
+                : List.of();
 
         List<Map<String, Object>> sections = allSections.stream()
                 .filter(s -> hasDepartmentLevelOrGlobalAssignment ||
@@ -213,24 +219,29 @@ public class StudentActivityQueryService {
 
         // For GLOBAL activities, bypass the teacher-assignment security check
         boolean isGlobalActivity = allAssignments.stream()
-                .anyMatch(a -> a.getAssignmentScope() == com.pragatix.entity.AssignmentScope.GLOBAL
-                        || "GLOBAL".equalsIgnoreCase(a.getActivity() != null ? a.getActivity().getAssignmentMode() : null));
+                .anyMatch(a -> a.getAssignmentScope() == jjcet.PragatiX.entity.AssignmentScope.GLOBAL
+                        || "GLOBAL".equalsIgnoreCase(
+                                a.getActivity() != null ? a.getActivity().getAssignmentMode() : null));
 
         List<ActivityAssignment> matching;
         if (isGlobalActivity) {
             matching = allAssignments.stream()
                     .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
                     .filter(a -> year == null || isYearMatching(year, a.getYear()))
-                    .filter(a -> departmentId == null || a.getDepartment() == null || a.getDepartment().getId().equals(departmentId))
-                    .filter(a -> sectionId == null || a.getSection() == null || a.getSection().getId().equals(sectionId))
+                    .filter(a -> departmentId == null || a.getDepartment() == null
+                            || a.getDepartment().getId().equals(departmentId))
+                    .filter(a -> sectionId == null || a.getSection() == null
+                            || a.getSection().getId().equals(sectionId))
                     .collect(Collectors.toList());
         } else {
             matching = allAssignments.stream()
                     .filter(a -> assignmentSecurityService.isUserAssignedFaculty(a, teacher))
                     .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
                     .filter(a -> year == null || isYearMatching(year, a.getYear()))
-                    .filter(a -> departmentId == null || a.getDepartment() == null || a.getDepartment().getId().equals(departmentId))
-                    .filter(a -> sectionId == null || a.getSection() == null || a.getSection().getId().equals(sectionId))
+                    .filter(a -> departmentId == null || a.getDepartment() == null
+                            || a.getDepartment().getId().equals(departmentId))
+                    .filter(a -> sectionId == null || a.getSection() == null
+                            || a.getSection().getId().equals(sectionId))
                     .collect(Collectors.toList());
         }
 
@@ -259,7 +270,8 @@ public class StudentActivityQueryService {
         if (stageOrder == 0 && activity != null && activity.getStage() != null) {
             stageOrder = activity.getStage().getDisplayOrder();
         }
-        if (stageOrder == 0 && activity != null && activity.getSubgroup() != null && activity.getSubgroup().getStage() != null) {
+        if (stageOrder == 0 && activity != null && activity.getSubgroup() != null
+                && activity.getSubgroup().getStage() != null) {
             stageOrder = activity.getSubgroup().getStage().getDisplayOrder();
         }
         final int activityStageOrder = stageOrder;
@@ -268,7 +280,8 @@ public class StudentActivityQueryService {
         if (departmentId != null) {
             if (sectionId != null) {
                 if (activityStageOrder > 0) {
-                    rawStudents = studentRepository.findByDepartmentIdAndSectionIdAndStage(departmentId, sectionId, activityStageOrder);
+                    rawStudents = studentRepository.findByDepartmentIdAndSectionIdAndStage(departmentId, sectionId,
+                            activityStageOrder);
                 } else {
                     rawStudents = studentRepository.findByDepartmentIdAndSectionId(departmentId, sectionId);
                 }
@@ -303,9 +316,11 @@ public class StudentActivityQueryService {
                             continue;
                         }
                     }
-                    // Stage filter: only include students whose current stage matches the activity's stage.
+                    // Stage filter: only include students whose current stage matches the
+                    // activity's stage.
                     // This ensures promoted students are hidden from activities of their old stage.
-                    if (activityStageOrder > 0 && s.getStage() != activityStageOrder && s.getCurrentStage() != activityStageOrder) {
+                    if (activityStageOrder > 0 && s.getStage() != activityStageOrder
+                            && s.getCurrentStage() != activityStageOrder) {
                         continue;
                     }
                     uniqueStudents.add(s);

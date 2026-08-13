@@ -1,4 +1,4 @@
-package com.pragatix.modules.analytics.dto;
+package jjcet.PragatiX.modules.analytics.dto;
 
 import java.time.LocalDate;
 
@@ -7,7 +7,8 @@ public class XpHeatmapDTO {
     private Long xp;
     private Integer level;
 
-    public XpHeatmapDTO() {}
+    public XpHeatmapDTO() {
+    }
 
     public XpHeatmapDTO(LocalDate date, Long xp, Integer level) {
         this.date = date;
@@ -15,12 +16,27 @@ public class XpHeatmapDTO {
         this.level = level;
     }
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public LocalDate getDate() {
+        return date;
+    }
 
-    public Long getXp() { return xp; }
-    public void setXp(Long xp) { this.xp = xp; }
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
 
-    public Integer getLevel() { return level; }
-    public void setLevel(Integer level) { this.level = level; }
+    public Long getXp() {
+        return xp;
+    }
+
+    public void setXp(Long xp) {
+        this.xp = xp;
+    }
+
+    public Integer getLevel() {
+        return level;
+    }
+
+    public void setLevel(Integer level) {
+        this.level = level;
+    }
 }

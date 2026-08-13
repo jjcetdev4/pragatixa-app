@@ -1,6 +1,6 @@
-package com.pragatix.modules.admin.controller;
+package jjcet.PragatiX.modules.admin.controller;
 
-import com.pragatix.common.response.ApiResponse;
+import jjcet.PragatiX.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")

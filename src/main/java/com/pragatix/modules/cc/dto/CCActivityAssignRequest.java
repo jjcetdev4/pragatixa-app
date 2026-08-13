@@ -1,4 +1,4 @@
-package com.pragatix.modules.cc.dto;
+package jjcet.PragatiX.modules.cc.dto;
 
 import java.util.List;
 

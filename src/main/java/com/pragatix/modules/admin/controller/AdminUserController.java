@@ -1,10 +1,10 @@
-package com.pragatix.modules.admin.controller;
+package jjcet.PragatiX.modules.admin.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.authentication.dto.request.CreateUserRequest;
-import com.pragatix.modules.authentication.dto.request.UpdateUserRequest;
-import com.pragatix.modules.authentication.dto.response.UserResponse;
-import com.pragatix.entity.User;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.authentication.dto.request.CreateUserRequest;
+import jjcet.PragatiX.modules.authentication.dto.request.UpdateUserRequest;
+import jjcet.PragatiX.modules.authentication.dto.response.UserResponse;
+import jjcet.PragatiX.entity.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")

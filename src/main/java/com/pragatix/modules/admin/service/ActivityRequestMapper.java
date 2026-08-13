@@ -1,6 +1,6 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.entity.Activity;
+import jjcet.PragatiX.entity.Activity;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +84,8 @@ public class ActivityRequestMapper {
             } else if (val instanceof String) {
                 activity.setAttendanceEngineEnabled(Boolean.parseBoolean((String) val));
             }
-            System.out.println("FORENSIC: ActivityRequestMapper - Parsed attendanceEngineEnabled as TRUE/FALSE: " + activity.getAttendanceEngineEnabled());
+            System.out.println("FORENSIC: ActivityRequestMapper - Parsed attendanceEngineEnabled as TRUE/FALSE: "
+                    + activity.getAttendanceEngineEnabled());
         } else if (activity.getId() == null) {
             activity.setAttendanceEngineEnabled(false);
             System.out.println("FORENSIC: ActivityRequestMapper - Key not found or null for CREATE. Set to FALSE.");
@@ -153,7 +154,7 @@ public class ActivityRequestMapper {
         if (existingActivity != null && Boolean.TRUE.equals(existingActivity.getAttendanceEngineEnabled()) &&
                 !body.containsKey("awardEnabled") && !body.containsKey("penaltyEnabled") &&
                 !body.containsKey("awardXp") && !body.containsKey("penaltyXp")) {
-            
+
             if (!body.containsKey("awardEnabled")) {
                 awardEnabled = existingActivity.getAwardEnabled();
             }

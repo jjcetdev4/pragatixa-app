@@ -1,8 +1,8 @@
-package com.pragatix.modules.hod.controller;
+package jjcet.PragatiX.modules.hod.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.hod.dto.HodDashboardResponse;
-import com.pragatix.modules.hod.service.HodAnalyticsService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.hod.dto.HodDashboardResponse;
+import jjcet.PragatiX.modules.hod.service.HodAnalyticsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

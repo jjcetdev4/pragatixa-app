@@ -1,9 +1,9 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.*;
-import com.pragatix.repository.*;
-import com.pragatix.enums.TeamRole;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.enums.TeamRole;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +18,9 @@ public class TeamAssignmentService {
     private final StudentRepository studentRepository;
     private final TeamRepository teamRepository;
     private final StageTeamRepository stageTeamRepository;
-    private final com.pragatix.admin.service.CaptainSelectionService captainSelectionService;
-    private final com.pragatix.admin.service.TeamCleanupService teamCleanupService;
-    private final com.pragatix.admin.service.LeadershipSyncService leadershipSyncService;
+    private final jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService;
+    private final jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService;
+    private final jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -28,9 +28,9 @@ public class TeamAssignmentService {
     public TeamAssignmentService(StudentRepository studentRepository,
             TeamRepository teamRepository,
             StageTeamRepository stageTeamRepository,
-            com.pragatix.admin.service.CaptainSelectionService captainSelectionService,
-            com.pragatix.admin.service.TeamCleanupService teamCleanupService,
-            com.pragatix.admin.service.LeadershipSyncService leadershipSyncService) {
+            jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService,
+            jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService,
+            jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService) {
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
         this.stageTeamRepository = stageTeamRepository;
@@ -79,8 +79,9 @@ public class TeamAssignmentService {
 
         boolean isCaptainAssigned = newTeam.getCaptain() != null;
         boolean isViceCaptainAssigned = false;
-        
-        StageTeam newStageTeam = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), newTeam.getId()).orElse(null);
+
+        StageTeam newStageTeam = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), newTeam.getId())
+                .orElse(null);
         if (newStageTeam != null) {
             isViceCaptainAssigned = newStageTeam.getViceCaptain() != null;
         }
@@ -90,12 +91,15 @@ public class TeamAssignmentService {
         // Assign leadership strictly by promotion order within this new team
         if (!isCaptainAssigned) {
             leadershipSyncService.syncLeadership(newTeam, student, newTeam.getViceCaptain());
-            System.out.println("STAGE 3+ LEADERSHIP: First promoted in " + newTeamName + " is now Captain -> " + student.getRegNo());
+            System.out.println("STAGE 3+ LEADERSHIP: First promoted in " + newTeamName + " is now Captain -> "
+                    + student.getRegNo());
         } else if (!isViceCaptainAssigned) {
             leadershipSyncService.syncLeadership(newTeam, newTeam.getCaptain(), student);
-            System.out.println("STAGE 3+ LEADERSHIP: Second promoted in " + newTeamName + " is now Vice Captain -> " + student.getRegNo());
+            System.out.println("STAGE 3+ LEADERSHIP: Second promoted in " + newTeamName + " is now Vice Captain -> "
+                    + student.getRegNo());
         } else {
-            System.out.println("STAGE 3+ LEADERSHIP: Standard member assigned to " + newTeamName + " -> " + student.getRegNo());
+            System.out.println(
+                    "STAGE 3+ LEADERSHIP: Standard member assigned to " + newTeamName + " -> " + student.getRegNo());
         }
 
         System.out.println("Student Moved: YES");
@@ -152,11 +156,12 @@ public class TeamAssignmentService {
             try {
                 entityManager.createNativeQuery(
                         "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
-                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                                "ON DUPLICATE KEY UPDATE team_id = :tid")
                         .setParameter("tid", newTeam.getId())
                         .setParameter("sid", student.getId())
                         .executeUpdate();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -188,7 +193,8 @@ public class TeamAssignmentService {
                 entityManager.createNativeQuery("DELETE FROM team_members WHERE student_id = :sid")
                         .setParameter("sid", student.getId())
                         .executeUpdate();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -225,7 +231,8 @@ public class TeamAssignmentService {
                             .setParameter("sid", student.getId())
                             .setParameter("tid", oldTeam.getId())
                             .executeUpdate();
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
 
             teamRepository.save(oldTeam);

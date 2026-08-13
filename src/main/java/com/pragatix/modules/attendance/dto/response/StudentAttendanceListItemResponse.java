@@ -1,6 +1,6 @@
-package com.pragatix.modules.attendance.dto.response;
+package jjcet.PragatiX.modules.attendance.dto.response;
 
-import com.pragatix.entity.AttendanceRecord;
+import jjcet.PragatiX.entity.AttendanceRecord;
 
 public class StudentAttendanceListItemResponse {
     private Long studentId;

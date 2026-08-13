@@ -1,11 +1,11 @@
-package com.pragatix.modules.admin.controller;
+package jjcet.PragatiX.modules.admin.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Activity;
-import com.pragatix.modules.activity.dto.response.MyActivityResponse;
-import com.pragatix.modules.activity.dto.response.GroupedActivityResponse;
-import com.pragatix.modules.activity.dto.request.AssignmentRequest;
-import com.pragatix.modules.activity.dto.response.ActivityAssignmentResponse;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.modules.activity.dto.response.MyActivityResponse;
+import jjcet.PragatiX.modules.activity.dto.response.GroupedActivityResponse;
+import jjcet.PragatiX.modules.activity.dto.request.AssignmentRequest;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityAssignmentResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -50,7 +50,7 @@ public class AdminActivityController {
     @Operation(summary = "Get all activities of a subgroup")
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(
             @PathVariable Long subgroupId,
-            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+            @RequestParam(required = false) jjcet.PragatiX.enums.AcademicYear academicYear) {
         return adminActivityService.getActivitiesBySubgroup(subgroupId, academicYear);
     }
 
@@ -60,7 +60,7 @@ public class AdminActivityController {
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(
             @PathVariable Long stageId,
             @RequestParam(required = false) String subgroup,
-            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+            @RequestParam(required = false) jjcet.PragatiX.enums.AcademicYear academicYear) {
         return adminActivityService.getActivitiesByStage(stageId, subgroup, academicYear);
     }
 
@@ -69,7 +69,7 @@ public class AdminActivityController {
     @Operation(summary = "Get all activities globally")
     public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(
             @RequestParam(required = false) String subgroup,
-            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+            @RequestParam(required = false) jjcet.PragatiX.enums.AcademicYear academicYear) {
         return adminActivityService.getAllActivities(subgroup, academicYear);
     }
 
@@ -79,7 +79,7 @@ public class AdminActivityController {
     public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(
             @RequestParam(required = false) Long stageId,
             @RequestParam(required = false) String subgroup,
-            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+            @RequestParam(required = false) jjcet.PragatiX.enums.AcademicYear academicYear) {
         return adminActivityService.getGroupedActivities(stageId, subgroup, academicYear);
     }
 
@@ -130,7 +130,7 @@ public class AdminActivityController {
             @PathVariable Long id,
             @RequestParam(required = false) Long stageId,
             @RequestBody AssignmentRequest request) {
-        
+
         log.info("========================");
         log.info("Incoming Assignment Request");
         log.info("activityId: {}", id);
@@ -140,9 +140,13 @@ public class AdminActivityController {
         log.info("sectionId: {}", request.getSectionId());
         log.info("assignmentType: {}", request.getScope());
         log.info("assignmentMode: UNKNOWN");
-        log.info("JWT User: {}", org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName() : "Anonymous");
+        log.info("JWT User: {}",
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null
+                        ? org.springframework.security.core.context.SecurityContextHolder.getContext()
+                                .getAuthentication().getName()
+                        : "Anonymous");
         log.info("========================");
-        
+
         return activityAssignmentService.addAssignment(id, stageId, request);
     }
 
@@ -165,14 +169,14 @@ public class AdminActivityController {
     @GetMapping("/frequencies/custom")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all custom award frequencies")
-    public ResponseEntity<ApiResponse<List<com.pragatix.entity.CustomFrequency>>> getCustomFrequencies() {
+    public ResponseEntity<ApiResponse<List<jjcet.PragatiX.entity.CustomFrequency>>> getCustomFrequencies() {
         return adminActivityService.getCustomFrequencies();
     }
 
     @PostMapping("/frequencies/custom")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a custom award frequency")
-    public ResponseEntity<ApiResponse<com.pragatix.entity.CustomFrequency>> createCustomFrequency(
+    public ResponseEntity<ApiResponse<jjcet.PragatiX.entity.CustomFrequency>> createCustomFrequency(
             @RequestBody Map<String, Object> payload) {
         return adminActivityService.createCustomFrequency(payload);
     }

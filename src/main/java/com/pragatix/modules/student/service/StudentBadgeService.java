@@ -1,4 +1,4 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
 import org.springframework.stereotype.Service;
 

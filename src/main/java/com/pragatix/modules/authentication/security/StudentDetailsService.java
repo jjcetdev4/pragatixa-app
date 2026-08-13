@@ -1,7 +1,7 @@
-package com.pragatix.modules.authentication.security;
+package jjcet.PragatiX.modules.authentication.security;
 
-import com.pragatix.entity.Student;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.ArrayList;
-import com.pragatix.repository.StageTeamRepository;
+import jjcet.PragatiX.repository.StageTeamRepository;
 import org.springframework.security.core.GrantedAuthority;
 
 /**
@@ -52,21 +52,25 @@ public class StudentDetailsService implements UserDetailsService {
         boolean isViceCap = false;
 
         if (student.getTeam() != null) {
-            if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+            if (student.getTeam().getViceCaptain() != null
+                    && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
                 isViceCap = true;
             }
 
             // Check StageTeams for captaincy/vice-captaincy if not already identified
             if (!isCap || !isViceCap) {
-                List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
-                for (com.pragatix.entity.StageTeam st : stageTeams) {
+                List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository
+                        .findByTeamId(student.getTeam().getId());
+                for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
                     if (!isCap && st.getCaptain() != null && st.getCaptain().getId().equals(student.getId())) {
                         isCap = true;
                     }
-                    if (!isViceCap && st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                    if (!isViceCap && st.getViceCaptain() != null
+                            && st.getViceCaptain().getId().equals(student.getId())) {
                         isViceCap = true;
                     }
-                    if (isCap && isViceCap) break;
+                    if (isCap && isViceCap)
+                        break;
                 }
             }
         }

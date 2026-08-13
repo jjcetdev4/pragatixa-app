@@ -1,10 +1,10 @@
-package com.pragatix.modules.attendance.scheduler;
+package jjcet.PragatiX.modules.attendance.scheduler;
 
-import com.pragatix.entity.CaptainRewardSettings;
-import com.pragatix.enums.AcademicYear;
-import com.pragatix.modules.attendance.repository.CaptainRewardSettingsRepository;
-import com.pragatix.modules.attendance.service.CaptainWeeklyEngineService;
-import com.pragatix.modules.attendancesettings.service.EngineClockService;
+import jjcet.PragatiX.entity.CaptainRewardSettings;
+import jjcet.PragatiX.enums.AcademicYear;
+import jjcet.PragatiX.modules.attendance.repository.CaptainRewardSettingsRepository;
+import jjcet.PragatiX.modules.attendance.service.CaptainWeeklyEngineService;
+import jjcet.PragatiX.modules.attendancesettings.service.EngineClockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

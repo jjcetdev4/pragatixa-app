@@ -1,15 +1,15 @@
-package com.pragatix.student;
+package jjcet.PragatiX.student;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Badge;
-import com.pragatix.entity.Level;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.StudentBadge;
-import com.pragatix.modules.student.dto.response.StudentBadgeResponse;
-import com.pragatix.repository.BadgeRepository;
-import com.pragatix.repository.LevelRepository;
-import com.pragatix.modules.student.repository.StudentBadgeRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Badge;
+import jjcet.PragatiX.entity.Level;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.StudentBadge;
+import jjcet.PragatiX.modules.student.dto.response.StudentBadgeResponse;
+import jjcet.PragatiX.repository.BadgeRepository;
+import jjcet.PragatiX.repository.LevelRepository;
+import jjcet.PragatiX.modules.student.repository.StudentBadgeRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;

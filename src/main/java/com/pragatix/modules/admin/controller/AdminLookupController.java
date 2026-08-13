@@ -1,11 +1,11 @@
-package com.pragatix.modules.admin.controller;
+package jjcet.PragatiX.modules.admin.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.AcademicYear;
-import com.pragatix.entity.Year;
-import com.pragatix.entity.Semester;
-import com.pragatix.entity.Gender;
-import com.pragatix.entity.Section;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.AcademicYear;
+import jjcet.PragatiX.entity.Year;
+import jjcet.PragatiX.entity.Semester;
+import jjcet.PragatiX.entity.Gender;
+import jjcet.PragatiX.entity.Section;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -65,7 +65,8 @@ public class AdminLookupController {
     @GetMapping("/sections")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "List Sections")
-    public ResponseEntity<ApiResponse<List<Section>>> getAllSections(@RequestParam(required = false) Long departmentId) {
+    public ResponseEntity<ApiResponse<List<Section>>> getAllSections(
+            @RequestParam(required = false) Long departmentId) {
         return adminLookupService.getAllSections(departmentId);
     }
 

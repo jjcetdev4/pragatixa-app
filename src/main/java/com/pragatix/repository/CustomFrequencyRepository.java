@@ -1,6 +1,6 @@
-package com.pragatix.repository;
+package jjcet.PragatiX.repository;
 
-import com.pragatix.entity.CustomFrequency;
+import jjcet.PragatiX.entity.CustomFrequency;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

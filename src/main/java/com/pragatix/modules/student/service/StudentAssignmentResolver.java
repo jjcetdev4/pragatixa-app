@@ -1,8 +1,8 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.Student;
-import com.pragatix.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

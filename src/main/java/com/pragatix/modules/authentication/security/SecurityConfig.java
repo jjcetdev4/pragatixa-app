@@ -1,4 +1,4 @@
-package com.pragatix.modules.authentication.security;
+package jjcet.PragatiX.modules.authentication.security;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -78,8 +78,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
-                        .accessDeniedHandler(customAccessDeniedHandler)
-                )
+                        .accessDeniedHandler(customAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
@@ -91,13 +90,18 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
                         .requestMatchers("/api/activity-requests/**")
                         .hasAnyRole("TEACHER", "CLASS_COORDINATOR", "ADMIN", "STUDENT")
-                        .requestMatchers("/api/v1/analytics/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ADMIN", "SUPER_ADMIN", "SUPERADMIN")
-                        .requestMatchers("/api/v1/hod/**").hasAnyRole("HOD", "ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER")
-                        .requestMatchers("/api/v1/cc/**").hasAnyRole("CLASS_COORDINATOR", "CC", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/v1/analytics/**")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ADMIN", "SUPER_ADMIN",
+                                "SUPERADMIN")
+                        .requestMatchers("/api/v1/hod/**")
+                        .hasAnyRole("HOD", "ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER")
+                        .requestMatchers("/api/v1/cc/**")
+                        .hasAnyRole("CLASS_COORDINATOR", "CC", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/v1/profile/**").authenticated()
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER")
-                .requestMatchers("/api/penalties/**").hasAnyRole("TEACHER", "HOD", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/penalties/**")
+                        .hasAnyRole("TEACHER", "HOD", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

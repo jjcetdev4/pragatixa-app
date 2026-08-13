@@ -1,13 +1,13 @@
-package com.pragatix.student;
+package jjcet.PragatiX.student;
 
-import com.pragatix.dto.StreakResponse;
-import com.pragatix.dto.XpTransactionDto;
-import com.pragatix.entity.Streak;
-import com.pragatix.entity.XpTransaction;
-import com.pragatix.repository.StreakRepository;
-import com.pragatix.repository.XpTransactionRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.entity.Student;
+import jjcet.PragatiX.dto.StreakResponse;
+import jjcet.PragatiX.dto.XpTransactionDto;
+import jjcet.PragatiX.entity.Streak;
+import jjcet.PragatiX.entity.XpTransaction;
+import jjcet.PragatiX.repository.StreakRepository;
+import jjcet.PragatiX.repository.XpTransactionRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.Student;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,28 +38,35 @@ public class XpQueryService {
 
     private Student findStudentByIdentifier(String identifier) {
         if (identifier == null || identifier.trim().isEmpty()) {
-            throw new com.pragatix.modules.student.exception.StudentNotFoundException("Student identifier is required");
+            throw new jjcet.PragatiX.modules.student.exception.StudentNotFoundException(
+                    "Student identifier is required");
         }
         String idStr = identifier.trim();
         java.util.Optional<Student> opt = studentRepository.findByRegNo(idStr);
-        if (opt.isPresent()) return opt.get();
+        if (opt.isPresent())
+            return opt.get();
 
         opt = studentRepository.findBySprNo(idStr);
-        if (opt.isPresent()) return opt.get();
+        if (opt.isPresent())
+            return opt.get();
 
         opt = studentRepository.findByEmail(idStr);
-        if (opt.isPresent()) return opt.get();
+        if (opt.isPresent())
+            return opt.get();
 
         try {
             Long id = Long.parseLong(idStr);
             opt = studentRepository.findById(id);
-            if (opt.isPresent()) return opt.get();
+            if (opt.isPresent())
+                return opt.get();
 
             opt = studentRepository.findByUserId(id);
-            if (opt.isPresent()) return opt.get();
-        } catch (NumberFormatException ignored) {}
+            if (opt.isPresent())
+                return opt.get();
+        } catch (NumberFormatException ignored) {
+        }
 
-        throw new com.pragatix.modules.student.exception.StudentNotFoundException("Student not found: " + identifier);
+        throw new jjcet.PragatiX.modules.student.exception.StudentNotFoundException("Student not found: " + identifier);
     }
 
     public Map<String, Integer> getXpSummary(String regNo) {

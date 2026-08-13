@@ -1,21 +1,21 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.TeamRemovalRequestDto;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.Team;
-import com.pragatix.entity.StageTeam;
-import com.pragatix.entity.TeamRemovalRequest;
-import com.pragatix.entity.User;
-import com.pragatix.modules.activity.service.AssignmentSecurityService;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.TeamRemovalRequestRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.TeamRemovalRequestDto;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.Team;
+import jjcet.PragatiX.entity.StageTeam;
+import jjcet.PragatiX.entity.TeamRemovalRequest;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.activity.service.AssignmentSecurityService;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.TeamRemovalRequestRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.pragatix.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,8 +29,8 @@ public class TeamRequestService {
     private final AssignmentSecurityService assignmentSecurityService;
     private final TeamMapper mapper;
     private final AuthUtils authUtils;
-    private final com.pragatix.repository.TeamRepository teamRepository;
-    private final com.pragatix.repository.StageTeamRepository stageTeamRepository;
+    private final jjcet.PragatiX.repository.TeamRepository teamRepository;
+    private final jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository;
     private final TeamCleanupService teamCleanupService;
     private final CaptainSelectionService captainSelectionService;
 
@@ -43,8 +43,8 @@ public class TeamRequestService {
             AssignmentSecurityService assignmentSecurityService,
             TeamMapper mapper,
             AuthUtils authUtils,
-            com.pragatix.repository.TeamRepository teamRepository,
-            com.pragatix.repository.StageTeamRepository stageTeamRepository,
+            jjcet.PragatiX.repository.TeamRepository teamRepository,
+            jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository,
             TeamCleanupService teamCleanupService,
             CaptainSelectionService captainSelectionService) {
         this.teamRemovalRequestRepository = teamRemovalRequestRepository;
@@ -154,7 +154,8 @@ public class TeamRequestService {
 
         if (member != null && team != null) {
             boolean wasCaptain = team.getCaptain() != null && team.getCaptain().getId().equals(member.getId());
-            boolean wasViceCaptain = team.getViceCaptain() != null && team.getViceCaptain().getId().equals(member.getId());
+            boolean wasViceCaptain = team.getViceCaptain() != null
+                    && team.getViceCaptain().getId().equals(member.getId());
 
             if (wasCaptain) {
                 team.setCaptain(null);
@@ -193,7 +194,8 @@ public class TeamRequestService {
                             .setParameter("tid", team.getId())
                             .executeUpdate();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
             if (!teamCleanupService.autoDeleteEmptyTeam(team)) {
                 if (wasCaptain) {

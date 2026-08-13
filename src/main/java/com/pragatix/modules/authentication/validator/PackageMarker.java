@@ -1,4 +1,4 @@
-package com.pragatix.modules.authentication.validator;
+package jjcet.PragatiX.modules.authentication.validator;
 
 public final class PackageMarker {
 }

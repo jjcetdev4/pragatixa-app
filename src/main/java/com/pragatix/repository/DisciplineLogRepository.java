@@ -1,6 +1,6 @@
-package com.pragatix.repository;
+package jjcet.PragatiX.repository;
 
-import com.pragatix.entity.DisciplineLog;
+import jjcet.PragatiX.entity.DisciplineLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

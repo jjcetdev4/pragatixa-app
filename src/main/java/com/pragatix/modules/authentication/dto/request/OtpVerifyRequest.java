@@ -1,4 +1,4 @@
-package com.pragatix.modules.authentication.dto.request;
+package jjcet.PragatiX.modules.authentication.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

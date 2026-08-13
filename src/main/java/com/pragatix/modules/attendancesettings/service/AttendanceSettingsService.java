@@ -1,8 +1,8 @@
-package com.pragatix.modules.attendancesettings.service;
+package jjcet.PragatiX.modules.attendancesettings.service;
 
-import com.pragatix.entity.AttendanceSettings;
-import com.pragatix.modules.attendancesettings.dto.AttendanceSettingsDto;
-import com.pragatix.modules.attendancesettings.repository.AttendanceSettingsRepository;
+import jjcet.PragatiX.entity.AttendanceSettings;
+import jjcet.PragatiX.modules.attendancesettings.dto.AttendanceSettingsDto;
+import jjcet.PragatiX.modules.attendancesettings.repository.AttendanceSettingsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +10,7 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.pragatix.enums.AcademicYear;
+import jjcet.PragatiX.enums.AcademicYear;
 
 @Service
 public class AttendanceSettingsService {
@@ -21,7 +21,8 @@ public class AttendanceSettingsService {
     // --- Settings ---
 
     public AttendanceSettingsDto getSettings(AcademicYear academicYear) {
-        if (academicYear == null) academicYear = AcademicYear.FIRST_YEAR; // Fallback
+        if (academicYear == null)
+            academicYear = AcademicYear.FIRST_YEAR; // Fallback
         final AcademicYear finalYear = academicYear;
 
         AttendanceSettings settings = settingsRepository.findByAcademicYear(finalYear).orElseGet(() -> {
@@ -40,7 +41,8 @@ public class AttendanceSettingsService {
     }
 
     public AttendanceSettingsDto updateSettings(AttendanceSettingsDto dto, AcademicYear academicYear) {
-        if (academicYear == null) academicYear = AcademicYear.FIRST_YEAR;
+        if (academicYear == null)
+            academicYear = AcademicYear.FIRST_YEAR;
         final AcademicYear finalYear = academicYear;
 
         AttendanceSettings settings = settingsRepository.findByAcademicYear(finalYear).orElseGet(() -> {
@@ -48,19 +50,31 @@ public class AttendanceSettingsService {
             newSettings.setAcademicYear(finalYear);
             return newSettings;
         });
-        
-        if (dto.getDailyEngineEnabled() != null) settings.setDailyEngineEnabled(dto.getDailyEngineEnabled());
-        if (dto.getDailyProcessingTime() != null) settings.setDailyProcessingTime(dto.getDailyProcessingTime());
-        if (dto.getWeeklyEngineEnabled() != null) settings.setWeeklyEngineEnabled(dto.getWeeklyEngineEnabled());
-        if (dto.getWeeklyProcessingTime() != null) settings.setWeeklyProcessingTime(dto.getWeeklyProcessingTime());
-        if (dto.getPartialDayPenalty() != null) settings.setPartialDayPenalty(dto.getPartialDayPenalty());
-        if (dto.getFullDayPenalty() != null) settings.setFullDayPenalty(dto.getFullDayPenalty());
-        if (dto.getPerfectWeekReward() != null) settings.setPerfectWeekReward(dto.getPerfectWeekReward());
-        if (dto.getWeekStartFullPenalty() != null) settings.setWeekStartFullPenalty(dto.getWeekStartFullPenalty());
-        if (dto.getWeekStartPartialPenalty() != null) settings.setWeekStartPartialPenalty(dto.getWeekStartPartialPenalty());
-        if (dto.getWeekEndFullPenalty() != null) settings.setWeekEndFullPenalty(dto.getWeekEndFullPenalty());
-        if (dto.getWeekEndPartialPenalty() != null) settings.setWeekEndPartialPenalty(dto.getWeekEndPartialPenalty());
-        if (dto.getTestModeEnabled() != null) settings.setTestModeEnabled(dto.getTestModeEnabled());
+
+        if (dto.getDailyEngineEnabled() != null)
+            settings.setDailyEngineEnabled(dto.getDailyEngineEnabled());
+        if (dto.getDailyProcessingTime() != null)
+            settings.setDailyProcessingTime(dto.getDailyProcessingTime());
+        if (dto.getWeeklyEngineEnabled() != null)
+            settings.setWeeklyEngineEnabled(dto.getWeeklyEngineEnabled());
+        if (dto.getWeeklyProcessingTime() != null)
+            settings.setWeeklyProcessingTime(dto.getWeeklyProcessingTime());
+        if (dto.getPartialDayPenalty() != null)
+            settings.setPartialDayPenalty(dto.getPartialDayPenalty());
+        if (dto.getFullDayPenalty() != null)
+            settings.setFullDayPenalty(dto.getFullDayPenalty());
+        if (dto.getPerfectWeekReward() != null)
+            settings.setPerfectWeekReward(dto.getPerfectWeekReward());
+        if (dto.getWeekStartFullPenalty() != null)
+            settings.setWeekStartFullPenalty(dto.getWeekStartFullPenalty());
+        if (dto.getWeekStartPartialPenalty() != null)
+            settings.setWeekStartPartialPenalty(dto.getWeekStartPartialPenalty());
+        if (dto.getWeekEndFullPenalty() != null)
+            settings.setWeekEndFullPenalty(dto.getWeekEndFullPenalty());
+        if (dto.getWeekEndPartialPenalty() != null)
+            settings.setWeekEndPartialPenalty(dto.getWeekEndPartialPenalty());
+        if (dto.getTestModeEnabled() != null)
+            settings.setTestModeEnabled(dto.getTestModeEnabled());
         if (dto.getTestDate() != null && !dto.getTestDate().isEmpty()) {
             settings.setTestDate(java.time.LocalDate.parse(dto.getTestDate()));
         }

@@ -1,6 +1,6 @@
-package com.pragatix.repository;
+package jjcet.PragatiX.repository;
 
-import com.pragatix.entity.Team;
+import jjcet.PragatiX.entity.Team;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,7 +19,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
         boolean existsByNameAndDepartmentIdAndYearAndSectionId(String name, Long departmentId, String year,
                         Long sectionId);
 
-        @org.springframework.data.jpa.repository.Query("SELECT COUNT(t) > 0 FROM Team t WHERE LOWER(TRIM(t.name)) = LOWER(TRIM(:name)) AND " +
+        @org.springframework.data.jpa.repository.Query("SELECT COUNT(t) > 0 FROM Team t WHERE LOWER(TRIM(t.name)) = LOWER(TRIM(:name)) AND "
+                        +
                         "(t.department.id = :deptId OR (t.department IS NULL AND :deptId IS NULL)) AND " +
                         "(t.year = :year OR (t.year IS NULL AND :year IS NULL)) AND " +
                         "(t.section.id = :secId OR (t.section IS NULL AND :secId IS NULL))")
@@ -29,7 +30,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
                         @org.springframework.data.repository.query.Param("year") String year,
                         @org.springframework.data.repository.query.Param("secId") Long secId);
 
-        @org.springframework.data.jpa.repository.Query("SELECT COUNT(t) > 0 FROM Team t WHERE LOWER(TRIM(t.name)) = LOWER(TRIM(:name)) AND " +
+        @org.springframework.data.jpa.repository.Query("SELECT COUNT(t) > 0 FROM Team t WHERE LOWER(TRIM(t.name)) = LOWER(TRIM(:name)) AND "
+                        +
                         "(t.department.id = :deptId OR (t.department IS NULL AND :deptId IS NULL)) AND " +
                         "(t.year = :year OR (t.year IS NULL AND :year IS NULL)) AND " +
                         "(t.section.id = :secId OR (t.section IS NULL AND :secId IS NULL)) AND " +
@@ -67,7 +69,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
                                         "DATABASE INTEGRITY VIOLATION: Student ID {} is associated with multiple teams: [{}]",
                                         studentId, teamDetails);
                         throw new IllegalStateException(
-                                        "Database integrity violation: Student ID " + studentId + " is associated with multiple teams: " + teamDetails);
+                                        "Database integrity violation: Student ID " + studentId
+                                                        + " is associated with multiple teams: " + teamDetails);
                 }
                 return Optional.of(teams.get(0));
         }

@@ -1,4 +1,4 @@
-package com.pragatix.modules.attendance.dto.response;
+package jjcet.PragatiX.modules.attendance.dto.response;
 
 import java.util.List;
 

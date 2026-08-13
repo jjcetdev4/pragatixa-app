@@ -1,9 +1,9 @@
-package com.pragatix.student;
+package jjcet.PragatiX.student;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.StreakResponse;
-import com.pragatix.dto.XpTransactionDto;
-import com.pragatix.entity.XpTransaction;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.StreakResponse;
+import jjcet.PragatiX.dto.XpTransactionDto;
+import jjcet.PragatiX.entity.XpTransaction;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 

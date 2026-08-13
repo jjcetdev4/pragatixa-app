@@ -1,9 +1,9 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.Student;
-import com.pragatix.modules.activity.dto.response.ActivityResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -44,7 +44,8 @@ public class StudentActivityAssembler {
                     act.getActivityDescription() != null ? act.getActivityDescription() : act.getDescription());
             int rewardXp;
             if ("Penalty".equalsIgnoreCase(act.getXpType())) {
-                rewardXp = (act.getPenaltyXp() != null && act.getPenaltyXp() > 0) ? act.getPenaltyXp() : act.getMaxPoints();
+                rewardXp = (act.getPenaltyXp() != null && act.getPenaltyXp() > 0) ? act.getPenaltyXp()
+                        : act.getMaxPoints();
             } else {
                 rewardXp = (act.getAwardXp() != null && act.getAwardXp() > 0) ? act.getAwardXp() : act.getMaxPoints();
             }
@@ -82,7 +83,7 @@ public class StudentActivityAssembler {
 
             List<ActivityAssignment> assignments = assignmentsByActivity.getOrDefault(act.getId(),
                     java.util.Collections.emptyList());
-            
+
             if (stageId != null) {
                 assignments = assignments.stream()
                         .filter(a -> a.getStage() != null && a.getStage().getId().equals(stageId))

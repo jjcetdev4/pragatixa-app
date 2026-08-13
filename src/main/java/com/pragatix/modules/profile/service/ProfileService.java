@@ -1,12 +1,12 @@
-package com.pragatix.modules.profile.service;
+package jjcet.PragatiX.modules.profile.service;
 
-import com.pragatix.entity.*;
-import com.pragatix.modules.profile.dto.ProfileResponse;
-import com.pragatix.modules.authentication.security.AuthUtils;
-import com.pragatix.repository.*;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.faculty.repository.FacultyRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.profile.dto.ProfileResponse;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.faculty.repository.FacultyRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +42,8 @@ public class ProfileService {
 
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile() {
-        String authName = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        String authName = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
         User user = authUtils.getCurrentUser();
 
         Student student = studentRepository.findByRegNo(authName).orElse(null);
@@ -61,11 +62,13 @@ public class ProfileService {
                     && student.getTeam().getCaptain().getId().equals(student.getId());
             boolean isViceCap = false;
             if (student.getTeam() != null) {
-                if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+                if (student.getTeam().getViceCaptain() != null
+                        && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
                     isViceCap = true;
                 } else {
-                    List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
-                    for (com.pragatix.entity.StageTeam st : stageTeams) {
+                    List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository
+                            .findByTeamId(student.getTeam().getId());
+                    for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
                         if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
                             isViceCap = true;
                             break;
@@ -81,9 +84,11 @@ public class ProfileService {
             response.setFullName(student.getFullName());
             response.setUsername(student.getRegNo());
             response.setEmail(student.getEmail());
-            response.setPhone(student.getPhoneNo() != null ? student.getPhoneNo() : (user != null ? user.getPhone() : ""));
+            response.setPhone(
+                    student.getPhoneNo() != null ? student.getPhoneNo() : (user != null ? user.getPhone() : ""));
             response.setDepartment(student.getDepartment() != null
-                    ? (student.getDepartment().getName() != null ? student.getDepartment().getName() : student.getDepartment().getDeptName())
+                    ? (student.getDepartment().getName() != null ? student.getDepartment().getName()
+                            : student.getDepartment().getDeptName())
                     : (user != null && user.getDepartment() != null ? user.getDepartment().getName() : "N/A"));
             response.setAccountStatus("Active");
             response.setCreatedDate(student.getCreatedAt());
@@ -125,7 +130,7 @@ public class ProfileService {
             response.setTeacherDetails(buildTeacherDetails(user));
         }
 
-        for (com.pragatix.entity.SubRole sr : user.getSubRoles()) {
+        for (jjcet.PragatiX.entity.SubRole sr : user.getSubRoles()) {
             if ("HOD".equalsIgnoreCase(sr.getName())) {
                 response.setHodDetails(buildHodDetails(user));
             }
@@ -150,7 +155,7 @@ public class ProfileService {
             if ("ROLE_STUDENT".equals(r.getName()))
                 isStudent = true;
         }
-        for (com.pragatix.entity.SubRole sr : user.getSubRoles()) {
+        for (jjcet.PragatiX.entity.SubRole sr : user.getSubRoles()) {
             if ("HOD".equalsIgnoreCase(sr.getName()))
                 return "HOD";
             if ("CC".equalsIgnoreCase(sr.getName()) || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName()))
@@ -189,15 +194,15 @@ public class ProfileService {
 
     private ProfileResponse.HodDetails buildHodDetails(User user) {
         ProfileResponse.HodDetails d = new ProfileResponse.HodDetails();
-        
+
         long totalFaculty = 0;
         long totalStudents = 0;
-        
+
         if (user.getDepartment() != null) {
             totalFaculty = facultyRepository.countByDepartmentId(user.getDepartment().getId());
             totalStudents = studentRepository.countByDepartmentId(user.getDepartment().getId());
         }
-        
+
         d.setTotalFaculty((int) totalFaculty);
         d.setTotalStudents((int) totalStudents);
         d.setTotalSections(0);
@@ -207,14 +212,21 @@ public class ProfileService {
     }
 
     private String normalizeYear(String year) {
-        if (year == null) return null;
+        if (year == null)
+            return null;
         switch (year.toUpperCase().trim()) {
-            case "I": return "1";
-            case "II": return "2";
-            case "III": return "3";
-            case "IV": return "4";
-            case "V": return "5";
-            default: return year;
+            case "I":
+                return "1";
+            case "II":
+                return "2";
+            case "III":
+                return "3";
+            case "IV":
+                return "4";
+            case "V":
+                return "5";
+            default:
+                return year;
         }
     }
 
@@ -222,14 +234,14 @@ public class ProfileService {
         ProfileResponse.CcDetails d = new ProfileResponse.CcDetails();
         d.setSection(user.getSection() != null ? user.getSection().getSectionName() : "N/A");
         d.setAcademicYear(user.getYear());
-        
+
         long totalStudents = 0;
         if (user.getDepartment() != null && user.getYear() != null && user.getSection() != null) {
             String studentYear = normalizeYear(user.getYear());
             totalStudents = studentRepository.countByDepartmentIdAndYearAndSectionId(
-                user.getDepartment().getId(), studentYear, user.getSection().getId());
+                    user.getDepartment().getId(), studentYear, user.getSection().getId());
         }
-        
+
         d.setTotalStudents((int) totalStudents);
         d.setTotalActivities(0);
         d.setPermissions(List.of("Manage Class", "View Attendance", "View Student Progress"));
@@ -254,19 +266,22 @@ public class ProfileService {
         d.setRollNumber(student.getSprNo() != null ? student.getSprNo() : "N/A");
         d.setAcademicYear(student.getYearRef() != null ? student.getYearRef().getYearName() : student.getYear());
         d.setSection(student.getSection() != null ? student.getSection().getSectionName() : "N/A");
-        d.setSemester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName() : (student.getSemester() != null ? student.getSemester() : "N/A"));
+        d.setSemester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName()
+                : (student.getSemester() != null ? student.getSemester() : "N/A"));
         d.setBatch("N/A");
         d.setPermissions(List.of("View Profile", "View Attendance", "View Leaderboard"));
-        
+
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                 && student.getTeam().getCaptain().getId().equals(student.getId());
         boolean isViceCap = false;
         if (student.getTeam() != null) {
-            if (student.getTeam().getViceCaptain() != null && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
+            if (student.getTeam().getViceCaptain() != null
+                    && student.getTeam().getViceCaptain().getId().equals(student.getId())) {
                 isViceCap = true;
             } else {
-                List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(student.getTeam().getId());
-                for (com.pragatix.entity.StageTeam st : stageTeams) {
+                List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository
+                        .findByTeamId(student.getTeam().getId());
+                for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
                     if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
                         isViceCap = true;
                         break;

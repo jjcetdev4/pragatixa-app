@@ -1,10 +1,10 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.entity.StageTeam;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.Team;
-import com.pragatix.repository.StageTeamRepository;
-import com.pragatix.repository.TeamRepository;
+import jjcet.PragatiX.entity.StageTeam;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.Team;
+import jjcet.PragatiX.repository.StageTeamRepository;
+import jjcet.PragatiX.repository.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +23,8 @@ public class LeadershipSyncService {
 
     @Transactional
     public void syncLeadership(Team team, Student captain, Student viceCaptain) {
-        if (team == null) return;
+        if (team == null)
+            return;
 
         // 1. Update the main teams table
         team.setCaptain(captain);

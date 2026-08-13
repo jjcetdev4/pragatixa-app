@@ -1,4 +1,4 @@
-package com.pragatix.modules.activity.dto.request;
+package jjcet.PragatiX.modules.activity.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -126,13 +126,13 @@ public class ActivityStageRequest {
         this.groupThreshold = groupThreshold;
     }
 
-    private com.pragatix.enums.AcademicYear academicYear;
+    private jjcet.PragatiX.enums.AcademicYear academicYear;
 
-    public com.pragatix.enums.AcademicYear getAcademicYear() {
+    public jjcet.PragatiX.enums.AcademicYear getAcademicYear() {
         return academicYear;
     }
 
-    public void setAcademicYear(com.pragatix.enums.AcademicYear academicYear) {
+    public void setAcademicYear(jjcet.PragatiX.enums.AcademicYear academicYear) {
         this.academicYear = academicYear;
     }
 }

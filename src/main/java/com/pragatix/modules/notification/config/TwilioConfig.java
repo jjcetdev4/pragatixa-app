@@ -1,4 +1,4 @@
-package com.pragatix.modules.notification.config;
+package jjcet.PragatiX.modules.notification.config;
 
 import com.twilio.Twilio;
 import jakarta.annotation.PostConstruct;

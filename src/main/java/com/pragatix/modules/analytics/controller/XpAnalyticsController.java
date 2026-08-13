@@ -1,7 +1,7 @@
-package com.pragatix.modules.analytics.controller;
+package jjcet.PragatiX.modules.analytics.controller;
 
-import com.pragatix.modules.analytics.dto.*;
-import com.pragatix.modules.analytics.service.XpAnalyticsService;
+import jjcet.PragatiX.modules.analytics.dto.*;
+import jjcet.PragatiX.modules.analytics.service.XpAnalyticsService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,9 +24,6 @@ public class XpAnalyticsController {
         this.service = service;
     }
 
-
-
-
     @GetMapping("/award-penalty")
     public ResponseEntity<List<XpAwardVsPenaltyDTO>> getAwardVsPenalty(
             @RequestParam(required = false) String academicYear,
@@ -35,7 +32,8 @@ public class XpAnalyticsController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return ResponseEntity.ok(service.getAwardVsPenalty(academicYear, departmentId, stageId, sectionId, startDate, endDate));
+        return ResponseEntity
+                .ok(service.getAwardVsPenalty(academicYear, departmentId, stageId, sectionId, startDate, endDate));
     }
 
     @GetMapping("/departments")
@@ -65,7 +63,8 @@ public class XpAnalyticsController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return ResponseEntity.ok(service.getMonthlyHeatmap(academicYear, departmentId, stageId, sectionId, startDate, endDate));
+        return ResponseEntity
+                .ok(service.getMonthlyHeatmap(academicYear, departmentId, stageId, sectionId, startDate, endDate));
     }
 
     @GetMapping("/top-performers")
@@ -76,7 +75,8 @@ public class XpAnalyticsController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return ResponseEntity.ok(service.getTopPerformers(academicYear, departmentId, stageId, sectionId, startDate, endDate));
+        return ResponseEntity
+                .ok(service.getTopPerformers(academicYear, departmentId, stageId, sectionId, startDate, endDate));
     }
 
     @GetMapping("/low-xp")
@@ -88,7 +88,8 @@ public class XpAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false, defaultValue = "20") Long threshold) {
-        return ResponseEntity.ok(service.getLowXpStudents(academicYear, departmentId, stageId, sectionId, startDate, endDate, threshold));
+        return ResponseEntity.ok(service.getLowXpStudents(academicYear, departmentId, stageId, sectionId, startDate,
+                endDate, threshold));
     }
 
     @GetMapping("/activities")
@@ -100,7 +101,8 @@ public class XpAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String category) {
-        return ResponseEntity.ok(service.getActivityXpContribution(academicYear, departmentId, stageId, sectionId, startDate, endDate, category));
+        return ResponseEntity.ok(service.getActivityXpContribution(academicYear, departmentId, stageId, sectionId,
+                startDate, endDate, category));
     }
 
     @GetMapping("/history")
@@ -115,16 +117,17 @@ public class XpAnalyticsController {
             @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
-        List<XpHistoryDTO> data = service.getXpHistory(academicYear, departmentId, stageId, sectionId, startDate, endDate, activityName, type, size, page * size);
-        long total = service.getXpHistoryCount(academicYear, departmentId, stageId, sectionId, startDate, endDate, activityName, type);
-        
+
+        List<XpHistoryDTO> data = service.getXpHistory(academicYear, departmentId, stageId, sectionId, startDate,
+                endDate, activityName, type, size, page * size);
+        long total = service.getXpHistoryCount(academicYear, departmentId, stageId, sectionId, startDate, endDate,
+                activityName, type);
+
         return ResponseEntity.ok(Map.of(
-            "content", data,
-            "totalElements", total,
-            "totalPages", (int) Math.ceil((double) total / size),
-            "currentPage", page
-        ));
+                "content", data,
+                "totalElements", total,
+                "totalPages", (int) Math.ceil((double) total / size),
+                "currentPage", page));
     }
 
     @GetMapping("/export-history")
@@ -137,8 +140,9 @@ public class XpAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String activityName,
             @RequestParam(required = false) String type) {
-            
-        byte[] data = service.exportXpHistory(academicYear, departmentId, stageId, sectionId, startDate, endDate, activityName, type);
+
+        byte[] data = service.exportXpHistory(academicYear, departmentId, stageId, sectionId, startDate, endDate,
+                activityName, type);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"XP_History_Report.xlsx\"");
         headers.add(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

@@ -1,4 +1,4 @@
-package com.pragatix.modules.leaderboard.dto.response;
+package jjcet.PragatiX.modules.leaderboard.dto.response;
 
 import java.util.List;
 

@@ -1,14 +1,14 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Activity;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
-import com.pragatix.modules.activity.dto.response.GroupedActivityResponse;
-import com.pragatix.modules.activity.dto.response.ActivityOptionDTO;
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivitySubgroupRepository;
+import jjcet.PragatiX.modules.activity.dto.response.GroupedActivityResponse;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityOptionDTO;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,12 +23,12 @@ import java.util.HashSet;
 import java.util.Collections;
 import java.time.LocalDate;
 
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.ActivityTemporaryAssignment;
-import com.pragatix.entity.User;
-import com.pragatix.modules.activity.repository.ActivityStageMappingRepository;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.repository.ActivityTemporaryAssignmentRepository;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.ActivityTemporaryAssignment;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.repository.ActivityTemporaryAssignmentRepository;
 
 @Service
 @Transactional(readOnly = true)
@@ -62,7 +62,7 @@ public class ActivityQueryService {
     }
 
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(Long subgroupId,
-            com.pragatix.enums.AcademicYear academicYear) {
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
         if (!activitySubgroupRepository.existsById(subgroupId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.<List<Activity>>error("Subgroup not found"));
@@ -80,27 +80,33 @@ public class ActivityQueryService {
         }
         System.out.println("Rows After Academic Year Filter : " + activities.size());
 
-        // If authenticated user is a Teacher (and NOT an Admin/SuperAdmin), filter strictly by assigned activities
-        org.springframework.security.core.Authentication authSubgroup = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (authSubgroup != null && authSubgroup.isAuthenticated() && !authSubgroup.getName().equalsIgnoreCase("anonymousUser")) {
+        // If authenticated user is a Teacher (and NOT an Admin/SuperAdmin), filter
+        // strictly by assigned activities
+        org.springframework.security.core.Authentication authSubgroup = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        if (authSubgroup != null && authSubgroup.isAuthenticated()
+                && !authSubgroup.getName().equalsIgnoreCase("anonymousUser")) {
             User currentUser = userRepository.findByUsername(authSubgroup.getName()).orElse(null);
             if (currentUser != null) {
-                boolean isAdmin = currentUser.getRoles().stream().anyMatch(r ->
-                        "ROLE_ADMIN".equalsIgnoreCase(r.getName()) ||
-                        "ROLE_SUPER_ADMIN".equalsIgnoreCase(r.getName()) ||
-                        "ROLE_SUPERADMIN".equalsIgnoreCase(r.getName()) ||
-                        "ADMIN".equalsIgnoreCase(r.getName()) ||
-                        "SUPER_ADMIN".equalsIgnoreCase(r.getName()));
+                boolean isAdmin = currentUser.getRoles().stream()
+                        .anyMatch(r -> "ROLE_ADMIN".equalsIgnoreCase(r.getName()) ||
+                                "ROLE_SUPER_ADMIN".equalsIgnoreCase(r.getName()) ||
+                                "ROLE_SUPERADMIN".equalsIgnoreCase(r.getName()) ||
+                                "ADMIN".equalsIgnoreCase(r.getName()) ||
+                                "SUPER_ADMIN".equalsIgnoreCase(r.getName()));
 
                 if (!isAdmin) {
-                    boolean isTeacher = currentUser.getRoles().stream().anyMatch(r ->
-                            "ROLE_TEACHER".equalsIgnoreCase(r.getName()) || "TEACHER".equalsIgnoreCase(r.getName()));
+                    boolean isTeacher = currentUser.getRoles().stream()
+                            .anyMatch(r -> "ROLE_TEACHER".equalsIgnoreCase(r.getName())
+                                    || "TEACHER".equalsIgnoreCase(r.getName()));
 
                     if (isTeacher) {
                         final LocalDate today = LocalDate.now();
-                        final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), null, today);
+                        final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), null,
+                                today);
                         activities = activities.stream()
-                                .filter(a -> assignedIds.contains(a.getId()) || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                .filter(a -> assignedIds.contains(a.getId())
+                                        || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
                                 .toList();
                     }
                 }
@@ -116,7 +122,7 @@ public class ActivityQueryService {
     }
 
     public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup,
-            com.pragatix.enums.AcademicYear academicYear) {
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
         System.out.println("Selected Academic Year : " + academicYear);
         List<Activity> allActivities = activityRepository.findAll();
         System.out.println("Rows Before Filter : " + allActivities.size());
@@ -141,7 +147,8 @@ public class ActivityQueryService {
                         System.out.println("Activity Name: " + a.getName());
                         System.out.println("Mandatory Flag: " + isMandatory);
                         System.out.println("Participation Type: " + a.getModeType());
-                        System.out.println("Subgroup: " + (a.getSubgroup() != null ? a.getSubgroup().getName() : "null"));
+                        System.out
+                                .println("Subgroup: " + (a.getSubgroup() != null ? a.getSubgroup().getName() : "null"));
                         System.out.println("Stage ID: " + (a.getStage() != null ? a.getStage().getId() : "null"));
 
                         boolean included = false;
@@ -167,27 +174,32 @@ public class ActivityQueryService {
                     .toList();
         }
 
-        // If authenticated user is a Teacher (and NOT an Admin/SuperAdmin), filter strictly by assigned activities
-        org.springframework.security.core.Authentication authAll = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        // If authenticated user is a Teacher (and NOT an Admin/SuperAdmin), filter
+        // strictly by assigned activities
+        org.springframework.security.core.Authentication authAll = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
         if (authAll != null && authAll.isAuthenticated() && !authAll.getName().equalsIgnoreCase("anonymousUser")) {
             User currentUser = userRepository.findByUsername(authAll.getName()).orElse(null);
             if (currentUser != null) {
-                boolean isAdmin = currentUser.getRoles().stream().anyMatch(r ->
-                        "ROLE_ADMIN".equalsIgnoreCase(r.getName()) ||
-                        "ROLE_SUPER_ADMIN".equalsIgnoreCase(r.getName()) ||
-                        "ROLE_SUPERADMIN".equalsIgnoreCase(r.getName()) ||
-                        "ADMIN".equalsIgnoreCase(r.getName()) ||
-                        "SUPER_ADMIN".equalsIgnoreCase(r.getName()));
+                boolean isAdmin = currentUser.getRoles().stream()
+                        .anyMatch(r -> "ROLE_ADMIN".equalsIgnoreCase(r.getName()) ||
+                                "ROLE_SUPER_ADMIN".equalsIgnoreCase(r.getName()) ||
+                                "ROLE_SUPERADMIN".equalsIgnoreCase(r.getName()) ||
+                                "ADMIN".equalsIgnoreCase(r.getName()) ||
+                                "SUPER_ADMIN".equalsIgnoreCase(r.getName()));
 
                 if (!isAdmin) {
-                    boolean isTeacher = currentUser.getRoles().stream().anyMatch(r ->
-                            "ROLE_TEACHER".equalsIgnoreCase(r.getName()) || "TEACHER".equalsIgnoreCase(r.getName()));
+                    boolean isTeacher = currentUser.getRoles().stream()
+                            .anyMatch(r -> "ROLE_TEACHER".equalsIgnoreCase(r.getName())
+                                    || "TEACHER".equalsIgnoreCase(r.getName()));
 
                     if (isTeacher) {
                         final LocalDate today = LocalDate.now();
-                        final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), null, today);
+                        final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), null,
+                                today);
                         activities = activities.stream()
-                                .filter(a -> assignedIds.contains(a.getId()) || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                .filter(a -> assignedIds.contains(a.getId())
+                                        || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
                                 .toList();
                     }
                 }
@@ -202,25 +214,28 @@ public class ActivityQueryService {
         return ResponseEntity.ok(ApiResponse.ok(activities));
     }
 
-    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(Long stageId, String subgroup,
-            com.pragatix.enums.AcademicYear requestedYear) {
-        
-        com.pragatix.enums.AcademicYear effectiveYear = requestedYear;
-        
+    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(Long stageId,
+            String subgroup,
+            jjcet.PragatiX.enums.AcademicYear requestedYear) {
+
+        jjcet.PragatiX.enums.AcademicYear effectiveYear = requestedYear;
+
         // Resolve authenticated user & enforce role-based AcademicYear scoping
-        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
         if (auth != null) {
             String username = auth.getName();
-            com.pragatix.entity.User user = userRepository.findByUsername(username).orElse(null);
+            jjcet.PragatiX.entity.User user = userRepository.findByUsername(username).orElse(null);
             if (user != null) {
                 boolean isSuperAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()));
                 boolean isAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
-                
+
                 if (!isSuperAdmin && isAdmin) {
-                    com.pragatix.enums.AcademicYear adminYear = user.getAcademicYear();
+                    jjcet.PragatiX.enums.AcademicYear adminYear = user.getAcademicYear();
                     if (requestedYear != null && adminYear != null && requestedYear != adminYear) {
                         return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
-                                .body(ApiResponse.error("Admin can only access activities within their assigned Academic Year"));
+                                .body(ApiResponse
+                                        .error("Admin can only access activities within their assigned Academic Year"));
                     }
                     if (adminYear != null) {
                         effectiveYear = adminYear;
@@ -229,7 +244,8 @@ public class ActivityQueryService {
             }
         }
 
-        // If effectiveYear is still null and stageId is provided, derive it from the target stage
+        // If effectiveYear is still null and stageId is provided, derive it from the
+        // target stage
         ActivityStage targetStage = null;
         if (stageId != null) {
             targetStage = activityStageRepository.findById(stageId).orElse(null);
@@ -239,8 +255,8 @@ public class ActivityQueryService {
         }
 
         List<Activity> activities = activityRepository.findAll();
-        
-        final com.pragatix.enums.AcademicYear finalEffectiveYear = effectiveYear;
+
+        final jjcet.PragatiX.enums.AcademicYear finalEffectiveYear = effectiveYear;
         if (finalEffectiveYear != null) {
             activities = activities.stream()
                     .filter(a -> a.getAcademicYear() == null || a.getAcademicYear() == finalEffectiveYear)
@@ -287,7 +303,8 @@ public class ActivityQueryService {
             boolean alreadyMapped = false;
             String actNameLower = activity.getName() != null ? activity.getName().trim().toLowerCase() : "";
             if (targetStage != null) {
-                if (activityStageMappingRepository.existsByStageIdAndActivityId(targetStage.getId(), activity.getId())) {
+                if (activityStageMappingRepository.existsByStageIdAndActivityId(targetStage.getId(),
+                        activity.getId())) {
                     alreadyMapped = true;
                 } else if (alreadyMappedNames.contains(actNameLower)
                         || (activity.getStage() != null && activity.getStage().getId().equals(targetStage.getId()))) {
@@ -343,25 +360,29 @@ public class ActivityQueryService {
             return Collections.emptySet();
         }
 
-        // 1. Temporary assignments for today where this teacher is the active temporary teacher (Priority 1)
-        List<Long> tempAssignedIds = temporaryAssignmentRepository.findActivityIdsByTemporaryTeacher(teacherId, stageId, today);
+        // 1. Temporary assignments for today where this teacher is the active temporary
+        // teacher (Priority 1)
+        List<Long> tempAssignedIds = temporaryAssignmentRepository.findActivityIdsByTemporaryTeacher(teacherId, stageId,
+                today);
         Set<Long> resultIds = new HashSet<>(tempAssignedIds);
 
         // 2. Permanent assignments for this teacher
         List<Long> permAssignedIds = activityAssignmentRepository.findActivityIdsByTeacherId(teacherId, stageId);
 
-        // 3. Exclude any permanent assignment if that activity is temporarily assigned to a DIFFERENT teacher today
+        // 3. Exclude any permanent assignment if that activity is temporarily assigned
+        // to a DIFFERENT teacher today
         for (Long actId : permAssignedIds) {
-            List<ActivityTemporaryAssignment> activeTemps = temporaryAssignmentRepository.findActiveByActivityIdAndDate(actId, today);
+            List<ActivityTemporaryAssignment> activeTemps = temporaryAssignmentRepository
+                    .findActiveByActivityIdAndDate(actId, today);
             if (stageId != null) {
                 activeTemps = activeTemps.stream()
                         .filter(ta -> ta.getStage() == null || ta.getStage().getId().equals(stageId))
                         .toList();
             }
 
-            boolean isReplacedByOther = activeTemps.stream().anyMatch(ta ->
-                    (ta.getOriginalTeacher() != null && ta.getOriginalTeacher().getId().equals(teacherId)) ||
-                    (ta.getTemporaryTeacher() != null && !ta.getTemporaryTeacher().getId().equals(teacherId)));
+            boolean isReplacedByOther = activeTemps.stream().anyMatch(
+                    ta -> (ta.getOriginalTeacher() != null && ta.getOriginalTeacher().getId().equals(teacherId)) ||
+                            (ta.getTemporaryTeacher() != null && !ta.getTemporaryTeacher().getId().equals(teacherId)));
 
             if (!isReplacedByOther) {
                 resultIds.add(actId);
@@ -372,19 +393,21 @@ public class ActivityQueryService {
     }
 
     public List<Activity> getActivitiesByStageUnfiltered(Long stageId, String subgroup,
-            com.pragatix.enums.AcademicYear academicYear) {
-        System.out.println("Fetching unfiltered activities for stageId: " + stageId + ", subgroup: " + subgroup + ", academicYear: " + academicYear);
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
+        System.out.println("Fetching unfiltered activities for stageId: " + stageId + ", subgroup: " + subgroup
+                + ", academicYear: " + academicYear);
 
         List<Activity> allActivities = activityRepository.findAll();
-        
-        List<com.pragatix.entity.ActivityStageMapping> mappings = activityStageMappingRepository.findByStageId(stageId);
+
+        List<jjcet.PragatiX.entity.ActivityStageMapping> mappings = activityStageMappingRepository
+                .findByStageId(stageId);
         List<Activity> legacyActivities = activityRepository.findByStageId(stageId);
-        
+
         // 1. Retrieve mappings from activity_stage_mappings table
         List<Activity> mappedActivities = new ArrayList<>();
         java.util.Set<Long> mappedActivityIds = new java.util.HashSet<>();
 
-        for (com.pragatix.entity.ActivityStageMapping mapping : mappings) {
+        for (jjcet.PragatiX.entity.ActivityStageMapping mapping : mappings) {
             Activity act = mapping.getActivity();
             if (act != null) {
                 boolean isActive = (act.getStatus() == null || "ACTIVE".equalsIgnoreCase(act.getStatus()));
@@ -419,7 +442,7 @@ public class ActivityQueryService {
             final String lowerSubgroup = subgroup.trim().toLowerCase();
             activities = activities.stream()
                     .filter(a -> {
-                        com.pragatix.entity.ActivityStageMapping m = mappings.stream()
+                        jjcet.PragatiX.entity.ActivityStageMapping m = mappings.stream()
                                 .filter(mp -> mp.getActivity() != null && mp.getActivity().getId().equals(a.getId()))
                                 .findFirst().orElse(null);
 
@@ -437,17 +460,24 @@ public class ActivityQueryService {
         for (Activity activity : activities) {
             adminAssignmentService.populateActivityTransientFields(activity, stageId);
 
-            // Apply stage-specific configuration overrides if present in ActivityStageMapping
-            com.pragatix.entity.ActivityStageMapping m = mappings.stream()
+            // Apply stage-specific configuration overrides if present in
+            // ActivityStageMapping
+            jjcet.PragatiX.entity.ActivityStageMapping m = mappings.stream()
                     .filter(mp -> mp.getActivity() != null && mp.getActivity().getId().equals(activity.getId()))
                     .findFirst().orElse(null);
             if (m != null) {
-                if (m.getAwardXp() != null) activity.setAwardXp(m.getAwardXp());
-                if (m.getAwardEnabled() != null) activity.setAwardEnabled(m.getAwardEnabled());
-                if (m.getPenaltyEnabled() != null) activity.setPenaltyEnabled(m.getPenaltyEnabled());
-                if (m.getPenaltyXp() != null) activity.setPenaltyXp(m.getPenaltyXp());
-                if (m.getAwardFrequency() != null) activity.setAwardFrequency(m.getAwardFrequency());
-                if (m.getAssignmentMode() != null) activity.setAssignmentMode(m.getAssignmentMode());
+                if (m.getAwardXp() != null)
+                    activity.setAwardXp(m.getAwardXp());
+                if (m.getAwardEnabled() != null)
+                    activity.setAwardEnabled(m.getAwardEnabled());
+                if (m.getPenaltyEnabled() != null)
+                    activity.setPenaltyEnabled(m.getPenaltyEnabled());
+                if (m.getPenaltyXp() != null)
+                    activity.setPenaltyXp(m.getPenaltyXp());
+                if (m.getAwardFrequency() != null)
+                    activity.setAwardFrequency(m.getAwardFrequency());
+                if (m.getAssignmentMode() != null)
+                    activity.setAssignmentMode(m.getAssignmentMode());
             }
         }
 
@@ -455,32 +485,38 @@ public class ActivityQueryService {
     }
 
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup,
-            com.pragatix.enums.AcademicYear academicYear) {
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
         List<Activity> activities = getActivitiesByStageUnfiltered(stageId, subgroup, academicYear);
 
-        // If authenticated user is a Teacher (and NOT an Admin/SuperAdmin), filter strictly by assigned activities
-        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        // If authenticated user is a Teacher (and NOT an Admin/SuperAdmin), filter
+        // strictly by assigned activities
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !auth.getName().equalsIgnoreCase("anonymousUser")) {
             User currentUser = userRepository.findByUsername(auth.getName()).orElse(null);
             if (currentUser != null) {
-                boolean isAdmin = currentUser.getRoles().stream().anyMatch(r ->
-                        "ROLE_ADMIN".equalsIgnoreCase(r.getName()) ||
-                        "ROLE_SUPER_ADMIN".equalsIgnoreCase(r.getName()) ||
-                        "ROLE_SUPERADMIN".equalsIgnoreCase(r.getName()) ||
-                        "ADMIN".equalsIgnoreCase(r.getName()) ||
-                        "SUPER_ADMIN".equalsIgnoreCase(r.getName()));
+                boolean isAdmin = currentUser.getRoles().stream()
+                        .anyMatch(r -> "ROLE_ADMIN".equalsIgnoreCase(r.getName()) ||
+                                "ROLE_SUPER_ADMIN".equalsIgnoreCase(r.getName()) ||
+                                "ROLE_SUPERADMIN".equalsIgnoreCase(r.getName()) ||
+                                "ADMIN".equalsIgnoreCase(r.getName()) ||
+                                "SUPER_ADMIN".equalsIgnoreCase(r.getName()));
 
                 if (!isAdmin) {
-                    boolean isTeacher = currentUser.getRoles().stream().anyMatch(r ->
-                            "ROLE_TEACHER".equalsIgnoreCase(r.getName()) || "TEACHER".equalsIgnoreCase(r.getName()));
+                    boolean isTeacher = currentUser.getRoles().stream()
+                            .anyMatch(r -> "ROLE_TEACHER".equalsIgnoreCase(r.getName())
+                                    || "TEACHER".equalsIgnoreCase(r.getName()));
 
                     if (isTeacher) {
                         final LocalDate today = LocalDate.now();
-                        final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), stageId, today);
+                        final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), stageId,
+                                today);
                         activities = activities.stream()
-                                .filter(a -> assignedIds.contains(a.getId()) || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                .filter(a -> assignedIds.contains(a.getId())
+                                        || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
                                 .toList();
-                        System.out.println("Rows After Teacher Assignment Filter for Teacher [" + currentUser.getUsername() + "]: " + activities.size());
+                        System.out.println("Rows After Teacher Assignment Filter for Teacher ["
+                                + currentUser.getUsername() + "]: " + activities.size());
                     }
                 }
             }
@@ -490,9 +526,10 @@ public class ActivityQueryService {
         return ResponseEntity.ok(ApiResponse.ok(activities));
     }
 
-    private boolean matchesSubgroup(com.pragatix.entity.ActivitySubgroup subgroup, String lowerSubgroupFilter) {
-        if (subgroup == null || lowerSubgroupFilter == null) return false;
-        
+    private boolean matchesSubgroup(jjcet.PragatiX.entity.ActivitySubgroup subgroup, String lowerSubgroupFilter) {
+        if (subgroup == null || lowerSubgroupFilter == null)
+            return false;
+
         boolean result = false;
         String failReason = "";
 
@@ -502,7 +539,7 @@ public class ActivityQueryService {
         } else {
             failReason += "category.equalsIgnoreCase(" + lowerSubgroupFilter + ") returned FALSE; ";
         }
-        
+
         // 2. Fallback to matching by display name prefix
         if (!result && subgroup.getName() != null) {
             String nameLower = subgroup.getName().trim().toLowerCase();
@@ -519,7 +556,8 @@ public class ActivityQueryService {
         }
 
         System.out.println("========== MATCH DEBUG ==========");
-        // Hack to get activity ID context if available, otherwise just print subgroup details
+        // Hack to get activity ID context if available, otherwise just print subgroup
+        // details
         System.out.println("Subgroup ID: " + subgroup.getId());
         System.out.println("Filter   : " + lowerSubgroupFilter);
         System.out.println("Category : " + subgroup.getCategory());
@@ -528,7 +566,7 @@ public class ActivityQueryService {
         if (!result) {
             System.out.println("Failure  : " + failReason);
         }
-        
+
         return result;
     }
 }

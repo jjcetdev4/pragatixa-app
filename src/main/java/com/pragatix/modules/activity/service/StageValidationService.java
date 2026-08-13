@@ -1,16 +1,16 @@
-package com.pragatix.modules.activity.service;
+package jjcet.PragatiX.modules.activity.service;
 
-import com.pragatix.modules.activity.dto.response.StageValidationResponse;
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.entity.ActivitySubgroup;
-import com.pragatix.entity.Student;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.student.repository.StudentActivityXpRepository;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.StudentActivityXp;
+import jjcet.PragatiX.modules.activity.dto.response.StageValidationResponse;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.entity.ActivitySubgroup;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivitySubgroupRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.StudentActivityXp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -28,18 +28,18 @@ public class StageValidationService {
     private final ActivitySubgroupRepository activitySubgroupRepository;
     private final StudentActivityXpRepository studentActivityXpRepository;
     private final ActivityRepository activityRepository;
-    private final com.pragatix.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository;
-    private final com.pragatix.repository.XpTransactionRepository xpTransactionRepository;
-    private final com.pragatix.modules.student.service.StageXpSummaryService stageXpSummaryService;
+    private final jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository;
+    private final jjcet.PragatiX.repository.XpTransactionRepository xpTransactionRepository;
+    private final jjcet.PragatiX.modules.student.service.StageXpSummaryService stageXpSummaryService;
 
     public StageValidationService(ActivityStageRepository activityStageRepository,
             StudentRepository studentRepository,
             ActivitySubgroupRepository activitySubgroupRepository,
             StudentActivityXpRepository studentActivityXpRepository,
             ActivityRepository activityRepository,
-            com.pragatix.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository,
-            com.pragatix.repository.XpTransactionRepository xpTransactionRepository,
-            com.pragatix.modules.student.service.StageXpSummaryService stageXpSummaryService) {
+            jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository activityStageMappingRepository,
+            jjcet.PragatiX.repository.XpTransactionRepository xpTransactionRepository,
+            jjcet.PragatiX.modules.student.service.StageXpSummaryService stageXpSummaryService) {
         this.activityStageRepository = activityStageRepository;
         this.studentRepository = studentRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
@@ -125,7 +125,8 @@ public class StageValidationService {
         System.out.println("Student ID                  : " + student.getId());
         System.out.println("--- XP Values vs Thresholds ---");
 
-        com.pragatix.modules.student.dto.StageXpSummary stageXp = stageXpSummaryService.getStageXp(student.getId(), stage.getDisplayOrder());
+        jjcet.PragatiX.modules.student.dto.StageXpSummary stageXp = stageXpSummaryService.getStageXp(student.getId(),
+                stage.getDisplayOrder());
 
         int expectedXp = stage.getExpectedXp() != null ? stage.getExpectedXp() : 0;
         boolean expectedXpMet = stageXp.getTotalXp() >= expectedXp;
@@ -134,7 +135,7 @@ public class StageValidationService {
         int mustThresh = stage.getMustThreshold() != null ? stage.getMustThreshold() : 0;
         int indThresh = stage.getIndividualThreshold() != null ? stage.getIndividualThreshold() : 0;
         int grpThresh = stage.getGroupThreshold() != null ? stage.getGroupThreshold() : 0;
-        
+
         int evaluatedMustXp = stageXp.getMustXp();
 
         boolean mustMet = stageXp.getMustXp() >= mustThresh;
@@ -148,19 +149,20 @@ public class StageValidationService {
         boolean allSubgroupsMet = mustMet && indMet && grpMet;
 
         boolean allMet = expectedXpMet && allSubgroupsMet;
-        
-        List<com.pragatix.entity.ActivityStageMapping> stageMappings = activityStageMappingRepository.findByStageId(stage.getId());
+
+        List<jjcet.PragatiX.entity.ActivityStageMapping> stageMappings = activityStageMappingRepository
+                .findByStageId(stage.getId());
         List<Activity> allMappedActivities = new java.util.ArrayList<>();
         java.util.Set<Long> mappedIds = new java.util.HashSet<>();
-        
-        for (com.pragatix.entity.ActivityStageMapping mapping : stageMappings) {
+
+        for (jjcet.PragatiX.entity.ActivityStageMapping mapping : stageMappings) {
             Activity act = mapping.getActivity();
             if (act != null) {
                 allMappedActivities.add(act);
                 mappedIds.add(act.getId());
             }
         }
-        
+
         List<Activity> legacyActivities = activityRepository.findByStageId(stage.getId());
         for (Activity act : legacyActivities) {
             if (act != null && !mappedIds.contains(act.getId())) {
@@ -169,25 +171,25 @@ public class StageValidationService {
             }
         }
 
-
         List<Activity> mandatoryMustActivities = allMappedActivities.stream()
                 .filter(a -> {
-                    if (a == null) return false;
+                    if (a == null)
+                        return false;
                     boolean isActive = "ACTIVE".equalsIgnoreCase(a.getStatus()) || a.getStatus() == null;
                     boolean isReward = "Reward".equalsIgnoreCase(a.getXpType());
-                    
+
                     // Determine subgroup from mapping first, fallback to activity global subgroup
-                    com.pragatix.entity.ActivityStageMapping m = stageMappings.stream()
+                    jjcet.PragatiX.entity.ActivityStageMapping m = stageMappings.stream()
                             .filter(mp -> mp.getActivity() != null && mp.getActivity().getId().equals(a.getId()))
                             .findFirst().orElse(null);
-                            
+
                     ActivitySubgroup effectiveSubgroup = null;
                     if (m != null && m.getSubgroup() != null) {
                         effectiveSubgroup = m.getSubgroup();
                     } else {
                         effectiveSubgroup = a.getSubgroup();
                     }
-                    
+
                     boolean inMustSubgroup = false;
                     if (effectiveSubgroup != null) {
                         String cat = effectiveSubgroup.getCategory();
@@ -198,10 +200,11 @@ public class StageValidationService {
                             inMustSubgroup = true;
                         }
                     }
-                    
+
                     boolean passed = isActive && isReward && inMustSubgroup;
-                    System.out.println(String.format("Must Checklist Filter Result for ID %d '%s' -> passed: %b (isActive: %b, isReward: %b, inMustSubgroup: %b)", 
-                        a.getId(), a.getName(), passed, isActive, isReward, inMustSubgroup));
+                    System.out.println(String.format(
+                            "Must Checklist Filter Result for ID %d '%s' -> passed: %b (isActive: %b, isReward: %b, inMustSubgroup: %b)",
+                            a.getId(), a.getName(), passed, isActive, isReward, inMustSubgroup));
                     return passed;
                 })
                 .collect(Collectors.toList());
@@ -209,25 +212,27 @@ public class StageValidationService {
         System.out.println("========== MANDATORY ACTIVITY FILTERING ==========");
         System.out.println("All Mapped Activities (raw size): " + allMappedActivities.size());
         for (Activity a : mandatoryMustActivities) {
-            System.out.println(String.format("Mandatory Candidate - ID: %d, status: %s, xpType: %s, isMandatory: %b", 
-                a.getId(), a.getStatus(), a.getXpType(), a.isMandatory()));
+            System.out.println(String.format("Mandatory Candidate - ID: %d, status: %s, xpType: %s, isMandatory: %b",
+                    a.getId(), a.getStatus(), a.getXpType(), a.isMandatory()));
         }
 
         List<Long> requiredActivityIds = mandatoryMustActivities.stream()
                 .map(Activity::getId)
                 .collect(Collectors.toList());
 
-        List<com.pragatix.entity.XpTransaction> allXpLogs = xpTransactionRepository.findByStudentRegNoAndStage(student.getRegNo(), stage.getDisplayOrder());
-        
+        List<jjcet.PragatiX.entity.XpTransaction> allXpLogs = xpTransactionRepository
+                .findByStudentRegNoAndStage(student.getRegNo(), stage.getDisplayOrder());
+
         List<Long> rawCompletedActivityIds = allXpLogs.stream()
-                .filter(tx -> "APPROVED".equalsIgnoreCase(tx.getStatus()) && !tx.isPenalty() && tx.getActivity() != null)
+                .filter(tx -> "APPROVED".equalsIgnoreCase(tx.getStatus()) && !tx.isPenalty()
+                        && tx.getActivity() != null)
                 .map(tx -> tx.getActivity().getId())
                 .collect(Collectors.toList());
 
         List<Long> uniqueCompletedActivityIds = rawCompletedActivityIds.stream()
                 .distinct()
                 .collect(Collectors.toList());
-                
+
         int duplicateActivitiesIgnored = rawCompletedActivityIds.size() - uniqueCompletedActivityIds.size();
 
         List<Long> completedMustActivityIds = uniqueCompletedActivityIds.stream()

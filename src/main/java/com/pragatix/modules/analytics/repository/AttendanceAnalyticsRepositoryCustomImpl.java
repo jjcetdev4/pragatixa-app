@@ -1,6 +1,6 @@
-package com.pragatix.modules.analytics.repository;
+package jjcet.PragatiX.modules.analytics.repository;
 
-import com.pragatix.modules.analytics.dto.*;
+import jjcet.PragatiX.modules.analytics.dto.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -17,10 +17,11 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
     @PersistenceContext
     private EntityManager entityManager;
 
-    private String buildWhereClause(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, Integer period, boolean includeWhere) {
+    private String buildWhereClause(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate, Integer period, boolean includeWhere) {
         StringBuilder sb = new StringBuilder();
         List<String> conditions = new ArrayList<>();
-        
+
         if (yearNo != null && !yearNo.isEmpty()) {
             conditions.add("y.year_no = :yearNo");
         }
@@ -51,11 +52,12 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
             }
             sb.append(String.join(" AND ", conditions));
         }
-        
+
         return sb.toString();
     }
 
-    private void setParameters(Query query, String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, Integer period) {
+    private void setParameters(Query query, String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate, Integer period) {
         if (yearNo != null && !yearNo.isEmpty()) {
             query.setParameter("yearNo", Byte.parseByte(yearNo));
         }
@@ -80,7 +82,8 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
     }
 
     @Override
-    public AnalyticsOverviewDTO getOverview(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, Integer period) {
+    public AnalyticsOverviewDTO getOverview(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate, Integer period) {
         String sql = "WITH StudentAgg AS (" +
                 "  SELECT " +
                 "    ar.student_id," +
@@ -93,7 +96,8 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
                 "  GROUP BY ar.student_id" +
                 ") " +
                 "SELECT " +
-                "  CAST((SUM(present_count) * 100.0) / NULLIF(SUM(present_count + absent_count), 0) AS DECIMAL(5,2)) as overall_pct, " +
+                "  CAST((SUM(present_count) * 100.0) / NULLIF(SUM(present_count + absent_count), 0) AS DECIMAL(5,2)) as overall_pct, "
+                +
                 "  SUM(CASE WHEN absent_count = 0 AND present_count > 0 THEN 1 ELSE 0 END) as present_students, " +
                 "  SUM(CASE WHEN absent_count > 0 AND present_count > 0 THEN 1 ELSE 0 END) as partial_absentees, " +
                 "  SUM(CASE WHEN present_count = 0 AND absent_count > 0 THEN 1 ELSE 0 END) as full_absentees, " +
@@ -118,10 +122,12 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
     }
 
     @Override
-    public List<AttendanceTrendDTO> getTrend(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, Integer period) {
+    public List<AttendanceTrendDTO> getTrend(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate, Integer period) {
         String sql = "SELECT " +
                 "  ar.attendance_date, " +
-                "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(*), 0) AS DECIMAL(5,2)) as pct " +
+                "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(*), 0) AS DECIMAL(5,2)) as pct "
+                +
                 "FROM attendance ar " +
                 "JOIN students st ON ar.student_id = st.id " +
                 "JOIN years y ON st.year_id = y.id " +
@@ -143,10 +149,11 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
     }
 
     @Override
-    public AttendanceDistributionDTO getDistribution(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, Integer period) {
+    public AttendanceDistributionDTO getDistribution(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate, Integer period) {
         AnalyticsOverviewDTO overview = getOverview(yearNo, departmentId, stage, sectionId, startDate, endDate, period);
         int total = overview.getPresentStudents() + overview.getPartialAbsentees() + overview.getFullDayAbsentees();
-        
+
         if (total == 0) {
             return new AttendanceDistributionDTO(0.0, 0.0, 0.0);
         }
@@ -159,10 +166,12 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
     }
 
     @Override
-    public List<GroupedAttendanceDTO> getDepartmentWiseAttendance(String yearNo, LocalDate startDate, LocalDate endDate, Integer period) {
+    public List<GroupedAttendanceDTO> getDepartmentWiseAttendance(String yearNo, LocalDate startDate, LocalDate endDate,
+            Integer period) {
         String sql = "SELECT " +
                 "  d.name, " +
-                "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(*), 0) AS DECIMAL(5,2)) as pct " +
+                "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(*), 0) AS DECIMAL(5,2)) as pct "
+                +
                 "FROM attendance ar " +
                 "JOIN students st ON ar.student_id = st.id " +
                 "JOIN years y ON st.year_id = y.id " +
@@ -177,13 +186,15 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
         List<Object[]> rows = query.getResultList();
         List<GroupedAttendanceDTO> result = new ArrayList<>();
         for (Object[] row : rows) {
-            result.add(new GroupedAttendanceDTO((String) row[0], row[1] != null ? ((BigDecimal) row[1]).doubleValue() : 0.0));
+            result.add(new GroupedAttendanceDTO((String) row[0],
+                    row[1] != null ? ((BigDecimal) row[1]).doubleValue() : 0.0));
         }
         return result;
     }
 
     @Override
-    public List<LowAttendanceStudentDTO> getLowAttendanceStudents(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, Integer period, Double threshold) {
+    public List<LowAttendanceStudentDTO> getLowAttendanceStudents(String yearNo, Long departmentId, Integer stage,
+            Long sectionId, LocalDate startDate, LocalDate endDate, Integer period, Double threshold) {
         String sql = "WITH StudentAgg AS (" +
                 "  SELECT " +
                 "    st.reg_no, " +
@@ -199,10 +210,12 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
                 "SELECT " +
                 "  reg_no, " +
                 "  full_name, " +
-                "  CAST((SUM(present_count) * 100.0) / NULLIF(SUM(present_count + absent_count), 0) AS DECIMAL(5,2)) as pct " +
+                "  CAST((SUM(present_count) * 100.0) / NULLIF(SUM(present_count + absent_count), 0) AS DECIMAL(5,2)) as pct "
+                +
                 "FROM StudentAgg " +
                 "GROUP BY reg_no, full_name " +
-                "HAVING CAST((SUM(present_count) * 100.0) / NULLIF(SUM(present_count + absent_count), 0) AS DECIMAL(5,2)) < :threshold " +
+                "HAVING CAST((SUM(present_count) * 100.0) / NULLIF(SUM(present_count + absent_count), 0) AS DECIMAL(5,2)) < :threshold "
+                +
                 "ORDER BY pct ASC";
 
         Query query = entityManager.createNativeQuery(sql);
@@ -212,16 +225,19 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
         List<Object[]> rows = query.getResultList();
         List<LowAttendanceStudentDTO> result = new ArrayList<>();
         for (Object[] row : rows) {
-            result.add(new LowAttendanceStudentDTO((String) row[0], (String) row[1], row[2] != null ? ((BigDecimal) row[2]).doubleValue() : 0.0));
+            result.add(new LowAttendanceStudentDTO((String) row[0], (String) row[1],
+                    row[2] != null ? ((BigDecimal) row[2]).doubleValue() : 0.0));
         }
         return result;
     }
 
     @Override
-    public List<GroupedAttendanceDTO> getSectionWiseAttendance(String yearNo, Long departmentId, Integer stage, LocalDate startDate, LocalDate endDate, Integer period) {
+    public List<GroupedAttendanceDTO> getSectionWiseAttendance(String yearNo, Long departmentId, Integer stage,
+            LocalDate startDate, LocalDate endDate, Integer period) {
         String sql = "SELECT " +
                 "  sec.section_name, " +
-                "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(*), 0) AS DECIMAL(5,2)) as pct " +
+                "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(*), 0) AS DECIMAL(5,2)) as pct "
+                +
                 "FROM attendance ar " +
                 "JOIN students st ON ar.student_id = st.id " +
                 "JOIN years y ON st.year_id = y.id " +
@@ -236,13 +252,15 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
         List<Object[]> rows = query.getResultList();
         List<GroupedAttendanceDTO> result = new ArrayList<>();
         for (Object[] row : rows) {
-            result.add(new GroupedAttendanceDTO((String) row[0], row[1] != null ? ((BigDecimal) row[1]).doubleValue() : 0.0));
+            result.add(new GroupedAttendanceDTO((String) row[0],
+                    row[1] != null ? ((BigDecimal) row[1]).doubleValue() : 0.0));
         }
         return result;
     }
 
     @Override
-    public List<AttendanceSummaryRowDTO> getSummaryTable(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, Integer period) {
+    public List<AttendanceSummaryRowDTO> getSummaryTable(String yearNo, Long departmentId, Integer stage,
+            Long sectionId, LocalDate startDate, LocalDate endDate, Integer period) {
         String sql = "WITH StudentAgg AS (" +
                 "  SELECT " +
                 "    st.id as student_id, " +
@@ -262,7 +280,8 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
                 "  SUM(CASE WHEN absent_count = 0 THEN 1 ELSE 0 END) as present_only, " +
                 "  SUM(CASE WHEN present_count > 0 AND absent_count > 0 THEN 1 ELSE 0 END) as partial, " +
                 "  SUM(CASE WHEN present_count = 0 THEN 1 ELSE 0 END) as absent_only, " +
-                "  CAST((SUM(present_count) * 100.0) / NULLIF(SUM(present_count + absent_count), 0) AS DECIMAL(5,2)) as pct " +
+                "  CAST((SUM(present_count) * 100.0) / NULLIF(SUM(present_count + absent_count), 0) AS DECIMAL(5,2)) as pct "
+                +
                 "FROM StudentAgg " +
                 "GROUP BY department_name " +
                 "ORDER BY department_name";
@@ -284,7 +303,8 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
     }
 
     @Override
-    public List<AttendanceExportDTO> getExportData(String yearNo, Long departmentId, Integer stage, Long sectionId, LocalDate startDate, LocalDate endDate, Integer period) {
+    public List<AttendanceExportDTO> getExportData(String yearNo, Long departmentId, Integer stage, Long sectionId,
+            LocalDate startDate, LocalDate endDate, Integer period) {
         String sql = "SELECT " +
                 "  st.reg_no, " +
                 "  st.full_name, " +
@@ -308,14 +328,13 @@ public class AttendanceAnalyticsRepositoryCustomImpl implements AttendanceAnalyt
         List<AttendanceExportDTO> result = new ArrayList<>();
         for (Object[] row : rows) {
             result.add(new AttendanceExportDTO(
-                (String) row[0],
-                (String) row[1],
-                (String) row[2],
-                row[3] != null ? (String) row[3] : "",
-                ((java.sql.Date) row[4]).toLocalDate(),
-                ((Number) row[5]).intValue(),
-                (String) row[6]
-            ));
+                    (String) row[0],
+                    (String) row[1],
+                    (String) row[2],
+                    row[3] != null ? (String) row[3] : "",
+                    ((java.sql.Date) row[4]).toLocalDate(),
+                    ((Number) row[5]).intValue(),
+                    (String) row[6]));
         }
         return result;
     }

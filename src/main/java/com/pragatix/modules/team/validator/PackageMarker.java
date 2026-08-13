@@ -1,4 +1,4 @@
-package com.pragatix.modules.team.validator;
+package jjcet.PragatiX.modules.team.validator;
 
 public final class PackageMarker {
 }

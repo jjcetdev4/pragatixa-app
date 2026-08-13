@@ -1,9 +1,9 @@
-package com.pragatix.config;
+package jjcet.PragatiX.config;
 
-import com.pragatix.entity.Student;
-import com.pragatix.entity.Streak;
-import com.pragatix.modules.student.service.XpEngineService;
-import com.pragatix.repository.StreakRepository;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.Streak;
+import jjcet.PragatiX.modules.student.service.XpEngineService;
+import jjcet.PragatiX.repository.StreakRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,11 +16,11 @@ public class XpDecayScheduler {
 
     private final StreakRepository streakRepository;
     private final XpEngineService xpEngineService;
-    private final com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
+    private final jjcet.PragatiX.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver;
 
     public XpDecayScheduler(StreakRepository streakRepository,
             XpEngineService xpEngineService,
-            com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver) {
+            jjcet.PragatiX.modules.academiccalendar.service.AcademicCalendarResolver academicCalendarResolver) {
         this.streakRepository = streakRepository;
         this.xpEngineService = xpEngineService;
         this.academicCalendarResolver = academicCalendarResolver;
@@ -39,8 +39,10 @@ public class XpDecayScheduler {
         List<Streak> streaksToSave = new java.util.ArrayList<>();
 
         for (Streak streak : allStreaks) {
-            com.pragatix.enums.AcademicYear academicYear = com.pragatix.enums.AcademicYear.fromStudent(streak.getStudent());
-            boolean yesterdayWasHoliday = academicCalendarResolver.isHoliday(java.time.LocalDate.now().minusDays(1), academicYear);
+            jjcet.PragatiX.enums.AcademicYear academicYear = jjcet.PragatiX.enums.AcademicYear
+                    .fromStudent(streak.getStudent());
+            boolean yesterdayWasHoliday = academicCalendarResolver.isHoliday(java.time.LocalDate.now().minusDays(1),
+                    academicYear);
 
             if ("ATTENDANCE".equalsIgnoreCase(streak.getStreakType()) && yesterdayWasHoliday) {
                 continue; // Do not break attendance streaks if yesterday was a holiday

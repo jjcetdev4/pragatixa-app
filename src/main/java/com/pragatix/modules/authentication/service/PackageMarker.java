@@ -1,4 +1,4 @@
-package com.pragatix.modules.authentication.service;
+package jjcet.PragatiX.modules.authentication.service;
 
 public final class PackageMarker {
 }

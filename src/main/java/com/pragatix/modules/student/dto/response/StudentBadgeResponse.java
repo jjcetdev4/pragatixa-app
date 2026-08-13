@@ -1,6 +1,6 @@
-package com.pragatix.modules.student.dto.response;
+package jjcet.PragatiX.modules.student.dto.response;
 
-import com.pragatix.entity.StudentBadge;
+import jjcet.PragatiX.entity.StudentBadge;
 import java.time.LocalDateTime;
 
 public class StudentBadgeResponse {

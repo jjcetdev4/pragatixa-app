@@ -1,6 +1,6 @@
-package com.pragatix.repository;
+package jjcet.PragatiX.repository;
 
-import com.pragatix.entity.PenaltyRequest;
+import jjcet.PragatiX.entity.PenaltyRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,10 +22,10 @@ public interface PenaltyRequestRepository extends JpaRepository<PenaltyRequest, 
     int deleteByActivityId(@Param("activityId") Long activityId);
 
     @Query("SELECT COUNT(p) FROM PenaltyRequest p WHERE p.status = 'PENDING' AND (p.cc.id = :ccId OR (p.student.department.id = :departmentId AND p.student.section.id = :sectionId))")
-    long countPendingForCc(@Param("ccId") Long ccId, @Param("departmentId") Long departmentId, @Param("sectionId") Long sectionId);
+    long countPendingForCc(@Param("ccId") Long ccId, @Param("departmentId") Long departmentId,
+            @Param("sectionId") Long sectionId);
 
     @Query("SELECT COUNT(p) FROM PenaltyRequest p WHERE p.status = 'PENDING' AND p.cc.id = :ccId")
     long countPendingByCcId(@Param("ccId") Long ccId);
 
 }
-

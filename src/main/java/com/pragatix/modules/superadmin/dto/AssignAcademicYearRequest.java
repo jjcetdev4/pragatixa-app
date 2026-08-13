@@ -1,6 +1,6 @@
-package com.pragatix.modules.superadmin.dto;
+package jjcet.PragatiX.modules.superadmin.dto;
 
-import com.pragatix.enums.AcademicYear;
+import jjcet.PragatiX.enums.AcademicYear;
 import jakarta.validation.constraints.NotNull;
 
 public class AssignAcademicYearRequest {

@@ -1,12 +1,12 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.entity.StageTeam;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.Team;
-import com.pragatix.repository.StageTeamRepository;
-import com.pragatix.repository.TeamRemovalRequestRepository;
-import com.pragatix.repository.TeamRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.StageTeam;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.Team;
+import jjcet.PragatiX.repository.StageTeamRepository;
+import jjcet.PragatiX.repository.TeamRemovalRequestRepository;
+import jjcet.PragatiX.repository.TeamRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -65,7 +65,8 @@ public class TeamCleanupService {
                     entityManager.createNativeQuery("DELETE FROM team_members WHERE team_id = :tid")
                             .setParameter("tid", team.getId())
                             .executeUpdate();
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
 
             teamRepository.delete(team);
@@ -76,4 +77,3 @@ public class TeamCleanupService {
         return false;
     }
 }
-

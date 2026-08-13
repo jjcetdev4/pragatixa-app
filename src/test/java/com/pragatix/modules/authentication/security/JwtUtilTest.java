@@ -1,4 +1,4 @@
-package com.pragatix.modules.authentication.security;
+package jjcet.PragatiX.modules.authentication.security;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

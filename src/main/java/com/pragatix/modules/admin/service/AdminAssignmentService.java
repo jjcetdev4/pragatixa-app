@@ -1,15 +1,15 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.entity.User;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.ActivityTemporaryAssignment;
-import com.pragatix.entity.AssignmentScope;
-import com.pragatix.entity.ActivitySubgroup;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.repository.ActivityTemporaryAssignmentRepository;
-import com.pragatix.modules.activity.repository.ActivitySubgroupRepository;
-import com.pragatix.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.ActivityTemporaryAssignment;
+import jjcet.PragatiX.entity.AssignmentScope;
+import jjcet.PragatiX.entity.ActivitySubgroup;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.repository.ActivityTemporaryAssignmentRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivitySubgroupRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import org.slf4j.Logger;
@@ -30,9 +30,9 @@ public class AdminAssignmentService {
     private final ActivityRepository activityRepository;
 
     public AdminAssignmentService(ActivityAssignmentRepository activityAssignmentRepository,
-                                  ActivityTemporaryAssignmentRepository temporaryAssignmentRepository,
-                                  ActivitySubgroupRepository activitySubgroupRepository,
-                                  ActivityRepository activityRepository) {
+            ActivityTemporaryAssignmentRepository temporaryAssignmentRepository,
+            ActivitySubgroupRepository activitySubgroupRepository,
+            ActivityRepository activityRepository) {
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.temporaryAssignmentRepository = temporaryAssignmentRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
@@ -48,11 +48,11 @@ public class AdminAssignmentService {
             boolean isValid = true;
             String storedSubgroup = activity.getSubgroup() != null ? activity.getSubgroup().getName() : "null";
             String storedCategory = activity.getSubgroup() != null ? activity.getSubgroup().getCategory() : "null";
-            
+
             if (activity.getSubgroup() == null || !"Individual".equalsIgnoreCase(activity.getSubgroup().getName())) {
                 isValid = false;
             }
-            
+
             log.info("================================================");
             log.info("ATTENDANCE ACTIVITY LOAD");
             log.info("Activity ID : {}", activity.getId());
@@ -64,12 +64,15 @@ public class AdminAssignmentService {
             log.info("Mandatory : {}", activity.isMandatory());
             log.info("Dropdown Status : {}", isValid ? "VALID" : "INVALID");
             log.info("================================================");
-            
+
             if (!isValid) {
-                log.warn("WARNING Invalid dropdown value detected. Dropdown : Subgroup Stored Value : {} Resolved To : Individual Reason : Referenced value no longer exists or is incorrect.", storedSubgroup);
-                
+                log.warn(
+                        "WARNING Invalid dropdown value detected. Dropdown : Subgroup Stored Value : {} Resolved To : Individual Reason : Referenced value no longer exists or is incorrect.",
+                        storedSubgroup);
+
                 if (activity.getStage() != null) {
-                    ActivitySubgroup individualSubgroup = activitySubgroupRepository.findByStageIdAndNameIgnoreCase(activity.getStage().getId(), "Individual").orElse(null);
+                    ActivitySubgroup individualSubgroup = activitySubgroupRepository
+                            .findByStageIdAndNameIgnoreCase(activity.getStage().getId(), "Individual").orElse(null);
                     if (individualSubgroup != null) {
                         activity.setSubgroup(individualSubgroup);
                         activity.setModeType("Individual");
@@ -117,8 +120,10 @@ public class AdminAssignmentService {
                 map.put("username", temp.getTemporaryTeacher().getUsername());
                 map.put("isTemporary", true);
                 map.put("assignmentType", "TEMPORARY");
-                map.put("originalTeacherId", temp.getOriginalTeacher() != null ? temp.getOriginalTeacher().getId() : null);
-                map.put("originalTeacherName", temp.getOriginalTeacher() != null ? temp.getOriginalTeacher().getFullName() : null);
+                map.put("originalTeacherId",
+                        temp.getOriginalTeacher() != null ? temp.getOriginalTeacher().getId() : null);
+                map.put("originalTeacherName",
+                        temp.getOriginalTeacher() != null ? temp.getOriginalTeacher().getFullName() : null);
             } else if (aa.getTeacher() != null) {
                 map.put("teacherId", aa.getTeacher().getId());
                 map.put("teacherName", aa.getTeacher().getFullName());
@@ -145,7 +150,10 @@ public class AdminAssignmentService {
     }
 
     public boolean isAssignmentMatching(ActivityAssignment a, User u) {
-        if (u.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN") || r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN") || r.getName().equalsIgnoreCase("ROLE_SUPERADMIN"))) {
+        if (u.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN")
+                        || r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN")
+                        || r.getName().equalsIgnoreCase("ROLE_SUPERADMIN"))) {
             return true;
         }
 

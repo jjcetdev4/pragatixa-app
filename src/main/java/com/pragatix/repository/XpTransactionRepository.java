@@ -1,6 +1,6 @@
-package com.pragatix.repository;
+package jjcet.PragatiX.repository;
 
-import com.pragatix.entity.XpTransaction;
+import jjcet.PragatiX.entity.XpTransaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,9 +12,9 @@ public interface XpTransactionRepository extends JpaRepository<XpTransaction, Lo
     void deleteByActivityId(Long activityId);
 
     List<XpTransaction> findByStudentRegNo(String regNo);
-    
+
     List<XpTransaction> findByStudentIdAndActivityId(Long studentId, Long activityId);
-    
+
     List<XpTransaction> findByStudentRegNoAndStage(String regNo, Integer stage);
 
     List<XpTransaction> findByStudentIdAndStageAndStatus(Long studentId, Integer stage, String status);

@@ -1,10 +1,10 @@
-package com.pragatix.modules.authentication.security;
+package jjcet.PragatiX.modules.authentication.security;
 
-import com.pragatix.entity.Student;
-import com.pragatix.entity.User;
-import com.pragatix.modules.student.exception.StudentNotFoundException;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.student.exception.StudentNotFoundException;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;

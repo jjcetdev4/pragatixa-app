@@ -1,7 +1,7 @@
-package com.pragatix.modules.notification.service;
+package jjcet.PragatiX.modules.notification.service;
 
-import com.pragatix.modules.notification.config.TwilioConfig;
-import com.pragatix.modules.notification.exception.NotificationException;
+import jjcet.PragatiX.modules.notification.config.TwilioConfig;
+import jjcet.PragatiX.modules.notification.exception.NotificationException;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import org.slf4j.Logger;

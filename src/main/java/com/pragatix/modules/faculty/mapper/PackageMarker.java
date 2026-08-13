@@ -1,4 +1,4 @@
-package com.pragatix.modules.faculty.mapper;
+package jjcet.PragatiX.modules.faculty.mapper;
 
 public final class PackageMarker {
 }

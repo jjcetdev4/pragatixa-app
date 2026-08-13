@@ -1,6 +1,6 @@
-package com.pragatix.modules.attendance.repository;
+package jjcet.PragatiX.modules.attendance.repository;
 
-import com.pragatix.entity.AttendanceSession;
+import jjcet.PragatiX.entity.AttendanceSession;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

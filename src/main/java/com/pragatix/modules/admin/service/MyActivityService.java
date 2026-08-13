@@ -1,12 +1,12 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.User;
-import com.pragatix.modules.activity.dto.response.MyActivityResponse;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.activity.dto.response.MyActivityResponse;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -47,7 +47,8 @@ public class MyActivityService {
         List<ActivityAssignment> allAssignments = activityAssignmentRepository.findAll();
 
         List<ActivityAssignment> matchingAssignments = allAssignments.stream()
-                .filter(a -> a.getActivity() != null && !Boolean.TRUE.equals(a.getActivity().getAttendanceEngineEnabled()))
+                .filter(a -> a.getActivity() != null
+                        && !Boolean.TRUE.equals(a.getActivity().getAttendanceEngineEnabled()))
                 .filter(a -> adminAssignmentService.isAssignmentMatching(a, currentUser))
                 .collect(Collectors.toList());
 

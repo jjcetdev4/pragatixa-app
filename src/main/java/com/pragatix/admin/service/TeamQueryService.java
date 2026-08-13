@@ -1,11 +1,11 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.TeamResponse;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.Team;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.TeamRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.TeamResponse;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.Team;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.TeamRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -24,18 +24,18 @@ public class TeamQueryService {
     private final StudentRepository studentRepository;
     private final TeamMapper mapper;
 
-    private final com.pragatix.modules.authentication.repository.UserRepository userRepository;
+    private final jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository;
     private final TeamValidationService validationService;
     private final TeamCleanupService teamCleanupService;
-    private final com.pragatix.modules.student.service.StudentLevelService studentLevelService;
-    private final com.pragatix.repository.StageTeamRepository stageTeamRepository;
+    private final jjcet.PragatiX.modules.student.service.StudentLevelService studentLevelService;
+    private final jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository;
 
     public TeamQueryService(TeamRepository teamRepository, StudentRepository studentRepository, TeamMapper mapper,
-            com.pragatix.modules.authentication.repository.UserRepository userRepository,
+            jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository,
             TeamValidationService validationService,
             TeamCleanupService teamCleanupService,
-            com.pragatix.modules.student.service.StudentLevelService studentLevelService,
-            com.pragatix.repository.StageTeamRepository stageTeamRepository) {
+            jjcet.PragatiX.modules.student.service.StudentLevelService studentLevelService,
+            jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository) {
         this.teamRepository = teamRepository;
         this.studentRepository = studentRepository;
         this.mapper = mapper;
@@ -46,10 +46,11 @@ public class TeamQueryService {
         this.stageTeamRepository = stageTeamRepository;
     }
 
-    public ResponseEntity<ApiResponse<List<TeamResponse>>> getAllTeams(String academicYear, Long departmentId, Long sectionId) {
+    public ResponseEntity<ApiResponse<List<TeamResponse>>> getAllTeams(String academicYear, Long departmentId,
+            Long sectionId) {
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
-        com.pragatix.entity.User currentUser = userRepository.findByUsername(username).orElse(null);
+        jjcet.PragatiX.entity.User currentUser = userRepository.findByUsername(username).orElse(null);
         if (currentUser == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
 
@@ -79,15 +80,16 @@ public class TeamQueryService {
         return ResponseEntity.ok(ApiResponse.ok("Team details retrieved successfully", mapper.toTeamResponse(team)));
     }
 
-    public ResponseEntity<ApiResponse<com.pragatix.dto.StudentTeamDetailsResponse>> getMyTeamDetails(Student student) {
+    public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.StudentTeamDetailsResponse>> getMyTeamDetails(
+            Student student) {
         Team team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
         if (team == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("You do not belong to any team"));
         }
 
-        List<com.pragatix.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
+        List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
 
-        com.pragatix.dto.StudentTeamDetailsResponse response = new com.pragatix.dto.StudentTeamDetailsResponse();
+        jjcet.PragatiX.dto.StudentTeamDetailsResponse response = new jjcet.PragatiX.dto.StudentTeamDetailsResponse();
         response.setTeamId(team.getId());
         response.setTeamName(team.getName());
         response.setDepartment(team.getDepartment() != null ? team.getDepartment().getName() : "N/A");
@@ -109,7 +111,7 @@ public class TeamQueryService {
         if (team.getMembers() != null)
             uniqueMembers.addAll(team.getMembers());
 
-        for (com.pragatix.entity.StageTeam st : stageTeams) {
+        for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
             if (st.getViceCaptain() != null) {
                 uniqueMembers.add(st.getViceCaptain());
                 if ("N/A".equals(viceCaptainName)) {
@@ -122,18 +124,18 @@ public class TeamQueryService {
 
         response.setCurrentMemberCount(allMembers.size());
 
-        List<com.pragatix.dto.TeamMemberRankDto> rankDtos = new java.util.ArrayList<>();
+        List<jjcet.PragatiX.dto.TeamMemberRankDto> rankDtos = new java.util.ArrayList<>();
         int totalTeamXp = 0;
         int maxStage = 1;
 
         for (Student m : allMembers) {
-            com.pragatix.modules.student.dto.response.StudentProgressionDto progression = studentLevelService
+            jjcet.PragatiX.modules.student.dto.response.StudentProgressionDto progression = studentLevelService
                     .getStudentProgression(m.getRegNo());
             int xp = progression.getTotalXp();
             int stage = 1;
             String currentLevel = "Explorer";
             if (progression.getUnlockedLevels() != null && !progression.getUnlockedLevels().isEmpty()) {
-                com.pragatix.modules.student.dto.response.StudentProgressionDto.LevelDto lastLevel = progression
+                jjcet.PragatiX.modules.student.dto.response.StudentProgressionDto.LevelDto lastLevel = progression
                         .getUnlockedLevels().get(progression.getUnlockedLevels().size() - 1);
                 stage = lastLevel.getStage();
                 currentLevel = lastLevel.getTitle() != null ? lastLevel.getTitle() : "Explorer";
@@ -148,7 +150,7 @@ public class TeamQueryService {
             } else if (team.getViceCaptain() != null && team.getViceCaptain().getRegNo().equals(m.getRegNo())) {
                 role = "VICE_CAPTAIN";
             } else {
-                for (com.pragatix.entity.StageTeam st : stageTeams) {
+                for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
                     if (st.getCaptain() != null && st.getCaptain().getId().equals(m.getId())) {
                         role = "CAPTAIN";
                         break;
@@ -167,7 +169,7 @@ public class TeamQueryService {
                 currentRole = role;
             }
 
-            rankDtos.add(new com.pragatix.dto.TeamMemberRankDto(
+            rankDtos.add(new jjcet.PragatiX.dto.TeamMemberRankDto(
                     null, // Profile Image not explicitly stored in basic entity often, can be null
                     m.getFullName(),
                     m.getRegNo(),
@@ -187,7 +189,7 @@ public class TeamQueryService {
 
         // Assign rank inside team
         int currentRank = 1;
-        for (com.pragatix.dto.TeamMemberRankDto dto : rankDtos) {
+        for (jjcet.PragatiX.dto.TeamMemberRankDto dto : rankDtos) {
             dto.setRankInsideTeam(currentRank++);
         }
 
@@ -206,7 +208,7 @@ public class TeamQueryService {
 
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
-        com.pragatix.entity.User currentUser = userRepository.findByUsername(username).orElse(null);
+        jjcet.PragatiX.entity.User currentUser = userRepository.findByUsername(username).orElse(null);
 
         if (currentUser != null) {
             try {

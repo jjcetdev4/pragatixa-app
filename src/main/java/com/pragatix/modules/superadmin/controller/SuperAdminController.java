@@ -1,9 +1,9 @@
-package com.pragatix.modules.superadmin.controller;
+package jjcet.PragatiX.modules.superadmin.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.superadmin.dto.YearAdminResponse;
-import com.pragatix.modules.superadmin.dto.AssignAcademicYearRequest;
-import com.pragatix.modules.superadmin.service.SuperAdminService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.superadmin.dto.YearAdminResponse;
+import jjcet.PragatiX.modules.superadmin.dto.AssignAcademicYearRequest;
+import jjcet.PragatiX.modules.superadmin.service.SuperAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,7 +37,7 @@ public class SuperAdminController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "Create new Year Admin")
     public ResponseEntity<ApiResponse<YearAdminResponse>> createYearAdmin(
-            @org.springframework.web.bind.annotation.RequestBody com.pragatix.modules.superadmin.dto.CreateYearAdminRequest request) {
+            @org.springframework.web.bind.annotation.RequestBody jjcet.PragatiX.modules.superadmin.dto.CreateYearAdminRequest request) {
         return superAdminService.createYearAdmin(request);
     }
 
@@ -46,7 +46,7 @@ public class SuperAdminController {
     @Operation(summary = "Update Year Admin details")
     public ResponseEntity<ApiResponse<YearAdminResponse>> updateYearAdmin(
             @PathVariable Long id,
-            @RequestBody com.pragatix.modules.superadmin.dto.UpdateYearAdminRequest request) {
+            @RequestBody jjcet.PragatiX.modules.superadmin.dto.UpdateYearAdminRequest request) {
         return superAdminService.updateYearAdmin(id, request);
     }
 

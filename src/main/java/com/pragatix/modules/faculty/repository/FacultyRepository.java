@@ -1,6 +1,6 @@
-package com.pragatix.modules.faculty.repository;
+package jjcet.PragatiX.modules.faculty.repository;
 
-import com.pragatix.entity.Faculty;
+import jjcet.PragatiX.entity.Faculty;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

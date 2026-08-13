@@ -1,9 +1,9 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.activity.dto.request.ActivityStageRequest;
-import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
-import com.pragatix.modules.activity.service.ActivityStageService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.activity.dto.request.ActivityStageRequest;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityStageResponse;
+import jjcet.PragatiX.modules.activity.service.ActivityStageService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,26 +16,26 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
-import com.pragatix.modules.activity.dto.request.EvaluatePromotionsRequest;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.repository.AcademicYearRepository;
+import jjcet.PragatiX.modules.activity.dto.request.EvaluatePromotionsRequest;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.repository.AcademicYearRepository;
 
 @Service
 public class AdminStageService {
     private static final Logger log = LoggerFactory.getLogger(AdminStageService.class);
 
     private final ActivityStageService activityStageService;
-    private final com.pragatix.modules.student.repository.StudentRepository studentRepository;
-    private final com.pragatix.modules.student.service.XpEngineService xpEngineService;
+    private final jjcet.PragatiX.modules.student.repository.StudentRepository studentRepository;
+    private final jjcet.PragatiX.modules.student.service.XpEngineService xpEngineService;
     private final ActivityStageRepository activityStageRepository;
     private final AcademicYearRepository academicYearRepository;
 
     public AdminStageService(ActivityStageService activityStageService,
-            com.pragatix.modules.student.repository.StudentRepository studentRepository,
-            com.pragatix.modules.student.service.XpEngineService xpEngineService,
+            jjcet.PragatiX.modules.student.repository.StudentRepository studentRepository,
+            jjcet.PragatiX.modules.student.service.XpEngineService xpEngineService,
             ActivityStageRepository activityStageRepository,
             AcademicYearRepository academicYearRepository) {
         this.activityStageService = activityStageService;
@@ -68,9 +68,9 @@ public class AdminStageService {
                     .body(ApiResponse.error("Academic year not found"));
         }
 
-        List<com.pragatix.entity.Student> activeStudents = studentRepository.findByActiveTrue();
+        List<jjcet.PragatiX.entity.Student> activeStudents = studentRepository.findByActiveTrue();
         int evaluated = 0;
-        for (com.pragatix.entity.Student student : activeStudents) {
+        for (jjcet.PragatiX.entity.Student student : activeStudents) {
             xpEngineService.evaluateStagePromotion(student);
             evaluated++;
         }
@@ -79,7 +79,7 @@ public class AdminStageService {
     }
 
     public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages(
-            com.pragatix.enums.AcademicYear academicYear) {
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
         List<ActivityStageResponse> stages = activityStageService.getAllStages(academicYear);
         return ResponseEntity.ok(ApiResponse.ok(stages));
     }

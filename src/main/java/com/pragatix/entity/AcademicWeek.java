@@ -1,4 +1,4 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -25,14 +25,43 @@ public class AcademicWeek {
     private LocalDate endDate;
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public AcademicMonth getAcademicMonth() { return academicMonth; }
-    public void setAcademicMonth(AcademicMonth academicMonth) { this.academicMonth = academicMonth; }
-    public Integer getWeekNumber() { return weekNumber; }
-    public void setWeekNumber(Integer weekNumber) { this.weekNumber = weekNumber; }
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
-    public LocalDate getEndDate() { return endDate; }
-    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public AcademicMonth getAcademicMonth() {
+        return academicMonth;
+    }
+
+    public void setAcademicMonth(AcademicMonth academicMonth) {
+        this.academicMonth = academicMonth;
+    }
+
+    public Integer getWeekNumber() {
+        return weekNumber;
+    }
+
+    public void setWeekNumber(Integer weekNumber) {
+        this.weekNumber = weekNumber;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
 }

@@ -1,17 +1,17 @@
-package com.pragatix.modules.academiccalendar.service;
+package jjcet.PragatiX.modules.academiccalendar.service;
 
-import com.pragatix.entity.AcademicHoliday;
-import com.pragatix.entity.AcademicMonth;
-import com.pragatix.entity.AcademicWeek;
-import com.pragatix.entity.AlternateWorkingDay;
-import com.pragatix.modules.academiccalendar.dto.AcademicHolidayDto;
-import com.pragatix.modules.academiccalendar.dto.AcademicMonthDto;
-import com.pragatix.modules.academiccalendar.dto.AcademicWeekDto;
-import com.pragatix.modules.academiccalendar.dto.AlternateWorkingDayDto;
-import com.pragatix.modules.academiccalendar.repository.AcademicHolidayRepository;
-import com.pragatix.modules.academiccalendar.repository.AcademicMonthRepository;
-import com.pragatix.modules.academiccalendar.repository.AcademicWeekRepository;
-import com.pragatix.modules.academiccalendar.repository.AlternateWorkingDayRepository;
+import jjcet.PragatiX.entity.AcademicHoliday;
+import jjcet.PragatiX.entity.AcademicMonth;
+import jjcet.PragatiX.entity.AcademicWeek;
+import jjcet.PragatiX.entity.AlternateWorkingDay;
+import jjcet.PragatiX.modules.academiccalendar.dto.AcademicHolidayDto;
+import jjcet.PragatiX.modules.academiccalendar.dto.AcademicMonthDto;
+import jjcet.PragatiX.modules.academiccalendar.dto.AcademicWeekDto;
+import jjcet.PragatiX.modules.academiccalendar.dto.AlternateWorkingDayDto;
+import jjcet.PragatiX.modules.academiccalendar.repository.AcademicHolidayRepository;
+import jjcet.PragatiX.modules.academiccalendar.repository.AcademicMonthRepository;
+import jjcet.PragatiX.modules.academiccalendar.repository.AcademicWeekRepository;
+import jjcet.PragatiX.modules.academiccalendar.repository.AlternateWorkingDayRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,14 +36,16 @@ public class AcademicCalendarService {
 
     // --- Academic Month ---
 
-    public AcademicMonthDto getOrCreateMonth(Integer month, Integer year, com.pragatix.enums.AcademicYear academicYear) {
-        AcademicMonth academicMonth = monthRepository.findByMonthAndYearAndAcademicYearEnum(month, year, academicYear).orElseGet(() -> {
-            AcademicMonth newMonth = new AcademicMonth();
-            newMonth.setMonth(month);
-            newMonth.setYear(year);
-            newMonth.setAcademicYearEnum(academicYear);
-            return monthRepository.save(newMonth);
-        });
+    public AcademicMonthDto getOrCreateMonth(Integer month, Integer year,
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
+        AcademicMonth academicMonth = monthRepository.findByMonthAndYearAndAcademicYearEnum(month, year, academicYear)
+                .orElseGet(() -> {
+                    AcademicMonth newMonth = new AcademicMonth();
+                    newMonth.setMonth(month);
+                    newMonth.setYear(year);
+                    newMonth.setAcademicYearEnum(academicYear);
+                    return monthRepository.save(newMonth);
+                });
         return convertToDto(academicMonth);
     }
 
@@ -141,7 +143,8 @@ public class AcademicCalendarService {
         boolean isAwd = alternateWorkingDayRepository.findAll().stream()
                 .anyMatch(a -> a.getEffectiveDate().equals(dto.getHolidayDate()));
         if (isAwd) {
-            throw new IllegalArgumentException("This date is already configured as an Alternate Working Day. Remove it first before marking this date as a Holiday.");
+            throw new IllegalArgumentException(
+                    "This date is already configured as an Alternate Working Day. Remove it first before marking this date as a Holiday.");
         }
 
         AcademicHoliday holiday = new AcademicHoliday();
@@ -160,10 +163,12 @@ public class AcademicCalendarService {
         }
 
         boolean isAwd = alternateWorkingDayRepository.findAll().stream()
-                .filter(a -> !a.getId().equals(id)) // not needed strictly since they are different entities, but good for safety
+                .filter(a -> !a.getId().equals(id)) // not needed strictly since they are different entities, but good
+                                                    // for safety
                 .anyMatch(a -> a.getEffectiveDate().equals(dto.getHolidayDate()));
         if (isAwd) {
-            throw new IllegalArgumentException("This date is already configured as an Alternate Working Day. Remove it first before marking this date as a Holiday.");
+            throw new IllegalArgumentException(
+                    "This date is already configured as an Alternate Working Day. Remove it first before marking this date as a Holiday.");
         }
 
         holiday.setHolidayName(dto.getHolidayName());
@@ -199,7 +204,8 @@ public class AcademicCalendarService {
         boolean isHoliday = holidayRepository.findAll().stream()
                 .anyMatch(h -> h.getHolidayDate().equals(dto.getEffectiveDate()));
         if (isHoliday) {
-            throw new IllegalArgumentException("This date is already configured as a Holiday. Remove the Holiday first before creating an Alternate Working Day.");
+            throw new IllegalArgumentException(
+                    "This date is already configured as a Holiday. Remove the Holiday first before creating an Alternate Working Day.");
         }
 
         AlternateWorkingDay awd = new AlternateWorkingDay();
@@ -208,7 +214,7 @@ public class AcademicCalendarService {
         awd.setOriginalHolidayDay(dto.getOriginalHolidayDay());
         awd.setWorkingDay(dto.getWorkingDay());
         awd.setReason(dto.getReason());
-        
+
         return convertToDto(alternateWorkingDayRepository.save(awd));
     }
 
@@ -219,14 +225,15 @@ public class AcademicCalendarService {
         boolean isHoliday = holidayRepository.findAll().stream()
                 .anyMatch(h -> h.getHolidayDate().equals(dto.getEffectiveDate()));
         if (isHoliday) {
-            throw new IllegalArgumentException("This date is already configured as a Holiday. Remove the Holiday first before creating an Alternate Working Day.");
+            throw new IllegalArgumentException(
+                    "This date is already configured as a Holiday. Remove the Holiday first before creating an Alternate Working Day.");
         }
 
         awd.setEffectiveDate(dto.getEffectiveDate());
         awd.setOriginalHolidayDay(dto.getOriginalHolidayDay());
         awd.setWorkingDay(dto.getWorkingDay());
         awd.setReason(dto.getReason());
-        
+
         return convertToDto(alternateWorkingDayRepository.save(awd));
     }
 

@@ -1,4 +1,4 @@
-package com.pragatix;
+package jjcet.PragatiX;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

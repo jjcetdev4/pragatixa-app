@@ -1,11 +1,11 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.Team;
-import com.pragatix.repository.TeamRepository;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.Team;
+import jjcet.PragatiX.repository.TeamRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +19,12 @@ public class CaptainSelectionService {
     private final TeamRepository teamRepository;
     private final StudentRepository studentRepository;
     private final ActivityStageRepository activityStageRepository;
-    private final com.pragatix.admin.service.LeadershipSyncService leadershipSyncService;
+    private final jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService;
 
     public CaptainSelectionService(TeamRepository teamRepository,
             StudentRepository studentRepository,
             ActivityStageRepository activityStageRepository,
-            com.pragatix.admin.service.LeadershipSyncService leadershipSyncService) {
+            jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService) {
         this.teamRepository = teamRepository;
         this.studentRepository = studentRepository;
         this.activityStageRepository = activityStageRepository;
@@ -63,7 +63,8 @@ public class CaptainSelectionService {
         Student currentCaptain = team.getCaptain();
         Student currentViceCaptain = team.getViceCaptain();
 
-        // 1. Remove current Captain/ViceCaptain if they are no longer eligible members of this team
+        // 1. Remove current Captain/ViceCaptain if they are no longer eligible members
+        // of this team
         if (currentCaptain != null && !eligibleMembers.contains(currentCaptain)) {
             currentCaptain = null;
         }
@@ -77,7 +78,8 @@ public class CaptainSelectionService {
             currentViceCaptain = null;
         }
 
-        // 3. Sort by 1. Highest XP 2. Earliest timestamp (simulated by lowest ID if timestamp not available)
+        // 3. Sort by 1. Highest XP 2. Earliest timestamp (simulated by lowest ID if
+        // timestamp not available)
         eligibleMembers.sort(Comparator.comparingInt(Student::getTotalXp).reversed()
                 .thenComparing(Student::getId));
 
@@ -88,7 +90,7 @@ public class CaptainSelectionService {
             } else if (currentViceCaptain == null && !member.getId().equals(currentCaptain.getId())) {
                 currentViceCaptain = member;
             }
-            
+
             if (currentCaptain != null && currentViceCaptain != null) {
                 break;
             }
@@ -96,9 +98,11 @@ public class CaptainSelectionService {
 
         leadershipSyncService.syncLeadership(team, currentCaptain, currentViceCaptain);
 
-        System.out.println("CAPTAIN SELECTION: Evaluated Captain for team: " + team.getName() + " -> " + (currentCaptain != null ? currentCaptain.getRegNo() : "None"));
+        System.out.println("CAPTAIN SELECTION: Evaluated Captain for team: " + team.getName() + " -> "
+                + (currentCaptain != null ? currentCaptain.getRegNo() : "None"));
         if (currentViceCaptain != null) {
-            System.out.println("CAPTAIN SELECTION: Evaluated Vice Captain for team: " + team.getName() + " -> " + currentViceCaptain.getRegNo());
+            System.out.println("CAPTAIN SELECTION: Evaluated Vice Captain for team: " + team.getName() + " -> "
+                    + currentViceCaptain.getRegNo());
         }
     }
 }

@@ -1,6 +1,6 @@
-package com.pragatix.modules.student.repository;
+package jjcet.PragatiX.modules.student.repository;
 
-import com.pragatix.entity.StudentBadge;
+import jjcet.PragatiX.entity.StudentBadge;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;

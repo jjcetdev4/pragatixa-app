@@ -1,15 +1,15 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.dto.*;
-import com.pragatix.modules.activity.dto.request.*;
-import com.pragatix.modules.activity.dto.response.*;
-import com.pragatix.modules.student.dto.request.*;
-import com.pragatix.modules.student.dto.response.*;
-import com.pragatix.entity.*;
-import com.pragatix.repository.*;
-import com.pragatix.modules.activity.repository.*;
-import com.pragatix.modules.faculty.repository.*;
-import com.pragatix.modules.student.repository.*;
+import jjcet.PragatiX.dto.*;
+import jjcet.PragatiX.modules.activity.dto.request.*;
+import jjcet.PragatiX.modules.activity.dto.response.*;
+import jjcet.PragatiX.modules.student.dto.request.*;
+import jjcet.PragatiX.modules.student.dto.response.*;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.modules.activity.repository.*;
+import jjcet.PragatiX.modules.faculty.repository.*;
+import jjcet.PragatiX.modules.student.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -20,9 +20,9 @@ import java.util.List;
 public class StudentMapper {
     private static final Logger log = LoggerFactory.getLogger(StudentMapper.class);
 
-    private final com.pragatix.repository.StageTeamRepository stageTeamRepository;
+    private final jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository;
 
-    public StudentMapper(com.pragatix.repository.StageTeamRepository stageTeamRepository) {
+    public StudentMapper(jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository) {
         this.stageTeamRepository = stageTeamRepository;
     }
 

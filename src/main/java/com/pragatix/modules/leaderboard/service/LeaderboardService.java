@@ -1,15 +1,15 @@
-package com.pragatix.modules.leaderboard.service;
+package jjcet.PragatiX.modules.leaderboard.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Section;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.User;
-import com.pragatix.entity.Year;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.dto.response.StudentResponse;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.student.service.StudentMapper;
-import com.pragatix.repository.YearRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Section;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.entity.Year;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.student.service.StudentMapper;
+import jjcet.PragatiX.repository.YearRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,15 +17,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.pragatix.repository.DepartmentRepository;
-import com.pragatix.repository.SectionRepository;
-import com.pragatix.modules.leaderboard.dto.response.FilterOptionsDto;
-import com.pragatix.entity.Department;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.repository.SectionRepository;
+import jjcet.PragatiX.modules.leaderboard.dto.response.FilterOptionsDto;
+import jjcet.PragatiX.entity.Department;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
-import com.pragatix.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
 
 @Service
 @Transactional(readOnly = true)

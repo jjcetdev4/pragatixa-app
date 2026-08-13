@@ -1,9 +1,9 @@
-package com.pragatix.modules.hod;
+package jjcet.PragatiX.modules.hod;
 
-import com.pragatix.entity.User;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.hod.dto.HodDashboardResponse;
-import com.pragatix.modules.hod.service.HodAnalyticsService;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.hod.dto.HodDashboardResponse;
+import jjcet.PragatiX.modules.hod.service.HodAnalyticsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,14 +39,13 @@ public class HodAnalyticsServiceTest {
     void setUp() {
         User user = userRepository.findByUsername("sharu").orElse(null);
         if (user != null) {
-            org.springframework.security.core.userdetails.UserDetails userDetails =
-                    new org.springframework.security.core.userdetails.User(
-                            user.getUsername(),
-                            user.getPassword(),
-                            Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_TEACHER"))
-                    );
-            UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            org.springframework.security.core.userdetails.UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                    user.getUsername(),
+                    user.getPassword(),
+                    Collections.singletonList(
+                            new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_TEACHER")));
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null,
+                    userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
     }
@@ -87,7 +86,7 @@ public class HodAnalyticsServiceTest {
     @Test
     void testDashboardEndpointHttp200() throws Exception {
         mockMvc.perform(get("/api/v1/hod/analytics/dashboard")
-                        .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.departmentInfo.name").value("Cyber Security"))

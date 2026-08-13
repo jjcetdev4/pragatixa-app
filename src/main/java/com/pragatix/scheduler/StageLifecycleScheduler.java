@@ -1,12 +1,12 @@
-package com.pragatix.scheduler;
+package jjcet.PragatiX.scheduler;
 
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.enums.StageStatus;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.entity.Notification;
-import com.pragatix.entity.Student;
-import com.pragatix.repository.NotificationRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.enums.StageStatus;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.entity.Notification;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.repository.NotificationRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;

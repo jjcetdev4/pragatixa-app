@@ -1,4 +1,4 @@
-package com.pragatix.modules.student.dto.request;
+package jjcet.PragatiX.modules.student.dto.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

@@ -1,4 +1,4 @@
-package com.pragatix.dto;
+package jjcet.PragatiX.dto;
 
 public class TeamMemberRankDto {
     private String profileImage;

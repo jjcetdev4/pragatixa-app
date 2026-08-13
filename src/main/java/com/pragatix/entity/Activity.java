@@ -1,4 +1,4 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -142,7 +142,7 @@ public class Activity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "academic_year")
-    private com.pragatix.enums.AcademicYear academicYear;
+    private jjcet.PragatiX.enums.AcademicYear academicYear;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "subgroup_id", nullable = false)
@@ -196,34 +196,39 @@ public class Activity {
     public void setAssignmentSummary(List<Map<String, Object>> assignmentSummary) {
         this.assignmentSummary = assignmentSummary;
     }
-    
+
     // XP Eligibility Helpers for Promotion Validation Engine
     //
     // BUSINESS RULE (corrected):
-    //   XP bucket is determined EXCLUSIVELY by the Activity Subgroup category.
-    //   Mode (Individual / Group) determines HOW the activity is performed,
-    //   NOT which XP bucket receives the points.
+    // XP bucket is determined EXCLUSIVELY by the Activity Subgroup category.
+    // Mode (Individual / Group) determines HOW the activity is performed,
+    // NOT which XP bucket receives the points.
     //
-    //   Must (Individual) / Must (Group)  →  Must XP ONLY
-    //   Individual                        →  Individual XP ONLY
-    //   Group                             →  Group XP ONLY
+    // Must (Individual) / Must (Group) → Must XP ONLY
+    // Individual → Individual XP ONLY
+    // Group → Group XP ONLY
     //
     // Use subgroup.getCategory() (canonical key) instead of subgroup.getName()
     // because the display name is "Must (Individual)", NOT "Must".
     public boolean isMustXpEligible() {
-        if (!"Reward".equalsIgnoreCase(this.xpType) || this.subgroup == null) return false;
+        if (!"Reward".equalsIgnoreCase(this.xpType) || this.subgroup == null)
+            return false;
         String cat = this.subgroup.getCategory();
         // "must" category covers both Must (Individual) and Must (Group)
         return cat != null && cat.trim().equalsIgnoreCase("must");
     }
 
     public boolean isIndividualXpEligible() {
-        if (!"Reward".equalsIgnoreCase(this.xpType)) return false;
+        if (!"Reward".equalsIgnoreCase(this.xpType))
+            return false;
         if (this.subgroup != null) {
             String cat = this.subgroup.getCategory() != null ? this.subgroup.getCategory().trim() : "";
-            // Must activities (Must Individual / Must Group) go ONLY to Must XP — never Individual XP
-            if ("must".equalsIgnoreCase(cat)) return false;
-            if ("individual".equalsIgnoreCase(cat)) return true;
+            // Must activities (Must Individual / Must Group) go ONLY to Must XP — never
+            // Individual XP
+            if ("must".equalsIgnoreCase(cat))
+                return false;
+            if ("individual".equalsIgnoreCase(cat))
+                return true;
             // Any other subgroup (e.g. Group) → not Individual XP
             return false;
         }
@@ -232,12 +237,16 @@ public class Activity {
     }
 
     public boolean isGroupXpEligible() {
-        if (!"Reward".equalsIgnoreCase(this.xpType)) return false;
+        if (!"Reward".equalsIgnoreCase(this.xpType))
+            return false;
         if (this.subgroup != null) {
             String cat = this.subgroup.getCategory() != null ? this.subgroup.getCategory().trim() : "";
-            // Must activities (Must Individual / Must Group) go ONLY to Must XP — never Group XP
-            if ("must".equalsIgnoreCase(cat)) return false;
-            if ("group".equalsIgnoreCase(cat)) return true;
+            // Must activities (Must Individual / Must Group) go ONLY to Must XP — never
+            // Group XP
+            if ("must".equalsIgnoreCase(cat))
+                return false;
+            if ("group".equalsIgnoreCase(cat))
+                return true;
             // Any other subgroup (e.g. Individual) → not Group XP
             return false;
         }
@@ -614,11 +623,11 @@ public class Activity {
         this.assignmentMode = assignmentMode;
     }
 
-    public com.pragatix.enums.AcademicYear getAcademicYear() {
+    public jjcet.PragatiX.enums.AcademicYear getAcademicYear() {
         return academicYear;
     }
 
-    public void setAcademicYear(com.pragatix.enums.AcademicYear academicYear) {
+    public void setAcademicYear(jjcet.PragatiX.enums.AcademicYear academicYear) {
         this.academicYear = academicYear;
     }
 
@@ -804,7 +813,7 @@ public class Activity {
             return this;
         }
 
-        public Builder academicYear(com.pragatix.enums.AcademicYear v) {
+        public Builder academicYear(jjcet.PragatiX.enums.AcademicYear v) {
             a.academicYear = v;
             return this;
         }

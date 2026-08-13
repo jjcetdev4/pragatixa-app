@@ -1,18 +1,18 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.repository.SectionRepository;
-import com.pragatix.repository.AcademicYearRepository;
-import com.pragatix.repository.YearRepository;
-import com.pragatix.repository.SemesterRepository;
-import com.pragatix.repository.GenderRepository;
-import com.pragatix.entity.AcademicYear;
-import com.pragatix.entity.Year;
-import com.pragatix.entity.Semester;
-import com.pragatix.entity.Gender;
-import com.pragatix.entity.Section;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.repository.SectionRepository;
+import jjcet.PragatiX.repository.AcademicYearRepository;
+import jjcet.PragatiX.repository.YearRepository;
+import jjcet.PragatiX.repository.SemesterRepository;
+import jjcet.PragatiX.repository.GenderRepository;
+import jjcet.PragatiX.entity.AcademicYear;
+import jjcet.PragatiX.entity.Year;
+import jjcet.PragatiX.entity.Semester;
+import jjcet.PragatiX.entity.Gender;
+import jjcet.PragatiX.entity.Section;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @Service
 public class AdminLookupService {
@@ -75,7 +75,8 @@ public class AdminLookupService {
         if (departmentId == null) {
             return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully", sectionRepository.findAll()));
         }
-        return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully", sectionRepository.findByDepartment_IdOrderBySectionNameAsc(departmentId)));
+        return ResponseEntity.ok(ApiResponse.ok("Sections fetched successfully",
+                sectionRepository.findByDepartment_IdOrderBySectionNameAsc(departmentId)));
     }
 
     public static String normalizeYearToRoman(String yr) {

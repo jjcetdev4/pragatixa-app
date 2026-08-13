@@ -1,4 +1,4 @@
-package com.pragatix.modules.admin.dto.request;
+package jjcet.PragatiX.modules.admin.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

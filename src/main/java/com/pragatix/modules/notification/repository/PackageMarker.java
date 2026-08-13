@@ -1,4 +1,4 @@
-package com.pragatix.modules.notification.repository;
+package jjcet.PragatiX.modules.notification.repository;
 
 public final class PackageMarker {
 }

@@ -1,7 +1,7 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.*;
-import com.pragatix.repository.*;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.*;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

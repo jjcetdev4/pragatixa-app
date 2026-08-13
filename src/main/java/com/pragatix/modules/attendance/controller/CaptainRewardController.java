@@ -1,9 +1,9 @@
-package com.pragatix.modules.attendance.controller;
+package jjcet.PragatiX.modules.attendance.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.enums.AcademicYear;
-import com.pragatix.modules.attendance.dto.CaptainRewardSettingsDTO;
-import com.pragatix.modules.attendance.service.CaptainRewardSettingsService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.enums.AcademicYear;
+import jjcet.PragatiX.modules.attendance.dto.CaptainRewardSettingsDTO;
+import jjcet.PragatiX.modules.attendance.service.CaptainRewardSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

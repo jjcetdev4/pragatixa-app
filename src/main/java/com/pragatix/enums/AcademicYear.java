@@ -1,4 +1,4 @@
-package com.pragatix.enums;
+package jjcet.PragatiX.enums;
 
 public enum AcademicYear {
     FIRST_YEAR,
@@ -6,8 +6,9 @@ public enum AcademicYear {
     THIRD_YEAR,
     FOURTH_YEAR;
 
-    public static AcademicYear fromUser(com.pragatix.entity.User user) {
-        if (user == null) return null;
+    public static AcademicYear fromUser(jjcet.PragatiX.entity.User user) {
+        if (user == null)
+            return null;
         if (user.getAcademicYear() != null) {
             return user.getAcademicYear();
         }
@@ -15,31 +16,42 @@ public enum AcademicYear {
     }
 
     public static AcademicYear fromString(String raw) {
-        if (raw == null || raw.trim().isEmpty()) return null;
+        if (raw == null || raw.trim().isEmpty())
+            return null;
         String s = raw.trim().toUpperCase();
 
         try {
             return AcademicYear.valueOf(s.replace(" ", "_"));
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
-        if (s.contains("FIRST") || s.equals("1") || s.equals("I") || s.contains("1ST")) return FIRST_YEAR;
-        if (s.contains("SECOND") || s.equals("2") || s.equals("II") || s.contains("2ND")) return SECOND_YEAR;
-        if (s.contains("THIRD") || s.equals("3") || s.equals("III") || s.contains("3RD")) return THIRD_YEAR;
-        if (s.contains("FOURTH") || s.equals("4") || s.equals("IV") || s.contains("4TH")) return FOURTH_YEAR;
+        if (s.contains("FIRST") || s.equals("1") || s.equals("I") || s.contains("1ST"))
+            return FIRST_YEAR;
+        if (s.contains("SECOND") || s.equals("2") || s.equals("II") || s.contains("2ND"))
+            return SECOND_YEAR;
+        if (s.contains("THIRD") || s.equals("3") || s.equals("III") || s.contains("3RD"))
+            return THIRD_YEAR;
+        if (s.contains("FOURTH") || s.equals("4") || s.equals("IV") || s.contains("4TH"))
+            return FOURTH_YEAR;
 
         return null;
     }
 
-    public static AcademicYear fromStudent(com.pragatix.entity.Student student) {
-        if (student == null) return null;
+    public static AcademicYear fromStudent(jjcet.PragatiX.entity.Student student) {
+        if (student == null)
+            return null;
 
         // 1. Check YearRef yearNo
         if (student.getYearRef() != null && student.getYearRef().getYearNo() != null) {
             int no = student.getYearRef().getYearNo();
-            if (no == 1) return FIRST_YEAR;
-            if (no == 2) return SECOND_YEAR;
-            if (no == 3) return THIRD_YEAR;
-            if (no == 4) return FOURTH_YEAR;
+            if (no == 1)
+                return FIRST_YEAR;
+            if (no == 2)
+                return SECOND_YEAR;
+            if (no == 3)
+                return THIRD_YEAR;
+            if (no == 4)
+                return FOURTH_YEAR;
         }
 
         // 2. Check text sources
@@ -59,7 +71,8 @@ public enum AcademicYear {
 
         for (String raw : sources) {
             AcademicYear year = fromString(raw);
-            if (year != null) return year;
+            if (year != null)
+                return year;
         }
 
         return null;

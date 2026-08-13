@@ -1,5 +1,5 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pragatix.modules.student.dto.response.StudentProgressionDto;
+import jjcet.PragatiX.modules.student.dto.response.StudentProgressionDto;
 
 public class TestJson {
     public static void main(String[] args) throws Exception {

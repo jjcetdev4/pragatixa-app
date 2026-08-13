@@ -1,19 +1,19 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.authentication.dto.request.CreateUserRequest;
-import com.pragatix.modules.authentication.dto.request.UpdateUserRequest;
-import com.pragatix.modules.authentication.dto.response.UserResponse;
-import com.pragatix.entity.Department;
-import com.pragatix.entity.Role;
-import com.pragatix.entity.User;
-import com.pragatix.repository.DepartmentRepository;
-import com.pragatix.modules.authentication.repository.RoleRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.entity.SubRole;
-import com.pragatix.modules.authentication.repository.SubRoleRepository;
-import com.pragatix.repository.SectionRepository;
-import com.pragatix.entity.Section;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.authentication.dto.request.CreateUserRequest;
+import jjcet.PragatiX.modules.authentication.dto.request.UpdateUserRequest;
+import jjcet.PragatiX.modules.authentication.dto.response.UserResponse;
+import jjcet.PragatiX.entity.Department;
+import jjcet.PragatiX.entity.Role;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.modules.authentication.repository.RoleRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.entity.SubRole;
+import jjcet.PragatiX.modules.authentication.repository.SubRoleRepository;
+import jjcet.PragatiX.repository.SectionRepository;
+import jjcet.PragatiX.entity.Section;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +29,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @Service
 public class AdminUserService {
@@ -61,8 +61,8 @@ public class AdminUserService {
         List<User> users = userRepository.findAll();
         if (departmentId != null) {
             users = users.stream()
-                         .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(departmentId))
-                         .collect(Collectors.toList());
+                    .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(departmentId))
+                    .collect(Collectors.toList());
         }
         List<UserResponse> responses = users.stream()
                 .map(adminMapper::toUserResponse)

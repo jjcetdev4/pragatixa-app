@@ -1,9 +1,9 @@
-package com.pragatix.modules.admin.controller;
+package jjcet.PragatiX.modules.admin.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.activity.dto.request.ActivityStageRequest;
-import com.pragatix.modules.activity.dto.request.EvaluatePromotionsRequest;
-import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.activity.dto.request.ActivityStageRequest;
+import jjcet.PragatiX.modules.activity.dto.request.EvaluatePromotionsRequest;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityStageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.RestController;
-import com.pragatix.modules.admin.service.*;
-import com.pragatix.modules.admin.mapper.*;
+import jjcet.PragatiX.modules.admin.service.*;
+import jjcet.PragatiX.modules.admin.mapper.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -38,7 +38,7 @@ public class AdminStageController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "Get all activity stages with subgroups")
     public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages(
-            @RequestParam(required = false) com.pragatix.enums.AcademicYear academicYear) {
+            @RequestParam(required = false) jjcet.PragatiX.enums.AcademicYear academicYear) {
         return adminStageService.getAllStages(academicYear);
     }
 

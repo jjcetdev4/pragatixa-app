@@ -1,11 +1,11 @@
-package com.pragatix.modules.notification.service;
+package jjcet.PragatiX.modules.notification.service;
 
-import com.pragatix.entity.SmsNotification;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.StudentGuardian;
-import com.pragatix.repository.SmsNotificationRepository;
-import com.pragatix.repository.StudentGuardianRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.entity.SmsNotification;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.StudentGuardian;
+import jjcet.PragatiX.repository.SmsNotificationRepository;
+import jjcet.PragatiX.repository.StudentGuardianRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -49,7 +49,7 @@ public class NotificationService {
         try {
             LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
             LocalDateTime endOfDay = LocalDate.now().atTime(23, 59, 59, 999999999);
-            
+
             if (smsNotificationRepository.existsByStudentIdAndCreatedAtBetween(studentId, startOfDay, endOfDay)) {
                 log.info("SMS already sent today to student {}. Skipping.", studentId);
                 return;

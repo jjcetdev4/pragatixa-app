@@ -1,4 +1,4 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -55,7 +55,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "academic_year")
-    private com.pragatix.enums.AcademicYear academicYear;
+    private jjcet.PragatiX.enums.AcademicYear academicYear;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -172,11 +172,11 @@ public class User {
         this.year = year;
     }
 
-    public com.pragatix.enums.AcademicYear getAcademicYear() {
+    public jjcet.PragatiX.enums.AcademicYear getAcademicYear() {
         return academicYear;
     }
 
-    public void setAcademicYear(com.pragatix.enums.AcademicYear academicYear) {
+    public void setAcademicYear(jjcet.PragatiX.enums.AcademicYear academicYear) {
         this.academicYear = academicYear;
     }
 
@@ -250,7 +250,7 @@ public class User {
             return this;
         }
 
-        public Builder academicYear(com.pragatix.enums.AcademicYear v) {
+        public Builder academicYear(jjcet.PragatiX.enums.AcademicYear v) {
             user.academicYear = v;
             return this;
         }

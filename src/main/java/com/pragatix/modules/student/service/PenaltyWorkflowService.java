@@ -1,15 +1,15 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.*;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.dto.request.CreatePenaltyRequestDto;
-import com.pragatix.modules.student.dto.response.PenaltyActivityDto;
-import com.pragatix.modules.student.dto.response.PenaltyRequestDto;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.repository.PenaltyRequestRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.dto.request.CreatePenaltyRequestDto;
+import jjcet.PragatiX.modules.student.dto.response.PenaltyActivityDto;
+import jjcet.PragatiX.modules.student.dto.response.PenaltyRequestDto;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.repository.PenaltyRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -270,7 +270,7 @@ public class PenaltyWorkflowService {
         return ApiResponse.ok("Penalty rejected", mapToDto(saved));
     }
 
-        @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public ApiResponse<List<PenaltyActivityDto>> getGlobalPenaltyActivities() {
         List<Activity> allActivities = activityRepository.findAll();
         List<PenaltyActivityDto> result = allActivities.stream()
@@ -315,7 +315,8 @@ public class PenaltyWorkflowService {
 
     /**
      * Resolve the execution stage order for student eligibility validation.
-     * Priority: assignment.getStage() > activity.getStage() > subgroup stage > 0 (no restriction)
+     * Priority: assignment.getStage() > activity.getStage() > subgroup stage > 0
+     * (no restriction)
      */
     private int resolveExecutionStageOrder(ActivityAssignment assignment, Activity activity) {
         if (assignment != null && assignment.getStage() != null) {

@@ -1,7 +1,7 @@
-package com.pragatix.repository;
+package jjcet.PragatiX.repository;
 
-import com.pragatix.entity.Department;
-import com.pragatix.entity.Section;
+import jjcet.PragatiX.entity.Department;
+import jjcet.PragatiX.entity.Section;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

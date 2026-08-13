@@ -1,14 +1,14 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.dto.*;
-import com.pragatix.entity.*;
-import com.pragatix.modules.student.dto.response.StudentResponse;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.YearRepository;
-import com.pragatix.repository.StudentGuardianRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.dto.*;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.YearRepository;
+import jjcet.PragatiX.repository.StudentGuardianRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -30,13 +30,13 @@ public class StudentQueryService {
     private final StudentGuardianRepository studentGuardianRepository;
     private final AuthUtils authUtils;
 
-    private final com.pragatix.repository.TeamRepository teamRepository;
+    private final jjcet.PragatiX.repository.TeamRepository teamRepository;
 
     @org.springframework.beans.factory.annotation.Autowired
     public StudentQueryService(StudentRepository studentRepository, UserRepository userRepository,
             YearRepository yearRepository, StudentMapper studentMapper,
-            StudentGuardianRepository studentGuardianRepository, AuthUtils authUtils, 
-            com.pragatix.repository.TeamRepository teamRepository) {
+            StudentGuardianRepository studentGuardianRepository, AuthUtils authUtils,
+            jjcet.PragatiX.repository.TeamRepository teamRepository) {
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.yearRepository = yearRepository;
@@ -80,7 +80,8 @@ public class StudentQueryService {
         return page.map(s -> studentMapper.toResponse(s, guardianMap.get(s.getId())));
     }
 
-    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword, String year, Long departmentId, Long sectionId) {
+    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword,
+            String year, Long departmentId, Long sectionId) {
         Sort sort = Sort.by(sortBy).ascending();
         if (!"regNo".equalsIgnoreCase(sortBy)) {
             sort = sort.and(Sort.by("regNo").ascending());
@@ -115,7 +116,8 @@ public class StudentQueryService {
             Section userSection = currentUser.getSection();
 
             if (currentUser.getDepartment() != null && yearRef != null && userSection != null) {
-                // CC sees only their own department/year/section, but we can allow search keyword
+                // CC sees only their own department/year/section, but we can allow search
+                // keyword
                 Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudentsByCC(
                         keyword == null ? "" : keyword,
                         currentUser.getDepartment().getId(),
@@ -131,8 +133,10 @@ public class StudentQueryService {
         if (currentUser != null && !authUtils.isSuperAdmin(currentUser) && authUtils.isAdmin(currentUser)) {
             String adminYear = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
             if (adminYear != null) {
-                // Admin can filter by keyword, department, section, but year is forced to adminYear
-                Page<StudentResponse> result = mapWithGuardians(studentRepository.findByFilters(keyword, adminYear, departmentId, sectionId, pageable));
+                // Admin can filter by keyword, department, section, but year is forced to
+                // adminYear
+                Page<StudentResponse> result = mapWithGuardians(
+                        studentRepository.findByFilters(keyword, adminYear, departmentId, sectionId, pageable));
                 log.info("Admin user '{}' with year '{}': total students in DB = {}, returned in page = {}",
                         username, adminYear, result.getTotalElements(), result.getNumberOfElements());
                 return ApiResponse.ok(result);
@@ -143,22 +147,24 @@ public class StudentQueryService {
         }
 
         // For Super Admin or other roles, apply all filters
-        Page<StudentResponse> result = mapWithGuardians(studentRepository.findByFilters(keyword, year, departmentId, sectionId, pageable));
+        Page<StudentResponse> result = mapWithGuardians(
+                studentRepository.findByFilters(keyword, year, departmentId, sectionId, pageable));
         log.info("User '{}': total students in DB = {}, returned in page = {}",
                 username, result.getTotalElements(), result.getNumberOfElements());
         return ApiResponse.ok(result);
     }
 
-    public java.util.List<com.pragatix.entity.Department> getFilterDepartmentsByYear(String year) {
+    public java.util.List<jjcet.PragatiX.entity.Department> getFilterDepartmentsByYear(String year) {
         return studentRepository.findDistinctDepartmentsByYear(year);
     }
 
-    public java.util.List<com.pragatix.entity.Section> getFilterSections(String year, Long departmentId) {
+    public java.util.List<jjcet.PragatiX.entity.Section> getFilterSections(String year, Long departmentId) {
         return studentRepository.findDistinctSectionsByYearAndDepartment(year, departmentId);
     }
 
     public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending().and(Sort.by("regNo").ascending()));
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by("fullName").ascending().and(Sort.by("regNo").ascending()));
 
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
@@ -215,7 +221,7 @@ public class StudentQueryService {
         return ApiResponse.ok(result);
     }
 
-    public ApiResponse<java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(
+    public ApiResponse<java.util.List<jjcet.PragatiX.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(
             String keyword, Long teamId, Integer currentStage) {
         Pageable limit = PageRequest.of(0, 100); // Increased limit for bulk team additions
 
@@ -229,14 +235,15 @@ public class StudentQueryService {
         Long sectionId = team.getSection() != null ? team.getSection().getId() : null;
 
         if (year == null || deptId == null || sectionId == null) {
-             return ApiResponse.error("Team configuration is incomplete");
+            return ApiResponse.error("Team configuration is incomplete");
         }
 
-        java.util.List<Student> students = studentRepository.searchEligibleStudentsForTeam(keyword, year, deptId, sectionId, currentStage, limit);
+        java.util.List<Student> students = studentRepository.searchEligibleStudentsForTeam(keyword, year, deptId,
+                sectionId, currentStage, limit);
 
-        java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO> results = students.stream()
+        java.util.List<jjcet.PragatiX.modules.student.dto.response.StudentSearchDTO> results = students.stream()
                 .map(s -> {
-                    com.pragatix.modules.student.dto.response.StudentSearchDTO dto = new com.pragatix.modules.student.dto.response.StudentSearchDTO();
+                    jjcet.PragatiX.modules.student.dto.response.StudentSearchDTO dto = new jjcet.PragatiX.modules.student.dto.response.StudentSearchDTO();
                     dto.setId(s.getId());
                     dto.setFullName(s.getFullName());
                     dto.setRegNo(s.getRegNo());

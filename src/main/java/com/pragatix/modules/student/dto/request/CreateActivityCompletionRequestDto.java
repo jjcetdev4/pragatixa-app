@@ -1,4 +1,4 @@
-package com.pragatix.modules.student.dto.request;
+package jjcet.PragatiX.modules.student.dto.request;
 
 public class CreateActivityCompletionRequestDto {
     private Long activityId;

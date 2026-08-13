@@ -1,12 +1,12 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.AssignmentScope;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.User;
-import com.pragatix.modules.student.dto.response.MyActivityStudentsResponse;
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.AssignmentScope;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.student.dto.response.MyActivityStudentsResponse;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

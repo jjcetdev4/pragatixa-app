@@ -1,14 +1,14 @@
-package com.pragatix.modules.student.controller;
+package jjcet.PragatiX.modules.student.controller;
 
-import com.pragatix.modules.student.service.StudentService;
-import com.pragatix.modules.student.service.StudentStageFacade;
+import jjcet.PragatiX.modules.student.service.StudentService;
+import jjcet.PragatiX.modules.student.service.StudentStageFacade;
 
-import com.pragatix.dto.*;
-import com.pragatix.modules.activity.dto.request.*;
-import com.pragatix.modules.activity.dto.response.*;
-import com.pragatix.modules.student.dto.request.*;
-import com.pragatix.modules.student.dto.response.*;
-import com.pragatix.common.response.ApiResponse;
+import jjcet.PragatiX.dto.*;
+import jjcet.PragatiX.modules.activity.dto.request.*;
+import jjcet.PragatiX.modules.activity.dto.response.*;
+import jjcet.PragatiX.modules.student.dto.request.*;
+import jjcet.PragatiX.modules.student.dto.response.*;
+import jjcet.PragatiX.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.pragatix.entity.DisciplineLog;
+import jjcet.PragatiX.entity.DisciplineLog;
 import java.util.List;
 
 @RestController
@@ -32,15 +32,15 @@ public class StudentController {
 
     private final StudentService studentService;
     private final StudentStageFacade studentStageFacade;
-    private final com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver;
-    private final com.pragatix.modules.activity.repository.ActivityRepository activityRepository;
-    private final com.pragatix.modules.activity.service.ActivityStreakService activityStreakService;
+    private final jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver;
+    private final jjcet.PragatiX.modules.activity.repository.ActivityRepository activityRepository;
+    private final jjcet.PragatiX.modules.activity.service.ActivityStreakService activityStreakService;
 
     public StudentController(StudentService studentService,
             StudentStageFacade studentStageFacade,
-            com.pragatix.modules.authentication.security.StudentAuthResolver studentAuthResolver,
-            com.pragatix.modules.activity.repository.ActivityRepository activityRepository,
-            com.pragatix.modules.activity.service.ActivityStreakService activityStreakService) {
+            jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver,
+            jjcet.PragatiX.modules.activity.repository.ActivityRepository activityRepository,
+            jjcet.PragatiX.modules.activity.service.ActivityStreakService activityStreakService) {
         this.studentService = studentService;
         this.studentStageFacade = studentStageFacade;
         this.studentAuthResolver = studentAuthResolver;
@@ -72,9 +72,11 @@ public class StudentController {
             @RequestParam(required = false) String year,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long sectionId) {
-        ApiResponse<Page<StudentResponse>> response = studentService.getAllStudents(page, size, sortBy, keyword, year, departmentId, sectionId);
+        ApiResponse<Page<StudentResponse>> response = studentService.getAllStudents(page, size, sortBy, keyword, year,
+                departmentId, sectionId);
         if (response.getData() != null) {
-            log.info("\n=== STUDENT DIRECTORY API ===\nRequested Page: {}, Size: {}\nTotal in DB: {}\nReturned in Page: {}\n",
+            log.info(
+                    "\n=== STUDENT DIRECTORY API ===\nRequested Page: {}, Size: {}\nTotal in DB: {}\nReturned in Page: {}\n",
                     page, size, response.getData().getTotalElements(), response.getData().getNumberOfElements());
         }
         return ResponseEntity.ok(response);
@@ -83,18 +85,20 @@ public class StudentController {
     @GetMapping("/filters/departments")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
     @Operation(summary = "Get distinct departments for a specific year", description = "Returns departments that have students in the specified academic year.")
-    public ResponseEntity<ApiResponse<java.util.List<com.pragatix.entity.Department>>> getFilterDepartmentsByYear(
+    public ResponseEntity<ApiResponse<java.util.List<jjcet.PragatiX.entity.Department>>> getFilterDepartmentsByYear(
             @RequestParam(required = false) String year) {
-        return ResponseEntity.ok(ApiResponse.ok("Departments fetched", studentService.getFilterDepartmentsByYear(year)));
+        return ResponseEntity
+                .ok(ApiResponse.ok("Departments fetched", studentService.getFilterDepartmentsByYear(year)));
     }
 
     @GetMapping("/filters/sections")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
     @Operation(summary = "Get distinct sections for a specific year and department", description = "Returns sections that have students in the specified year and department.")
-    public ResponseEntity<ApiResponse<java.util.List<com.pragatix.entity.Section>>> getFilterSections(
+    public ResponseEntity<ApiResponse<java.util.List<jjcet.PragatiX.entity.Section>>> getFilterSections(
             @RequestParam(required = false) String year,
             @RequestParam(required = false) Long departmentId) {
-        return ResponseEntity.ok(ApiResponse.ok("Sections fetched", studentService.getFilterSections(year, departmentId)));
+        return ResponseEntity
+                .ok(ApiResponse.ok("Sections fetched", studentService.getFilterSections(year, departmentId)));
     }
 
     @GetMapping("/{id}")
@@ -114,8 +118,10 @@ public class StudentController {
             @RequestParam(defaultValue = "1000") int size) {
         ApiResponse<Page<StudentResponse>> response = studentService.searchStudents(keyword, page, size);
         if (response.getData() != null) {
-            log.info("\n=== STUDENT SEARCH API ===\nKeyword: '{}', Page: {}, Size: {}\nTotal Matches: {}\nReturned: {}\n",
-                    keyword, page, size, response.getData().getTotalElements(), response.getData().getNumberOfElements());
+            log.info(
+                    "\n=== STUDENT SEARCH API ===\nKeyword: '{}', Page: {}, Size: {}\nTotal Matches: {}\nReturned: {}\n",
+                    keyword, page, size, response.getData().getTotalElements(),
+                    response.getData().getNumberOfElements());
         }
         return ResponseEntity.ok(response);
     }
@@ -123,7 +129,7 @@ public class StudentController {
     @GetMapping("/team-member-search")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Smart search for team members", description = "Search active students by name, reg_no, or spr_no for team selection. Filters by team configuration.")
-    public ResponseEntity<ApiResponse<java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO>>> searchActiveStudentsForTeam(
+    public ResponseEntity<ApiResponse<java.util.List<jjcet.PragatiX.modules.student.dto.response.StudentSearchDTO>>> searchActiveStudentsForTeam(
             @RequestParam(required = false) String keyword,
             @RequestParam Long teamId,
             @RequestParam(required = false, defaultValue = "1") Integer currentStage) {
@@ -223,16 +229,16 @@ public class StudentController {
     @PreAuthorize("hasAnyRole('STUDENT')")
     @Operation(summary = "Get Stages Configured for Student", description = "Returns list of stages enriched with specific user validation (unlock rules).")
     public ResponseEntity<?> getStudentStages() {
-        com.pragatix.entity.Student student = studentAuthResolver.getLoggedInStudent();
+        jjcet.PragatiX.entity.Student student = studentAuthResolver.getLoggedInStudent();
         return studentStageFacade.getStudentStages(student);
     }
 
     @GetMapping("/subgroups/{subgroupId}/activities")
     @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN', 'TEACHER')")
     @Operation(summary = "Get all activities of a subgroup")
-    public ResponseEntity<ApiResponse<List<com.pragatix.entity.Activity>>> getActivitiesBySubgroup(
+    public ResponseEntity<ApiResponse<List<jjcet.PragatiX.entity.Activity>>> getActivitiesBySubgroup(
             @PathVariable Long subgroupId) {
-        List<com.pragatix.entity.Activity> activities = activityRepository.findBySubgroupId(subgroupId);
+        List<jjcet.PragatiX.entity.Activity> activities = activityRepository.findBySubgroupId(subgroupId);
         return ResponseEntity.ok(ApiResponse.ok("Activities fetched successfully", activities));
     }
 
@@ -240,8 +246,9 @@ public class StudentController {
     @PreAuthorize("hasAnyRole('STUDENT')")
     @Operation(summary = "Get Student Activity Streaks", description = "Returns all activity streaks for the logged-in student.")
     public ResponseEntity<ApiResponse<List<StudentActivityStreakDTO>>> getMyActivityStreaks() {
-        com.pragatix.entity.Student student = studentAuthResolver.getLoggedInStudent();
-        List<com.pragatix.entity.StudentActivityStreak> streaks = activityStreakService.getStudentActivityStreaks(student.getId());
+        jjcet.PragatiX.entity.Student student = studentAuthResolver.getLoggedInStudent();
+        List<jjcet.PragatiX.entity.StudentActivityStreak> streaks = activityStreakService
+                .getStudentActivityStreaks(student.getId());
         List<StudentActivityStreakDTO> dtos = streaks.stream()
                 .map(s -> new StudentActivityStreakDTO(
                         s.getActivity().getId(),

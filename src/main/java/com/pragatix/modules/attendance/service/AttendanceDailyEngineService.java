@@ -1,33 +1,33 @@
-package com.pragatix.modules.attendance.service;
+package jjcet.PragatiX.modules.attendance.service;
 
-import com.pragatix.entity.Attendance;
-import com.pragatix.entity.AttendanceSettings;
-import com.pragatix.entity.Student;
-import com.pragatix.enums.AcademicYear;
-import com.pragatix.modules.academiccalendar.service.AcademicCalendarResolver;
-import com.pragatix.modules.attendance.repository.AttendanceRepository;
-import com.pragatix.modules.attendancesettings.repository.AttendanceSettingsRepository;
-import com.pragatix.modules.attendancesettings.service.EngineClockService;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.YearRepository;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.AcademicWeek;
-import com.pragatix.modules.academiccalendar.repository.AcademicWeekRepository;
-import com.pragatix.modules.student.service.XpEngineService;
-import com.pragatix.modules.student.repository.StudentActivityXpRepository;
-import com.pragatix.repository.XpTransactionRepository;
-import com.pragatix.entity.StudentActivityXp;
-import com.pragatix.entity.AttendanceSettings;
+import jjcet.PragatiX.entity.Attendance;
+import jjcet.PragatiX.entity.AttendanceSettings;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.enums.AcademicYear;
+import jjcet.PragatiX.modules.academiccalendar.service.AcademicCalendarResolver;
+import jjcet.PragatiX.modules.attendance.repository.AttendanceRepository;
+import jjcet.PragatiX.modules.attendancesettings.repository.AttendanceSettingsRepository;
+import jjcet.PragatiX.modules.attendancesettings.service.EngineClockService;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.YearRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.AcademicWeek;
+import jjcet.PragatiX.modules.academiccalendar.repository.AcademicWeekRepository;
+import jjcet.PragatiX.modules.student.service.XpEngineService;
+import jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository;
+import jjcet.PragatiX.repository.XpTransactionRepository;
+import jjcet.PragatiX.entity.StudentActivityXp;
+import jjcet.PragatiX.entity.AttendanceSettings;
 
-import com.pragatix.modules.activity.repository.ActivityStageMappingRepository;
-import com.pragatix.entity.ActivityStageMapping;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository;
+import jjcet.PragatiX.entity.ActivityStageMapping;
 
-import com.pragatix.entity.ActivityAssignment;
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.entity.AssignmentScope;
+import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.entity.AssignmentScope;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,12 +149,12 @@ public class AttendanceDailyEngineService {
                 .collect(Collectors.toList());
 
         List<ActivityStage> stages = activityStageRepository.findByAcademicYearOrderByDisplayOrderAsc(academicYear);
-        
+
         int processed = 0;
         int successful = 0;
         int skipped = 0;
         int errors = 0;
-        
+
         int penaltyStudentsCount = 0;
         int partialPenaltiesCount = 0;
         int fullPenaltiesCount = 0;
@@ -220,7 +220,8 @@ public class AttendanceDailyEngineService {
                 String todayType = "NORMAL";
 
                 if (!executePenaltyConfigured) {
-                    log.info("No active Academic Week configured. XP penalties will be skipped, but streak will be processed.");
+                    log.info(
+                            "No active Academic Week configured. XP penalties will be skipped, but streak will be processed.");
                 } else {
                     startDate = activeWeek.getStartDate();
                     endDate = activeWeek.getEndDate();
@@ -295,9 +296,9 @@ public class AttendanceDailyEngineService {
 
                         String transactionRemark = "Attendance Date: " + engineDate;
                         boolean alreadyProcessed = false;
-                        List<com.pragatix.entity.XpTransaction> existingXp = xpTransactionRepository
+                        List<jjcet.PragatiX.entity.XpTransaction> existingXp = xpTransactionRepository
                                 .findByStudentIdAndActivityId(student.getId(), engineActivity.getId());
-                        for (com.pragatix.entity.XpTransaction xp : existingXp) {
+                        for (jjcet.PragatiX.entity.XpTransaction xp : existingXp) {
                             if (xp.getActivityName() != null && xp.getActivityName().contains(transactionRemark)) {
                                 alreadyProcessed = true;
                                 break;
@@ -363,7 +364,7 @@ public class AttendanceDailyEngineService {
 
                         if (executeXp) {
                             try {
-                                com.pragatix.modules.attendance.dto.AttendanceXpExecutionRequest req = new com.pragatix.modules.attendance.dto.AttendanceXpExecutionRequest();
+                                jjcet.PragatiX.modules.attendance.dto.AttendanceXpExecutionRequest req = new jjcet.PragatiX.modules.attendance.dto.AttendanceXpExecutionRequest();
                                 req.setStudentId(student.getId());
                                 req.setActivityId(engineActivity.getId());
                                 req.setAttendanceRule(penaltySource);
@@ -377,7 +378,7 @@ public class AttendanceDailyEngineService {
 
                                 Student savedStudent = xpEngineService.awardXp(student, engineActivity, null, null,
                                         appliedXp, transactionRemark, req);
-                                
+
                                 log.info("Student:");
                                 log.info(student.getRegNo());
                                 log.info("");
@@ -389,7 +390,7 @@ public class AttendanceDailyEngineService {
                                 log.info("");
                                 log.info("----------------------------------------");
                                 log.info("");
-                                
+
                                 penaltyStudentsCount++;
                                 if (presentCount > 0) {
                                     partialPenaltiesCount++;
@@ -397,7 +398,7 @@ public class AttendanceDailyEngineService {
                                     fullPenaltiesCount++;
                                 }
                                 totalXpDeducted += appliedXp;
-                                
+
                             } catch (Exception e) {
                                 log.error("XP Execution Error : {}", e.getMessage(), e);
                             }

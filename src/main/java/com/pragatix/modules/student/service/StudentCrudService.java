@@ -1,9 +1,9 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.dto.*;
-import com.pragatix.modules.student.dto.request.*;
-import com.pragatix.modules.student.dto.response.StudentResponse;
-import com.pragatix.common.response.ApiResponse;
+import jjcet.PragatiX.dto.*;
+import jjcet.PragatiX.modules.student.dto.request.*;
+import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.common.response.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -34,15 +34,16 @@ public class StudentCrudService {
         return studentQueryService.getStudentById(id);
     }
 
-    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword, String year, Long departmentId, Long sectionId) {
+    public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword,
+            String year, Long departmentId, Long sectionId) {
         return studentQueryService.getAllStudents(page, size, sortBy, keyword, year, departmentId, sectionId);
     }
 
-    public java.util.List<com.pragatix.entity.Department> getFilterDepartmentsByYear(String year) {
+    public java.util.List<jjcet.PragatiX.entity.Department> getFilterDepartmentsByYear(String year) {
         return studentQueryService.getFilterDepartmentsByYear(year);
     }
 
-    public java.util.List<com.pragatix.entity.Section> getFilterSections(String year, Long departmentId) {
+    public java.util.List<jjcet.PragatiX.entity.Section> getFilterSections(String year, Long departmentId) {
         return studentQueryService.getFilterSections(year, departmentId);
     }
 
@@ -50,7 +51,7 @@ public class StudentCrudService {
         return studentQueryService.searchStudents(keyword, page, size);
     }
 
-    public ApiResponse<java.util.List<com.pragatix.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(
+    public ApiResponse<java.util.List<jjcet.PragatiX.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(
             String keyword, Long teamId, Integer currentStage) {
         return studentQueryService.searchActiveStudentsForTeam(keyword, teamId, currentStage);
     }

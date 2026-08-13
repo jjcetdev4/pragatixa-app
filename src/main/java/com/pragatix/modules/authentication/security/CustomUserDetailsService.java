@@ -1,7 +1,7 @@
-package com.pragatix.modules.authentication.security;
+package jjcet.PragatiX.modules.authentication.security;
 
-import com.pragatix.entity.User;
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
@@ -27,13 +27,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseGet(() -> userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with username or email: " + username)));
+                        .orElseThrow(() -> new UsernameNotFoundException(
+                                "User not found with username or email: " + username)));
 
         java.util.Set<org.springframework.security.core.GrantedAuthority> authorities = new java.util.HashSet<>();
 
         if (user.getRoles() != null) {
-            for (com.pragatix.entity.Role role : user.getRoles()) {
+            for (jjcet.PragatiX.entity.Role role : user.getRoles()) {
                 if (role.getName() == null)
                     continue;
                 String rName = role.getName().trim().toUpperCase();
@@ -72,7 +72,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         if (user.getSubRoles() != null) {
-            for (com.pragatix.entity.SubRole sr : user.getSubRoles()) {
+            for (jjcet.PragatiX.entity.SubRole sr : user.getSubRoles()) {
                 if (sr.getName() == null)
                     continue;
                 String srName = sr.getName().trim().toUpperCase();

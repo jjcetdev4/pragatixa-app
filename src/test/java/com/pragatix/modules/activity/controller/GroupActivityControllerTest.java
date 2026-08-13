@@ -1,15 +1,15 @@
-package com.pragatix.modules.activity.controller;
+package jjcet.PragatiX.modules.activity.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.TeamResponse;
-import com.pragatix.entity.*;
-import com.pragatix.modules.activity.repository.ActivityStageRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.student.service.XpEngineService;
-import com.pragatix.repository.ActivityAssignmentRepository;
-import com.pragatix.repository.StageTeamRepository;
-import com.pragatix.repository.TeamRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.TeamResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.activity.repository.ActivityStageRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.student.service.XpEngineService;
+import jjcet.PragatiX.repository.ActivityAssignmentRepository;
+import jjcet.PragatiX.repository.StageTeamRepository;
+import jjcet.PragatiX.repository.TeamRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -151,7 +151,8 @@ public class GroupActivityControllerTest {
         when(stageTeamRepository.findByTeamId(1L)).thenReturn(Collections.singletonList(st1));
         when(stageTeamRepository.findByTeamId(2L)).thenReturn(Collections.singletonList(st2));
 
-        ResponseEntity<ApiResponse<List<TeamResponse>>> response = groupActivityController.getTeamsForAssignment(500L, 1L);
+        ResponseEntity<ApiResponse<List<TeamResponse>>> response = groupActivityController.getTeamsForAssignment(500L,
+                1L);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -180,7 +181,8 @@ public class GroupActivityControllerTest {
         when(stageTeamRepository.findByTeamId(1L)).thenReturn(Collections.singletonList(st1));
         when(stageTeamRepository.findByTeamId(2L)).thenReturn(Collections.singletonList(st2));
 
-        ResponseEntity<ApiResponse<List<TeamResponse>>> response = groupActivityController.getTeamsForAssignment(500L, 2L);
+        ResponseEntity<ApiResponse<List<TeamResponse>>> response = groupActivityController.getTeamsForAssignment(500L,
+                2L);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -200,7 +202,8 @@ public class GroupActivityControllerTest {
         when(stageTeamRepository.findByTeamId(anyLong())).thenReturn(Collections.emptyList());
 
         // Assignment default stage is Stage 1
-        ResponseEntity<ApiResponse<List<TeamResponse>>> response = groupActivityController.getTeamsForAssignment(500L, null);
+        ResponseEntity<ApiResponse<List<TeamResponse>>> response = groupActivityController.getTeamsForAssignment(500L,
+                null);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());

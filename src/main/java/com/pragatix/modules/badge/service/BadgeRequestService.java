@@ -1,14 +1,14 @@
-package com.pragatix.modules.badge.service;
+package jjcet.PragatiX.modules.badge.service;
 
-import com.pragatix.dto.BadgeRequestCreateDto;
-import com.pragatix.dto.BadgeRequestDto;
-import com.pragatix.dto.BadgeRequestStatusUpdateDto;
-import com.pragatix.entity.*;
-import com.pragatix.repository.*;
-import com.pragatix.modules.student.repository.StudentBadgeRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.dto.BadgeRequestCreateDto;
+import jjcet.PragatiX.dto.BadgeRequestDto;
+import jjcet.PragatiX.dto.BadgeRequestStatusUpdateDto;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.modules.student.repository.StudentBadgeRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +48,8 @@ public class BadgeRequestService {
         Badge badge = badgeRepository.findById(dto.getBadgeId())
                 .orElseThrow(() -> new RuntimeException("Badge not found"));
 
-        List<StudentBadge> earnedBadges = studentBadgeRepository.findByStudentIdAndBadgeId(student.getId(), badge.getId());
+        List<StudentBadge> earnedBadges = studentBadgeRepository.findByStudentIdAndBadgeId(student.getId(),
+                badge.getId());
         if (earnedBadges.stream().anyMatch(b -> "APPROVED".equalsIgnoreCase(b.getStatus()))) {
             throw new IllegalArgumentException("Student already has this badge");
         }

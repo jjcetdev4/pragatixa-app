@@ -1,10 +1,10 @@
-package com.pragatix.modules.student.controller;
+package jjcet.PragatiX.modules.student.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.AwardXpRequest;
-import com.pragatix.modules.student.dto.response.MyActivityStudentsResponse;
-import com.pragatix.modules.student.service.StudentActivityQueryService;
-import com.pragatix.modules.student.service.StudentXpService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.AwardXpRequest;
+import jjcet.PragatiX.modules.student.dto.response.MyActivityStudentsResponse;
+import jjcet.PragatiX.modules.student.service.StudentActivityQueryService;
+import jjcet.PragatiX.modules.student.service.StudentXpService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;

@@ -1,9 +1,9 @@
-package com.pragatix.modules.attendance.service;
+package jjcet.PragatiX.modules.attendance.service;
 
-import com.pragatix.entity.CaptainRewardSettings;
-import com.pragatix.enums.AcademicYear;
-import com.pragatix.modules.attendance.dto.CaptainRewardSettingsDTO;
-import com.pragatix.modules.attendance.repository.CaptainRewardSettingsRepository;
+import jjcet.PragatiX.entity.CaptainRewardSettings;
+import jjcet.PragatiX.enums.AcademicYear;
+import jjcet.PragatiX.modules.attendance.dto.CaptainRewardSettingsDTO;
+import jjcet.PragatiX.modules.attendance.repository.CaptainRewardSettingsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +48,7 @@ public class CaptainRewardSettingsService {
         entity.setCaptainXp(request.getCaptainXp());
         entity.setViceCaptainXp(request.getViceCaptainXp());
         entity.setExecutionTime(request.getExecutionTime());
-        
+
         entity = repository.save(entity);
 
         CaptainRewardSettingsDTO dto = new CaptainRewardSettingsDTO();

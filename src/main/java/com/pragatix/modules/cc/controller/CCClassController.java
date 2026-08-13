@@ -1,7 +1,7 @@
-package com.pragatix.modules.cc.controller;
+package jjcet.PragatiX.modules.cc.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.cc.service.CCActivityService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.cc.service.CCActivityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,4 +1,4 @@
-package com.pragatix.modules.student.dto;
+package jjcet.PragatiX.modules.student.dto;
 
 public class StageXpSummary {
     private int totalXp;

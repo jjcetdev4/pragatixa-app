@@ -1,11 +1,11 @@
-package com.pragatix.modules.authentication.controller;
+package jjcet.PragatiX.modules.authentication.controller;
 
-import com.pragatix.modules.authentication.service.AuthService;
+import jjcet.PragatiX.modules.authentication.service.AuthService;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.authentication.dto.response.AuthResponse;
-import com.pragatix.modules.authentication.dto.request.LoginRequest;
-import com.pragatix.modules.authentication.dto.request.StudentLoginRequest;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.authentication.dto.response.AuthResponse;
+import jjcet.PragatiX.modules.authentication.dto.request.LoginRequest;
+import jjcet.PragatiX.modules.authentication.dto.request.StudentLoginRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  * This class handles all incoming HTTP requests for login.
  * It is separated from business logic (which lives in AuthService) to follow the Single Responsibility Principle.
  */
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -79,7 +79,8 @@ public class AuthController {
 
     @PostMapping("/request-otp")
     @Operation(summary = "Request Login OTP", description = "Generates and sends a 4-digit OTP to the user's email if valid.")
-    public ResponseEntity<ApiResponse<String>> requestOtp(@Valid @RequestBody com.pragatix.modules.authentication.dto.request.OtpRequest request) {
+    public ResponseEntity<ApiResponse<String>> requestOtp(
+            @Valid @RequestBody jjcet.PragatiX.modules.authentication.dto.request.OtpRequest request) {
         ApiResponse<String> response = authService.requestOtp(request);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -90,7 +91,8 @@ public class AuthController {
 
     @PostMapping("/verify-otp")
     @Operation(summary = "Verify Login OTP", description = "Verifies the 4-digit OTP and returns a JWT token.")
-    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(@Valid @RequestBody com.pragatix.modules.authentication.dto.request.OtpVerifyRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
+            @Valid @RequestBody jjcet.PragatiX.modules.authentication.dto.request.OtpVerifyRequest request) {
         ApiResponse<AuthResponse> response = authService.verifyOtp(request);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

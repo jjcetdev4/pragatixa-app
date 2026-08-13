@@ -1,14 +1,14 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.*;
-import com.pragatix.modules.activity.repository.ActivityRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.dto.request.CreateActivityCompletionRequestDto;
-import com.pragatix.modules.student.dto.response.ActivityCompletionRequestDto;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.TeamRepository;
-import com.pragatix.repository.ActivityCompletionRequestRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.dto.request.CreateActivityCompletionRequestDto;
+import jjcet.PragatiX.modules.student.dto.response.ActivityCompletionRequestDto;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.TeamRepository;
+import jjcet.PragatiX.repository.ActivityCompletionRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

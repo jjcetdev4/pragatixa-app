@@ -1,6 +1,6 @@
-package com.pragatix.common.exception;
+package jjcet.PragatiX.common.exception;
 
-import com.pragatix.common.response.ApiResponse;
+import jjcet.PragatiX.common.response.ApiResponse;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.slf4j.Logger;
@@ -23,7 +23,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import com.pragatix.modules.student.exception.StudentNotFoundException;
+import jjcet.PragatiX.modules.student.exception.StudentNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -110,14 +110,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ApiResponse<Void> handleBadCredentials(org.springframework.security.authentication.BadCredentialsException ex) {
+    public ApiResponse<Void> handleBadCredentials(
+            org.springframework.security.authentication.BadCredentialsException ex) {
         log.warn("Bad credentials: {}", ex.getMessage());
         return ApiResponse.error(ex.getMessage());
     }
 
     @ExceptionHandler(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ApiResponse<Void> handleUsernameNotFound(org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
+    public ApiResponse<Void> handleUsernameNotFound(
+            org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
         log.warn("Username not found: {}", ex.getMessage());
         return ApiResponse.error(ex.getMessage());
     }
@@ -152,7 +154,8 @@ public class GlobalExceptionHandler {
         return ApiResponse.error(ex.getMessage());
     }
 
-    @ExceptionHandler({NoHandlerFoundException.class, org.springframework.web.servlet.resource.NoResourceFoundException.class})
+    @ExceptionHandler({ NoHandlerFoundException.class,
+            org.springframework.web.servlet.resource.NoResourceFoundException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiResponse<Void> handleNoHandlerFound(Exception ex) {
         log.warn("Resource not found: {}", ex.getMessage());

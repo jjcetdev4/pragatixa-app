@@ -1,8 +1,8 @@
-package com.pragatix.modules.authentication.security;
+package jjcet.PragatiX.modules.authentication.security;
 
-import com.pragatix.entity.Role;
-import com.pragatix.entity.User;
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.entity.Role;
+import jjcet.PragatiX.entity.User;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -38,7 +38,7 @@ public class AuthUtils {
      * @param year the AcademicYear enum
      * @return the string mapped value
      */
-    public static String getAssignedYearString(com.pragatix.enums.AcademicYear year) {
+    public static String getAssignedYearString(jjcet.PragatiX.enums.AcademicYear year) {
         if (year == null)
             return null;
         switch (year) {
@@ -59,10 +59,11 @@ public class AuthUtils {
         if (user == null || user.getRoles() == null)
             return false;
         for (Role role : user.getRoles()) {
-            if (role.getName() == null) continue;
+            if (role.getName() == null)
+                continue;
             String name = role.getName().trim().toUpperCase();
             if ("ROLE_SUPERADMIN".equals(name) || "ROLE_SUPER_ADMIN".equals(name) ||
-                "SUPERADMIN".equals(name) || "SUPER_ADMIN".equals(name)) {
+                    "SUPERADMIN".equals(name) || "SUPER_ADMIN".equals(name)) {
                 return true;
             }
         }
@@ -73,7 +74,8 @@ public class AuthUtils {
         if (user == null || user.getRoles() == null)
             return false;
         for (Role role : user.getRoles()) {
-            if (role.getName() == null) continue;
+            if (role.getName() == null)
+                continue;
             String name = role.getName().trim().toUpperCase();
             if ("ROLE_ADMIN".equals(name) || "ADMIN".equals(name)) {
                 return true;

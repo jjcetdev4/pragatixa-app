@@ -1,15 +1,15 @@
-package com.pragatix.admin;
+package jjcet.PragatiX.admin;
 
-import com.pragatix.admin.service.TeamCrudService;
-import com.pragatix.admin.service.TeamMemberService;
-import com.pragatix.admin.service.TeamQueryService;
-import com.pragatix.admin.service.TeamRequestService;
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.CreateTeamRequest;
-import com.pragatix.dto.TeamRemovalRequestDto;
-import com.pragatix.dto.TeamResponse;
-import com.pragatix.entity.Student;
-import com.pragatix.modules.authentication.security.StudentAuthResolver;
+import jjcet.PragatiX.admin.service.TeamCrudService;
+import jjcet.PragatiX.admin.service.TeamMemberService;
+import jjcet.PragatiX.admin.service.TeamQueryService;
+import jjcet.PragatiX.admin.service.TeamRequestService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.CreateTeamRequest;
+import jjcet.PragatiX.dto.TeamRemovalRequestDto;
+import jjcet.PragatiX.dto.TeamResponse;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.modules.authentication.security.StudentAuthResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -75,7 +75,7 @@ public class TeamController {
     @GetMapping("/my-team/details")
     @PreAuthorize("hasRole('STUDENT')")
     @Operation(summary = "Get My Team Details (Leaderboard)", description = "Returns the team details for the logged-in student with XP sorting.")
-    public ResponseEntity<ApiResponse<com.pragatix.dto.StudentTeamDetailsResponse>> getMyTeamDetails() {
+    public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.StudentTeamDetailsResponse>> getMyTeamDetails() {
         Student student = studentAuthResolver.getLoggedInStudent();
         return teamQueryService.getMyTeamDetails(student);
     }
@@ -110,7 +110,7 @@ public class TeamController {
         return teamMemberService.removeMemberFromTeam(id, regNo);
     }
 
-    @PostMapping({"/{id}/captain", "/{id}/assign-captain"})
+    @PostMapping({ "/{id}/captain", "/{id}/assign-captain" })
     @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'CC', 'HOD', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Assign Team Captain", description = "Assigns/promotes a student to captain of a team.")
     public ResponseEntity<ApiResponse<TeamResponse>> assignTeamCaptain(@PathVariable Long id,
@@ -174,7 +174,8 @@ public class TeamController {
     @PostMapping("/{id}/add-members")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'CC', 'HOD', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Add Multiple Team Members (CC)", description = "Adds multiple students to a specific team (CC/Admin only).")
-    public ResponseEntity<ApiResponse<Void>> addMembersByCC(@PathVariable Long id, @RequestBody java.util.List<String> regNos) {
+    public ResponseEntity<ApiResponse<Void>> addMembersByCC(@PathVariable Long id,
+            @RequestBody java.util.List<String> regNos) {
         return teamMemberService.addMembersByCC(id, regNos);
     }
 
@@ -186,7 +187,7 @@ public class TeamController {
         return teamMemberService.removeMemberByCC(id, regNo);
     }
 
-    @PostMapping({"/my-team/remove-request", "/my-team/removal-request"})
+    @PostMapping({ "/my-team/remove-request", "/my-team/removal-request" })
     @PreAuthorize("hasRole('STUDENT')")
     @Operation(summary = "Request Team Member Removal", description = "Creates a request to remove a student from the captain's team.")
     public ResponseEntity<ApiResponse<Void>> requestRemoveMember(@RequestParam String regNo,

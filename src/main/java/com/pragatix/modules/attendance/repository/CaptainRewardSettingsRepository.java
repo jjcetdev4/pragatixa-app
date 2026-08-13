@@ -1,7 +1,7 @@
-package com.pragatix.modules.attendance.repository;
+package jjcet.PragatiX.modules.attendance.repository;
 
-import com.pragatix.entity.CaptainRewardSettings;
-import com.pragatix.enums.AcademicYear;
+import jjcet.PragatiX.entity.CaptainRewardSettings;
+import jjcet.PragatiX.enums.AcademicYear;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

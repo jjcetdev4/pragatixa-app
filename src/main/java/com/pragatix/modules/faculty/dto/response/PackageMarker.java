@@ -1,4 +1,4 @@
-package com.pragatix.modules.faculty.dto.response;
+package jjcet.PragatiX.modules.faculty.dto.response;
 
 public final class PackageMarker {
 }

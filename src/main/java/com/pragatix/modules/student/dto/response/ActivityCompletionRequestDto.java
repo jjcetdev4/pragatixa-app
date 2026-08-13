@@ -1,4 +1,4 @@
-package com.pragatix.modules.student.dto.response;
+package jjcet.PragatiX.modules.student.dto.response;
 
 import java.time.LocalDateTime;
 

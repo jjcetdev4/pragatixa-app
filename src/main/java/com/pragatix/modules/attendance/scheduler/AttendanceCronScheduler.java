@@ -1,11 +1,11 @@
-package com.pragatix.modules.attendance.scheduler;
+package jjcet.PragatiX.modules.attendance.scheduler;
 
-import com.pragatix.entity.AttendanceSettings;
-import com.pragatix.enums.AcademicYear;
-import com.pragatix.modules.attendance.service.AttendanceDailyEngineService;
-import com.pragatix.modules.attendance.service.AttendanceWeeklyEngineService;
-import com.pragatix.modules.attendancesettings.repository.AttendanceSettingsRepository;
-import com.pragatix.modules.attendancesettings.service.EngineClockService;
+import jjcet.PragatiX.entity.AttendanceSettings;
+import jjcet.PragatiX.enums.AcademicYear;
+import jjcet.PragatiX.modules.attendance.service.AttendanceDailyEngineService;
+import jjcet.PragatiX.modules.attendance.service.AttendanceWeeklyEngineService;
+import jjcet.PragatiX.modules.attendancesettings.repository.AttendanceSettingsRepository;
+import jjcet.PragatiX.modules.attendancesettings.service.EngineClockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import com.pragatix.modules.academiccalendar.repository.AcademicWeekRepository;
-import com.pragatix.entity.AcademicWeek;
+import jjcet.PragatiX.modules.academiccalendar.repository.AcademicWeekRepository;
+import jjcet.PragatiX.entity.AcademicWeek;
 
 @Component
 public class AttendanceCronScheduler {
@@ -51,7 +51,7 @@ public class AttendanceCronScheduler {
             if (year == null) {
                 continue;
             }
-            
+
             LocalTime effectiveTime = clockService.getEffectiveTime(year);
             LocalDate effectiveDate = clockService.getEffectiveDate(year);
             boolean isTestMode = clockService.isTestMode(year);
@@ -60,9 +60,10 @@ public class AttendanceCronScheduler {
             boolean shouldExecuteDaily = true;
 
             if (!Boolean.TRUE.equals(settings.getDailyEngineEnabled()) ||
-                settings.getDailyProcessingTime() == null ||
-                effectiveTime.isBefore(settings.getDailyProcessingTime()) ||
-                (settings.getLastDailyRun() != null && settings.getLastDailyRun().toLocalDate().isEqual(effectiveDate))) {
+                    settings.getDailyProcessingTime() == null ||
+                    effectiveTime.isBefore(settings.getDailyProcessingTime()) ||
+                    (settings.getLastDailyRun() != null
+                            && settings.getLastDailyRun().toLocalDate().isEqual(effectiveDate))) {
                 shouldExecuteDaily = false;
             }
 
@@ -81,11 +82,12 @@ public class AttendanceCronScheduler {
             boolean shouldExecuteWeekly = true;
 
             if (!Boolean.TRUE.equals(settings.getWeeklyEngineEnabled()) ||
-                settings.getWeeklyProcessingTime() == null ||
-                activeWeek == null || activeWeek.getEndDate() == null ||
-                !effectiveDate.isEqual(activeWeek.getEndDate()) ||
-                effectiveTime.isBefore(settings.getWeeklyProcessingTime()) ||
-                (settings.getLastWeeklyRun() != null && settings.getLastWeeklyRun().toLocalDate().isEqual(effectiveDate))) {
+                    settings.getWeeklyProcessingTime() == null ||
+                    activeWeek == null || activeWeek.getEndDate() == null ||
+                    !effectiveDate.isEqual(activeWeek.getEndDate()) ||
+                    effectiveTime.isBefore(settings.getWeeklyProcessingTime()) ||
+                    (settings.getLastWeeklyRun() != null
+                            && settings.getLastWeeklyRun().toLocalDate().isEqual(effectiveDate))) {
                 shouldExecuteWeekly = false;
             }
 

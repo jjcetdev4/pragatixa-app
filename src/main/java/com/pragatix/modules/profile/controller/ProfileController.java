@@ -1,8 +1,8 @@
-package com.pragatix.modules.profile.controller;
+package jjcet.PragatiX.modules.profile.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.profile.dto.ProfileResponse;
-import com.pragatix.modules.profile.service.ProfileService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.profile.dto.ProfileResponse;
+import jjcet.PragatiX.modules.profile.service.ProfileService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;

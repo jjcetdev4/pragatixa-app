@@ -1,10 +1,10 @@
-package com.pragatix.modules.attendance.controller;
+package jjcet.PragatiX.modules.attendance.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.modules.attendance.dto.response.StudentAttendanceHistoryResponse;
-import com.pragatix.modules.attendance.dto.response.StudentAttendanceSummaryResponse;
-import com.pragatix.modules.attendance.service.StudentAttendanceService;
-import com.pragatix.modules.authentication.security.StudentAuthResolver;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.modules.attendance.dto.response.StudentAttendanceHistoryResponse;
+import jjcet.PragatiX.modules.attendance.dto.response.StudentAttendanceSummaryResponse;
+import jjcet.PragatiX.modules.attendance.service.StudentAttendanceService;
+import jjcet.PragatiX.modules.authentication.security.StudentAuthResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

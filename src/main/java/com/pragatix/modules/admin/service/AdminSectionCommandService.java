@@ -1,10 +1,10 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Department;
-import com.pragatix.entity.Section;
-import com.pragatix.repository.DepartmentRepository;
-import com.pragatix.repository.SectionRepository;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Department;
+import jjcet.PragatiX.entity.Section;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.repository.SectionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

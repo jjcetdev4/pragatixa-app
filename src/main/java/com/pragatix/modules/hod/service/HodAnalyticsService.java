@@ -1,14 +1,14 @@
-package com.pragatix.modules.hod.service;
+package jjcet.PragatiX.modules.hod.service;
 
-import com.pragatix.entity.*;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.authentication.security.AuthUtils;
-import com.pragatix.modules.faculty.repository.FacultyRepository;
-import com.pragatix.modules.hod.dto.HodDashboardResponse;
-import com.pragatix.modules.hod.dto.HodDashboardResponse.*;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.DepartmentRepository;
-import com.pragatix.repository.SectionRepository;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.authentication.security.AuthUtils;
+import jjcet.PragatiX.modules.faculty.repository.FacultyRepository;
+import jjcet.PragatiX.modules.hod.dto.HodDashboardResponse;
+import jjcet.PragatiX.modules.hod.dto.HodDashboardResponse.*;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.repository.SectionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -36,15 +36,14 @@ public class HodAnalyticsService {
     private EntityManager entityManager;
 
     private static final List<String> STANDARD_YEARS = List.of(
-            "All Years", "First Year", "Second Year", "Third Year", "Fourth Year"
-    );
+            "All Years", "First Year", "Second Year", "Third Year", "Fourth Year");
 
     public HodAnalyticsService(StudentRepository studentRepository,
-                               SectionRepository sectionRepository,
-                               FacultyRepository facultyRepository,
-                               UserRepository userRepository,
-                               DepartmentRepository departmentRepository,
-                               AuthUtils authUtils) {
+            SectionRepository sectionRepository,
+            FacultyRepository facultyRepository,
+            UserRepository userRepository,
+            DepartmentRepository departmentRepository,
+            AuthUtils authUtils) {
         this.studentRepository = studentRepository;
         this.sectionRepository = sectionRepository;
         this.facultyRepository = facultyRepository;
@@ -118,22 +117,22 @@ public class HodAnalyticsService {
             totalTeachers = userRepository.countByDepartmentId(deptId);
         }
         long totalSections = deptSections.size();
-        double averageXp = filteredStudents.isEmpty() ? 0.0 :
-                filteredStudents.stream().mapToDouble(Student::getTotalXp).average().orElse(0.0);
-        
+        double averageXp = filteredStudents.isEmpty() ? 0.0
+                : filteredStudents.stream().mapToDouble(Student::getTotalXp).average().orElse(0.0);
+
         // Average Discipline Score MUST NEVER EXCEED 100
-        double rawAvgScore = filteredStudents.isEmpty() ? 100.0 :
-                filteredStudents.stream().mapToDouble(Student::getScore).average().orElse(100.0);
+        double rawAvgScore = filteredStudents.isEmpty() ? 100.0
+                : filteredStudents.stream().mapToDouble(Student::getScore).average().orElse(100.0);
         double averageDisciplineScore = Math.min(100.0, Math.max(0.0, rawAvgScore));
 
         DepartmentOverviewDTO overview = new DepartmentOverviewDTO(
                 totalStudents, totalTeachers, totalSections,
                 Math.round(averageXp * 10.0) / 10.0,
-                Math.round(averageDisciplineScore * 10.0) / 10.0
-        );
+                Math.round(averageDisciplineScore * 10.0) / 10.0);
 
         // 5. Attendance Analytics
-        HodAttendanceAnalyticsDTO attendance = calculateAttendanceAnalytics(deptId, studentIds, activeYear, deptSections, filteredStudents);
+        HodAttendanceAnalyticsDTO attendance = calculateAttendanceAnalytics(deptId, studentIds, activeYear,
+                deptSections, filteredStudents);
 
         // 6. XP Analytics
         HodXpAnalyticsDTO xp = calculateXpAnalytics(deptId, studentIds, filteredStudents);
@@ -153,22 +152,27 @@ public class HodAnalyticsService {
         return new HodDashboardResponse(
                 deptInfo, availableYears, activeYear, overview,
                 attendance, xp, discipline, leaderboard, sectionComparison,
-                recentPenalties, Collections.emptyList()
-        );
+                recentPenalties, Collections.emptyList());
     }
 
     private boolean matchesYearString(String standardYear, String query) {
-        if (standardYear.equalsIgnoreCase(query)) return true;
-        if (query.equals("1") && standardYear.equals("First Year")) return true;
-        if (query.equals("2") && standardYear.equals("Second Year")) return true;
-        if (query.equals("3") && standardYear.equals("Third Year")) return true;
-        if (query.equals("4") && standardYear.equals("Fourth Year")) return true;
+        if (standardYear.equalsIgnoreCase(query))
+            return true;
+        if (query.equals("1") && standardYear.equals("First Year"))
+            return true;
+        if (query.equals("2") && standardYear.equals("Second Year"))
+            return true;
+        if (query.equals("3") && standardYear.equals("Third Year"))
+            return true;
+        if (query.equals("4") && standardYear.equals("Fourth Year"))
+            return true;
         return false;
     }
 
     private boolean matchesYear(Student s, String year) {
-        if (year == null || year.isEmpty() || year.equalsIgnoreCase("All Years")) return true;
-        
+        if (year == null || year.isEmpty() || year.equalsIgnoreCase("All Years"))
+            return true;
+
         int targetYearNo = 0;
         String lowerYear = year.toLowerCase();
         if (lowerYear.contains("first") || lowerYear.equals("1") || lowerYear.contains("1st")) {
@@ -183,32 +187,39 @@ public class HodAnalyticsService {
 
         if (targetYearNo > 0) {
             if (s.getYearRef() != null) {
-                if (s.getYearRef().getYearNo() == targetYearNo) return true;
-                if (s.getYearRef().getYearName() != null && s.getYearRef().getYearName().toLowerCase().contains(lowerYear)) return true;
+                if (s.getYearRef().getYearNo() == targetYearNo)
+                    return true;
+                if (s.getYearRef().getYearName() != null
+                        && s.getYearRef().getYearName().toLowerCase().contains(lowerYear))
+                    return true;
             }
             if (s.getYear() != null) {
                 String yStr = s.getYear().trim().toLowerCase();
-                if (yStr.equals(String.valueOf(targetYearNo)) || yStr.contains(lowerYear)) return true;
+                if (yStr.equals(String.valueOf(targetYearNo)) || yStr.contains(lowerYear))
+                    return true;
             }
         }
 
         // Generic fallback match
         if (s.getYearRef() != null && s.getYearRef().getYearName() != null
-                && s.getYearRef().getYearName().equalsIgnoreCase(year)) return true;
-        if (s.getYear() != null && s.getYear().equalsIgnoreCase(year)) return true;
-        if (s.getAcademicYear() != null && s.getAcademicYear().equalsIgnoreCase(year)) return true;
+                && s.getYearRef().getYearName().equalsIgnoreCase(year))
+            return true;
+        if (s.getYear() != null && s.getYear().equalsIgnoreCase(year))
+            return true;
+        if (s.getAcademicYear() != null && s.getAcademicYear().equalsIgnoreCase(year))
+            return true;
 
         return false;
     }
 
-    private HodAttendanceAnalyticsDTO calculateAttendanceAnalytics(Long deptId, List<Long> studentIds, String activeYear,
-                                                                   List<Section> deptSections, List<Student> filteredStudents) {
+    private HodAttendanceAnalyticsDTO calculateAttendanceAnalytics(Long deptId, List<Long> studentIds,
+            String activeYear,
+            List<Section> deptSections, List<Student> filteredStudents) {
         if (studentIds.isEmpty()) {
             return new HodAttendanceAnalyticsDTO(
                     0.0, 0, 0, 0, 0,
                     new AttendanceDistributionDTO(0.0, 0.0, 0.0),
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()
-            );
+                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         }
 
         try {
@@ -252,9 +263,12 @@ public class HodAnalyticsService {
             for (Object[] r : studentAggRows) {
                 int p = r[1] != null ? ((Number) r[1]).intValue() : 0;
                 int a = r[2] != null ? ((Number) r[2]).intValue() : 0;
-                if (a == 0 && p > 0) fullPresentStudents++;
-                else if (p > 0 && a > 0) partialAbsentStudents++;
-                else if (p == 0 && a > 0) fullAbsentStudents++;
+                if (a == 0 && p > 0)
+                    fullPresentStudents++;
+                else if (p > 0 && a > 0)
+                    partialAbsentStudents++;
+                else if (p == 0 && a > 0)
+                    fullAbsentStudents++;
             }
 
             int totalDistinct = studentAggRows.size();
@@ -265,14 +279,14 @@ public class HodAnalyticsService {
             AttendanceDistributionDTO distribution = new AttendanceDistributionDTO(
                     Math.round(presentPct * 10.0) / 10.0,
                     Math.round(partialAbsentPct * 10.0) / 10.0,
-                    Math.round(fullAbsentPct * 10.0) / 10.0
-            );
+                    Math.round(fullAbsentPct * 10.0) / 10.0);
 
             // Daily Trend (Last 7 distinct active days)
             // attendance_records has no date column – date lives in attendance_sessions
             String trendSql = "SELECT " +
                     "  sess.attendance_date, " +
-                    "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(ar.id), 0) AS DECIMAL(5,2)) as daily_pct " +
+                    "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(ar.id), 0) AS DECIMAL(5,2)) as daily_pct "
+                    +
                     "FROM attendance_records ar " +
                     "JOIN attendance_sessions sess ON ar.attendance_session_id = sess.id " +
                     "WHERE ar.student_id IN (:studentIds) " +
@@ -290,9 +304,12 @@ public class HodAnalyticsService {
             for (Object[] r : trendRows) {
                 Object dObj = r[0];
                 LocalDate d = null;
-                if (dObj instanceof java.sql.Date) d = ((java.sql.Date) dObj).toLocalDate();
-                else if (dObj instanceof LocalDate) d = (LocalDate) dObj;
-                else if (dObj instanceof String) d = LocalDate.parse((String) dObj);
+                if (dObj instanceof java.sql.Date)
+                    d = ((java.sql.Date) dObj).toLocalDate();
+                else if (dObj instanceof LocalDate)
+                    d = (LocalDate) dObj;
+                else if (dObj instanceof String)
+                    d = LocalDate.parse((String) dObj);
 
                 double pct = r[1] != null ? ((BigDecimal) r[1]).doubleValue() : 0.0;
                 String label = d != null ? d.format(dFmt) : (dObj != null ? dObj.toString() : "");
@@ -303,7 +320,8 @@ public class HodAnalyticsService {
             // Weekly Summary (Last 4 weeks)
             String weekSql = "SELECT " +
                     "  CONCAT('Week ', WEEK(sess.attendance_date, 1)) as w_label, " +
-                    "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(ar.id), 0) AS DECIMAL(5,2)) as w_pct, " +
+                    "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(ar.id), 0) AS DECIMAL(5,2)) as w_pct, "
+                    +
                     "  SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) as p_cnt, " +
                     "  SUM(CASE WHEN ar.status IN ('ABSENT', 'LEAVE') THEN 1 ELSE 0 END) as a_cnt " +
                     "FROM attendance_records ar " +
@@ -342,7 +360,8 @@ public class HodAnalyticsService {
                 }
 
                 String secSql = "SELECT " +
-                        "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(ar.id), 0) AS DECIMAL(5,2)) as sec_pct " +
+                        "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(ar.id), 0) AS DECIMAL(5,2)) as sec_pct "
+                        +
                         "FROM attendance ar " +
                         "WHERE ar.student_id IN (:secStudentIds)";
 
@@ -351,7 +370,8 @@ public class HodAnalyticsService {
                 Object res = secQuery.getSingleResult();
                 double secPct = res != null ? ((BigDecimal) res).doubleValue() : 0.0;
 
-                sectionAttendance.add(new SectionAttendanceDTO(sec.getId(), sec.getSectionName(), secPct, secStudentIds.size()));
+                sectionAttendance
+                        .add(new SectionAttendanceDTO(sec.getId(), sec.getSectionName(), secPct, secStudentIds.size()));
             }
 
             return new HodAttendanceAnalyticsDTO(
@@ -364,16 +384,14 @@ public class HodAnalyticsService {
                     trend,
                     Collections.emptyList(),
                     weeklySummary,
-                    sectionAttendance
-            );
+                    sectionAttendance);
 
         } catch (Exception e) {
             e.printStackTrace();
             return new HodAttendanceAnalyticsDTO(
                     0.0, 0, 0, 0, 0,
                     new AttendanceDistributionDTO(0.0, 0.0, 0.0),
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()
-            );
+                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         }
     }
 
@@ -382,8 +400,7 @@ public class HodAnalyticsService {
             return new HodXpAnalyticsDTO(
                     0, 0, 0, 0,
                     Collections.emptyList(), new AwardVsPenaltyDTO(0, 0, 0, 0),
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList()
-            );
+                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         }
 
         try {
@@ -450,8 +467,8 @@ public class HodAnalyticsService {
                     .map(s -> new StudentXpSummaryDTO(
                             s.getId(), s.getFullName(), s.getRegNo(),
                             s.getSection() != null ? s.getSection().getSectionName() : "N/A",
-                            s.getTotalXp(), Math.min(100, Math.max(0, s.getScore()))
-                    )).collect(Collectors.toList());
+                            s.getTotalXp(), Math.min(100, Math.max(0, s.getScore()))))
+                    .collect(Collectors.toList());
 
             List<StudentXpSummaryDTO> lowestStudents = sortedStudents.stream()
                     .sorted(Comparator.comparingInt(Student::getTotalXp))
@@ -459,21 +476,19 @@ public class HodAnalyticsService {
                     .map(s -> new StudentXpSummaryDTO(
                             s.getId(), s.getFullName(), s.getRegNo(),
                             s.getSection() != null ? s.getSection().getSectionName() : "N/A",
-                            s.getTotalXp(), Math.min(100, Math.max(0, s.getScore()))
-                    )).collect(Collectors.toList());
+                            s.getTotalXp(), Math.min(100, Math.max(0, s.getScore()))))
+                    .collect(Collectors.toList());
 
             return new HodXpAnalyticsDTO(
                     totalNetXp, awardXp, penaltyXp, netXp,
-                    monthlyTrend, awardVsPenalty, xpHeatmap, topStudents, lowestStudents
-            );
+                    monthlyTrend, awardVsPenalty, xpHeatmap, topStudents, lowestStudents);
 
         } catch (Exception e) {
             e.printStackTrace();
             return new HodXpAnalyticsDTO(
                     0, 0, 0, 0,
                     Collections.emptyList(), new AwardVsPenaltyDTO(0, 0, 0, 0),
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList()
-            );
+                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         }
     }
 
@@ -488,7 +503,8 @@ public class HodAnalyticsService {
                     "  COUNT(*) as total_cases, " +
                     "  COALESCE(SUM(CASE WHEN points > 0 THEN 1 ELSE 0 END), 0) as pos_count, " +
                     "  COALESCE(SUM(CASE WHEN points < 0 THEN 1 ELSE 0 END), 0) as neg_count, " +
-                    "  COALESCE(SUM(CASE WHEN points = 0 OR LOWER(remarks) LIKE '%warn%' THEN 1 ELSE 0 END), 0) as warn_count " +
+                    "  COALESCE(SUM(CASE WHEN points = 0 OR LOWER(remarks) LIKE '%warn%' THEN 1 ELSE 0 END), 0) as warn_count "
+                    +
                     "FROM discipline_logs dl " +
                     "WHERE dl.student_id IN (:studentIds)";
 
@@ -508,7 +524,8 @@ public class HodAnalyticsService {
             Number pCount = (Number) pQuery.getSingleResult();
             long penaltiesTotal = negCount + (pCount != null ? pCount.longValue() : 0);
 
-            return new HodDisciplineAnalyticsDTO(totalCases + (pCount != null ? pCount.longValue() : 0), posCount, penaltiesTotal, warnCount);
+            return new HodDisciplineAnalyticsDTO(totalCases + (pCount != null ? pCount.longValue() : 0), posCount,
+                    penaltiesTotal, warnCount);
         } catch (Exception e) {
             e.printStackTrace();
             return new HodDisciplineAnalyticsDTO(0, 0, 0, 0);
@@ -522,7 +539,8 @@ public class HodAnalyticsService {
         List<LeaderboardStudentDTO> list = new ArrayList<>();
         int rank = 1;
         for (Student s : sorted) {
-            if (rank > 10) break;
+            if (rank > 10)
+                break;
             list.add(new LeaderboardStudentDTO(
                     rank++,
                     s.getId(),
@@ -531,13 +549,13 @@ public class HodAnalyticsService {
                     s.getSection() != null ? s.getSection().getSectionName() : "N/A",
                     s.getTotalXp(),
                     Math.min(100, Math.max(0, s.getScore())),
-                    s.getStage()
-            ));
+                    s.getStage()));
         }
         return list;
     }
 
-    private List<SectionComparisonDTO> calculateSectionComparison(List<Section> deptSections, List<Student> filteredStudents) {
+    private List<SectionComparisonDTO> calculateSectionComparison(List<Section> deptSections,
+            List<Student> filteredStudents) {
         List<SectionComparisonDTO> list = new ArrayList<>();
 
         for (Section sec : deptSections) {
@@ -546,10 +564,10 @@ public class HodAnalyticsService {
                     .collect(Collectors.toList());
 
             int studentCount = secStudents.size();
-            double avgXp = secStudents.isEmpty() ? 0.0 :
-                    secStudents.stream().mapToDouble(Student::getTotalXp).average().orElse(0.0);
-            double avgScore = secStudents.isEmpty() ? 100.0 :
-                    secStudents.stream().mapToDouble(Student::getScore).average().orElse(100.0);
+            double avgXp = secStudents.isEmpty() ? 0.0
+                    : secStudents.stream().mapToDouble(Student::getTotalXp).average().orElse(0.0);
+            double avgScore = secStudents.isEmpty() ? 100.0
+                    : secStudents.stream().mapToDouble(Student::getScore).average().orElse(100.0);
 
             // Attendance % for this section
             double attendancePct = 0.0;
@@ -557,7 +575,8 @@ public class HodAnalyticsService {
                 List<Long> secStudentIds = secStudents.stream().map(Student::getId).collect(Collectors.toList());
                 try {
                     String attSql = "SELECT " +
-                            "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(ar.id), 0) AS DECIMAL(5,2)) " +
+                            "  CAST((SUM(CASE WHEN ar.status IN ('PRESENT', 'OD') THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(ar.id), 0) AS DECIMAL(5,2)) "
+                            +
                             "FROM attendance ar " +
                             "WHERE ar.student_id IN (:secStudentIds)";
                     Query q = entityManager.createNativeQuery(attSql);
@@ -566,7 +585,8 @@ public class HodAnalyticsService {
                     if (res != null) {
                         attendancePct = ((BigDecimal) res).doubleValue();
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
 
             list.add(new SectionComparisonDTO(
@@ -575,8 +595,7 @@ public class HodAnalyticsService {
                     studentCount,
                     Math.round(avgXp * 10.0) / 10.0,
                     Math.round(attendancePct * 10.0) / 10.0,
-                    Math.round(Math.min(100.0, Math.max(0.0, avgScore)) * 10.0) / 10.0
-            ));
+                    Math.round(Math.min(100.0, Math.max(0.0, avgScore)) * 10.0) / 10.0));
         }
 
         return list;
@@ -658,8 +677,10 @@ public class HodAnalyticsService {
 
             // Sort newest first
             list.sort((a, b) -> {
-                if (a.getPenaltyDate() == null) return 1;
-                if (b.getPenaltyDate() == null) return -1;
+                if (a.getPenaltyDate() == null)
+                    return 1;
+                if (b.getPenaltyDate() == null)
+                    return -1;
                 return b.getPenaltyDate().compareTo(a.getPenaltyDate());
             });
 

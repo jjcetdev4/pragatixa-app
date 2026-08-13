@@ -1,4 +1,4 @@
-package com.pragatix.modules.analytics.dto;
+package jjcet.PragatiX.modules.analytics.dto;
 
 import java.time.LocalDateTime;
 
@@ -15,9 +15,12 @@ public class XpHistoryDTO {
     private Long currentTotalXp;
     private String approvedBy;
 
-    public XpHistoryDTO() {}
+    public XpHistoryDTO() {
+    }
 
-    public XpHistoryDTO(LocalDateTime date, String studentName, String registerNumber, String department, String section, String activityName, Integer awardXp, Integer penaltyXp, Integer netXp, Long currentTotalXp, String approvedBy) {
+    public XpHistoryDTO(LocalDateTime date, String studentName, String registerNumber, String department,
+            String section, String activityName, Integer awardXp, Integer penaltyXp, Integer netXp, Long currentTotalXp,
+            String approvedBy) {
         this.date = date;
         this.studentName = studentName;
         this.registerNumber = registerNumber;
@@ -32,36 +35,91 @@ public class XpHistoryDTO {
     }
 
     // Getters and Setters
-    public LocalDateTime getDate() { return date; }
-    public void setDate(LocalDateTime date) { this.date = date; }
+    public LocalDateTime getDate() {
+        return date;
+    }
 
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
 
-    public String getRegisterNumber() { return registerNumber; }
-    public void setRegisterNumber(String registerNumber) { this.registerNumber = registerNumber; }
+    public String getStudentName() {
+        return studentName;
+    }
 
-    public String getDepartment() { return department; }
-    public void setDepartment(String department) { this.department = department; }
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
 
-    public String getSection() { return section; }
-    public void setSection(String section) { this.section = section; }
+    public String getRegisterNumber() {
+        return registerNumber;
+    }
 
-    public String getActivityName() { return activityName; }
-    public void setActivityName(String activityName) { this.activityName = activityName; }
+    public void setRegisterNumber(String registerNumber) {
+        this.registerNumber = registerNumber;
+    }
 
-    public Integer getAwardXp() { return awardXp; }
-    public void setAwardXp(Integer awardXp) { this.awardXp = awardXp; }
+    public String getDepartment() {
+        return department;
+    }
 
-    public Integer getPenaltyXp() { return penaltyXp; }
-    public void setPenaltyXp(Integer penaltyXp) { this.penaltyXp = penaltyXp; }
+    public void setDepartment(String department) {
+        this.department = department;
+    }
 
-    public Integer getNetXp() { return netXp; }
-    public void setNetXp(Integer netXp) { this.netXp = netXp; }
+    public String getSection() {
+        return section;
+    }
 
-    public Long getCurrentTotalXp() { return currentTotalXp; }
-    public void setCurrentTotalXp(Long currentTotalXp) { this.currentTotalXp = currentTotalXp; }
+    public void setSection(String section) {
+        this.section = section;
+    }
 
-    public String getApprovedBy() { return approvedBy; }
-    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
+    public String getActivityName() {
+        return activityName;
+    }
+
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
+    }
+
+    public Integer getAwardXp() {
+        return awardXp;
+    }
+
+    public void setAwardXp(Integer awardXp) {
+        this.awardXp = awardXp;
+    }
+
+    public Integer getPenaltyXp() {
+        return penaltyXp;
+    }
+
+    public void setPenaltyXp(Integer penaltyXp) {
+        this.penaltyXp = penaltyXp;
+    }
+
+    public Integer getNetXp() {
+        return netXp;
+    }
+
+    public void setNetXp(Integer netXp) {
+        this.netXp = netXp;
+    }
+
+    public Long getCurrentTotalXp() {
+        return currentTotalXp;
+    }
+
+    public void setCurrentTotalXp(Long currentTotalXp) {
+        this.currentTotalXp = currentTotalXp;
+    }
+
+    public String getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(String approvedBy) {
+        this.approvedBy = approvedBy;
+    }
 }

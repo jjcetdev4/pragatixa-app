@@ -1,14 +1,14 @@
-package com.pragatix;
+package jjcet.PragatiX;
 
-import com.pragatix.admin.service.*;
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.CreateTeamRequest;
-import com.pragatix.dto.TeamResponse;
-import com.pragatix.entity.*;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.repository.StudentActivityXpRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.repository.*;
+import jjcet.PragatiX.admin.service.*;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.CreateTeamRequest;
+import jjcet.PragatiX.dto.TeamResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -81,16 +81,14 @@ public class TeamClassScopedValidationTest {
                 teamMapper,
                 stageTeamRepository,
                 departmentRepository,
-                sectionRepository
-        );
+                sectionRepository);
 
         adminUser = new User();
         adminUser.setId(1L);
         adminUser.setUsername("admin");
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin", "password",
-                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
-        );
+                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
 
         deptCS = new Department();
         deptCS.setId(10L);
@@ -136,7 +134,8 @@ public class TeamClassScopedValidationTest {
     void testSameTeamNameAllowedInDifferentClasses() {
         // 1. Team A in CS - 1st Year - Section A
         Student student1 = createMockStudent("REG001", "Student 1", deptCS, "1st Year", secA);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "1st Year", secA.getId())).thenReturn(false);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "1st Year", secA.getId()))
+                .thenReturn(false);
 
         CreateTeamRequest req1 = new CreateTeamRequest();
         req1.setName("Team A");
@@ -149,7 +148,8 @@ public class TeamClassScopedValidationTest {
 
         // 2. Team A in CS - 1st Year - Section B (different section)
         Student student2 = createMockStudent("REG002", "Student 2", deptCS, "1st Year", secB);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "1st Year", secB.getId())).thenReturn(false);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "1st Year", secB.getId()))
+                .thenReturn(false);
 
         CreateTeamRequest req2 = new CreateTeamRequest();
         req2.setName("Team A");
@@ -162,7 +162,8 @@ public class TeamClassScopedValidationTest {
 
         // 3. Team A in IT - 1st Year - Section A (different department)
         Student student3 = createMockStudent("REG003", "Student 3", deptIT, "1st Year", secA);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptIT.getId(), "1st Year", secA.getId())).thenReturn(false);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptIT.getId(), "1st Year", secA.getId()))
+                .thenReturn(false);
 
         CreateTeamRequest req3 = new CreateTeamRequest();
         req3.setName("Team A");
@@ -175,7 +176,8 @@ public class TeamClassScopedValidationTest {
 
         // 4. Team A in CS - 2nd Year - Section A (different year)
         Student student4 = createMockStudent("REG004", "Student 4", deptCS, "2nd Year", secA);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "2nd Year", secA.getId())).thenReturn(false);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "2nd Year", secA.getId()))
+                .thenReturn(false);
 
         CreateTeamRequest req4 = new CreateTeamRequest();
         req4.setName("Team A");
@@ -192,7 +194,8 @@ public class TeamClassScopedValidationTest {
     void testDuplicateTeamNameRejectedInSameClass() {
         // Given Team A already exists in CS - 1st Year - Section A
         Student student5 = createMockStudent("REG005", "Student 5", deptCS, "1st Year", secA);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "1st Year", secA.getId())).thenReturn(true);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "1st Year", secA.getId()))
+                .thenReturn(true);
 
         CreateTeamRequest req = new CreateTeamRequest();
         req.setName("Team A");

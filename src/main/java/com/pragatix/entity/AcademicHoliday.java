@@ -1,4 +1,4 @@
-package com.pragatix.entity;
+package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -22,12 +22,35 @@ public class AcademicHoliday {
     private LocalDate holidayDate;
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public AcademicMonth getAcademicMonth() { return academicMonth; }
-    public void setAcademicMonth(AcademicMonth academicMonth) { this.academicMonth = academicMonth; }
-    public String getHolidayName() { return holidayName; }
-    public void setHolidayName(String holidayName) { this.holidayName = holidayName; }
-    public LocalDate getHolidayDate() { return holidayDate; }
-    public void setHolidayDate(LocalDate holidayDate) { this.holidayDate = holidayDate; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public AcademicMonth getAcademicMonth() {
+        return academicMonth;
+    }
+
+    public void setAcademicMonth(AcademicMonth academicMonth) {
+        this.academicMonth = academicMonth;
+    }
+
+    public String getHolidayName() {
+        return holidayName;
+    }
+
+    public void setHolidayName(String holidayName) {
+        this.holidayName = holidayName;
+    }
+
+    public LocalDate getHolidayDate() {
+        return holidayDate;
+    }
+
+    public void setHolidayDate(LocalDate holidayDate) {
+        this.holidayDate = holidayDate;
+    }
 }

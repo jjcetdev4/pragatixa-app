@@ -1,7 +1,7 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.entity.XpTransaction;
-import com.pragatix.repository.XpTransactionRepository;
+import jjcet.PragatiX.entity.XpTransaction;
+import jjcet.PragatiX.repository.XpTransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -26,7 +26,8 @@ public class StudentXpAggregator {
         if (stageOrder == null) {
             return processTransactions(java.util.Collections.emptyList());
         }
-        List<XpTransaction> stageTxs = xpTransactionRepository.findByStudentIdAndStageAndStatus(regNo, stageOrder, "APPROVED");
+        List<XpTransaction> stageTxs = xpTransactionRepository.findByStudentIdAndStageAndStatus(regNo, stageOrder,
+                "APPROVED");
         return processTransactions(stageTxs);
     }
 

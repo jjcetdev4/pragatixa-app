@@ -1,4 +1,4 @@
-package com.pragatix.enums;
+package jjcet.PragatiX.enums;
 
 public enum StageStatus {
     UPCOMING,

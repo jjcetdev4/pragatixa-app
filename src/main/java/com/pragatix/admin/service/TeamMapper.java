@@ -1,17 +1,17 @@
-package com.pragatix.admin.service;
+package jjcet.PragatiX.admin.service;
 
-import com.pragatix.dto.TeamRemovalRequestDto;
-import com.pragatix.dto.TeamResponse;
-import com.pragatix.entity.Student;
-import com.pragatix.entity.Team;
-import com.pragatix.entity.TeamRemovalRequest;
-import com.pragatix.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.dto.TeamRemovalRequestDto;
+import jjcet.PragatiX.dto.TeamResponse;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.entity.Team;
+import jjcet.PragatiX.entity.TeamRemovalRequest;
+import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import com.pragatix.repository.StageTeamRepository;
-import com.pragatix.entity.StageTeam;
+import jjcet.PragatiX.repository.StageTeamRepository;
+import jjcet.PragatiX.entity.StageTeam;
 
 @Component
 public class TeamMapper {

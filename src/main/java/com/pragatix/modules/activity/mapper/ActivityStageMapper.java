@@ -1,9 +1,9 @@
-package com.pragatix.modules.activity.mapper;
+package jjcet.PragatiX.modules.activity.mapper;
 
-import com.pragatix.modules.activity.dto.request.ActivityStageRequest;
-import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
-import com.pragatix.entity.ActivityStage;
-import com.pragatix.enums.StageStatus;
+import jjcet.PragatiX.modules.activity.dto.request.ActivityStageRequest;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityStageResponse;
+import jjcet.PragatiX.entity.ActivityStage;
+import jjcet.PragatiX.enums.StageStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -91,13 +91,17 @@ public class ActivityStageMapper {
         System.out.println("======================================");
         System.out.println("DEBUG LOG: Stage ID = " + entity.getId());
         System.out.println("DEBUG LOG: Stage Name = " + entity.getName());
-        System.out.println("DEBUG LOG: Start Date = " + (entity.getStartDateTime() != null ? entity.getStartDateTime().toLocalDate() : "null"));
-        System.out.println("DEBUG LOG: End Date = " + (entity.getEndDateTime() != null ? entity.getEndDateTime().toLocalDate() : "null"));
-        System.out.println("DEBUG LOG: Start Time = " + (entity.getStartDateTime() != null ? entity.getStartDateTime().toLocalTime() : "null"));
-        System.out.println("DEBUG LOG: End Time = " + (entity.getEndDateTime() != null ? entity.getEndDateTime().toLocalTime() : "null"));
+        System.out.println("DEBUG LOG: Start Date = "
+                + (entity.getStartDateTime() != null ? entity.getStartDateTime().toLocalDate() : "null"));
+        System.out.println("DEBUG LOG: End Date = "
+                + (entity.getEndDateTime() != null ? entity.getEndDateTime().toLocalDate() : "null"));
+        System.out.println("DEBUG LOG: Start Time = "
+                + (entity.getStartDateTime() != null ? entity.getStartDateTime().toLocalTime() : "null"));
+        System.out.println("DEBUG LOG: End Time = "
+                + (entity.getEndDateTime() != null ? entity.getEndDateTime().toLocalTime() : "null"));
         System.out.println("DEBUG LOG: Current Time = " + now);
         System.out.println("DEBUG LOG: Calculated Status = " + calculatedStatus);
-        
+
         if (entity.getStartDateTime() == null && entity.getEndDateTime() == null) {
             System.out.println("DEBUG LOG: Reason = No valid scheduling information exists. Defaulting to ACTIVE.");
         } else if (calculatedStatus == StageStatus.UPCOMING) {
@@ -105,7 +109,8 @@ public class ActivityStageMapper {
         } else if (calculatedStatus == StageStatus.COMPLETED) {
             System.out.println("DEBUG LOG: Reason = Current time is after the configured End Date.");
         } else {
-            System.out.println("DEBUG LOG: Reason = Current time satisfies the ACTIVE condition (after start, before end).");
+            System.out.println(
+                    "DEBUG LOG: Reason = Current time satisfies the ACTIVE condition (after start, before end).");
         }
         System.out.println("======================================");
 

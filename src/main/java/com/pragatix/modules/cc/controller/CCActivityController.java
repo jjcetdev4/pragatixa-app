@@ -1,11 +1,11 @@
-package com.pragatix.modules.cc.controller;
+package jjcet.PragatiX.modules.cc.controller;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Activity;
-import com.pragatix.modules.activity.dto.response.ActivityStageResponse;
-import com.pragatix.modules.cc.dto.CCActivityAssignRequest;
-import com.pragatix.modules.cc.dto.CCTeacherAssignRequest;
-import com.pragatix.modules.cc.service.CCActivityService;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.modules.activity.dto.response.ActivityStageResponse;
+import jjcet.PragatiX.modules.cc.dto.CCActivityAssignRequest;
+import jjcet.PragatiX.modules.cc.dto.CCTeacherAssignRequest;
+import jjcet.PragatiX.modules.cc.service.CCActivityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,7 +64,7 @@ public class CCActivityController {
         return ccActivityService.getClassTeachers(username);
     }
 
-    @GetMapping({"/students", "/{activityId}/students"})
+    @GetMapping({ "/students", "/{activityId}/students" })
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Get students belonging to the logged-in CC's department, year, and section")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getClassStudents(

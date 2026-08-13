@@ -1,18 +1,18 @@
-package com.pragatix.modules.student.service;
+package jjcet.PragatiX.modules.student.service;
 
-import com.pragatix.dto.*;
-import com.pragatix.modules.activity.dto.request.*;
-import com.pragatix.modules.activity.dto.response.*;
-import com.pragatix.modules.student.dto.request.*;
-import com.pragatix.modules.student.dto.response.*;
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.*;
-import com.pragatix.repository.*;
-import com.pragatix.modules.activity.repository.*;
-import com.pragatix.modules.faculty.repository.*;
-import com.pragatix.modules.student.repository.*;
-import com.pragatix.repository.StudentGuardianRepository;
-import com.pragatix.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.dto.*;
+import jjcet.PragatiX.modules.activity.dto.request.*;
+import jjcet.PragatiX.modules.activity.dto.response.*;
+import jjcet.PragatiX.modules.student.dto.request.*;
+import jjcet.PragatiX.modules.student.dto.response.*;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.repository.*;
+import jjcet.PragatiX.modules.activity.repository.*;
+import jjcet.PragatiX.modules.faculty.repository.*;
+import jjcet.PragatiX.modules.student.repository.*;
+import jjcet.PragatiX.repository.StudentGuardianRepository;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -364,9 +364,12 @@ public class StudentImportService {
                     Team g = teamRepository.findExactTeam(gTrim, dId, secId, year)
                             .orElseGet(() -> {
                                 Team.Builder builder = Team.builder().name(gTrim);
-                                if (dId != null) departmentRepository.findById(dId).ifPresent(builder::department);
-                                if (secId != null) sectionRepository.findById(secId).ifPresent(builder::section);
-                                if (year != null && !year.isEmpty()) builder.year(year);
+                                if (dId != null)
+                                    departmentRepository.findById(dId).ifPresent(builder::department);
+                                if (secId != null)
+                                    sectionRepository.findById(secId).ifPresent(builder::section);
+                                if (year != null && !year.isEmpty())
+                                    builder.year(year);
                                 return teamRepository.save(builder.build());
                             });
                     req.setTeamId(g.getId());
@@ -453,9 +456,11 @@ public class StudentImportService {
             List<Student> studentsToSave = new ArrayList<>();
             List<StudentGuardian> guardiansToSave = new ArrayList<>();
 
-            ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueOrderByDisplayOrderAsc().orElse(null);
+            ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueOrderByDisplayOrderAsc()
+                    .orElse(null);
             if (initialStage == null) {
-                return ApiResponse.error("Validation Error: No active stages found. Please configure stages before creating students.");
+                return ApiResponse.error(
+                        "Validation Error: No active stages found. Please configure stages before creating students.");
             }
             java.util.Map<Long, Department> deptMap = new java.util.HashMap<>();
             java.util.Map<Long, Section> sectionMap = new java.util.HashMap<>();
@@ -695,11 +700,12 @@ public class StudentImportService {
                             try {
                                 entityManager.createNativeQuery(
                                         "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
-                                        "ON DUPLICATE KEY UPDATE team_id = :tid")
+                                                "ON DUPLICATE KEY UPDATE team_id = :tid")
                                         .setParameter("tid", s.getTeam().getId())
                                         .setParameter("sid", s.getId())
                                         .executeUpdate();
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                            }
                         }
                     }
                 }

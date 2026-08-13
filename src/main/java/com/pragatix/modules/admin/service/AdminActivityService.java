@@ -1,10 +1,10 @@
-package com.pragatix.modules.admin.service;
+package jjcet.PragatiX.modules.admin.service;
 
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.entity.Activity;
-import com.pragatix.entity.CustomFrequency;
-import com.pragatix.modules.activity.dto.response.MyActivityResponse;
-import com.pragatix.modules.activity.dto.response.GroupedActivityResponse;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.Activity;
+import jjcet.PragatiX.entity.CustomFrequency;
+import jjcet.PragatiX.modules.activity.dto.response.MyActivityResponse;
+import jjcet.PragatiX.modules.activity.dto.response.GroupedActivityResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -34,22 +34,23 @@ public class AdminActivityService {
     }
 
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(Long subgroupId,
-            com.pragatix.enums.AcademicYear academicYear) {
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
         return queryService.getActivitiesBySubgroup(subgroupId, academicYear);
     }
 
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(Long stageId, String subgroup,
-            com.pragatix.enums.AcademicYear academicYear) {
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
         return queryService.getActivitiesByStage(stageId, subgroup, academicYear);
     }
 
     public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup,
-            com.pragatix.enums.AcademicYear academicYear) {
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
         return queryService.getAllActivities(subgroup, academicYear);
     }
 
-    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(Long stageId, String subgroup,
-            com.pragatix.enums.AcademicYear academicYear) {
+    public ResponseEntity<ApiResponse<List<GroupedActivityResponse>>> getGroupedActivities(Long stageId,
+            String subgroup,
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
         return queryService.getGroupedActivities(stageId, subgroup, academicYear);
     }
 

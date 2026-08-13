@@ -1,6 +1,6 @@
-package com.pragatix.modules.attendance.dto.request;
+package jjcet.PragatiX.modules.attendance.dto.request;
 
-import com.pragatix.entity.AttendanceRecord;
+import jjcet.PragatiX.entity.AttendanceRecord;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;

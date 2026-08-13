@@ -1,6 +1,6 @@
-package com.pragatix.modules.attendance.service;
+package jjcet.PragatiX.modules.attendance.service;
 
-import com.pragatix.modules.attendance.repository.AttendanceRepository;
+import jjcet.PragatiX.modules.attendance.repository.AttendanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,10 +9,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import com.pragatix.entity.Streak;
-import com.pragatix.entity.Student;
-import com.pragatix.repository.StreakRepository;
-import com.pragatix.entity.Attendance;
+import jjcet.PragatiX.entity.Streak;
+import jjcet.PragatiX.entity.Student;
+import jjcet.PragatiX.repository.StreakRepository;
+import jjcet.PragatiX.entity.Attendance;
 
 @Service
 public class AttendanceStreakService {

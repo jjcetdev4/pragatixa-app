@@ -1,8 +1,8 @@
-package com.pragatix.modules.attendancesettings.service;
+package jjcet.PragatiX.modules.attendancesettings.service;
 
-import com.pragatix.entity.AttendanceSettings;
-import com.pragatix.enums.AcademicYear;
-import com.pragatix.modules.attendancesettings.repository.AttendanceSettingsRepository;
+import jjcet.PragatiX.entity.AttendanceSettings;
+import jjcet.PragatiX.enums.AcademicYear;
+import jjcet.PragatiX.modules.attendancesettings.repository.AttendanceSettingsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,13 +11,17 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * EngineClockService — Single source of truth for the "effective" engine timestamp.
+ * EngineClockService — Single source of truth for the "effective" engine
+ * timestamp.
  *
- * - Production Mode: uses the real system clock (LocalDate.now() / LocalDateTime.now()).
- * - Test Mode:       uses the administrator-configured test date and time stored in AttendanceSettings.
+ * - Production Mode: uses the real system clock (LocalDate.now() /
+ * LocalDateTime.now()).
+ * - Test Mode: uses the administrator-configured test date and time stored in
+ * AttendanceSettings.
  *
  * IMPORTANT: Only attendance engine code should call this service.
- * JWT, login, audit logs, and all other modules must continue using LocalDate/LocalDateTime.now() directly.
+ * JWT, login, audit logs, and all other modules must continue using
+ * LocalDate/LocalDateTime.now() directly.
  */
 @Service
 public class EngineClockService {
@@ -39,7 +43,8 @@ public class EngineClockService {
 
     /**
      * Returns the effective time for the engine.
-     * In Test Mode: the configured testTime (or midnight if not set). In Production: LocalTime.now().
+     * In Test Mode: the configured testTime (or midnight if not set). In
+     * Production: LocalTime.now().
      */
     public LocalTime getEffectiveTime(AcademicYear academicYear) {
         AttendanceSettings settings = getSettings(academicYear);
@@ -65,7 +70,8 @@ public class EngineClockService {
     }
 
     private AttendanceSettings getSettings(AcademicYear academicYear) {
-        if (academicYear == null) return null;
+        if (academicYear == null)
+            return null;
         return settingsRepository.findByAcademicYear(academicYear).orElse(null);
     }
 }

@@ -1,15 +1,15 @@
-package com.pragatix;
+package jjcet.PragatiX;
 
-import com.pragatix.admin.service.*;
-import com.pragatix.common.response.ApiResponse;
-import com.pragatix.dto.CreateTeamRequest;
-import com.pragatix.dto.TeamResponse;
-import com.pragatix.entity.*;
-import com.pragatix.modules.authentication.repository.UserRepository;
-import com.pragatix.modules.student.repository.StudentActivityXpRepository;
-import com.pragatix.modules.student.repository.StudentRepository;
-import com.pragatix.modules.student.service.StudentXpValidator;
-import com.pragatix.repository.*;
+import jjcet.PragatiX.admin.service.*;
+import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.dto.CreateTeamRequest;
+import jjcet.PragatiX.dto.TeamResponse;
+import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.authentication.repository.UserRepository;
+import jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository;
+import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.student.service.StudentXpValidator;
+import jjcet.PragatiX.repository.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -100,8 +100,7 @@ public class TeamMembershipIntegrityTest {
                 teamMapper,
                 stageTeamRepository,
                 departmentRepository,
-                sectionRepository
-        );
+                sectionRepository);
 
         teamMemberService = new TeamMemberService(
                 teamRepository,
@@ -112,10 +111,10 @@ public class TeamMembershipIntegrityTest {
                 teamMapper,
                 stageTeamRepository,
                 teamCleanupService,
-                leadershipSyncService
-        );
+                leadershipSyncService);
 
-        studentXpValidator = new StudentXpValidator(studentActivityXpRepository, null, teamRepository, activityAssignmentRepository);
+        studentXpValidator = new StudentXpValidator(studentActivityXpRepository, null, teamRepository,
+                activityAssignmentRepository);
 
         Department dept = new Department();
         dept.setId(1L);
@@ -249,7 +248,8 @@ public class TeamMembershipIntegrityTest {
         when(studentRepository.findByRegNo(student1.getRegNo())).thenReturn(Optional.of(student1));
 
         // Act
-        ResponseEntity<ApiResponse<Void>> response = teamMemberService.addMemberToTeam(teamB.getId(), student1.getRegNo());
+        ResponseEntity<ApiResponse<Void>> response = teamMemberService.addMemberToTeam(teamB.getId(),
+                student1.getRegNo());
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -269,7 +269,8 @@ public class TeamMembershipIntegrityTest {
         when(teamRepository.findAllTeamsByStudentId(student1.getId())).thenReturn(List.of());
 
         // Act
-        ResponseEntity<ApiResponse<Void>> response = teamMemberService.addMemberToTeam(teamB.getId(), student1.getRegNo());
+        ResponseEntity<ApiResponse<Void>> response = teamMemberService.addMemberToTeam(teamB.getId(),
+                student1.getRegNo());
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -295,7 +296,8 @@ public class TeamMembershipIntegrityTest {
         when(stageTeamRepository.findByTeamId(teamA.getId())).thenReturn(List.of());
 
         // Act
-        ResponseEntity<ApiResponse<TeamResponse>> response = teamMemberService.removeMemberFromTeam(teamA.getId(), student1.getRegNo());
+        ResponseEntity<ApiResponse<TeamResponse>> response = teamMemberService.removeMemberFromTeam(teamA.getId(),
+                student1.getRegNo());
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
