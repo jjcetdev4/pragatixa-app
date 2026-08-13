@@ -8,9 +8,9 @@ spring:
     banner-mode: "off"
     log-startup-info: false
   datasource:
-    url: jdbc:mysql://localhost:3307/pragatix?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: sharu
+    url: ${DATABASE_URL}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -30,14 +30,16 @@ jwt:
   student-expiration: 57600000
 springdoc:
   api-docs:
-    path: /api-docs
+    enabled: ${SWAGGER_ENABLED:true}
+    path: /api/api-docs
   swagger-ui:
-    path: /swagger-ui.html
+    enabled: ${SWAGGER_ENABLED:true}
+    path: /api/swagger-ui.html
     tags-sorter: alpha
 logging:
   level:
     root: WARN
-    jjcet.PragatiX: INFO
+    com.pragatix: INFO
     org.springframework: WARN
     org.springframework.security: ERROR
     org.hibernate: WARN
