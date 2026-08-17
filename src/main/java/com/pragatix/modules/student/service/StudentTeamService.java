@@ -51,7 +51,7 @@ public class StudentTeamService {
             String defaultTeamName = student.getFullName().trim() + "'s Team";
             Long deptId = student.getDepartment() != null ? student.getDepartment().getId() : null;
             Long secId = student.getSection() != null ? student.getSection().getId() : null;
-            String year = student.getYear();
+            String year = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(student.getYear());
 
             if (teamRepository.existsByTeamNameAndClass(defaultTeamName, deptId, year, secId)) {
                 defaultTeamName = student.getFullName().trim() + " (" + student.getRegNo().trim() + ")'s Team";
@@ -65,7 +65,7 @@ public class StudentTeamService {
                     .size(10) // Default max size of 10
                     .captain(student)
                     .department(student.getDepartment())
-                    .year(student.getYear())
+                    .year(jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(student.getYear()))
                     .section(student.getSection())
                     .build();
             team = teamRepository.save(team);

@@ -81,8 +81,9 @@ public class TeamClassScopedValidationTest {
                 teamMapper,
                 stageTeamRepository,
                 departmentRepository,
-                sectionRepository);
-
+                sectionRepository,
+                null // activityStageRepository
+        ); 
         adminUser = new User();
         adminUser.setId(1L);
         adminUser.setUsername("admin");

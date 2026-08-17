@@ -114,15 +114,17 @@ public class StudentQueryService {
                 yearRef = yearRepository.findByYearNo(yearNo).orElse(null);
             }
             Section userSection = currentUser.getSection();
+            Long ccSectionId = userSection != null ? userSection.getId() : null;
 
-            if (currentUser.getDepartment() != null && yearRef != null && userSection != null) {
+            if (currentUser.getDepartment() != null && yearRef != null) {
                 // CC sees only their own department/year/section, but we can allow search
                 // keyword
                 Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudentsByCC(
                         keyword == null ? "" : keyword,
                         currentUser.getDepartment().getId(),
                         yearRef.getId(),
-                        userSection.getId(),
+                        ccSectionId,
+                        false,
                         pageable));
                 return ApiResponse.ok(result);
             } else {
@@ -162,7 +164,7 @@ public class StudentQueryService {
         return studentRepository.findDistinctSectionsByYearAndDepartment(year, departmentId);
     }
 
-    public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size) {
+    public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size, boolean unassignedOnly) {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by("fullName").ascending().and(Sort.by("regNo").ascending()));
 
@@ -192,13 +194,15 @@ public class StudentQueryService {
                 yearRef = yearRepository.findByYearNo(yearNo).orElse(null);
             }
             Section userSection = currentUser.getSection();
+            Long ccSectionId = userSection != null ? userSection.getId() : null;
 
-            if (currentUser.getDepartment() != null && yearRef != null && userSection != null) {
+            if (currentUser.getDepartment() != null && yearRef != null) {
                 Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudentsByCC(
                         keyword,
                         currentUser.getDepartment().getId(),
                         yearRef.getId(),
-                        userSection.getId(),
+                        ccSectionId,
+                        unassignedOnly,
                         pageable));
                 return ApiResponse.ok(result);
             } else {
@@ -210,14 +214,14 @@ public class StudentQueryService {
             String adminYear = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
             if (adminYear != null) {
                 Page<StudentResponse> result = mapWithGuardians(
-                        studentRepository.searchStudentsByYear(keyword, adminYear, pageable));
+                        studentRepository.searchStudentsByYear(keyword, adminYear, unassignedOnly, pageable));
                 return ApiResponse.ok(result);
             } else {
                 return ApiResponse.ok(Page.empty(pageable));
             }
         }
 
-        Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudents(keyword, pageable));
+        Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudents(keyword, unassignedOnly, pageable));
         return ApiResponse.ok(result);
     }
 
@@ -230,12 +234,13 @@ public class StudentQueryService {
             return ApiResponse.error("Team not found");
         }
 
-        String year = team.getYear();
+        String canonicalYear = team.getYear();
+        String year = jjcet.PragatiX.entity.Team.reverseCanonicalYearOfStudy(canonicalYear);
         Long deptId = team.getDepartment() != null ? team.getDepartment().getId() : null;
         Long sectionId = team.getSection() != null ? team.getSection().getId() : null;
 
-        if (year == null || deptId == null || sectionId == null) {
-            return ApiResponse.error("Team configuration is incomplete");
+        if (year == null && deptId == null && sectionId == null) {
+            return ApiResponse.error("Team has absolutely no configuration.");
         }
 
         java.util.List<Student> students = studentRepository.searchEligibleStudentsForTeam(keyword, year, deptId,

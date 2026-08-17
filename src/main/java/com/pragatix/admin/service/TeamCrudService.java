@@ -42,6 +42,7 @@ public class TeamCrudService {
     private final StageTeamRepository stageTeamRepository;
     private final DepartmentRepository departmentRepository;
     private final SectionRepository sectionRepository;
+    private final jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -57,7 +58,8 @@ public class TeamCrudService {
             TeamMapper mapper,
             StageTeamRepository stageTeamRepository,
             DepartmentRepository departmentRepository,
-            SectionRepository sectionRepository) {
+            SectionRepository sectionRepository,
+            jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -70,6 +72,7 @@ public class TeamCrudService {
         this.stageTeamRepository = stageTeamRepository;
         this.departmentRepository = departmentRepository;
         this.sectionRepository = sectionRepository;
+        this.activityStageRepository = activityStageRepository;
     }
 
     @Transactional
@@ -108,13 +111,18 @@ public class TeamCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName()
                     + " already belongs to an existing team."));
 
-        Long deptId = request.getDepartmentId() != null ? request.getDepartmentId()
-                : (captain.getDepartment() != null ? captain.getDepartment().getId() : null);
-        String year = (request.getAcademicYear() != null && !request.getAcademicYear().trim().isEmpty())
-                ? request.getAcademicYear()
-                : captain.getYear();
-        Long sectionId = request.getSectionId() != null ? request.getSectionId()
-                : (captain.getSection() != null ? captain.getSection().getId() : null);
+        Long deptId = captain.getDepartment() != null ? captain.getDepartment().getId() : null;
+        String year = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(captain.getYear());
+        Long sectionId = captain.getSection() != null ? captain.getSection().getId() : null;
+
+        boolean isCcOrHod = creator.getSubRoles().stream().map(jjcet.PragatiX.entity.SubRole::getName)
+                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("HOD"));
+        if (isCcOrHod && creator.getDepartment() != null && deptId != null) {
+            if (!creator.getDepartment().getId().equals(deptId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(
+                        "Access Denied: You cannot create a team for a student in another department."));
+            }
+        }
 
         if (teamRepository.existsByTeamNameAndClass(request.getName(), deptId, year, sectionId)) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
@@ -205,6 +213,18 @@ public class TeamCrudService {
         studentResponses.add(mapper.toStudentResponse(captain));
         for (Student m : members)
             studentResponses.add(mapper.toStudentResponse(m));
+
+        // Auto-assign to Stage 1
+        jjcet.PragatiX.entity.ActivityStage stage1 = activityStageRepository.findByDisplayOrder(1).orElse(null);
+        if (stage1 != null) {
+            StageTeam st = new StageTeam();
+            st.setTeam(savedTeam);
+            st.setStage(stage1);
+            st.setCaptain(captain);
+            // Vice-captain logic can be handled separately or added later
+            stageTeamRepository.save(st);
+            log.debug("Mapped Team '{}' to Stage 1", savedTeam.getName());
+        }
 
         TeamResponse response = mapper.toTeamResponse(savedTeam);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Team created successfully", response));

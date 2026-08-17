@@ -176,7 +176,7 @@ public class StageValidationService {
                     if (a == null)
                         return false;
                     boolean isActive = "ACTIVE".equalsIgnoreCase(a.getStatus()) || a.getStatus() == null;
-                    boolean isReward = "Reward".equalsIgnoreCase(a.getXpType());
+                    boolean isReward = "Reward".equalsIgnoreCase(a.getXpType()) || "Mixed".equalsIgnoreCase(a.getXpType());
 
                     // Determine subgroup from mapping first, fallback to activity global subgroup
                     jjcet.PragatiX.entity.ActivityStageMapping m = stageMappings.stream()

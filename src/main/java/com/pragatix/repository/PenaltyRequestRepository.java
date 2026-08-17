@@ -21,7 +21,7 @@ public interface PenaltyRequestRepository extends JpaRepository<PenaltyRequest, 
     @Query("DELETE FROM PenaltyRequest p WHERE p.activity.id = :activityId")
     int deleteByActivityId(@Param("activityId") Long activityId);
 
-    @Query("SELECT COUNT(p) FROM PenaltyRequest p WHERE p.status = 'PENDING' AND (p.cc.id = :ccId OR (p.student.department.id = :departmentId AND p.student.section.id = :sectionId))")
+    @Query("SELECT COUNT(p) FROM PenaltyRequest p WHERE p.status = 'PENDING' AND (p.cc.id = :ccId OR (p.student.department.id = :departmentId AND (:sectionId IS NULL OR p.student.section.id = :sectionId)))")
     long countPendingForCc(@Param("ccId") Long ccId, @Param("departmentId") Long departmentId,
             @Param("sectionId") Long sectionId);
 

@@ -211,7 +211,8 @@ public class Activity {
     // Use subgroup.getCategory() (canonical key) instead of subgroup.getName()
     // because the display name is "Must (Individual)", NOT "Must".
     public boolean isMustXpEligible() {
-        if (!"Reward".equalsIgnoreCase(this.xpType) || this.subgroup == null)
+        if (this.subgroup == null) return false;
+        if (!("Reward".equalsIgnoreCase(this.xpType) || "Mixed".equalsIgnoreCase(this.xpType)))
             return false;
         String cat = this.subgroup.getCategory();
         // "must" category covers both Must (Individual) and Must (Group)
@@ -219,7 +220,7 @@ public class Activity {
     }
 
     public boolean isIndividualXpEligible() {
-        if (!"Reward".equalsIgnoreCase(this.xpType))
+        if (!("Reward".equalsIgnoreCase(this.xpType) || "Mixed".equalsIgnoreCase(this.xpType)))
             return false;
         if (this.subgroup != null) {
             String cat = this.subgroup.getCategory() != null ? this.subgroup.getCategory().trim() : "";
@@ -237,7 +238,7 @@ public class Activity {
     }
 
     public boolean isGroupXpEligible() {
-        if (!"Reward".equalsIgnoreCase(this.xpType))
+        if (!("Reward".equalsIgnoreCase(this.xpType) || "Mixed".equalsIgnoreCase(this.xpType)))
             return false;
         if (this.subgroup != null) {
             String cat = this.subgroup.getCategory() != null ? this.subgroup.getCategory().trim() : "";

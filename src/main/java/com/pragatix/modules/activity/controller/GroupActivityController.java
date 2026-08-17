@@ -149,9 +149,11 @@ public class GroupActivityController {
                     // dept/section)
                     if (assignYearNo != -1 && (teamYearNo == -1 || teamYearNo != assignYearNo))
                         return false;
-                    if (t.getSection() == null || assignment.getSection() == null
-                            || !t.getSection().getId().equals(assignment.getSection().getId()))
-                        return false;
+                    if (assignment.getSection() != null) {
+                        if (t.getSection() == null || !t.getSection().getId().equals(assignment.getSection().getId())) {
+                            return false;
+                        }
+                    }
                 }
             }
 
@@ -297,8 +299,18 @@ public class GroupActivityController {
                 && Boolean.parseBoolean(body.get("equalDistribution").toString());
 
         if (equalDistribution) {
-            int xp = Integer.parseInt(body.get("xp").toString());
+            int xp = 0;
+            if (body.containsKey("isPenalty") && Boolean.parseBoolean(body.get("isPenalty").toString())) {
+                // If it's a penalty, make sure xp is negative
+                int absXp = Math.abs(Integer.parseInt(body.get("xp").toString()));
+                xp = -absXp;
+            } else {
+                xp = Integer.parseInt(body.get("xp").toString());
+            }
+            
             String remarks = body.containsKey("remarks") ? body.get("remarks").toString() : null;
+
+            System.out.println("GROUP XP DEBUG: Processing team " + team.getId() + " with " + team.getMembers().size() + " members. XP: " + xp);
 
             List<Student> studentsToAward = new ArrayList<>(team.getMembers());
             if (team.getCaptain() != null && !studentsToAward.contains(team.getCaptain())) {
@@ -306,9 +318,11 @@ public class GroupActivityController {
             }
 
             for (Student member : studentsToAward) {
-                int memberStage = member.getCurrentStage() > 0 ? member.getCurrentStage() : member.getStage();
-                if (member.isActive() && (activityStageOrder <= 0 || memberStage == activityStageOrder)) {
+                if (member.isActive()) {
+                    System.out.println("GROUP XP DEBUG: Member " + member.getRegNo() + " qualifies! Awarding...");
                     xpEngineService.awardXp(member, activity, teacher, assignment, xp, remarks);
+                } else {
+                    System.out.println("GROUP XP DEBUG: Member " + member.getRegNo() + " rejected! Active? " + member.isActive());
                 }
             }
         } else {
@@ -325,15 +339,22 @@ public class GroupActivityController {
 
             for (Map<String, Object> sData : studentsData) {
                 String regNo = sData.get("regNo").toString();
-                int xp = Integer.parseInt(sData.get("xp").toString());
+                int xp = 0;
+                if (sData.containsKey("isPenalty") && Boolean.parseBoolean(sData.get("isPenalty").toString())) {
+                    int absXp = Math.abs(Integer.parseInt(sData.get("xp").toString()));
+                    xp = -absXp;
+                } else {
+                    xp = Integer.parseInt(sData.get("xp").toString());
+                }
+                
                 String remarks = sData.containsKey("remarks") ? sData.get("remarks").toString() : null;
 
                 Student student = studentMap.get(regNo);
                 if (student != null && student.isActive()) {
-                    int studentStage = student.getCurrentStage() > 0 ? student.getCurrentStage() : student.getStage();
-                    if (activityStageOrder <= 0 || studentStage == activityStageOrder) {
-                        xpEngineService.awardXp(student, activity, teacher, assignment, xp, remarks);
-                    }
+                    System.out.println("GROUP XP DEBUG: Member " + student.getRegNo() + " qualifies! Awarding...");
+                    xpEngineService.awardXp(student, activity, teacher, assignment, xp, remarks);
+                } else if (student != null) {
+                    System.out.println("GROUP XP DEBUG: Member " + student.getRegNo() + " rejected! Active? " + student.isActive());
                 }
             }
         }

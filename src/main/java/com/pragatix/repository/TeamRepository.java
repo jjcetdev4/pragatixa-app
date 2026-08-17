@@ -92,4 +92,19 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
                         @org.springframework.data.repository.query.Param("academicYear") String academicYear,
                         @org.springframework.data.repository.query.Param("departmentId") Long departmentId,
                         @org.springframework.data.repository.query.Param("sectionId") Long sectionId);
+
+        @org.springframework.data.jpa.repository.Query("SELECT COUNT(DISTINCT t) FROM Team t " +
+                        "JOIN StageTeam st ON st.team = t " +
+                        "JOIN st.stage s " +
+                        "WHERE s.displayOrder = 1 " +
+                        "AND (t.department.id = :deptId OR (t.department IS NULL AND :deptId IS NULL)) " +
+                        "AND (t.year = :yearStr OR (t.year IS NULL AND :yearStr IS NULL)) " +
+                        "AND (t.section.id = :secId OR (t.section IS NULL AND :secId IS NULL))")
+        int countStage1TeamsForClass(
+                        @org.springframework.data.repository.query.Param("deptId") Long deptId,
+                        @org.springframework.data.repository.query.Param("yearStr") String yearStr,
+                        @org.springframework.data.repository.query.Param("secId") Long secId);
+                        
+        @org.springframework.data.jpa.repository.Query("SELECT t.id, t.name, t.department.id, t.section.id, t.year FROM Team t JOIN StageTeam st ON st.team = t JOIN st.stage s WHERE s.displayOrder = 1")
+        java.util.List<Object[]> findAllStage1TeamsRaw();
 }

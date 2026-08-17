@@ -71,8 +71,8 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size) {
-        return studentCrudService.searchStudents(keyword, page, size);
+    public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size, boolean unassignedOnly) {
+        return studentCrudService.searchStudents(keyword, page, size, unassignedOnly);
     }
 
     @Transactional

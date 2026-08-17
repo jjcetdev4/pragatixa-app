@@ -199,4 +199,36 @@ public class Team {
             return team;
         }
     }
+
+    public static String resolveCanonicalYearOfStudy(String rawYear) {
+        if (rawYear == null || rawYear.trim().isEmpty()) return null;
+        
+        String upperYear = rawYear.trim().toUpperCase();
+        if (upperYear.equals("1") || upperYear.equals("1ST") || upperYear.equals("1ST YEAR") || upperYear.equals("FIRST_YEAR") || upperYear.equals("FIRST YEAR")) {
+            return "FIRST_YEAR";
+        }
+        if (upperYear.equals("2") || upperYear.equals("2ND") || upperYear.equals("2ND YEAR") || upperYear.equals("SECOND_YEAR") || upperYear.equals("SECOND YEAR")) {
+            return "SECOND_YEAR";
+        }
+        if (upperYear.equals("3") || upperYear.equals("3RD") || upperYear.equals("3RD YEAR") || upperYear.equals("THIRD_YEAR") || upperYear.equals("THIRD YEAR")) {
+            return "THIRD_YEAR";
+        }
+        if (upperYear.equals("4") || upperYear.equals("4TH") || upperYear.equals("4TH YEAR") || upperYear.equals("FOURTH_YEAR") || upperYear.equals("FOURTH YEAR")) {
+            return "FOURTH_YEAR";
+        }
+        
+        return rawYear;
+    }
+
+    public static String reverseCanonicalYearOfStudy(String canonicalYear) {
+        if (canonicalYear == null || canonicalYear.trim().isEmpty()) return null;
+        
+        switch (canonicalYear.trim().toUpperCase()) {
+            case "FIRST_YEAR": return "1";
+            case "SECOND_YEAR": return "2";
+            case "THIRD_YEAR": return "3";
+            case "FOURTH_YEAR": return "4";
+            default: return canonicalYear;
+        }
+    }
 }

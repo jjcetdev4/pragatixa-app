@@ -68,6 +68,21 @@ public class TeamValidationService {
         if (authUtils.isSuperAdmin(user))
             return true;
 
+        jjcet.PragatiX.entity.Department teamDept = team.getDepartment() != null ? team.getDepartment()
+                : (team.getCaptain() != null ? team.getCaptain().getDepartment() : null);
+
+        if (team.getCreatedBy() != null && team.getCreatedBy().getId().equals(user.getId())) {
+            boolean isCcOrHod = user.getSubRoles().stream().map(SubRole::getName)
+                    .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("HOD"));
+            if (isCcOrHod) {
+                if (user.getDepartment() == null || teamDept == null || teamDept.getId().equals(user.getDepartment().getId())) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+
         if (authUtils.isAdmin(user)) {
             String adminYear = jjcet.PragatiX.modules.authentication.security.AuthUtils
                     .getAssignedYearString(user.getAcademicYear());
@@ -78,13 +93,25 @@ public class TeamValidationService {
                     "You do not have permission to view this team's details.");
         }
 
+        jjcet.PragatiX.entity.Section teamSec = team.getSection() != null ? team.getSection()
+                : (team.getCaptain() != null ? team.getCaptain().getSection() : null);
+
         boolean isCc = user.getSubRoles().stream().map(SubRole::getName)
                 .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR"));
         if (isCc) {
-            boolean matchesDept = team.getDepartment() != null && user.getDepartment() != null
-                    && team.getDepartment().getId().equals(user.getDepartment().getId());
-            boolean matchesSection = team.getSection() != null && user.getSection() != null
-                    && team.getSection().getId().equals(user.getSection().getId());
+            boolean matchesDept = teamDept != null && user.getDepartment() != null
+                    && teamDept.getId().equals(user.getDepartment().getId());
+                    
+            boolean matchesSection = false;
+            if (user.getSection() == null) {
+                // CC handles the whole department or no specific section is set
+                matchesSection = true;
+            } else if (teamSec == null) {
+                // Team has no section, but CC has a section. We can allow if dept matches.
+                matchesSection = true;
+            } else {
+                matchesSection = teamSec.getId().equals(user.getSection().getId());
+            }
 
             if (matchesDept && matchesSection) {
                 return true;
@@ -94,8 +121,8 @@ public class TeamValidationService {
         boolean isHod = user.getSubRoles().stream().map(SubRole::getName)
                 .anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
         if (isHod) {
-            boolean matchesDept = team.getDepartment() != null && user.getDepartment() != null
-                    && team.getDepartment().getId().equals(user.getDepartment().getId());
+            boolean matchesDept = teamDept != null && user.getDepartment() != null
+                    && teamDept.getId().equals(user.getDepartment().getId());
             if (matchesDept) {
                 return true;
             }

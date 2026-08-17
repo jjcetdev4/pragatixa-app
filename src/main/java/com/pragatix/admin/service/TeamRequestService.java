@@ -104,9 +104,10 @@ public class TeamRequestService {
                         .filter(req -> {
                             boolean isCC = currentUser.getSubRoles().stream()
                                     .anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
+                            String reqTeamYearForCC = jjcet.PragatiX.entity.Team.reverseCanonicalYearOfStudy(req.getTeam().getYear());
                             return isCC && req.getTeam().getDepartment() != null
                                     && req.getTeam().getDepartment().getId().equals(currentUser.getDepartment().getId())
-                                    && req.getTeam().getYear().equals(currentUser.getYear())
+                                    && reqTeamYearForCC != null && reqTeamYearForCC.equals(currentUser.getYear())
                                     && req.getTeam().getSection() != null
                                     && req.getTeam().getSection().getId().equals(currentUser.getSection().getId());
                         })
@@ -137,9 +138,10 @@ public class TeamRequestService {
                 }
             } else if (!authUtils.isSuperAdmin(currentUser) && !authUtils.isAdmin(currentUser)) {
                 boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
+                String reqTeamYearForCC = jjcet.PragatiX.entity.Team.reverseCanonicalYearOfStudy(request.getTeam().getYear());
                 boolean isAuthorized = isCC && request.getTeam().getDepartment() != null
                         && request.getTeam().getDepartment().getId().equals(currentUser.getDepartment().getId())
-                        && request.getTeam().getYear().equals(currentUser.getYear())
+                        && reqTeamYearForCC != null && reqTeamYearForCC.equals(currentUser.getYear())
                         && request.getTeam().getSection() != null
                         && request.getTeam().getSection().getId().equals(currentUser.getSection().getId());
                 if (!isAuthorized) {
@@ -228,9 +230,10 @@ public class TeamRequestService {
                 }
             } else if (!authUtils.isSuperAdmin(currentUser) && !authUtils.isAdmin(currentUser)) {
                 boolean isCC = currentUser.getSubRoles().stream().anyMatch(sr -> sr.getName().equalsIgnoreCase("CC"));
+                String reqTeamYearForCC = jjcet.PragatiX.entity.Team.reverseCanonicalYearOfStudy(request.getTeam().getYear());
                 boolean isAuthorized = isCC && request.getTeam().getDepartment() != null
                         && request.getTeam().getDepartment().getId().equals(currentUser.getDepartment().getId())
-                        && request.getTeam().getYear().equals(currentUser.getYear())
+                        && reqTeamYearForCC != null && reqTeamYearForCC.equals(currentUser.getYear())
                         && request.getTeam().getSection() != null
                         && request.getTeam().getSection().getId().equals(currentUser.getSection().getId());
                 if (!isAuthorized) {

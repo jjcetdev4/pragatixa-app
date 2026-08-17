@@ -361,15 +361,16 @@ public class StudentImportService {
 
                 if (!teamName.isEmpty()) {
                     String gTrim = teamName.trim();
-                    Team g = teamRepository.findExactTeam(gTrim, dId, secId, year)
+                    String canonicalYear = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(year);
+                    Team g = teamRepository.findExactTeam(gTrim, dId, secId, canonicalYear)
                             .orElseGet(() -> {
                                 Team.Builder builder = Team.builder().name(gTrim);
                                 if (dId != null)
                                     departmentRepository.findById(dId).ifPresent(builder::department);
                                 if (secId != null)
                                     sectionRepository.findById(secId).ifPresent(builder::section);
-                                if (year != null && !year.isEmpty())
-                                    builder.year(year);
+                                if (canonicalYear != null && !canonicalYear.isEmpty())
+                                    builder.year(canonicalYear);
                                 return teamRepository.save(builder.build());
                             });
                     req.setTeamId(g.getId());

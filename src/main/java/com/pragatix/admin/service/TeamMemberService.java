@@ -401,7 +401,8 @@ public class TeamMemberService {
             }
 
             // Validate configuration match
-            if (team.getYear() != null && member.getYear() != null && !team.getYear().equals(member.getYear())) {
+            String teamYearForStudent = jjcet.PragatiX.entity.Team.reverseCanonicalYearOfStudy(team.getYear());
+            if (teamYearForStudent != null && member.getYear() != null && !teamYearForStudent.equals(member.getYear())) {
                 return ResponseEntity.badRequest().body(ApiResponse
                         .error("Student " + member.getFullName() + " is in a different academic year than the team."));
             }

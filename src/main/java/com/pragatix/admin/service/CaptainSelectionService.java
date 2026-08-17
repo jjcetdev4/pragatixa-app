@@ -50,9 +50,12 @@ public class CaptainSelectionService {
             return;
         }
 
-        // Find all active eligible members
+        // Ensure that we filter out students who might be returned by Hibernate due to uncommitted transactions
+        // but have already been removed from the team in-memory.
+        // We use .getId().equals() to handle differences in object identity between Hibernate sessions.
         List<Student> eligibleMembers = teamMembers.stream()
                 .filter(Student::isActive)
+                .filter(s -> team.getMembers() != null && team.getMembers().stream().anyMatch(m -> m.getId().equals(s.getId())))
                 .collect(Collectors.toList());
 
         if (eligibleMembers.isEmpty()) {

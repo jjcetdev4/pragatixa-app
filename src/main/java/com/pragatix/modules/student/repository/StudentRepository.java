@@ -120,25 +120,27 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
-       @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.yearRef.id = :yearId AND s.section.id = :sectionId AND ("
-                     +
-                     "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-                     "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-                     "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+       @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.yearRef.id = :yearId AND (:sectionId IS NULL OR s.section.id = :sectionId) AND " +
+                      "(:unassignedOnly = false OR s.team IS NULL) AND ("
+                      +
+                      "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                      "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                      "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
        Page<Student> searchStudentsByCC(
                      @Param("keyword") String keyword,
                      @Param("deptId") Long deptId,
                      @Param("yearId") Long yearId,
                      @Param("sectionId") Long sectionId,
+                     @Param("unassignedOnly") boolean unassignedOnly,
                      Pageable pageable);
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
-       @Query("SELECT s FROM Student s WHERE " +
+       @Query("SELECT s FROM Student s WHERE (:unassignedOnly = false OR s.team IS NULL) AND (" +
                      "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                      "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-                     "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-       Page<Student> searchStudents(@Param("keyword") String keyword, Pageable pageable);
+                     "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+       Page<Student> searchStudents(@Param("keyword") String keyword, @Param("unassignedOnly") boolean unassignedOnly, Pageable pageable);
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
@@ -171,17 +173,19 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
-       @Query("SELECT s FROM Student s WHERE s.year = :year AND (" +
+       @Query("SELECT s FROM Student s WHERE s.year = :year AND (:unassignedOnly = false OR s.team IS NULL) AND (" +
                      "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                      "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                      "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
        Page<Student> searchStudentsByYear(@Param("keyword") String keyword, @Param("year") String year,
-                     Pageable pageable);
+                     @Param("unassignedOnly") boolean unassignedOnly, Pageable pageable);
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
        @Query("SELECT s FROM Student s WHERE s.active = true AND s.team IS NULL AND " +
-                     "s.year = :year AND s.department.id = :deptId AND s.section.id = :sectionId AND s.currentStage = :currentStage AND ("
+                      "(s.year = :year OR (s.year IS NULL AND :year IS NULL)) AND " +
+                      "(s.department.id = :deptId OR (s.department IS NULL AND :deptId IS NULL)) AND " +
+                      "(s.section.id = :sectionId OR (s.section IS NULL AND :sectionId IS NULL)) AND s.currentStage = :currentStage AND ("
                      +
                      ":keyword IS NULL OR :keyword = '' OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
                      +

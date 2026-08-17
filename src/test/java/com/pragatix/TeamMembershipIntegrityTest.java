@@ -100,7 +100,9 @@ public class TeamMembershipIntegrityTest {
                 teamMapper,
                 stageTeamRepository,
                 departmentRepository,
-                sectionRepository);
+                sectionRepository,
+                null // activityStageRepository
+        );
 
         teamMemberService = new TeamMemberService(
                 teamRepository,

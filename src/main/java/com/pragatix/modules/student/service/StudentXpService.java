@@ -301,14 +301,13 @@ public class StudentXpService {
                     continue;
                 }
 
-                boolean isPenalty = (activity.getPenaltyEnabled() != null && activity.getPenaltyEnabled())
-                        || "Penalty".equalsIgnoreCase(activity.getXpType());
+                boolean isPenalty = xpToAward < 0;
 
                 if (isPenalty) {
                     boolean hasCcRole = teacher.getSubRoles().stream()
                             .anyMatch(sr -> "CC".equalsIgnoreCase(sr.getName()));
-                    boolean sameSection = teacher.getSection() != null && student.getSection() != null
-                            && teacher.getSection().getId().equals(student.getSection().getId());
+                    boolean sameSection = teacher.getSection() == null || (student.getSection() != null
+                            && teacher.getSection().getId().equals(student.getSection().getId()));
                     boolean sameDepartment = teacher.getDepartment() != null && student.getDepartment() != null
                             && teacher.getDepartment().getId().equals(student.getDepartment().getId());
                     boolean isCc = hasCcRole && sameSection && sameDepartment;
@@ -356,8 +355,8 @@ public class StudentXpService {
                         User cc = userRepository.findAll().stream()
                                 .filter(u -> u.getSubRoles().stream()
                                         .anyMatch(sr -> "CC".equalsIgnoreCase(sr.getName())))
-                                .filter(u -> u.getSection() != null && student.getSection() != null
-                                        && u.getSection().getId().equals(student.getSection().getId()))
+                                .filter(u -> u.getSection() == null || (student.getSection() != null
+                                        && u.getSection().getId().equals(student.getSection().getId())))
                                 .filter(u -> u.getDepartment() != null && student.getDepartment() != null
                                         && u.getDepartment().getId().equals(student.getDepartment().getId()))
                                 .filter(User::isActive)
@@ -400,6 +399,9 @@ public class StudentXpService {
                     .ok(ApiResponse.ok("XP points awarded successfully to " + successCount + " students", null));
         } catch (Exception e) {
             logError(e, "Unexpected Exception", request, activity, xpToAward);
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            }
             return buildErrorResponse("Internal server error: " + e.getMessage(), request, activity, xpToAward);
         }
     }

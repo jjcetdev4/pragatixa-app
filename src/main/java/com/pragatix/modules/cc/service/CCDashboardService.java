@@ -49,15 +49,12 @@ public class CCDashboardService {
         if (user.getDepartment() == null || user.getDepartment().getId() == null) {
             throw new IllegalStateException("CC is not assigned to a valid department");
         }
-        if (user.getSection() == null || user.getSection().getId() == null) {
-            throw new IllegalStateException("CC is not assigned to a valid section");
-        }
 
         Long deptId = user.getDepartment().getId();
-        Long sectionId = user.getSection().getId();
+        Long sectionId = user.getSection() != null ? user.getSection().getId() : null;
 
-        if (!departmentRepository.existsById(deptId) || !sectionRepository.existsById(sectionId)) {
-            throw new IllegalStateException("CC assigned department or section does not exist in the database");
+        if (!departmentRepository.existsById(deptId)) {
+            throw new IllegalStateException("CC assigned department does not exist in the database");
         }
 
         long pendingBadgeRequests = badgeRequestRepository.countByStatusAndDepartmentIdAndSectionId("PENDING", deptId,

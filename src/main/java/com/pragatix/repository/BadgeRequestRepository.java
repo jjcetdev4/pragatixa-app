@@ -18,6 +18,7 @@ public interface BadgeRequestRepository extends JpaRepository<BadgeRequest, Long
 
     long countByStatus(String status);
 
-    long countByStatusAndDepartmentIdAndSectionId(String status, Long departmentId, Long sectionId);
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(b) FROM BadgeRequest b WHERE b.status = :status AND b.department.id = :departmentId AND (:sectionId IS NULL OR b.section.id = :sectionId)")
+    long countByStatusAndDepartmentIdAndSectionId(@org.springframework.data.repository.query.Param("status") String status, @org.springframework.data.repository.query.Param("departmentId") Long departmentId, @org.springframework.data.repository.query.Param("sectionId") Long sectionId);
 
 }

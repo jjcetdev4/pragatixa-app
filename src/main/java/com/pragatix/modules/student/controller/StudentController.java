@@ -115,8 +115,9 @@ public class StudentController {
     public ResponseEntity<ApiResponse<Page<StudentResponse>>> searchStudents(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "1000") int size) {
-        ApiResponse<Page<StudentResponse>> response = studentService.searchStudents(keyword, page, size);
+            @RequestParam(defaultValue = "1000") int size,
+            @RequestParam(required = false, defaultValue = "false") boolean unassignedOnly) {
+        ApiResponse<Page<StudentResponse>> response = studentService.searchStudents(keyword, page, size, unassignedOnly);
         if (response.getData() != null) {
             log.info(
                     "\n=== STUDENT SEARCH API ===\nKeyword: '{}', Page: {}, Size: {}\nTotal Matches: {}\nReturned: {}\n",

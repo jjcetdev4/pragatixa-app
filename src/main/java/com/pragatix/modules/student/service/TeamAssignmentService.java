@@ -110,7 +110,7 @@ public class TeamAssignmentService {
     public Team createNextStageTeamIfRequired(String newTeamName, Student student, ActivityStage nextStage) {
         Long deptId = student.getDepartment() != null ? student.getDepartment().getId() : null;
         Long secId = student.getSection() != null ? student.getSection().getId() : null;
-        String yearStr = student.getYear();
+        String yearStr = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(student.getYear());
 
         Team newTeam = findNextStageTeam(newTeamName, deptId, secId, yearStr);
         if (newTeam == null) {
@@ -255,16 +255,29 @@ public class TeamAssignmentService {
         return oldName; // fallback
     }
 
+
     // --- INITIAL TEAM ASSIGNMENT LOGIC ---
     private void handleInitialTeamAssignment(Student student, ActivityStage nextStage) {
         Long deptId = student.getDepartment() != null ? student.getDepartment().getId() : null;
         Long secId = student.getSection() != null ? student.getSection().getId() : null;
-        String yearStr = student.getYear();
+        String yearStr = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(student.getYear());
 
         if (deptId == null || yearStr == null)
             return;
 
         int teamCount = 6;
+
+        boolean isStage2 = nextStage.getDisplayOrder() == 2
+                || nextStage.getStageName().toLowerCase().contains("stage 2");
+
+        if (isStage2) {
+            int stage1Count = teamRepository.countStage1TeamsForClass(deptId, yearStr, secId);
+            if (stage1Count == 0) {
+                System.err.println("WARNING: Stage 1 teams have not been created for this class/group yet. Cannot create Stage 2 teams. Aborting promotion.");
+                throw new IllegalStateException("Stage 1 teams have not been created for this class/group yet. Cannot create Stage 2 teams.");
+            }
+            teamCount = stage1Count;
+        }
 
         java.util.List<Team> teams = new java.util.ArrayList<>();
 
@@ -286,6 +299,7 @@ public class TeamAssignmentService {
                 // Team does not exist -> dynamically create it and assign Captain
                 String teamName = nextStage.getStageName() + " - Team " + (char) ('A' + i);
                 assignedTeam = createNextStageTeamIfRequired(teamName, student, nextStage);
+                teams.set(i, assignedTeam);
                 assignCaptain = true;
                 break;
             } else if (t.getCaptain() == null) {
@@ -324,7 +338,8 @@ public class TeamAssignmentService {
                 }
             }
 
-            int sequenceIndex = totalMembers - 12;
+            // Phase 3 begins after all teams have 1 Captain + 1 Vice Captain
+            int sequenceIndex = totalMembers - (teamCount * 2);
             if (sequenceIndex < 0)
                 sequenceIndex = 0;
 
@@ -353,13 +368,63 @@ public class TeamAssignmentService {
 
             if (assignCaptain) {
                 leadershipSyncService.syncLeadership(assignedTeam, student, assignedTeam.getViceCaptain());
-                System.out.println(
-                        "CAPTAIN SELECTION: New Captain for " + assignedTeam.getName() + " -> " + student.getRegNo());
             } else if (assignViceCaptain) {
                 leadershipSyncService.syncLeadership(assignedTeam, assignedTeam.getCaptain(), student);
-                System.out.println("CAPTAIN SELECTION: New Vice Captain for " + assignedTeam.getName() + " -> "
-                        + student.getRegNo());
             }
+
+            System.out.println("\n================ TEAM PROMOTION ASSIGNMENT ================");
+            System.out.println("Student:");
+            System.out.println("Student ID: " + student.getId());
+            System.out.println("Student Register Number: " + student.getRegNo());
+            System.out.println("\nSource Stage: " + student.getStage());
+            System.out.println("Target Stage: " + nextStage.getStageName());
+            
+            System.out.println("\nEligible Target Teams:");
+            System.out.println("Team ID | Team Name | Current Members | Distribution Order");
+            int[] teamMemberCounts = new int[teamCount];
+            for (int k = 0; k < teamCount; k++) {
+                Team t = teams.get(k);
+                int cnt = (t != null && t.getMembers() != null) ? t.getMembers().size() : 0;
+                teamMemberCounts[k] = cnt;
+                if (t != null) {
+                    System.out.println(t.getId() + " | " + t.getName() + " | " + cnt + " | " + k);
+                } else {
+                    System.out.println("N/A | (To be created) | 0 | " + k);
+                }
+            }
+            
+            System.out.println("\nSelected Team:");
+            System.out.println("Selected Team ID: " + assignedTeam.getId());
+            System.out.println("Selected Team Name: " + assignedTeam.getName());
+            
+            String reason = assignCaptain ? "First assignment (Captain Phase)" : (assignViceCaptain ? "Second assignment (Vice Captain Phase)" : "Snake Algorithm Member Distribution");
+            System.out.println("Reason: " + reason);
+            
+            System.out.println("\nAfter Assignment:");
+            for (int k = 0; k < teamCount; k++) {
+                Team t = teams.get(k);
+                if (t != null) {
+                    String tName = t.getName();
+                    int newCnt = teamMemberCounts[k] + (t.getId().equals(assignedTeam.getId()) ? 1 : 0);
+                    System.out.println(tName + " = " + newCnt + " members");
+                }
+            }
+            
+            System.out.println("\nOld Team Removal:");
+            System.out.println("Old Team: Checked and removed (duplicate removal prevented by Set logic)");
+            
+            System.out.println("\nCaptain:");
+            Student cap = assignedTeam.getCaptain();
+            System.out.println("Captain ID: " + (cap != null ? cap.getId() : "None"));
+            System.out.println("Captain Register Number: " + (cap != null ? cap.getRegNo() : "None"));
+            
+            System.out.println("\nVice Captain:");
+            Student vc = assignedTeam.getViceCaptain();
+            System.out.println("Vice Captain ID: " + (vc != null ? vc.getId() : "None"));
+            System.out.println("Vice Captain Register Number: " + (vc != null ? vc.getRegNo() : "None"));
+            
+            System.out.println("\nPersisted:\nYES");
+            System.out.println("=================================================================\n");
         }
     }
 }

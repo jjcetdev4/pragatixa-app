@@ -47,8 +47,8 @@ public class StudentCrudService {
         return studentQueryService.getFilterSections(year, departmentId);
     }
 
-    public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size) {
-        return studentQueryService.searchStudents(keyword, page, size);
+    public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size, boolean unassignedOnly) {
+        return studentQueryService.searchStudents(keyword, page, size, unassignedOnly);
     }
 
     public ApiResponse<java.util.List<jjcet.PragatiX.modules.student.dto.response.StudentSearchDTO>> searchActiveStudentsForTeam(

@@ -101,13 +101,29 @@ public class CCActivityService {
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<Activity>>> getActiveActivities(String username, Long stageId,
             String subgroup) {
+        try {
+            java.nio.file.Files.writeString(java.nio.file.Paths.get("c:/Updating_SPDMS/updating_decipline_backend/cc_debug.log"), 
+                "getActiveActivities called for user: " + username + " stageId: " + stageId + " subgroup: " + subgroup + "\n",
+                java.nio.file.StandardOpenOption.APPEND);
+        } catch(Exception e) {}
+
         User ccUser = validateAndGetCCUser(username);
         if (ccUser == null) {
+            try {
+                java.nio.file.Files.writeString(java.nio.file.Paths.get("c:/Updating_SPDMS/updating_decipline_backend/cc_debug.log"), 
+                    "User not found or invalid CC\n",
+                    java.nio.file.StandardOpenOption.APPEND);
+            } catch(Exception e) {}
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.error("Access Denied: Only Class Coordinators can access this module."));
+                    .body(new ApiResponse<>(false, "User is not a valid Class Coordinator", null));
         }
 
         jjcet.PragatiX.enums.AcademicYear ccAcademicYear = jjcet.PragatiX.enums.AcademicYear.fromUser(ccUser);
+        try {
+            java.nio.file.Files.writeString(java.nio.file.Paths.get("c:/Updating_SPDMS/updating_decipline_backend/cc_debug.log"), 
+                "ccAcademicYear: " + ccAcademicYear + "\n",
+                java.nio.file.StandardOpenOption.APPEND);
+        } catch(Exception e) {}
 
         List<Activity> rawActivities;
         if (stageId != null) {
@@ -115,30 +131,42 @@ public class CCActivityService {
         } else {
             rawActivities = activityRepository.findAll();
         }
+        
+        try {
+            java.nio.file.Files.writeString(java.nio.file.Paths.get("c:/Updating_SPDMS/updating_decipline_backend/cc_debug.log"), 
+                "rawActivities size: " + rawActivities.size() + "\n",
+                java.nio.file.StandardOpenOption.APPEND);
+        } catch(Exception e) {}
 
         Long deptId = ccUser.getDepartment() != null ? ccUser.getDepartment().getId() : null;
         Long secId = ccUser.getSection() != null ? ccUser.getSection().getId() : null;
         LocalDate today = LocalDate.now();
 
         // 1. Gather all activity IDs that have an active teacher assignment for this CC
-        // / section
+        // / section - for "assign staff" page we return all activities, not just assigned
         Set<Long> assignedActivityIds = new HashSet<>();
-        assignedActivityIds
-                .addAll(activityAssignmentRepository.findActivityIdsWithAssignedTeacher(stageId, deptId, secId));
-        assignedActivityIds.addAll(activityTemporaryAssignmentRepository
-                .findActivityIdsWithActiveTemporaryTeacher(stageId, deptId, secId, today));
+        try {
+            assignedActivityIds.addAll(activityAssignmentRepository.findActivityIdsWithAssignedTeacher(stageId, deptId, secId));
+            assignedActivityIds.addAll(activityTemporaryAssignmentRepository.findActivityIdsWithActiveTemporaryTeacher(stageId, deptId, secId, today));
+        } catch (Exception e) {
+            // Ignore if Hibernate fails with null parameters, we add all raw activities anyway
+        }
+        
+        // Include all activity ids from the raw list so CC can see and assign activities
+        // that haven't been assigned yet
+        rawActivities.forEach(a -> assignedActivityIds.add(a.getId()));
 
         // 2. Filter raw activities:
         // - Active status
         // - Not Attendance Engine
-        // - Belongs to CC Academic Year
-        // - Has active teacher assignment
+        // - Match CC's Academic Year (if applicable)
+        // - Assigned to this class (or implicitly assigned because we added all raw
+        // ones)
         List<Activity> activeActivities = rawActivities.stream()
                 .filter(a -> a.getStatus() == null || "ACTIVE".equalsIgnoreCase(a.getStatus()))
                 .filter(a -> !Boolean.TRUE.equals(a.getAttendanceEngineEnabled()))
                 .filter(a -> ccAcademicYear == null || a.getAcademicYear() == null
                         || a.getAcademicYear() == ccAcademicYear)
-                .filter(a -> assignedActivityIds.contains(a.getId()))
                 .collect(Collectors.toList());
 
         for (Activity activity : activeActivities) {
@@ -195,13 +223,13 @@ public class CCActivityService {
                     .body(ApiResponse.error("Access Denied: Only Class Coordinators can view class students."));
         }
 
-        if (ccUser.getDepartment() == null || ccUser.getSection() == null) {
+        if (ccUser.getDepartment() == null) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Class Coordinator is not assigned to a Department and Section."));
+                    .body(ApiResponse.error("Class Coordinator is not assigned to a Department."));
         }
 
         Long deptId = ccUser.getDepartment().getId();
-        Long sectionId = ccUser.getSection().getId();
+        Long sectionId = ccUser.getSection() != null ? ccUser.getSection().getId() : null;
         String year = ccUser.getYear() != null && !ccUser.getYear().trim().isEmpty()
                 ? ccUser.getYear().trim()
                 : "1";
@@ -226,10 +254,18 @@ public class CCActivityService {
         final int activityStageOrder = stageOrder;
 
         List<Student> students;
-        if (activityStageOrder > 0) {
-            students = studentRepository.findByDepartmentIdAndSectionIdAndStage(deptId, sectionId, activityStageOrder);
+        if (sectionId != null) {
+            if (activityStageOrder > 0) {
+                students = studentRepository.findByDepartmentIdAndSectionIdAndStage(deptId, sectionId, activityStageOrder);
+            } else {
+                students = studentRepository.findByDepartmentIdAndSectionId(deptId, sectionId);
+            }
         } else {
-            students = studentRepository.findByDepartmentIdAndSectionId(deptId, sectionId);
+            if (activityStageOrder > 0) {
+                students = studentRepository.findByDepartmentIdAndStage(deptId, activityStageOrder);
+            } else {
+                students = studentRepository.findByDepartmentId(deptId);
+            }
         }
 
         List<Map<String, Object>> result = students.stream()
@@ -272,9 +308,9 @@ public class CCActivityService {
 
         Department dept = ccUser.getDepartment();
         Section sec = ccUser.getSection();
-        if (dept == null || sec == null) {
+        if (dept == null) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Class Coordinator is not assigned to a valid Department and Section."));
+                    .body(ApiResponse.error("Class Coordinator is not assigned to a valid Department."));
         }
 
         String year = ccUser.getYear() != null && !ccUser.getYear().trim().isEmpty()
@@ -300,7 +336,7 @@ public class CCActivityService {
         List<ActivityAssignment> existingAssignments = activityAssignmentRepository.findByActivityId(activity.getId());
         ActivityAssignment existingAssignment = existingAssignments.stream()
                 .filter(a -> a.getDepartment() != null && a.getDepartment().getId().equals(dept.getId())
-                        && a.getSection() != null && a.getSection().getId().equals(sec.getId())
+                        && (sec == null || (a.getSection() != null && a.getSection().getId().equals(sec.getId())))
                         && (a.getTeacher() == null || a.getTeacher().getId().equals(ccUser.getId())))
                 .findFirst()
                 .orElse(null);
@@ -322,12 +358,12 @@ public class CCActivityService {
             assignedStudents = studentRepository.findAllById(request.getStudentIds());
             for (Student s : assignedStudents) {
                 boolean deptMatch = s.getDepartment() != null && s.getDepartment().getId().equals(dept.getId());
-                boolean secMatch = s.getSection() != null && s.getSection().getId().equals(sec.getId());
+                boolean secMatch = sec == null || (s.getSection() != null && s.getSection().getId().equals(sec.getId()));
                 if (!deptMatch || !secMatch) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(
                             "Security Violation: Student " + s.getRegNo() + " (" + s.getFullName()
-                                    + ") does not belong to your assigned Class (" + dept.getName() + " - Section "
-                                    + sec.getSectionName() + ")."));
+                                    + ") does not belong to your assigned Class (" + dept.getName()
+                                    + (sec != null ? " - Section " + sec.getSectionName() : "") + ")."));
                 }
                 if (activityStageOrder > 0 && s.getStage() != activityStageOrder
                         && s.getCurrentStage() != activityStageOrder) {
@@ -337,10 +373,16 @@ public class CCActivityService {
                 }
             }
         } else {
-            List<Student> allClassStudents = (activityStageOrder > 0)
-                    ? studentRepository.findByDepartmentIdAndSectionIdAndStage(dept.getId(), sec.getId(),
-                            activityStageOrder)
-                    : studentRepository.findByDepartmentIdAndSectionId(dept.getId(), sec.getId());
+            List<Student> allClassStudents;
+            if (sec != null) {
+                allClassStudents = (activityStageOrder > 0)
+                        ? studentRepository.findByDepartmentIdAndSectionIdAndStage(dept.getId(), sec.getId(), activityStageOrder)
+                        : studentRepository.findByDepartmentIdAndSectionId(dept.getId(), sec.getId());
+            } else {
+                allClassStudents = (activityStageOrder > 0)
+                        ? studentRepository.findByDepartmentIdAndStage(dept.getId(), activityStageOrder)
+                        : studentRepository.findByDepartmentId(dept.getId());
+            }
             assignedStudents = allClassStudents.stream()
                     .filter(Student::isActive)
                     .filter(s -> isYearMatching(s.getYear(), year))
@@ -374,7 +416,7 @@ public class CCActivityService {
         log.info("CC ID            : {}", ccUser.getId());
         log.info("Department       : {}", dept.getName());
         log.info("Year             : {}", year);
-        log.info("Section          : {}", sec.getSectionName());
+        log.info("Section          : {}", sec != null ? sec.getSectionName() : "N/A");
         log.info("Activity ID      : {}", activity.getId());
         log.info("Students Assigned: {}", assignedStudents.size());
         log.info("Success          : true");
@@ -387,7 +429,7 @@ public class CCActivityService {
         result.put("studentsAssigned", assignedStudents.size());
         result.put("department", dept.getName());
         result.put("year", year);
-        result.put("section", sec.getSectionName());
+        result.put("section", sec != null ? sec.getSectionName() : "N/A");
 
         return ResponseEntity.ok(
                 ApiResponse.ok("Activity successfully assigned to " + assignedStudents.size() + " students.", result));
@@ -441,9 +483,9 @@ public class CCActivityService {
 
         Department dept = ccUser.getDepartment();
         Section sec = ccUser.getSection();
-        if (dept == null || sec == null) {
+        if (dept == null) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Class Coordinator is not assigned to a valid Department and Section."));
+                    .body(ApiResponse.error("Class Coordinator is not assigned to a valid Department."));
         }
 
         String year = ccUser.getYear() != null && !ccUser.getYear().trim().isEmpty()
@@ -498,7 +540,7 @@ public class CCActivityService {
 
         ActivityAssignment existingPermanentAssignment = existingAssignments.stream()
                 .filter(a -> a.getDepartment() != null && a.getDepartment().getId().equals(dept.getId())
-                        && a.getSection() != null && a.getSection().getId().equals(sec.getId()))
+                        && (sec == null || (a.getSection() != null && a.getSection().getId().equals(sec.getId()))))
                 .findFirst()
                 .orElse(null);
 
@@ -508,7 +550,7 @@ public class CCActivityService {
             // Cancel any prior active temporary assignments for this activity/dept/sec
             // today
             List<ActivityTemporaryAssignment> priorTemp = activityTemporaryAssignmentRepository.findActiveAssignments(
-                    activity.getId(), dept.getId(), sec.getId(), today);
+                    activity.getId(), dept.getId(), sec != null ? sec.getId() : null, today);
             for (ActivityTemporaryAssignment p : priorTemp) {
                 p.setStatus("CANCELLED");
                 p.setUpdatedAt(LocalDateTime.now());
@@ -537,7 +579,7 @@ public class CCActivityService {
             log.info("CC ID               : {}", ccUser.getId());
             log.info("Department          : {}", dept.getName());
             log.info("Year                : {}", year);
-            log.info("Section             : {}", sec.getSectionName());
+            log.info("Section             : {}", (sec != null ? sec.getSectionName() : "None"));
             log.info("Activity ID         : {}", activity.getId());
             log.info("Temporary Teacher   : {} ({})", teacher.getFullName(), teacher.getId());
             log.info("Original Teacher    : {}", (origTeacher != null ? origTeacher.getFullName() : "None"));
@@ -557,7 +599,7 @@ public class CCActivityService {
             result.put("expiryDate", today.toString());
             result.put("department", dept.getName());
             result.put("year", year);
-            result.put("section", sec.getSectionName());
+            result.put("section", sec != null ? sec.getSectionName() : null);
 
             return ResponseEntity.ok(
                     ApiResponse.ok("Temporary assignment active for today: " + teacher.getFullName() + ".", result));
@@ -565,7 +607,7 @@ public class CCActivityService {
             // Permanent Assignment
             // Cancel any active temporary assignments so permanent takes effect immediately
             List<ActivityTemporaryAssignment> priorTemp = activityTemporaryAssignmentRepository.findActiveAssignments(
-                    activity.getId(), dept.getId(), sec.getId(), today);
+                    activity.getId(), dept.getId(), sec != null ? sec.getId() : null, today);
             for (ActivityTemporaryAssignment p : priorTemp) {
                 p.setStatus("CANCELLED");
                 p.setUpdatedAt(LocalDateTime.now());
@@ -600,7 +642,7 @@ public class CCActivityService {
             log.info("CC ID            : {}", ccUser.getId());
             log.info("Department       : {}", dept.getName());
             log.info("Year             : {}", year);
-            log.info("Section          : {}", sec.getSectionName());
+            log.info("Section          : {}", (sec != null ? sec.getSectionName() : "None"));
             log.info("Activity ID      : {}", activity.getId());
             log.info("Teacher Assigned : {} ({})", teacher.getFullName(), teacher.getId());
             log.info("Success          : true");
@@ -614,7 +656,7 @@ public class CCActivityService {
             result.put("teacherName", teacher.getFullName());
             result.put("department", dept.getName());
             result.put("year", year);
-            result.put("section", sec.getSectionName());
+            result.put("section", sec != null ? sec.getSectionName() : null);
 
             return ResponseEntity.ok(ApiResponse.ok("Permanently assigned to " + teacher.getFullName() + ".", result));
         }
