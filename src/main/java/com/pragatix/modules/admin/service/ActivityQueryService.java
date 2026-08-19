@@ -98,7 +98,23 @@ public class ActivityQueryService {
                 if (!isAdmin) {
                     boolean isTeacher = currentUser.getRoles().stream()
                             .anyMatch(r -> "ROLE_TEACHER".equalsIgnoreCase(r.getName())
-                                    || "TEACHER".equalsIgnoreCase(r.getName()));
+                                    || "TEACHER".equalsIgnoreCase(r.getName())
+                                    || "ROLE_CLASS_COORDINATOR".equalsIgnoreCase(r.getName())
+                                    || "CLASS_COORDINATOR".equalsIgnoreCase(r.getName())
+                                    || "ROLE_CC".equalsIgnoreCase(r.getName())
+                                    || "CC".equalsIgnoreCase(r.getName())
+                                    || "ROLE_HOD".equalsIgnoreCase(r.getName())
+                                    || "HOD".equalsIgnoreCase(r.getName()));
+
+                    if (!isTeacher && currentUser.getSubRoles() != null) {
+                        isTeacher = currentUser.getSubRoles().stream()
+                                .anyMatch(sr -> "ROLE_CLASS_COORDINATOR".equalsIgnoreCase(sr.getName())
+                                        || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName())
+                                        || "ROLE_CC".equalsIgnoreCase(sr.getName())
+                                        || "CC".equalsIgnoreCase(sr.getName())
+                                        || "ROLE_HOD".equalsIgnoreCase(sr.getName())
+                                        || "HOD".equalsIgnoreCase(sr.getName()));
+                    }
 
                     if (isTeacher) {
                         final LocalDate today = LocalDate.now();
@@ -193,7 +209,31 @@ public class ActivityQueryService {
                             .anyMatch(r -> "ROLE_TEACHER".equalsIgnoreCase(r.getName())
                                     || "TEACHER".equalsIgnoreCase(r.getName()));
 
-                    if (isTeacher) {
+                    boolean isHod = currentUser.getRoles().stream()
+                            .anyMatch(r -> "ROLE_HOD".equalsIgnoreCase(r.getName()) || "HOD".equalsIgnoreCase(r.getName())) ||
+                            currentUser.getSubRoles().stream()
+                            .anyMatch(sr -> "ROLE_HOD".equalsIgnoreCase(sr.getName()) || "HOD".equalsIgnoreCase(sr.getName()));
+
+                    if (isHod) {
+                        Long deptId = currentUser.getDepartment() != null ? currentUser.getDepartment().getId() : null;
+                        if (deptId != null) {
+                            List<Long> deptActIds = activityAssignmentRepository.findActivityIdsByDepartmentId(deptId);
+                            // If they are also a teacher, maybe include their specific assignments too
+                            Set<Long> assignedIds = new HashSet<>();
+                            if (isTeacher) {
+                                assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), null, LocalDate.now());
+                            }
+                            final Set<Long> teacherAssignedIds = assignedIds;
+                            activities = activities.stream()
+                                    .filter(a -> deptActIds.contains(a.getId()) || teacherAssignedIds.contains(a.getId())
+                                            || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                    .toList();
+                        } else {
+                            activities = activities.stream()
+                                    .filter(a -> "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                    .toList();
+                        }
+                    } else if (isTeacher) {
                         final LocalDate today = LocalDate.now();
                         final Set<Long> assignedIds = getAssignedActivityIdsForTeacher(currentUser.getId(), null,
                                 today);
@@ -505,7 +545,23 @@ public class ActivityQueryService {
                 if (!isAdmin) {
                     boolean isTeacher = currentUser.getRoles().stream()
                             .anyMatch(r -> "ROLE_TEACHER".equalsIgnoreCase(r.getName())
-                                    || "TEACHER".equalsIgnoreCase(r.getName()));
+                                    || "TEACHER".equalsIgnoreCase(r.getName())
+                                    || "ROLE_CLASS_COORDINATOR".equalsIgnoreCase(r.getName())
+                                    || "CLASS_COORDINATOR".equalsIgnoreCase(r.getName())
+                                    || "ROLE_CC".equalsIgnoreCase(r.getName())
+                                    || "CC".equalsIgnoreCase(r.getName())
+                                    || "ROLE_HOD".equalsIgnoreCase(r.getName())
+                                    || "HOD".equalsIgnoreCase(r.getName()));
+
+                    if (!isTeacher && currentUser.getSubRoles() != null) {
+                        isTeacher = currentUser.getSubRoles().stream()
+                                .anyMatch(sr -> "ROLE_CLASS_COORDINATOR".equalsIgnoreCase(sr.getName())
+                                        || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName())
+                                        || "ROLE_CC".equalsIgnoreCase(sr.getName())
+                                        || "CC".equalsIgnoreCase(sr.getName())
+                                        || "ROLE_HOD".equalsIgnoreCase(sr.getName())
+                                        || "HOD".equalsIgnoreCase(sr.getName()));
+                    }
 
                     if (isTeacher) {
                         final LocalDate today = LocalDate.now();

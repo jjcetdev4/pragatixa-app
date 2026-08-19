@@ -39,14 +39,14 @@ public class AdminActivityController {
     }
 
     @GetMapping("/my-activities")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "Get activities assigned to the currently logged in teacher")
     public ResponseEntity<ApiResponse<List<MyActivityResponse>>> getMyActivities() {
         return adminActivityService.getMyActivities();
     }
 
     @GetMapping("/subgroups/{subgroupId}/activities")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'HOD')")
     @Operation(summary = "Get all activities of a subgroup")
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesBySubgroup(
             @PathVariable Long subgroupId,
@@ -55,7 +55,7 @@ public class AdminActivityController {
     }
 
     @GetMapping("/stages/{stageId}/activities")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'HOD')")
     @Operation(summary = "Get all activities of a stage")
     public ResponseEntity<ApiResponse<List<Activity>>> getActivitiesByStage(
             @PathVariable Long stageId,

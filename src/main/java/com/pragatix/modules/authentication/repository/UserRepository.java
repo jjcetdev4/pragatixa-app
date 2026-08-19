@@ -21,6 +21,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
         java.util.List<User> findByRoleName(
                         @org.springframework.data.repository.query.Param("roleName") String roleName);
 
+        @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) > 0 FROM User u JOIN u.roles r WHERE u.assignedYear.id = :yearId AND r.name = :roleName")
+        boolean existsByAssignedYearIdAndRolesName(
+                        @org.springframework.data.repository.query.Param("yearId") Long yearId,
+                        @org.springframework.data.repository.query.Param("roleName") String roleName);
+
+        @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) > 0 FROM User u JOIN u.roles r WHERE u.assignedYear.id = :yearId AND r.name = :roleName AND u.id != :adminId")
+        boolean existsByAssignedYearIdAndRolesNameAndIdNot(
+                        @org.springframework.data.repository.query.Param("yearId") Long yearId,
+                        @org.springframework.data.repository.query.Param("roleName") String roleName,
+                        @org.springframework.data.repository.query.Param("adminId") Long adminId);
+
         /**
          * Find the Class Coordinator (Teacher with CC sub-role) assigned to a given
          * section.

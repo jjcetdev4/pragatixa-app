@@ -26,19 +26,22 @@ public class ActivityCompletionRequestService {
     private final ActivityRepository activityRepository;
     private final TeamRepository teamRepository;
     private final StudentAssignmentResolver studentAssignmentResolver;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     public ActivityCompletionRequestService(ActivityCompletionRequestRepository repository,
             StudentRepository studentRepository,
             UserRepository userRepository,
             ActivityRepository activityRepository,
             TeamRepository teamRepository,
-            StudentAssignmentResolver studentAssignmentResolver) {
+            StudentAssignmentResolver studentAssignmentResolver,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.repository = repository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.teamRepository = teamRepository;
         this.studentAssignmentResolver = studentAssignmentResolver;
+        this.auditService = auditService;
     }
 
     private User findCcForStudent(Student student) {
@@ -120,6 +123,24 @@ public class ActivityCompletionRequestService {
         }
 
         ActivityCompletionRequest saved = repository.save(request);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("studentId", student.getId());
+        newValues.put("activityId", activity.getId());
+        newValues.put("teamId", team != null ? team.getId() : null);
+        newValues.put("reason", dto.getReason());
+        newValues.put("status", "PENDING");
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CREATE,
+            jjcet.PragatiX.enums.AuditModule.REQUEST,
+            "ACTIVITY_COMPLETION_REQUEST",
+            saved.getId(),
+            "Submitted activity completion request for activity: " + activity.getActivityName(),
+            null,
+            newValues
+        );
+        
         return ApiResponse.ok("Request submitted successfully", mapToDto(saved));
     }
 
@@ -236,6 +257,21 @@ public class ActivityCompletionRequestService {
         request.setApprovedBy(teacher.getFullName());
 
         ActivityCompletionRequest saved = repository.save(request);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("status", "APPROVED");
+        newValues.put("approvedBy", teacher.getFullName());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.UPDATE,
+            jjcet.PragatiX.enums.AuditModule.REQUEST,
+            "ACTIVITY_COMPLETION_REQUEST",
+            saved.getId(),
+            "Approved activity completion request",
+            null,
+            newValues
+        );
+        
         return ApiResponse.ok("Request approved", mapToDto(saved));
     }
 
@@ -262,6 +298,22 @@ public class ActivityCompletionRequestService {
         request.setRejectedReason(reason);
 
         ActivityCompletionRequest saved = repository.save(request);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("status", "REJECTED");
+        newValues.put("approvedBy", teacher.getFullName());
+        newValues.put("rejectedReason", reason);
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.UPDATE,
+            jjcet.PragatiX.enums.AuditModule.REQUEST,
+            "ACTIVITY_COMPLETION_REQUEST",
+            saved.getId(),
+            "Rejected activity completion request",
+            null,
+            newValues
+        );
+        
         return ApiResponse.ok("Request rejected", mapToDto(saved));
     }
 

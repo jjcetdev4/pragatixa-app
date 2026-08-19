@@ -43,10 +43,11 @@ public class AdminUserService {
     private final SubRoleRepository subRoleRepository;
     private final UserRepository userRepository;
     private final AdminMapper adminMapper;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     public AdminUserService(DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder,
             RoleRepository roleRepository, SectionRepository sectionRepository, SubRoleRepository subRoleRepository,
-            UserRepository userRepository, AdminMapper adminMapper) {
+            UserRepository userRepository, AdminMapper adminMapper, jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
@@ -54,6 +55,7 @@ public class AdminUserService {
         this.subRoleRepository = subRoleRepository;
         this.userRepository = userRepository;
         this.adminMapper = adminMapper;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -119,6 +121,15 @@ public class AdminUserService {
                 .build();
 
         User saved = userRepository.save(user);
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CREATE,
+            jjcet.PragatiX.enums.AuditModule.USER,
+            "USER",
+            saved.getId(),
+            "Created user " + saved.getUsername() + (saved.getFullName() != null ? " (" + saved.getFullName() + ")" : "")
+        );
+        
         log.debug("Admin created new user: {}", saved.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("User created successfully", adminMapper.toUserResponse(saved)));
@@ -182,18 +193,56 @@ public class AdminUserService {
         user.setActive(request.isActive());
 
         User saved = userRepository.save(user);
+        
+        java.util.Map<String, Object> oldValues = new java.util.HashMap<>();
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("username", saved.getUsername());
+        newValues.put("fullName", saved.getFullName());
+        newValues.put("email", saved.getEmail());
+        if (saved.getDepartment() != null) newValues.put("departmentId", saved.getDepartment().getId());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.UPDATE,
+            jjcet.PragatiX.enums.AuditModule.USER,
+            "USER",
+            saved.getId(),
+            "Updated user " + saved.getUsername(),
+            oldValues,
+            newValues
+        );
+        
         log.debug("Admin updated user: {}", saved.getUsername());
         return ResponseEntity.ok(ApiResponse.ok("User updated successfully", adminMapper.toUserResponse(saved)));
     }
 
     @Transactional
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
-        if (!userRepository.existsById(id)) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("User not found"));
         }
-        userRepository.deleteById(id);
-        log.debug("Admin deleted user with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.ok("User deleted successfully", null));
+        
+        user.setDeleted(true);
+        user.setDeletedAt(java.time.LocalDateTime.now());
+        user.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
+        
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null) {
+            user.setDeletedBy(auth.getName());
+        }
+
+        userRepository.save(user);
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.DELETE,
+            jjcet.PragatiX.enums.AuditModule.USER,
+            "USER",
+            user.getId(),
+            "Moved user " + user.getUsername() + " to Recycle Bin"
+        );
+        
+        log.debug("Admin soft deleted user with ID: {}", id);
+        return ResponseEntity.ok(ApiResponse.ok("User moved to Recycle Bin", null));
     }
 
     public Set<SubRole> resolveSubRoles(Set<String> subRoleNames, Set<Role> roles) {

@@ -23,6 +23,8 @@ public class SuperAdminService {
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final jjcet.PragatiX.modules.authentication.repository.RoleRepository roleRepository;
     private final jjcet.PragatiX.repository.ActivityAssignmentRepository activityAssignmentRepository;
+    private final jjcet.PragatiX.repository.YearRepository yearRepository;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -30,11 +32,15 @@ public class SuperAdminService {
     public SuperAdminService(UserRepository userRepository,
             org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
             jjcet.PragatiX.modules.authentication.repository.RoleRepository roleRepository,
-            jjcet.PragatiX.repository.ActivityAssignmentRepository activityAssignmentRepository) {
+            jjcet.PragatiX.repository.ActivityAssignmentRepository activityAssignmentRepository,
+            jjcet.PragatiX.repository.YearRepository yearRepository,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
+        this.yearRepository = yearRepository;
+        this.auditService = auditService;
     }
 
     public ResponseEntity<ApiResponse<Void>> refreshDbCache() {
@@ -57,12 +63,13 @@ public class SuperAdminService {
         List<YearAdminResponse> response = admins.stream()
                 .filter(u -> u.getRoles().stream().noneMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName())))
                 .map(u -> {
-                    System.out.println("Admin : " + u.getUsername() + ", Academic Year : " + u.getAcademicYear());
+                    System.out.println("Admin : " + u.getUsername() + ", Assigned Year : " + (u.getAssignedYear() != null ? u.getAssignedYear().getYearName() : "None"));
                     return new YearAdminResponse(
                             u.getId(),
                             u.getFullName(),
                             u.getUsername(),
-                            u.getAcademicYear(),
+                            u.getAssignedYear() != null ? u.getAssignedYear().getId() : null,
+                            u.getAssignedYear() != null ? u.getAssignedYear().getYearName() : null,
                             u.isActive());
                 })
                 .collect(Collectors.toList());
@@ -80,6 +87,18 @@ public class SuperAdminService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Email already registered"));
         }
 
+        if (request.getAssignedYearId() == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Assigned Academic Year is required"));
+        }
+        jjcet.PragatiX.entity.Year year = yearRepository.findById(request.getAssignedYearId()).orElse(null);
+        if (year == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Selected Academic Year does not exist"));
+        }
+
+        if (userRepository.existsByAssignedYearIdAndRolesName(request.getAssignedYearId(), "ROLE_ADMIN")) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(ApiResponse.error("Year " + year.getYearName() + " is already assigned to another Admin."));
+        }
+
         jjcet.PragatiX.entity.Role adminRole = roleRepository.findByName("ROLE_ADMIN")
                 .orElseThrow(() -> new RuntimeException("Role ROLE_ADMIN not found"));
 
@@ -93,17 +112,26 @@ public class SuperAdminService {
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .roles(roles)
-                .academicYear(request.getAcademicYear())
+                .assignedYear(year)
                 .active(request.isActive())
                 .build();
 
         User savedAdmin = userRepository.save(user);
 
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CREATE,
+            jjcet.PragatiX.enums.AuditModule.ADMIN,
+            "ADMIN",
+            savedAdmin.getId(),
+            "Created admin " + savedAdmin.getUsername() + " (" + savedAdmin.getFullName() + ")"
+        );
+
         YearAdminResponse resp = new YearAdminResponse(
                 savedAdmin.getId(),
                 savedAdmin.getFullName(),
                 savedAdmin.getUsername(),
-                savedAdmin.getAcademicYear(),
+                savedAdmin.getAssignedYear().getId(),
+                savedAdmin.getAssignedYear().getYearName(),
                 savedAdmin.isActive());
 
         return ResponseEntity.ok(ApiResponse.ok("Year Admin created successfully", resp));
@@ -132,20 +160,46 @@ public class SuperAdminService {
         admin.setPhone(request.getPhone());
         admin.setActive(request.isActive());
 
-        // It's possible academic year is not assigned yet
-        if (request.getAcademicYear() != null) {
-            admin.setAcademicYear(request.getAcademicYear());
+        if (request.getAssignedYearId() != null) {
+            jjcet.PragatiX.entity.Year year = yearRepository.findById(request.getAssignedYearId()).orElse(null);
+            if (year == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Selected Academic Year does not exist"));
+            }
+
+            if (userRepository.existsByAssignedYearIdAndRolesNameAndIdNot(request.getAssignedYearId(), "ROLE_ADMIN", admin.getId())) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(ApiResponse.error("Year " + year.getYearName() + " is already assigned to another Admin."));
+            }
+
+            admin.setAssignedYear(year);
         } else {
-            admin.setAcademicYear(null);
+            return ResponseEntity.badRequest().body(ApiResponse.error("Assigned Academic Year is required"));
         }
 
         userRepository.save(admin);
+
+        java.util.Map<String, Object> oldValues = new java.util.HashMap<>();
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("username", admin.getUsername());
+        newValues.put("fullName", admin.getFullName());
+        newValues.put("email", admin.getEmail());
+        if (admin.getAssignedYear() != null) newValues.put("assignedYearId", admin.getAssignedYear().getId());
+
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.UPDATE,
+            jjcet.PragatiX.enums.AuditModule.ADMIN,
+            "ADMIN",
+            admin.getId(),
+            "Updated admin " + admin.getUsername(),
+            oldValues,
+            newValues
+        );
 
         YearAdminResponse resp = new YearAdminResponse(
                 admin.getId(),
                 admin.getFullName(),
                 admin.getUsername(),
-                admin.getAcademicYear(),
+                admin.getAssignedYear().getId(),
+                admin.getAssignedYear().getYearName(),
                 admin.isActive());
         return ResponseEntity.ok(ApiResponse.ok("Year Admin updated successfully", resp));
     }
@@ -179,6 +233,15 @@ public class SuperAdminService {
         }
 
         userRepository.delete(admin);
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.PERMANENT_DELETE,
+            jjcet.PragatiX.enums.AuditModule.ADMIN,
+            "ADMIN",
+            id,
+            "Permanently deleted admin " + admin.getUsername()
+        );
+        
         return ResponseEntity.ok(ApiResponse.ok("Year Admin deleted successfully", null));
     }
 }

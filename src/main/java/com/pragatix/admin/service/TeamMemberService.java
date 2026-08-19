@@ -28,6 +28,7 @@ public class TeamMemberService {
     private final jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository;
     private final jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService;
     private final jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -40,7 +41,8 @@ public class TeamMemberService {
             jjcet.PragatiX.admin.service.TeamMapper teamMapper,
             jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository,
             jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService,
-            jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService) {
+            jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.teamRepository = teamRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
@@ -50,6 +52,7 @@ public class TeamMemberService {
         this.stageTeamRepository = stageTeamRepository;
         this.teamCleanupService = teamCleanupService;
         this.leadershipSyncService = leadershipSyncService;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -102,6 +105,20 @@ public class TeamMemberService {
             }
         } catch (Exception ignored) {
         }
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("studentId", member.getId());
+        newValues.put("regNo", member.getRegNo());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.ADD_MEMBER,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Added member " + member.getRegNo() + " to team " + team.getName(),
+            null,
+            newValues
+        );
 
         return ResponseEntity.ok(ApiResponse.ok("Member added successfully", null));
     }
@@ -178,6 +195,20 @@ public class TeamMemberService {
         }
 
         teamRepository.save(team);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("studentId", member.getId());
+        newValues.put("regNo", member.getRegNo());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.REMOVE_MEMBER,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Removed member " + member.getRegNo() + " from team " + team.getName(),
+            null,
+            newValues
+        );
 
         return ResponseEntity
                 .ok(ApiResponse.ok("Member removed successfully", teamMapper.toTeamResponse(team)));
@@ -219,6 +250,21 @@ public class TeamMemberService {
             team.getMembers().add(captain);
         }
         leadershipSyncService.syncLeadership(team, captain, team.getViceCaptain());
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("captainId", captain.getId());
+        newValues.put("captainRegNo", captain.getRegNo());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CHANGE_CAPTAIN,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Assigned captain " + captain.getRegNo() + " to team " + team.getName(),
+            null,
+            newValues
+        );
+        
         return ResponseEntity
                 .ok(ApiResponse.ok("Student assigned as Team Captain successfully", teamMapper.toTeamResponse(team)));
     }
@@ -242,6 +288,20 @@ public class TeamMemberService {
         }
 
         leadershipSyncService.syncLeadership(team, null, team.getViceCaptain());
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("captainId", null);
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CHANGE_CAPTAIN,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Removed captain from team " + team.getName(),
+            null,
+            newValues
+        );
+        
         return ResponseEntity.ok(ApiResponse.ok("Team Captain removed successfully", teamMapper.toTeamResponse(team)));
     }
 
@@ -281,6 +341,21 @@ public class TeamMemberService {
             team.getMembers().add(viceCaptain);
         }
         leadershipSyncService.syncLeadership(team, team.getCaptain(), viceCaptain);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("viceCaptainId", viceCaptain.getId());
+        newValues.put("viceCaptainRegNo", viceCaptain.getRegNo());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CHANGE_VICE_CAPTAIN,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Assigned vice captain " + viceCaptain.getRegNo() + " to team " + team.getName(),
+            null,
+            newValues
+        );
+        
         return ResponseEntity.ok(
                 ApiResponse.ok("Student assigned as Team Vice Captain successfully", teamMapper.toTeamResponse(team)));
     }
@@ -304,6 +379,20 @@ public class TeamMemberService {
         }
 
         leadershipSyncService.syncLeadership(team, team.getCaptain(), null);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("viceCaptainId", null);
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CHANGE_VICE_CAPTAIN,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Removed vice captain from team " + team.getName(),
+            null,
+            newValues
+        );
+        
         return ResponseEntity
                 .ok(ApiResponse.ok("Team Vice Captain removed successfully", teamMapper.toTeamResponse(team)));
     }
@@ -348,6 +437,20 @@ public class TeamMemberService {
             }
         } catch (Exception ignored) {
         }
+
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("studentId", member.getId());
+        newValues.put("regNo", member.getRegNo());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.ADD_MEMBER,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Added member " + member.getRegNo() + " to team " + team.getName(),
+            null,
+            newValues
+        );
 
         return ResponseEntity.ok(ApiResponse.ok("Member added successfully", null));
     }
@@ -435,6 +538,20 @@ public class TeamMemberService {
         }
 
         teamRepository.save(team);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("addedMembers", regNos);
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.ADD_MEMBER,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Added " + regNos.size() + " members to team " + team.getName(),
+            null,
+            newValues
+        );
+        
         return ResponseEntity.ok(ApiResponse.ok("Members added successfully", null));
     }
 

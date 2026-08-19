@@ -27,7 +27,7 @@ public class CreateYearAdminRequest {
 
     private boolean active = true;
 
-    private AcademicYear academicYear;
+    private Long assignedYearId;
 
     public CreateYearAdminRequest() {
     }
@@ -80,11 +80,11 @@ public class CreateYearAdminRequest {
         this.active = active;
     }
 
-    public AcademicYear getAcademicYear() {
-        return academicYear;
+    public Long getAssignedYearId() {
+        return assignedYearId;
     }
 
-    public void setAcademicYear(AcademicYear academicYear) {
-        this.academicYear = academicYear;
+    public void setAssignedYearId(Long assignedYearId) {
+        this.assignedYearId = assignedYearId;
     }
 }

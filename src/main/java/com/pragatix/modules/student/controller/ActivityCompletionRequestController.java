@@ -40,7 +40,7 @@ public class ActivityCompletionRequestController {
     }
 
     @GetMapping("/inbox")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR', 'HOD')")
     public ResponseEntity<ApiResponse<List<ActivityCompletionRequestDto>>> getInbox(
             @RequestParam(required = false) String status,
             Authentication authentication) {
@@ -54,7 +54,7 @@ public class ActivityCompletionRequestController {
     }
 
     @GetMapping("/pending-count")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR', 'HOD')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getPendingCount(
             Authentication authentication) {
         String username = authentication.getName();
@@ -62,7 +62,7 @@ public class ActivityCompletionRequestController {
     }
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR', 'HOD')")
     public ResponseEntity<ApiResponse<ActivityCompletionRequestDto>> approveRequest(
             @PathVariable Long id,
             Authentication authentication) {
@@ -71,7 +71,7 @@ public class ActivityCompletionRequestController {
     }
 
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'CLASS_COORDINATOR', 'HOD')")
     public ResponseEntity<ApiResponse<ActivityCompletionRequestDto>> rejectRequest(
             @PathVariable Long id,
             @RequestBody Map<String, String> body,

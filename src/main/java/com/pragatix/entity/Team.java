@@ -2,8 +2,12 @@ package jjcet.PragatiX.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 /**
  * Represents a student team created by a Class Coordinator (CC) or for a Group
@@ -14,7 +18,21 @@ import java.util.Set;
         @UniqueConstraint(name = "uk_team_name_class", columnNames = { "name", "department_id", "year", "section_id" })
 })
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
-public class Team {
+
+@Filter(name = "deletedFilter")
+public class Team implements SoftDeletable {
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "permanent_delete_at")
+    private LocalDateTime permanentDeleteAt;
+
+    @Column(name = "deleted_by")
+    private String deletedBy;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -143,7 +161,28 @@ public class Team {
         this.createdBy = createdBy;
     }
 
-    public static Builder builder() {
+    
+    @Override
+    public boolean isDeleted() { return deleted; }
+    @Override
+    public void setDeleted(boolean deleted) { this.deleted = deleted; }
+
+    @Override
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    @Override
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+
+    @Override
+    public LocalDateTime getPermanentDeleteAt() { return permanentDeleteAt; }
+    @Override
+    public void setPermanentDeleteAt(LocalDateTime permanentDeleteAt) { this.permanentDeleteAt = permanentDeleteAt; }
+
+    @Override
+    public String getDeletedBy() { return deletedBy; }
+    @Override
+    public void setDeletedBy(String deletedBy) { this.deletedBy = deletedBy; }
+
+public static Builder builder() {
         return new Builder();
     }
 
@@ -195,7 +234,24 @@ public class Team {
             return this;
         }
 
-        public Team build() {
+        
+        public Builder deleted(boolean v) {
+            team.deleted = v;
+            return this;
+        }
+        public Builder deletedAt(LocalDateTime v) {
+            team.deletedAt = v;
+            return this;
+        }
+        public Builder permanentDeleteAt(LocalDateTime v) {
+            team.permanentDeleteAt = v;
+            return this;
+        }
+        public Builder deletedBy(String v) {
+            team.deletedBy = v;
+            return this;
+        }
+public Team build() {
             return team;
         }
     }

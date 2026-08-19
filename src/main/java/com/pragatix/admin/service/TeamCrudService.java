@@ -43,6 +43,7 @@ public class TeamCrudService {
     private final DepartmentRepository departmentRepository;
     private final SectionRepository sectionRepository;
     private final jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -59,7 +60,8 @@ public class TeamCrudService {
             StageTeamRepository stageTeamRepository,
             DepartmentRepository departmentRepository,
             SectionRepository sectionRepository,
-            jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository) {
+            jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -73,6 +75,7 @@ public class TeamCrudService {
         this.departmentRepository = departmentRepository;
         this.sectionRepository = sectionRepository;
         this.activityStageRepository = activityStageRepository;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -225,6 +228,16 @@ public class TeamCrudService {
             stageTeamRepository.save(st);
             log.debug("Mapped Team '{}' to Stage 1", savedTeam.getName());
         }
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CREATE,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            savedTeam.getId(),
+            "Created team " + savedTeam.getName(),
+            null,
+            savedTeam
+        );
 
         TeamResponse response = mapper.toTeamResponse(savedTeam);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Team created successfully", response));
@@ -271,6 +284,21 @@ public class TeamCrudService {
 
         team.setSize(request.getSize());
         teamRepository.save(team);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("name", team.getName());
+        newValues.put("size", team.getSize());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.UPDATE,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Updated team " + team.getName(),
+            null,
+            newValues
+        );
+        
         return ResponseEntity.ok(ApiResponse.ok("Team updated successfully", null));
     }
 
@@ -302,6 +330,20 @@ public class TeamCrudService {
 
         team.setSize(size);
         teamRepository.save(team);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("size", team.getSize());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.UPDATE,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            team.getId(),
+            "Updated team limit for " + team.getName(),
+            null,
+            newValues
+        );
+        
         return ResponseEntity.ok(ApiResponse.ok("Team limit updated successfully", null));
     }
 
@@ -345,23 +387,14 @@ public class TeamCrudService {
             team.setViceCaptain(null);
         }
 
-        // Remove StageTeam mappings
-        List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(teamId);
-        stageTeamRepository.deleteAll(stageTeams);
-
-        teamRemovalRequestRepository.deleteAll(teamRemovalRequestRepository.findByTeamId(teamId));
-
-        try {
-            if (entityManager != null) {
-                entityManager.createNativeQuery("DELETE FROM team_members WHERE team_id = :tid")
-                        .setParameter("tid", teamId)
-                        .executeUpdate();
-            }
-        } catch (Exception ignored) {
-        }
-
+        // Soft Delete Team
+        team.setDeleted(true);
+        team.setDeletedAt(java.time.LocalDateTime.now());
+        team.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
+        team.setDeletedBy(username);
+        teamRepository.save(team);
+        
         String teamName = team.getName();
-        teamRepository.delete(team);
 
         boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
         boolean isAssignedFaculty = false; // We can't determine this globally without an assignment context
@@ -370,6 +403,15 @@ public class TeamCrudService {
         GroupDeletionAuditLog auditLog = new GroupDeletionAuditLog(
                 teamId, teamName, username, roleStr, "User initiated deletion", java.time.LocalDateTime.now());
         auditLogRepository.save(auditLog);
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.DELETE,
+            jjcet.PragatiX.enums.AuditModule.TEAM,
+            "TEAM",
+            teamId,
+            "Soft deleted team " + teamName
+        );
+        
         return ResponseEntity.ok(ApiResponse.ok("Group deleted successfully", null));
     }
 }

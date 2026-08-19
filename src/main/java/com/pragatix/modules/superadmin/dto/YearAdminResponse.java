@@ -6,17 +6,19 @@ public class YearAdminResponse {
     private Long id;
     private String fullName;
     private String username;
-    private AcademicYear academicYear;
+    private Long assignedYearId;
+    private String assignedYearName;
     private boolean active;
 
     public YearAdminResponse() {
     }
 
-    public YearAdminResponse(Long id, String fullName, String username, AcademicYear academicYear, boolean active) {
+    public YearAdminResponse(Long id, String fullName, String username, Long assignedYearId, String assignedYearName, boolean active) {
         this.id = id;
         this.fullName = fullName;
         this.username = username;
-        this.academicYear = academicYear;
+        this.assignedYearId = assignedYearId;
+        this.assignedYearName = assignedYearName;
         this.active = active;
     }
 
@@ -44,12 +46,20 @@ public class YearAdminResponse {
         this.username = username;
     }
 
-    public AcademicYear getAcademicYear() {
-        return academicYear;
+    public Long getAssignedYearId() {
+        return assignedYearId;
     }
 
-    public void setAcademicYear(AcademicYear academicYear) {
-        this.academicYear = academicYear;
+    public void setAssignedYearId(Long assignedYearId) {
+        this.assignedYearId = assignedYearId;
+    }
+
+    public String getAssignedYearName() {
+        return assignedYearName;
+    }
+
+    public void setAssignedYearName(String assignedYearName) {
+        this.assignedYearName = assignedYearName;
     }
 
     public boolean isActive() {

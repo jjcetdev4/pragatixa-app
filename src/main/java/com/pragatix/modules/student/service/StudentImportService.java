@@ -127,6 +127,79 @@ public class StudentImportService {
         return null;
     }
 
+    public byte[] generateExcelTemplate() throws java.io.IOException {
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+            
+            Sheet sheet = workbook.createSheet("Students");
+            Row headerRow = sheet.createRow(0);
+            
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            
+            String[] headers = {
+                "Student Name", "Register Number", "SPR Number", "Email", "Phone",
+                "Address", "Date of Birth", "Department", "Year", "Academic Year",
+                "Semester", "Gender", "Section", "Team Name", "Guardian Name",
+                "Relationship", "Guardian Phone", "Guardian Email"
+            };
+            
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+            
+            Row sampleRow = sheet.createRow(1);
+            sampleRow.createCell(0).setCellValue("Arun Kumar");
+            sampleRow.createCell(1).setCellValue("24CSC101");
+            sampleRow.createCell(2).setCellValue("SPR001");
+            sampleRow.createCell(3).setCellValue("arun@example.com");
+            sampleRow.createCell(4).setCellValue("9876543210");
+            sampleRow.createCell(5).setCellValue("123 Main St, City");
+            sampleRow.createCell(6).setCellValue("2000-01-15");
+            sampleRow.createCell(7).setCellValue("CSE");
+            sampleRow.createCell(8).setCellValue("Year 1");
+            sampleRow.createCell(9).setCellValue("2024-2025");
+            sampleRow.createCell(10).setCellValue("Semester 1");
+            sampleRow.createCell(11).setCellValue("Male");
+            sampleRow.createCell(12).setCellValue("A");
+            sampleRow.createCell(13).setCellValue("Alpha");
+            sampleRow.createCell(14).setCellValue("Ravi Kumar");
+            sampleRow.createCell(15).setCellValue("Father");
+            sampleRow.createCell(16).setCellValue("9988776655");
+            sampleRow.createCell(17).setCellValue("ravi@example.com");
+            
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            sheet.createFreezePane(0, 1);
+            
+            Sheet instructions = workbook.createSheet("Instructions");
+            String[] instructionLines = {
+                "1. Do not change the column headers.",
+                "2. Enter one student per row.",
+                "3. Do not leave required fields empty.",
+                "4. Use the correct department/year/section values.",
+                "5. Remove sample rows before uploading.",
+                "6. Save the file as .xlsx.",
+                "7. Upload the completed file."
+            };
+            
+            for (int i = 0; i < instructionLines.length; i++) {
+                Row row = instructions.createRow(i);
+                row.createCell(0).setCellValue(instructionLines[i]);
+            }
+            instructions.autoSizeColumn(0);
+            
+            try (java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream()) {
+                workbook.write(bos);
+                return bos.toByteArray();
+            }
+        }
+    }
+
     @Transactional
     public ApiResponse<List<CreateStudentRequest>> bulkParse(MultipartFile file, String username) {
         if (file.isEmpty())

@@ -62,7 +62,7 @@ public class StudentController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StudentController.class);
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'HOD')")
     @Operation(summary = "Get All Students", description = "Returns paginated list of all students with optional filters.")
     public ResponseEntity<ApiResponse<Page<StudentResponse>>> getAllStudents(
             @RequestParam(defaultValue = "0") int page,
@@ -83,7 +83,7 @@ public class StudentController {
     }
 
     @GetMapping("/filters/departments")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR', 'HOD')")
     @Operation(summary = "Get distinct departments for a specific year", description = "Returns departments that have students in the specified academic year.")
     public ResponseEntity<ApiResponse<java.util.List<jjcet.PragatiX.entity.Department>>> getFilterDepartmentsByYear(
             @RequestParam(required = false) String year) {
@@ -92,7 +92,7 @@ public class StudentController {
     }
 
     @GetMapping("/filters/sections")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR', 'HOD')")
     @Operation(summary = "Get distinct sections for a specific year and department", description = "Returns sections that have students in the specified year and department.")
     public ResponseEntity<ApiResponse<java.util.List<jjcet.PragatiX.entity.Section>>> getFilterSections(
             @RequestParam(required = false) String year,
@@ -110,7 +110,7 @@ public class StudentController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "Search Students", description = "Search by name, student ID, or email.")
     public ResponseEntity<ApiResponse<Page<StudentResponse>>> searchStudents(
             @RequestParam String keyword,
@@ -160,6 +160,24 @@ public class StudentController {
         ApiResponse<StudentResponse> response = studentService.updateStudent(id, request);
         return response.isSuccess() ? ResponseEntity.ok(response)
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @GetMapping("/bulk-upload/template")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Download Student Bulk Upload Template", description = "Generates and downloads an Excel template for bulk student upload.")
+    public ResponseEntity<byte[]> downloadBulkUploadTemplate() {
+        try {
+            byte[] excelBytes = studentService.generateExcelTemplate();
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDispositionFormData("attachment", "SPDMS_Student_Bulk_Upload_Template.xlsx");
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+            
+            return new ResponseEntity<>(excelBytes, headers, HttpStatus.OK);
+        } catch (java.io.IOException e) {
+            log.error("Failed to generate Excel template", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping(value = "/bulk-parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -449,11 +449,15 @@ public class AuthService {
                     .collect(Collectors.toList());
 
             String userType = "USER";
-            if (rolesList.contains("ROLE_ADMIN") || rolesList.contains("ROLE_SUPER_ADMIN")) {
+            if (rolesList.contains("ROLE_SUPERADMIN") || rolesList.contains("ROLE_SUPER_ADMIN") || rolesList.contains("SUPERADMIN")
+                    || rolesList.contains("SUPER_ADMIN")) {
                 userType = "ADMIN";
-            } else if (rolesList.contains("ROLE_TEACHER")) {
+            } else if (rolesList.contains("ROLE_ADMIN") || rolesList.contains("ADMIN")) {
+                userType = "ADMIN";
+            } else if (rolesList.contains("ROLE_TEACHER") || rolesList.contains("TEACHER") || rolesList.contains("ROLE_FACULTY")
+                    || rolesList.contains("FACULTY") || rolesList.contains("ROLE_HOD") || rolesList.contains("HOD")) {
                 userType = "TEACHER";
-            } else if (rolesList.contains("ROLE_TRANSPORT")) {
+            } else if (rolesList.contains("ROLE_TRANSPORT") || rolesList.contains("TRANSPORT")) {
                 userType = "TRANSPORT";
             }
 
@@ -590,11 +594,15 @@ public class AuthService {
                     .collect(Collectors.toList());
 
             String userType = "USER";
-            if (rolesList.contains("ROLE_ADMIN")) {
+            if (rolesList.contains("ROLE_SUPERADMIN") || rolesList.contains("ROLE_SUPER_ADMIN") || rolesList.contains("SUPERADMIN")
+                    || rolesList.contains("SUPER_ADMIN")) {
                 userType = "ADMIN";
-            } else if (rolesList.contains("ROLE_TEACHER")) {
+            } else if (rolesList.contains("ROLE_ADMIN") || rolesList.contains("ADMIN")) {
+                userType = "ADMIN";
+            } else if (rolesList.contains("ROLE_TEACHER") || rolesList.contains("TEACHER") || rolesList.contains("ROLE_FACULTY")
+                    || rolesList.contains("FACULTY") || rolesList.contains("ROLE_HOD") || rolesList.contains("HOD")) {
                 userType = "TEACHER";
-            } else if (rolesList.contains("ROLE_TRANSPORT")) {
+            } else if (rolesList.contains("ROLE_TRANSPORT") || rolesList.contains("TRANSPORT")) {
                 userType = "TRANSPORT";
             }
 

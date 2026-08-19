@@ -29,7 +29,7 @@ public class TestBugController {
         req.setFullName("Test Admin Bug");
         req.setEmail("testbug@example.com");
         req.setPhone("1234567890");
-        req.setAcademicYear(jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
+        req.setAssignedYearId(1L);
         req.setActive(true);
         return superAdminService.createYearAdmin(req);
     }

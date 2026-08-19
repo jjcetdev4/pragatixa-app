@@ -24,7 +24,7 @@ public class PenaltyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'HOD')")
     public ResponseEntity<ApiResponse<PenaltyRequestDto>> submitPenalty(
             @Valid @RequestBody CreatePenaltyRequestDto dto,
             Authentication authentication) {
@@ -37,14 +37,14 @@ public class PenaltyController {
     }
 
     @GetMapping("/pending-count")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'HOD')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getPendingCount(Authentication authentication) {
         String username = authentication.getName();
         return ResponseEntity.ok(penaltyWorkflowService.getPendingCount(username));
     }
 
     @GetMapping("/cc-inbox")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'HOD')")
     public ResponseEntity<ApiResponse<List<PenaltyRequestDto>>> getCcInbox(
             @RequestParam(required = false) String status,
             Authentication authentication) {
@@ -53,14 +53,14 @@ public class PenaltyController {
     }
 
     @GetMapping("/my-requests")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'HOD')")
     public ResponseEntity<ApiResponse<List<PenaltyRequestDto>>> getMyRequests(Authentication authentication) {
         String username = authentication.getName();
         return ResponseEntity.ok(penaltyWorkflowService.getMyRequests(username));
     }
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'HOD')")
     public ResponseEntity<ApiResponse<PenaltyRequestDto>> approvePenalty(
             @PathVariable Long id,
             Authentication authentication) {
@@ -69,7 +69,7 @@ public class PenaltyController {
     }
 
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'HOD')")
     public ResponseEntity<ApiResponse<PenaltyRequestDto>> rejectPenalty(
             @PathVariable Long id,
             @RequestBody Map<String, String> body,

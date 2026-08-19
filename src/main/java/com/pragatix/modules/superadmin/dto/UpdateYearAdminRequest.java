@@ -19,7 +19,7 @@ public class UpdateYearAdminRequest {
 
     private String phone;
 
-    private AcademicYear academicYear;
+    private Long assignedYearId;
     private boolean active;
 
     public UpdateYearAdminRequest() {
@@ -65,12 +65,12 @@ public class UpdateYearAdminRequest {
         this.phone = phone;
     }
 
-    public AcademicYear getAcademicYear() {
-        return academicYear;
+    public Long getAssignedYearId() {
+        return assignedYearId;
     }
 
-    public void setAcademicYear(AcademicYear academicYear) {
-        this.academicYear = academicYear;
+    public void setAssignedYearId(Long assignedYearId) {
+        this.assignedYearId = assignedYearId;
     }
 
     public boolean isActive() {

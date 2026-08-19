@@ -48,6 +48,7 @@ public class ActivityCrudService {
     private final AdminAssignmentService adminAssignmentService;
 
     private final jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     public ActivityCrudService(
             ActivityRepository activityRepository,
@@ -64,7 +65,8 @@ public class ActivityCrudService {
             ActivityValidationService validationService,
             ActivityRequestMapper requestMapper,
             AdminAssignmentService adminAssignmentService,
-            jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository) {
+            jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.activityRepository = activityRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityStageRepository = activityStageRepository;
@@ -80,6 +82,7 @@ public class ActivityCrudService {
         this.requestMapper = requestMapper;
         this.adminAssignmentService = adminAssignmentService;
         this.userRepository = userRepository;
+        this.auditService = auditService;
     }
 
     private void validateAdminAcademicYearAccess(jjcet.PragatiX.enums.AcademicYear targetYear) {
@@ -300,6 +303,17 @@ public class ActivityCrudService {
         log.debug("Entity after save [Create] - Award Enabled: {}, Award XP: {}, Penalty Enabled: {}, Penalty XP: {}",
                 saved.getAwardEnabled(), saved.getAwardXp(), saved.getPenaltyEnabled(), saved.getPenaltyXp());
         adminAssignmentService.populateActivityTransientFields(saved);
+
+        auditService.log(
+                jjcet.PragatiX.enums.AuditAction.CREATE,
+                jjcet.PragatiX.enums.AuditModule.ACTIVITY,
+                "ACTIVITY",
+                saved.getId(),
+                "Created activity: " + saved.getName(),
+                null,
+                saved
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Activity created successfully", saved));
     }
 
@@ -481,6 +495,26 @@ public class ActivityCrudService {
         System.out.println("=====================================================");
 
         adminAssignmentService.populateActivityTransientFields(saved);
+
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("name", saved.getName());
+        newValues.put("awardEnabled", saved.getAwardEnabled());
+        newValues.put("awardXp", saved.getAwardXp());
+        newValues.put("penaltyEnabled", saved.getPenaltyEnabled());
+        newValues.put("penaltyXp", saved.getPenaltyXp());
+        if (saved.getSubgroup() != null) newValues.put("subgroupId", saved.getSubgroup().getId());
+        if (saved.getStage() != null) newValues.put("stageId", saved.getStage().getId());
+
+        auditService.log(
+                jjcet.PragatiX.enums.AuditAction.UPDATE,
+                jjcet.PragatiX.enums.AuditModule.ACTIVITY,
+                "ACTIVITY",
+                saved.getId(),
+                "Updated activity " + saved.getName(),
+                null,
+                newValues
+        );
+
         return ResponseEntity.ok(ApiResponse.ok("Activity updated successfully", saved));
     }
 
@@ -491,44 +525,23 @@ public class ActivityCrudService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>error("Activity not found"));
         }
 
-        System.out.println("=================================");
-        System.out.println("ACTIVITY DELETE");
-        System.out.println("=================================");
-        System.out.println("Activity ID : " + activityId);
+        activity.setDeleted(true);
+        activity.setDeletedAt(java.time.LocalDateTime.now());
+        activity.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null) {
+            activity.setDeletedBy(auth.getName());
+        }
+        
+        activityRepository.save(activity);
 
-        // 1. Delete penalty_requests WHERE activity_id = ?
-        System.out.println("Deleting Penalty Requests...");
-        int deletedPenaltyRequests = penaltyRequestRepository.deleteByActivityId(activityId);
-        System.out.println("Deleted : " + deletedPenaltyRequests);
-
-        // 2. Delete activity completion requests
-        activityCompletionRequestRepository.deleteByActivityId(activityId);
-
-        // 3. Remove all Stage Activity mappings for the activity
-        activityStageMappingRepository.deleteByActivityId(activityId);
-
-        // 4. Remove any Activity Assignment mappings
-        activityAssignmentRepository.deleteByActivityId(activityId);
-
-        // 5. Remove XP configuration/mappings related to the activity
-        studentActivityXpRepository.deleteByActivityId(activityId);
-        xpTransactionRepository.deleteByActivityId(activityId);
-        studentActivityStreakRepository.deleteByActivityId(activityId);
-
-        // 6. Remove discipline log references pointing to this activity
-        disciplineLogRepository.nullifyActivityReferences(activityId);
-
-        // Flush changes
-        activityRepository.flush();
-
-        // 7. Delete Activity
-        System.out.println("Deleting Activity...");
-        activityRepository.deleteById(activityId);
-        activityRepository.flush();
-
-        System.out.println("Success");
-        System.out.println("Activity Deleted Successfully");
-        System.out.println("=================================");
+        auditService.log(
+                jjcet.PragatiX.enums.AuditAction.DELETE,
+                jjcet.PragatiX.enums.AuditModule.ACTIVITY,
+                "ACTIVITY",
+                activity.getId(),
+                "Soft deleted activity: " + activity.getName()
+        );
 
         log.info("Admin deleted activity with ID and all its references: {}", activityId);
         return ResponseEntity.ok(ApiResponse.ok("Activity deleted successfully", null));

@@ -23,7 +23,7 @@ public class Attendance {
     private Student student;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "faculty_id", nullable = false)
+    @JoinColumn(name = "faculty_id", nullable = true)
     private Faculty faculty;
 
     @ManyToOne(fetch = FetchType.EAGER)

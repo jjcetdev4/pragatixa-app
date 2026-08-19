@@ -5,12 +5,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.hibernate.annotations.Filter;
+
 /**
  * Represents a school/college department
  */
 @Entity
 @Table(name = "departments")
-public class Department {
+@Filter(name = "deletedFilter", condition = "deleted = false")
+public class Department implements SoftDeletable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,6 +43,18 @@ public class Department {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "permanent_delete_at")
+    private LocalDateTime permanentDeleteAt;
+
+    @Column(name = "deleted_by")
+    private String deletedBy;
 
     public Department() {
     }
@@ -102,6 +117,50 @@ public class Department {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    @Override
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    @Override
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    @Override
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    @Override
+    public LocalDateTime getPermanentDeleteAt() {
+        return permanentDeleteAt;
+    }
+
+    @Override
+    public void setPermanentDeleteAt(LocalDateTime permanentDeleteAt) {
+        this.permanentDeleteAt = permanentDeleteAt;
+    }
+
+    @Override
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    @Override
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
     }
 
     public LocalDateTime getUpdatedAt() {

@@ -4,13 +4,29 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 /**
  * Represents a system user (Teacher, Admin, etc.)
  */
 @Entity
 @Table(name = "users")
-public class User {
+@Filter(name = "deletedFilter")
+public class User implements SoftDeletable {
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "permanent_delete_at")
+    private LocalDateTime permanentDeleteAt;
+
+    @Column(name = "deleted_by")
+    private String deletedBy;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +36,7 @@ public class User {
     private String username;
 
     @Column(nullable = false, length = 150)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String password;
 
     @Column(name = "full_name", nullable = false, length = 100)
@@ -56,6 +73,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "academic_year")
     private jjcet.PragatiX.enums.AcademicYear academicYear;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "assigned_year_id")
+    private Year assignedYear;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -180,6 +201,14 @@ public class User {
         this.academicYear = academicYear;
     }
 
+    public Year getAssignedYear() {
+        return assignedYear;
+    }
+
+    public void setAssignedYear(Year assignedYear) {
+        this.assignedYear = assignedYear;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -188,7 +217,28 @@ public class User {
         return updatedAt;
     }
 
-    public static Builder builder() {
+    
+    @Override
+    public boolean isDeleted() { return deleted; }
+    @Override
+    public void setDeleted(boolean deleted) { this.deleted = deleted; }
+
+    @Override
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    @Override
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+
+    @Override
+    public LocalDateTime getPermanentDeleteAt() { return permanentDeleteAt; }
+    @Override
+    public void setPermanentDeleteAt(LocalDateTime permanentDeleteAt) { this.permanentDeleteAt = permanentDeleteAt; }
+
+    @Override
+    public String getDeletedBy() { return deletedBy; }
+    @Override
+    public void setDeletedBy(String deletedBy) { this.deletedBy = deletedBy; }
+
+public static Builder builder() {
         return new Builder();
     }
 
@@ -255,7 +305,29 @@ public class User {
             return this;
         }
 
-        public User build() {
+        public Builder assignedYear(Year v) {
+            user.assignedYear = v;
+            return this;
+        }
+
+        
+        public Builder deleted(boolean v) {
+            user.deleted = v;
+            return this;
+        }
+        public Builder deletedAt(LocalDateTime v) {
+            user.deletedAt = v;
+            return this;
+        }
+        public Builder permanentDeleteAt(LocalDateTime v) {
+            user.permanentDeleteAt = v;
+            return this;
+        }
+        public Builder deletedBy(String v) {
+            user.deletedBy = v;
+            return this;
+        }
+public User build() {
             return user;
         }
     }

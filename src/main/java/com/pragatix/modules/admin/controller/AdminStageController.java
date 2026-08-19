@@ -35,10 +35,15 @@ public class AdminStageController {
     }
 
     @GetMapping("/stages")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'HOD')")
     @Operation(summary = "Get all activity stages with subgroups")
     public ResponseEntity<ApiResponse<List<ActivityStageResponse>>> getAllStages(
-            @RequestParam(required = false) jjcet.PragatiX.enums.AcademicYear academicYear) {
+            @RequestParam(required = false) jjcet.PragatiX.enums.AcademicYear academicYear,
+            org.springframework.security.core.Authentication authentication) {
+        if (authentication != null) {
+            log.info("getAllStages called by: {}", authentication.getName());
+            log.info("Authorities: {}", authentication.getAuthorities());
+        }
         return adminStageService.getAllStages(academicYear);
     }
 

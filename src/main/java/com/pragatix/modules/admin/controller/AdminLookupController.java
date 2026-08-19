@@ -35,35 +35,35 @@ public class AdminLookupController {
     }
 
     @GetMapping("/academic-years")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "List Academic Years")
     public ResponseEntity<ApiResponse<List<AcademicYear>>> getAllAcademicYears() {
         return adminLookupService.getAllAcademicYears();
     }
 
     @GetMapping("/years")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "List Years")
     public ResponseEntity<ApiResponse<List<Year>>> getAllYears() {
         return adminLookupService.getAllYears();
     }
 
     @GetMapping("/semesters")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "List Semesters")
     public ResponseEntity<ApiResponse<List<Semester>>> getAllSemesters() {
         return adminLookupService.getAllSemesters();
     }
 
     @GetMapping("/genders")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "List Genders")
     public ResponseEntity<ApiResponse<List<Gender>>> getAllGenders() {
         return adminLookupService.getAllGenders();
     }
 
     @GetMapping("/sections")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "List Sections")
     public ResponseEntity<ApiResponse<List<Section>>> getAllSections(
             @RequestParam(required = false) Long departmentId) {

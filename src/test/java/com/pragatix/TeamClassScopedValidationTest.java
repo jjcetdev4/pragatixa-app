@@ -58,6 +58,8 @@ public class TeamClassScopedValidationTest {
     private DepartmentRepository departmentRepository;
     @Mock
     private SectionRepository sectionRepository;
+    @Mock
+    private jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     private TeamCrudService teamCrudService;
 
@@ -82,7 +84,8 @@ public class TeamClassScopedValidationTest {
                 stageTeamRepository,
                 departmentRepository,
                 sectionRepository,
-                null // activityStageRepository
+                null, // activityStageRepository
+                auditService
         ); 
         adminUser = new User();
         adminUser.setId(1L);

@@ -29,19 +29,22 @@ public class PenaltyWorkflowService {
     private final ActivityRepository activityRepository;
     private final XpEngineService xpEngineService;
     private final ActivityAssignmentRepository activityAssignmentRepository;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     public PenaltyWorkflowService(PenaltyRequestRepository penaltyRequestRepository,
             StudentRepository studentRepository,
             UserRepository userRepository,
             ActivityRepository activityRepository,
             XpEngineService xpEngineService,
-            ActivityAssignmentRepository activityAssignmentRepository) {
+            ActivityAssignmentRepository activityAssignmentRepository,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.penaltyRequestRepository = penaltyRequestRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.xpEngineService = xpEngineService;
         this.activityAssignmentRepository = activityAssignmentRepository;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -152,6 +155,23 @@ public class PenaltyWorkflowService {
         System.out.println("Student ID: " + (saved.getStudent() != null ? saved.getStudent().getId() : "null"));
         System.out.println("CC ID: " + (saved.getCc() != null ? saved.getCc().getId() : "null"));
         System.out.println("Status: " + saved.getStatus());
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("studentId", student.getId());
+        newValues.put("activityId", activity != null ? activity.getId() : null);
+        newValues.put("penaltyXp", configuredXp);
+        newValues.put("reason", dto.getReason());
+        newValues.put("status", saved.getStatus());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CREATE,
+            jjcet.PragatiX.enums.AuditModule.REQUEST,
+            "PENALTY_REQUEST",
+            saved.getId(),
+            "Submitted penalty request for student: " + student.getRegNo(),
+            null,
+            newValues
+        );
 
         return ApiResponse.ok("Penalty submitted successfully", mapToDto(saved));
     }
@@ -236,6 +256,21 @@ public class PenaltyWorkflowService {
                 "Penalty: " + request.getActivityName() + " - " + request.getReason());
 
         PenaltyRequest saved = penaltyRequestRepository.save(request);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("status", "APPROVED");
+        newValues.put("approvedBy", cc.getFullName());
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.UPDATE,
+            jjcet.PragatiX.enums.AuditModule.REQUEST,
+            "PENALTY_REQUEST",
+            saved.getId(),
+            "Approved penalty request for student: " + request.getStudent().getRegNo(),
+            null,
+            newValues
+        );
+        
         return ApiResponse.ok("Penalty approved", mapToDto(saved));
     }
 
@@ -267,6 +302,22 @@ public class PenaltyWorkflowService {
         request.setApprovedBy(cc.getFullName());
 
         PenaltyRequest saved = penaltyRequestRepository.save(request);
+        
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("status", "REJECTED");
+        newValues.put("approvedBy", cc.getFullName());
+        newValues.put("rejectedReason", reason);
+        
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.UPDATE,
+            jjcet.PragatiX.enums.AuditModule.REQUEST,
+            "PENALTY_REQUEST",
+            saved.getId(),
+            "Rejected penalty request for student: " + request.getStudent().getRegNo(),
+            null,
+            newValues
+        );
+        
         return ApiResponse.ok("Penalty rejected", mapToDto(saved));
     }
 

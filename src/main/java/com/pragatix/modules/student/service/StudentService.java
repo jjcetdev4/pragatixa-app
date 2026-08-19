@@ -84,6 +84,10 @@ public class StudentService {
         return studentImportService.bulkImport(requests, username);
     }
 
+    public byte[] generateExcelTemplate() throws java.io.IOException {
+        return studentImportService.generateExcelTemplate();
+    }
+
     @Transactional
     public ApiResponse<StudentResponse> adjustPoints(Long regNo, PointAdjustmentRequest request, String username) {
         return studentDisciplineService.adjustPoints(regNo, request, username);

@@ -2,10 +2,26 @@ package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 @Entity
 @Table(name = "faculty")
-public class Faculty {
+
+@Filter(name = "deletedFilter")
+public class Faculty implements SoftDeletable {
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "permanent_delete_at")
+    private LocalDateTime permanentDeleteAt;
+
+    @Column(name = "deleted_by")
+    private String deletedBy;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -94,6 +110,46 @@ public class Faculty {
         return updatedAt;
     }
 
+    @Override
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    @Override
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    @Override
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    @Override
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    @Override
+    public LocalDateTime getPermanentDeleteAt() {
+        return permanentDeleteAt;
+    }
+
+    @Override
+    public void setPermanentDeleteAt(LocalDateTime permanentDeleteAt) {
+        this.permanentDeleteAt = permanentDeleteAt;
+    }
+
+    @Override
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    @Override
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -123,6 +179,26 @@ public class Faculty {
 
         public Builder phoneNo(String v) {
             f.phoneNo = v;
+            return this;
+        }
+
+        public Builder deleted(boolean v) {
+            f.deleted = v;
+            return this;
+        }
+
+        public Builder deletedAt(LocalDateTime v) {
+            f.deletedAt = v;
+            return this;
+        }
+
+        public Builder permanentDeleteAt(LocalDateTime v) {
+            f.permanentDeleteAt = v;
+            return this;
+        }
+
+        public Builder deletedBy(String v) {
+            f.deletedBy = v;
             return this;
         }
 

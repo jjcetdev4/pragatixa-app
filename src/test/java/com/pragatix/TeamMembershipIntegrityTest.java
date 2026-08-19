@@ -68,6 +68,8 @@ public class TeamMembershipIntegrityTest {
     private DepartmentRepository departmentRepository;
     @Mock
     private SectionRepository sectionRepository;
+    @Mock
+    private jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     private TeamCrudService teamCrudService;
     private TeamMemberService teamMemberService;
@@ -101,7 +103,8 @@ public class TeamMembershipIntegrityTest {
                 stageTeamRepository,
                 departmentRepository,
                 sectionRepository,
-                null // activityStageRepository
+                null, // activityStageRepository
+                auditService
         );
 
         teamMemberService = new TeamMemberService(
@@ -113,7 +116,8 @@ public class TeamMembershipIntegrityTest {
                 teamMapper,
                 stageTeamRepository,
                 teamCleanupService,
-                leadershipSyncService);
+                leadershipSyncService,
+                auditService);
 
         studentXpValidator = new StudentXpValidator(studentActivityXpRepository, null, teamRepository,
                 activityAssignmentRepository);

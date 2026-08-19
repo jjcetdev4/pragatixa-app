@@ -72,7 +72,7 @@ public class XpController {
 
     /** PUT /api/v1/xp/{id}/approve – Faculty/Admin approves XP claim */
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "Approve XP Claim", description = "Approves a pending student XP claim. Requires Faculty or Admin role.")
     public ResponseEntity<ApiResponse<XpTransaction>> approveXpClaim(@PathVariable Long id) {
         String approvedBy = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -82,7 +82,7 @@ public class XpController {
 
     /** PUT /api/v1/xp/{id}/reject – Faculty/Admin rejects XP claim */
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "Reject XP Claim", description = "Rejects a pending student XP claim. Requires Faculty or Admin role.")
     public ResponseEntity<ApiResponse<XpTransaction>> rejectXpClaim(@PathVariable Long id) {
         String approvedBy = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -92,7 +92,7 @@ public class XpController {
 
     /** POST /api/v1/xp/penalty – Faculty logs a violation penalty */
     @PostMapping("/penalty")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "Log Violation Penalty", description = "Deducts XP points from a student for a discipline infraction. Requires Faculty or Admin role.")
     public ResponseEntity<ApiResponse<XpTransaction>> logViolation(@Valid @RequestBody LogViolationRequest request) {
         String appliedBy = SecurityContextHolder.getContext().getAuthentication().getName();

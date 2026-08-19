@@ -20,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,13 +42,17 @@ public class AdminDepartmentCommandService {
     private final UserRepository userRepository;
     private final AuthUtils authUtils;
     private final YearRepository yearRepository;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public AdminDepartmentCommandService(ActivitySubgroupRepository activitySubgroupRepository,
             ActivityAssignmentRepository activityAssignmentRepository,
             DepartmentRepository departmentRepository, FacultyRepository facultyRepository,
             SectionRepository sectionRepository, StudentGroupRepository studentGroupRepository,
             StudentRepository studentRepository, SubjectRepository subjectRepository, UserRepository userRepository,
-            AuthUtils authUtils, YearRepository yearRepository) {
+            AuthUtils authUtils, YearRepository yearRepository, jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.departmentRepository = departmentRepository;
@@ -58,6 +64,7 @@ public class AdminDepartmentCommandService {
         this.userRepository = userRepository;
         this.authUtils = authUtils;
         this.yearRepository = yearRepository;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -130,6 +137,14 @@ public class AdminDepartmentCommandService {
         }
         saved.setSections(savedSections);
 
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.CREATE,
+            jjcet.PragatiX.enums.AuditModule.DEPARTMENT,
+            "DEPARTMENT",
+            saved.getId(),
+            "Created department " + saved.getName()
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Department created successfully", saved));
     }
 
@@ -186,47 +201,128 @@ public class AdminDepartmentCommandService {
 
         Department saved = departmentRepository.save(dept);
 
+        java.util.Map<String, Object> oldValues = new java.util.HashMap<>();
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("code", saved.getCode());
+        newValues.put("name", saved.getName());
+        newValues.put("description", saved.getDescription());
+
+        auditService.log(
+            jjcet.PragatiX.enums.AuditAction.UPDATE,
+            jjcet.PragatiX.enums.AuditModule.DEPARTMENT,
+            "DEPARTMENT",
+            saved.getId(),
+            "Updated department " + saved.getName(),
+            oldValues,
+            newValues
+        );
+
         return ResponseEntity.ok(ApiResponse.ok("Department updated successfully", saved));
     }
 
     @Transactional
     public ResponseEntity<ApiResponse<Void>> deleteDepartment(Long id) {
-        if (!departmentRepository.existsById(id)) {
+        Department department = departmentRepository.findById(id).orElse(null);
+        if (department == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Department not found"));
         }
 
-        long sections = sectionRepository.countByDepartment_Id(id);
-        long students = studentRepository.countByDepartmentId(id);
-        long faculty = facultyRepository.countByDepartmentId(id);
-        long subjects = subjectRepository.countByDepartmentId(id);
-        long subgroups = activitySubgroupRepository.countByAssignedDepartmentId(id);
-        long users = userRepository.countByDepartmentId(id);
-        long groups = studentGroupRepository.countByDepartmentId(id);
+        department.setDeleted(true);
+        department.setDeletedAt(java.time.LocalDateTime.now());
+        department.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
+        
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null) {
+            department.setDeletedBy(auth.getName());
+        }
+        
+        departmentRepository.save(department);
 
-        java.util.List<String> deps = new java.util.ArrayList<>();
-        if (students > 0)
-            deps.add(students + " Student(s)");
-        if (faculty > 0)
-            deps.add(faculty + " Faculty Member(s)");
-        if (subjects > 0)
-            deps.add(subjects + " Subject(s)");
-        if (subgroups > 0)
-            deps.add(subgroups + " Activity Subgroup(s)");
-        if (users > 0)
-            deps.add(users + " User(s)");
-        if (groups > 0)
-            deps.add(groups + " Student Group(s)");
+        auditService.log(
+                jjcet.PragatiX.enums.AuditAction.DELETE,
+                jjcet.PragatiX.enums.AuditModule.DEPARTMENT,
+                "DEPARTMENT",
+                department.getId(),
+                "Soft deleted department: " + department.getName()
+        );
 
-        if (!deps.isEmpty()) {
-            String msg = "Cannot delete Department because it contains: " + String.join(", ", deps)
-                    + ". Remove or reassign them first.";
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(msg));
+        return ResponseEntity.ok(ApiResponse.ok("Department deleted successfully and moved to Recycle Bin", null));
+    }
+
+    @Transactional
+    public void permanentlyDeleteDepartment(Long id) {
+        Department department = departmentRepository.findById(id).orElse(null);
+        if (department == null) {
+            // Already deleted or not found
+            return;
         }
 
-        // Delete associated activity assignments before deleting the department
-        activityAssignmentRepository.deleteByDepartmentId(id);
+        String deptName = department.getName();
+        System.out.println("================ DEPARTMENT PERMANENT DELETE ================");
+        System.out.println("Department ID: " + id);
+        System.out.println("Department Name: " + deptName);
+        System.out.println("Schema dependency discovery and cleanup started.");
 
-        departmentRepository.deleteById(id);
-        return ResponseEntity.ok(ApiResponse.ok("Department deleted successfully", null));
+        // Step 2: Nullable references (SET NULL)
+        String[] nullableTables = {
+            "activities:department_id",
+            "activity_subgroups:assigned_department_id",
+            "activity_temporary_assignments:department_id",
+            "badge_requests:department_id",
+            "subjects:dept_id",
+            "teams:department_id",
+            "users:department_id"
+        };
+        for (String ref : nullableTables) {
+            String[] parts = ref.split(":");
+            String table = parts[0];
+            String column = parts[1];
+            System.out.println("Setting NULL for: " + table + "." + column);
+            entityManager.createNativeQuery("UPDATE " + table + " SET " + column + " = NULL WHERE " + column + " = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+        }
+
+        // Step 3: Non-Nullable references (DELETE)
+        // Order matters if they have foreign keys pointing to each other.
+        // e.g. student_group depends on student, etc.
+        // But normally if we delete these, we rely on the caller acknowledging it's a deep clean.
+        String[] nonNullableTables = {
+            "activity_assignments:department_id",
+            "attendance_sessions:department_id",
+            "timetable:department_id",
+            "students_group:dept_id",
+            "students:department_id",
+            "faculty:dept_id",
+            "section:dept_id"
+        };
+        for (String ref : nonNullableTables) {
+            String[] parts = ref.split(":");
+            String table = parts[0];
+            String column = parts[1];
+            System.out.println("Deleting from: " + table + " where " + column + " matches");
+            entityManager.createNativeQuery("DELETE FROM " + table + " WHERE " + column + " = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+        }
+
+        // Step 4: Physically delete the department
+        System.out.println("Physical delete for Department");
+        entityManager.createNativeQuery("DELETE FROM departments WHERE id = :id")
+            .setParameter("id", id)
+            .executeUpdate();
+            
+        System.out.println("Department delete: SUCCESS");
+
+        // Step 5: Create PERMANENT_DELETE audit log
+        auditService.log(
+                jjcet.PragatiX.enums.AuditAction.PERMANENT_DELETE,
+                jjcet.PragatiX.enums.AuditModule.DEPARTMENT,
+                "DEPARTMENT",
+                id,
+                "Permanently deleted department " + deptName + " from Recycle Bin"
+        );
+        System.out.println("Audit: SUCCESS");
+        System.out.println("Transaction: COMMITTED");
     }
 }

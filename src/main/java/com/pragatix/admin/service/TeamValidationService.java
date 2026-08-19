@@ -1,6 +1,7 @@
 package jjcet.PragatiX.admin.service;
 
 import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.Role;
 import jjcet.PragatiX.entity.SubRole;
 import jjcet.PragatiX.entity.User;
 import jjcet.PragatiX.modules.activity.service.AssignmentSecurityService;
@@ -72,8 +73,10 @@ public class TeamValidationService {
                 : (team.getCaptain() != null ? team.getCaptain().getDepartment() : null);
 
         if (team.getCreatedBy() != null && team.getCreatedBy().getId().equals(user.getId())) {
-            boolean isCcOrHod = user.getSubRoles().stream().map(SubRole::getName)
-                    .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("HOD"));
+            boolean isCcOrHod = user.getRoles().stream().map(Role::getName)
+                    .anyMatch(r -> r != null && (r.trim().equalsIgnoreCase("CC") || r.trim().equalsIgnoreCase("CLASS_COORDINATOR") || r.trim().equalsIgnoreCase("HOD") || r.trim().equalsIgnoreCase("ROLE_HOD"))) ||
+                    user.getSubRoles().stream().map(SubRole::getName)
+                    .anyMatch(sr -> sr != null && (sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("HOD") || sr.trim().equalsIgnoreCase("ROLE_HOD")));
             if (isCcOrHod) {
                 if (user.getDepartment() == null || teamDept == null || teamDept.getId().equals(user.getDepartment().getId())) {
                     return true;
@@ -118,8 +121,10 @@ public class TeamValidationService {
             }
         }
 
-        boolean isHod = user.getSubRoles().stream().map(SubRole::getName)
-                .anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
+        boolean isHod = user.getRoles().stream().map(Role::getName)
+                .anyMatch(r -> r != null && (r.trim().equalsIgnoreCase("HOD") || r.trim().equalsIgnoreCase("ROLE_HOD"))) ||
+                user.getSubRoles().stream().map(SubRole::getName)
+                .anyMatch(sr -> sr != null && (sr.trim().equalsIgnoreCase("HOD") || sr.trim().equalsIgnoreCase("ROLE_HOD")));
         if (isHod) {
             boolean matchesDept = teamDept != null && user.getDepartment() != null
                     && teamDept.getId().equals(user.getDepartment().getId());

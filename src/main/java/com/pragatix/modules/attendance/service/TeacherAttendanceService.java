@@ -168,7 +168,7 @@ public class TeacherAttendanceService {
         }
 
         Faculty teacher = facultyRepository.findByUserUsername(username)
-                .orElseThrow(() -> new RuntimeException("Faculty not found for username: " + username));
+                .orElse(null);
 
         List<Long> studentIds = request.getRecords().stream()
                 .map(SaveAttendanceRequest.StudentAttendanceRequest::getStudentId)

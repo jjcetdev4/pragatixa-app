@@ -36,12 +36,14 @@ public class StudentCommandService {
     private final StudentGuardianRepository studentGuardianRepository;
     private final jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService;
     private final ActivityStageRepository activityStageRepository;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     public StudentCommandService(PasswordEncoder passwordEncoder, StudentRepository studentRepository,
             TeamRepository teamRepository, UserRepository userRepository, StudentLookupService studentLookupService,
             StudentMapper studentMapper, StudentGuardianRepository studentGuardianRepository,
             jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService,
-            ActivityStageRepository activityStageRepository) {
+            ActivityStageRepository activityStageRepository,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.passwordEncoder = passwordEncoder;
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
@@ -51,6 +53,7 @@ public class StudentCommandService {
         this.studentGuardianRepository = studentGuardianRepository;
         this.teamCleanupService = teamCleanupService;
         this.activityStageRepository = activityStageRepository;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -190,6 +193,16 @@ public class StudentCommandService {
                     .build();
             guardian = studentGuardianRepository.save(guardian);
         }
+
+        auditService.log(
+                jjcet.PragatiX.enums.AuditAction.CREATE,
+                jjcet.PragatiX.enums.AuditModule.STUDENT,
+                "STUDENT",
+                saved.getId(),
+                "Created student: " + saved.getRegNo(),
+                null,
+                saved
+        );
 
         return ApiResponse.ok("Student created successfully", studentMapper.toResponse(saved, guardian));
     }
@@ -341,6 +354,23 @@ public class StudentCommandService {
             guardian = studentGuardianRepository.save(guardian);
         }
 
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("regNo", saved.getRegNo());
+        newValues.put("fullName", saved.getFullName());
+        newValues.put("email", saved.getEmail());
+        if (saved.getDepartment() != null) newValues.put("departmentId", saved.getDepartment().getId());
+        if (saved.getTeam() != null) newValues.put("teamId", saved.getTeam().getId());
+
+        auditService.log(
+                jjcet.PragatiX.enums.AuditAction.UPDATE,
+                jjcet.PragatiX.enums.AuditModule.STUDENT,
+                "STUDENT",
+                saved.getId(),
+                "Updated student " + saved.getRegNo(),
+                null,
+                newValues
+        );
+
         return ApiResponse.ok("Student updated successfully", studentMapper.toResponse(saved, guardian));
     }
 
@@ -408,53 +438,22 @@ public class StudentCommandService {
             }
         }
 
-        jjcet.PragatiX.entity.Team oldTeam = student.getTeam();
-        Long oldTeamId = oldTeam != null ? oldTeam.getId() : null;
-
-        entityManager.createNativeQuery("DELETE FROM student_guardians WHERE student_id = :sid").setParameter("sid", id)
-                .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM xp_transactions WHERE student_id = :sid").setParameter("sid", id)
-                .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM discipline_logs WHERE student_id = :sid").setParameter("sid", id)
-                .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE student_id = :sid")
-                .setParameter("sid", id)
-                .executeUpdate();
-        entityManager
-                .createNativeQuery("DELETE FROM team_removal_requests WHERE student_id = :sid OR captain_id = :sid")
-                .setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM team_members WHERE student_id = :sid").setParameter("sid", id)
-                .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM student_badges WHERE student_id = :sid").setParameter("sid", id)
-                .executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM streaks WHERE student_id = :sid").setParameter("sid", id)
-                .executeUpdate();
-        entityManager.createNativeQuery("UPDATE teams SET captain_id = NULL WHERE captain_id = :sid")
-                .setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("UPDATE teams SET vice_captain_id = NULL WHERE vice_captain_id = :sid")
-                .setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("UPDATE stage_teams SET captain_id = NULL WHERE captain_id = :sid")
-                .setParameter("sid", id).executeUpdate();
-        entityManager.createNativeQuery("UPDATE stage_teams SET vice_captain_id = NULL WHERE vice_captain_id = :sid")
-                .setParameter("sid", id).executeUpdate();
-
-        User user = student.getUser();
-        studentRepository.delete(student);
-
-        if (user != null) {
-            entityManager.createNativeQuery("DELETE FROM user_roles WHERE user_id = :uid")
-                    .setParameter("uid", user.getId()).executeUpdate();
-            entityManager.createNativeQuery("DELETE FROM user_sub_roles WHERE user_id = :uid")
-                    .setParameter("uid", user.getId()).executeUpdate();
-            userRepository.delete(user);
+        student.setDeleted(true);
+        student.setDeletedAt(java.time.LocalDateTime.now());
+        student.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
+        if (auth != null && auth.getName() != null) {
+            student.setDeletedBy(auth.getName());
         }
+        
+        studentRepository.save(student);
 
-        entityManager.flush();
-        entityManager.clear();
-
-        if (oldTeamId != null) {
-            teamRepository.findById(oldTeamId).ifPresent(teamCleanupService::autoDeleteEmptyTeam);
-        }
+        auditService.log(
+                jjcet.PragatiX.enums.AuditAction.DELETE,
+                jjcet.PragatiX.enums.AuditModule.STUDENT,
+                "STUDENT",
+                student.getId(),
+                "Soft deleted student: " + student.getRegNo()
+        );
 
         return ApiResponse.ok("Student deleted successfully", null);
     }

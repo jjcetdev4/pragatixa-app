@@ -23,6 +23,7 @@ public class XpEngineService {
     private final jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService;
     private final jjcet.PragatiX.repository.StreakRepository streakRepository;
     private final jjcet.PragatiX.modules.activity.service.ActivityStreakService activityStreakService;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     public XpEngineService(StudentRepository studentRepository,
             StudentActivityXpRepository studentActivityXpRepository,
@@ -32,7 +33,8 @@ public class XpEngineService {
             TeamAssignmentService teamAssignmentService,
             jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService,
             jjcet.PragatiX.repository.StreakRepository streakRepository,
-            jjcet.PragatiX.modules.activity.service.ActivityStreakService activityStreakService) {
+            jjcet.PragatiX.modules.activity.service.ActivityStreakService activityStreakService,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.studentRepository = studentRepository;
         this.studentActivityXpRepository = studentActivityXpRepository;
         this.xpTransactionRepository = xpTransactionRepository;
@@ -42,6 +44,7 @@ public class XpEngineService {
         this.captainSelectionService = captainSelectionService;
         this.streakRepository = streakRepository;
         this.activityStreakService = activityStreakService;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -218,6 +221,24 @@ public class XpEngineService {
         System.out.println("Record ID\n" + tx.getId());
         System.out.println("Table Name\nxp_transactions");
         System.out.println("--------------------------------");
+
+        java.util.Map<String, Object> newValues = new java.util.HashMap<>();
+        newValues.put("studentId", student.getId());
+        newValues.put("studentRegNo", student.getRegNo());
+        newValues.put("activityId", activity != null ? activity.getId() : null);
+        newValues.put("activityName", activityName);
+        newValues.put("appliedXp", appliedXp);
+        newValues.put("remarks", remarks);
+        
+        auditService.log(
+            appliedXp >= 0 ? jjcet.PragatiX.enums.AuditAction.AWARD_XP : jjcet.PragatiX.enums.AuditAction.PENALTY_XP,
+            jjcet.PragatiX.enums.AuditModule.XP,
+            "XP_TRANSACTION",
+            tx.getId(),
+            (appliedXp >= 0 ? "Awarded " : "Penalized ") + Math.abs(appliedXp) + " XP to student " + student.getRegNo() + " for activity: " + activityName,
+            null,
+            newValues
+        );
 
         // Update streak
         updateStreakOnSubmission(student, activityName);
