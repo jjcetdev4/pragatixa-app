@@ -73,6 +73,7 @@ public class RecycleBinService {
                 User user = entityManager.find(User.class, id);
                 if (user != null) {
                     user.setDeleted(false);
+                    user.setActive(true);
                     user.setDeletedAt(null);
                     user.setPermanentDeleteAt(null);
                     user.setDeletedBy(null);
@@ -93,6 +94,7 @@ public class RecycleBinService {
                 Student student = entityManager.find(Student.class, id);
                 if (student != null) {
                     student.setDeleted(false);
+                    student.setActive(true);
                     student.setDeletedAt(null);
                     student.setPermanentDeleteAt(null);
                     student.setDeletedBy(null);

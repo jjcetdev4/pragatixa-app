@@ -48,10 +48,10 @@ public class AdminDashboardService {
 
         long totalStudents;
         if (currentUser != null && !authUtils.isSuperAdmin(currentUser) && authUtils.isAdmin(currentUser)) {
-            String adminYear = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
-            log.info("\nCurrent User Role:\nADMIN\n\nAcademic Year:\n{}\n", currentUser.getAcademicYear());
-            if (adminYear != null) {
-                totalStudents = studentRepository.countByYear(adminYear);
+            jjcet.PragatiX.entity.Year assignedYear = currentUser.getAssignedYear();
+            log.info("\nCurrent User Role:\nADMIN\n\nAssigned Year:\n{}\n", assignedYear != null ? assignedYear.getYearName() : "None");
+            if (assignedYear != null) {
+                totalStudents = studentRepository.countByYearRefId(assignedYear.getId());
                 log.info("\nStudent Count:\n{}\n", totalStudents);
             } else {
                 totalStudents = 0; // Admin with no year assigned sees 0 students

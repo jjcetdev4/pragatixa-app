@@ -11,9 +11,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
         Optional<User> findByEmail(String email);
 
+        @org.springframework.data.jpa.repository.Query("SELECT u FROM User u WHERE u.deleted = false")
+        java.util.List<User> findAll();
+
         boolean existsByUsername(String username);
+        boolean existsByUsernameAndIdNot(String username, Long id);
 
         boolean existsByEmail(String email);
+        boolean existsByEmailAndIdNot(String email, Long id);
 
         long countByDepartmentId(Long departmentId);
 

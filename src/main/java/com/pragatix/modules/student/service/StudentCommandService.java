@@ -439,6 +439,7 @@ public class StudentCommandService {
         }
 
         student.setDeleted(true);
+        student.setActive(false);
         student.setDeletedAt(java.time.LocalDateTime.now());
         student.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
         if (auth != null && auth.getName() != null) {

@@ -13,7 +13,10 @@ import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import jjcet.PragatiX.entity.SubRole;
 import jjcet.PragatiX.modules.authentication.repository.SubRoleRepository;
 import jjcet.PragatiX.repository.SectionRepository;
+import jjcet.PragatiX.repository.YearRepository;
 import jjcet.PragatiX.entity.Section;
+import jjcet.PragatiX.entity.Year;
+import jjcet.PragatiX.enums.AcademicYear;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +47,12 @@ public class AdminUserService {
     private final UserRepository userRepository;
     private final AdminMapper adminMapper;
     private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
+    private final YearRepository yearRepository;
 
     public AdminUserService(DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder,
             RoleRepository roleRepository, SectionRepository sectionRepository, SubRoleRepository subRoleRepository,
-            UserRepository userRepository, AdminMapper adminMapper, jjcet.PragatiX.modules.audit.service.AuditService auditService) {
+            UserRepository userRepository, AdminMapper adminMapper, jjcet.PragatiX.modules.audit.service.AuditService auditService,
+            YearRepository yearRepository) {
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
@@ -56,11 +61,14 @@ public class AdminUserService {
         this.userRepository = userRepository;
         this.adminMapper = adminMapper;
         this.auditService = auditService;
+        this.yearRepository = yearRepository;
     }
 
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(Long departmentId) {
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findAll().stream()
+                .filter(u -> !u.isDeleted() && u.isActive())
+                .collect(Collectors.toList());
         if (departmentId != null) {
             users = users.stream()
                     .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(departmentId))
@@ -107,11 +115,27 @@ public class AdminUserService {
             section = sectionRepository.findById(request.getSectionId()).orElse(null);
         }
 
+        AcademicYear academicYearEnum = AcademicYear.fromString(request.getYear());
+        Year assignedYear = null;
+        if (academicYearEnum != null) {
+            Byte yearNo = null;
+            switch(academicYearEnum) {
+                case FIRST_YEAR: yearNo = 1; break;
+                case SECOND_YEAR: yearNo = 2; break;
+                case THIRD_YEAR: yearNo = 3; break;
+                case FOURTH_YEAR: yearNo = 4; break;
+            }
+            if (yearNo != null) {
+                assignedYear = yearRepository.findByYearNo(yearNo).orElse(null);
+            }
+        }
+
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .email(request.getEmail())
+                .phone(request.getPhone())
                 .department(department)
                 .roles(roles)
                 .subRoles(this.resolveSubRoles(request.getSubRoles(), roles))
@@ -119,6 +143,9 @@ public class AdminUserService {
                 .year(request.getYear())
                 .active(true)
                 .build();
+                
+        user.setAcademicYear(academicYearEnum);
+        user.setAssignedYear(assignedYear);
 
         User saved = userRepository.save(user);
         
@@ -176,9 +203,27 @@ public class AdminUserService {
 
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
         user.setDepartment(department);
         user.setSection(section);
         user.setYear(request.getYear());
+
+        AcademicYear academicYearEnum = AcademicYear.fromString(request.getYear());
+        Year assignedYear = null;
+        if (academicYearEnum != null) {
+            Byte yearNo = null;
+            switch(academicYearEnum) {
+                case FIRST_YEAR: yearNo = 1; break;
+                case SECOND_YEAR: yearNo = 2; break;
+                case THIRD_YEAR: yearNo = 3; break;
+                case FOURTH_YEAR: yearNo = 4; break;
+            }
+            if (yearNo != null) {
+                assignedYear = yearRepository.findByYearNo(yearNo).orElse(null);
+            }
+        }
+        user.setAcademicYear(academicYearEnum);
+        user.setAssignedYear(assignedYear);
 
         user.getRoles().clear();
         if (roles != null) {
@@ -223,6 +268,7 @@ public class AdminUserService {
         }
         
         user.setDeleted(true);
+        user.setActive(false);
         user.setDeletedAt(java.time.LocalDateTime.now());
         user.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
         

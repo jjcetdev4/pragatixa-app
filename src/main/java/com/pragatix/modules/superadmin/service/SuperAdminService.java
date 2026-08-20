@@ -70,6 +70,8 @@ public class SuperAdminService {
                             u.getUsername(),
                             u.getAssignedYear() != null ? u.getAssignedYear().getId() : null,
                             u.getAssignedYear() != null ? u.getAssignedYear().getYearName() : null,
+                            u.getEmail(),
+                            u.getPhone(),
                             u.isActive());
                 })
                 .collect(Collectors.toList());
@@ -132,6 +134,8 @@ public class SuperAdminService {
                 savedAdmin.getUsername(),
                 savedAdmin.getAssignedYear().getId(),
                 savedAdmin.getAssignedYear().getYearName(),
+                savedAdmin.getEmail(),
+                savedAdmin.getPhone(),
                 savedAdmin.isActive());
 
         return ResponseEntity.ok(ApiResponse.ok("Year Admin created successfully", resp));
@@ -148,6 +152,15 @@ public class SuperAdminService {
         boolean isAdmin = admin.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
         if (!isAdmin) {
             return ResponseEntity.badRequest().body(ApiResponse.error("User is not a Year Admin"));
+        }
+
+        if (userRepository.existsByUsernameAndIdNot(request.getUsername(), admin.getId())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Username already exists"));
+        }
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            if (userRepository.existsByEmailAndIdNot(request.getEmail(), admin.getId())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Email already registered"));
+            }
         }
 
         // Update fields
@@ -200,6 +213,8 @@ public class SuperAdminService {
                 admin.getUsername(),
                 admin.getAssignedYear().getId(),
                 admin.getAssignedYear().getYearName(),
+                admin.getEmail(),
+                admin.getPhone(),
                 admin.isActive());
         return ResponseEntity.ok(ApiResponse.ok("Year Admin updated successfully", resp));
     }

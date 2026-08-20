@@ -300,11 +300,7 @@ public class AuthService {
 
         otpTokenRepository.deleteByEmail(email);
 
-        java.util.List<String> testEmails = java.util.List.of(
-                "test1@gmail.com", "test2@gmail.com", "test3@gmail.com", "test4@gmail.com",
-                "test5@gmail.com", "test6@gmail.com", "test7@gmail.com", "test8@gmail.com");
-
-        if (testEmails.contains(email.toLowerCase())) {
+        if (email.toLowerCase().matches("^test\\d+@gmail\\.com$")) {
             OtpToken otpToken = new OtpToken(email, "1234", LocalDateTime.now().plusYears(1));
             otpTokenRepository.save(otpToken);
             return ApiResponse.ok("OTP sent successfully to " + email);
@@ -337,11 +333,7 @@ public class AuthService {
         String otp = request.getOtp().trim();
         log.info("Verifying OTP for email: {}", email);
 
-        java.util.List<String> testEmails = java.util.List.of(
-                "test1@gmail.com", "test2@gmail.com", "test3@gmail.com", "test4@gmail.com",
-                "test5@gmail.com", "test6@gmail.com", "test7@gmail.com", "test8@gmail.com");
-
-        boolean isTestUser = testEmails.contains(email.toLowerCase()) && "1234".equals(otp);
+        boolean isTestUser = email.toLowerCase().matches("^test\\d+@gmail\\.com$") && "1234".equals(otp);
 
         if (!isTestUser) {
             OtpToken otpToken = otpTokenRepository.findByEmailAndOtp(email, otp).orElse(null);

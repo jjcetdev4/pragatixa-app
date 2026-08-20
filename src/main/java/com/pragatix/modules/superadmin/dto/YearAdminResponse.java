@@ -8,17 +8,21 @@ public class YearAdminResponse {
     private String username;
     private Long assignedYearId;
     private String assignedYearName;
+    private String email;
+    private String phone;
     private boolean active;
 
     public YearAdminResponse() {
     }
 
-    public YearAdminResponse(Long id, String fullName, String username, Long assignedYearId, String assignedYearName, boolean active) {
+    public YearAdminResponse(Long id, String fullName, String username, Long assignedYearId, String assignedYearName, String email, String phone, boolean active) {
         this.id = id;
         this.fullName = fullName;
         this.username = username;
         this.assignedYearId = assignedYearId;
         this.assignedYearName = assignedYearName;
+        this.email = email;
+        this.phone = phone;
         this.active = active;
     }
 
@@ -68,5 +72,21 @@ public class YearAdminResponse {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 }

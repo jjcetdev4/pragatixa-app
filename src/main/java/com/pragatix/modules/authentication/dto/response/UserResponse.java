@@ -7,6 +7,7 @@ public class UserResponse {
     private String username;
     private String fullName;
     private String email;
+    private String phone;
     private boolean active;
     private Set<String> roles;
     private Set<String> subRoles;
@@ -20,13 +21,14 @@ public class UserResponse {
     public UserResponse() {
     }
 
-    public UserResponse(Long id, String username, String fullName, String email, boolean active, Set<String> roles,
+    public UserResponse(Long id, String username, String fullName, String email, String phone, boolean active, Set<String> roles,
             Set<String> subRoles, Long departmentId, String departmentName, Long sectionId, String sectionName,
             String section, String year) {
         this.id = id;
         this.username = username;
         this.fullName = fullName;
         this.email = email;
+        this.phone = phone;
         this.active = active;
         this.roles = roles;
         this.subRoles = subRoles;
@@ -68,6 +70,14 @@ public class UserResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public boolean isActive() {
@@ -151,6 +161,7 @@ public class UserResponse {
         private String username;
         private String fullName;
         private String email;
+        private String phone;
         private boolean active;
         private Set<String> roles;
         private Set<String> subRoles;
@@ -178,6 +189,11 @@ public class UserResponse {
 
         public Builder email(String v) {
             this.email = v;
+            return this;
+        }
+
+        public Builder phone(String v) {
+            this.phone = v;
             return this;
         }
 
@@ -227,7 +243,7 @@ public class UserResponse {
         }
 
         public UserResponse build() {
-            return new UserResponse(id, username, fullName, email, active, roles, subRoles, departmentId,
+            return new UserResponse(id, username, fullName, email, phone, active, roles, subRoles, departmentId,
                     departmentName, sectionId, sectionName, section, year);
         }
     }

@@ -111,7 +111,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
-       @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.yearRef.id = :yearId AND s.section.id = :sectionId")
+       @Query("SELECT s FROM Student s WHERE s.deleted = false AND s.department.id = :deptId AND s.yearRef.id = :yearId AND s.section.id = :sectionId")
        Page<Student> findByDepartmentAndYearAndSection(
                      @Param("deptId") Long deptId,
                      @Param("yearId") Long yearId,
@@ -120,7 +120,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
-       @Query("SELECT s FROM Student s WHERE s.department.id = :deptId AND s.yearRef.id = :yearId AND (:sectionId IS NULL OR s.section.id = :sectionId) AND " +
+       @Query("SELECT s FROM Student s WHERE s.deleted = false AND s.department.id = :deptId AND s.yearRef.id = :yearId AND (:sectionId IS NULL OR s.section.id = :sectionId) AND " +
                       "(:unassignedOnly = false OR s.team IS NULL) AND ("
                       +
                       "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -136,7 +136,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
-       @Query("SELECT s FROM Student s WHERE (:unassignedOnly = false OR s.team IS NULL) AND (" +
+       @Query("SELECT s FROM Student s WHERE s.deleted = false AND (:unassignedOnly = false OR s.team IS NULL) AND (" +
                      "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                      "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                      "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
@@ -157,6 +157,21 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
                      @Param("sectionId") Long sectionId,
                      Pageable pageable);
 
+       @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
+                     "academicYearRef", "yearRef", "semesterRef", "team" })
+       @Query("SELECT s FROM Student s WHERE s.active = true " +
+                     "AND (:keyword IS NULL OR :keyword = '' OR (LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))) "
+                     +
+                     "AND (s.yearRef.id = :yearId) " +
+                     "AND (:departmentId IS NULL OR s.department.id = :departmentId) " +
+                     "AND (:sectionId IS NULL OR s.section.id = :sectionId)")
+       Page<Student> findByFiltersWithYearRef(
+                     @Param("keyword") String keyword,
+                     @Param("yearId") Long yearId,
+                     @Param("departmentId") Long departmentId,
+                     @Param("sectionId") Long sectionId,
+                     Pageable pageable);
+
        @Query("SELECT DISTINCT s.section FROM Student s WHERE s.active = true AND s.section IS NOT NULL " +
                      "AND (:year IS NULL OR :year = '' OR s.year = :year) " +
                      "AND (:departmentId IS NULL OR s.department.id = :departmentId)")
@@ -168,16 +183,25 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
                      "AND (:year IS NULL OR :year = '' OR s.year = :year)")
        List<Department> findDistinctDepartmentsByYear(@Param("year") String year);
 
-       @Query("SELECT s FROM Student s WHERE s.year = :year")
+       @Query("SELECT s FROM Student s WHERE s.deleted = false AND s.year = :year")
        Page<Student> findAllByYear(@Param("year") String year, Pageable pageable);
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
                      "academicYearRef", "yearRef", "semesterRef", "team" })
-       @Query("SELECT s FROM Student s WHERE s.year = :year AND (:unassignedOnly = false OR s.team IS NULL) AND (" +
+       @Query("SELECT s FROM Student s WHERE s.deleted = false AND s.year = :year AND (:unassignedOnly = false OR s.team IS NULL) AND (" +
                      "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                      "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                      "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
        Page<Student> searchStudentsByYear(@Param("keyword") String keyword, @Param("year") String year,
+                     @Param("unassignedOnly") boolean unassignedOnly, Pageable pageable);
+
+       @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
+                     "academicYearRef", "yearRef", "semesterRef", "team" })
+       @Query("SELECT s FROM Student s WHERE s.deleted = false AND s.yearRef.id = :yearId AND (:unassignedOnly = false OR s.team IS NULL) AND (" +
+                     "LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                     "LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                     "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+       Page<Student> searchStudentsByYearRef(@Param("keyword") String keyword, @Param("yearId") Long yearId,
                      @Param("unassignedOnly") boolean unassignedOnly, Pageable pageable);
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
@@ -214,8 +238,11 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
        long countByDepartmentIdAndYearAndSectionId(@Param("deptId") Long deptId, @Param("year") String year,
                      @Param("secId") Long secId);
 
-       @Query("SELECT COUNT(s) FROM Student s WHERE s.year = :year")
+       @Query("SELECT COUNT(s) FROM Student s WHERE s.deleted = false AND s.year = :year")
        long countByYear(@Param("year") String year);
+
+       @Query("SELECT COUNT(s) FROM Student s WHERE s.deleted = false AND s.yearRef.id = :yearId")
+       long countByYearRefId(@Param("yearId") Long yearId);
 
        @Query("SELECT COUNT(s) FROM Student s WHERE s.active = true AND s.stage >= :stageOrder AND s.promotionOrder IS NOT NULL AND "
                      +

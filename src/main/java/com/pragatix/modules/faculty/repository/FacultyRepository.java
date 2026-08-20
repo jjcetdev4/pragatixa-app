@@ -8,6 +8,9 @@ import java.util.Optional;
 
 @Repository
 public interface FacultyRepository extends JpaRepository<Faculty, Long> {
+    @org.springframework.data.jpa.repository.Query("SELECT f FROM Faculty f WHERE f.deleted = false")
+    java.util.List<Faculty> findAll();
+
     Optional<Faculty> findByUserUsername(String username);
 
     long countByDepartmentId(Long departmentId);

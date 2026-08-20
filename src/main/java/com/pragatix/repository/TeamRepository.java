@@ -8,6 +8,9 @@ import java.util.Optional;
 
 @Repository
 public interface TeamRepository extends JpaRepository<Team, Long> {
+        @org.springframework.data.jpa.repository.Query("SELECT t FROM Team t WHERE t.deleted = false")
+        java.util.List<Team> findAll();
+
         @Deprecated
         Optional<Team> findByName(String name);
 

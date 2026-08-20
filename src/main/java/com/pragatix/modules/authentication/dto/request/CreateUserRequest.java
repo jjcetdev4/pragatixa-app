@@ -21,6 +21,9 @@ public class CreateUserRequest {
     @Size(max = 255)
     private String email;
 
+    @Size(max = 15)
+    private String phone;
+
     private Long departmentId;
 
     private Set<String> roles; // e.g. ["ROLE_TEACHER"]
@@ -63,6 +66,14 @@ public class CreateUserRequest {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public Long getDepartmentId() {

@@ -133,17 +133,18 @@ public class StudentQueryService {
         }
 
         if (currentUser != null && !authUtils.isSuperAdmin(currentUser) && authUtils.isAdmin(currentUser)) {
-            String adminYear = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
-            if (adminYear != null) {
+            jjcet.PragatiX.entity.Year assignedYear = currentUser.getAssignedYear();
+            if (assignedYear != null) {
+                Long adminYearId = assignedYear.getId();
                 // Admin can filter by keyword, department, section, but year is forced to
-                // adminYear
+                // adminYearId
                 Page<StudentResponse> result = mapWithGuardians(
-                        studentRepository.findByFilters(keyword, adminYear, departmentId, sectionId, pageable));
-                log.info("Admin user '{}' with year '{}': total students in DB = {}, returned in page = {}",
-                        username, adminYear, result.getTotalElements(), result.getNumberOfElements());
+                        studentRepository.findByFiltersWithYearRef(keyword, adminYearId, departmentId, sectionId, pageable));
+                log.info("Admin user '{}' with year id '{}': total students in DB = {}, returned in page = {}",
+                        username, adminYearId, result.getTotalElements(), result.getNumberOfElements());
                 return ApiResponse.ok(result);
             } else {
-                log.warn("Admin user '{}' has no academic year assigned; returning 0 students.", username);
+                log.warn("Admin user '{}' has no assignedYear; returning 0 students.", username);
                 return ApiResponse.ok(Page.empty(pageable));
             }
         }
@@ -211,10 +212,11 @@ public class StudentQueryService {
         }
 
         if (currentUser != null && !authUtils.isSuperAdmin(currentUser) && authUtils.isAdmin(currentUser)) {
-            String adminYear = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
-            if (adminYear != null) {
+            jjcet.PragatiX.entity.Year assignedYear = currentUser.getAssignedYear();
+            if (assignedYear != null) {
+                Long adminYearId = assignedYear.getId();
                 Page<StudentResponse> result = mapWithGuardians(
-                        studentRepository.searchStudentsByYear(keyword, adminYear, unassignedOnly, pageable));
+                        studentRepository.searchStudentsByYearRef(keyword, adminYearId, unassignedOnly, pageable));
                 return ApiResponse.ok(result);
             } else {
                 return ApiResponse.ok(Page.empty(pageable));

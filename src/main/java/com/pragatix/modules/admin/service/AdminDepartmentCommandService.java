@@ -69,7 +69,9 @@ public class AdminDepartmentCommandService {
 
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments() {
-        List<Department> depts = departmentRepository.findAll();
+        List<Department> depts = departmentRepository.findAll().stream()
+                .filter(d -> !d.isDeleted())
+                .collect(java.util.stream.Collectors.toList());
 
         List<Map<String, Object>> response = new ArrayList<>();
 

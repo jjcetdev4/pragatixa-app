@@ -8,6 +8,9 @@ import java.util.List;
 
 @Repository
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
+        @org.springframework.data.jpa.repository.Query("SELECT a FROM Activity a WHERE a.deleted = false")
+        List<Activity> findAll();
+
         List<Activity> findByStageId(Long stageId);
 
         List<Activity> findByStreakEnabledTrue();

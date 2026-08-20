@@ -34,6 +34,7 @@ public class AdminMapper {
                 .username(user.getUsername())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
+                .phone(user.getPhone())
                 .active(user.isActive())
                 .roles(roleNames)
                 .subRoles(user.getSubRoles().stream().map(SubRole::getName).collect(Collectors.toSet()))

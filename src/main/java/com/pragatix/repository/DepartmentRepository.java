@@ -12,4 +12,7 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     Optional<Department> findByCode(String code);
 
     Optional<Department> findByDeptCode(String deptCode);
+
+    @org.springframework.data.jpa.repository.Query("SELECT d FROM Department d WHERE d.deleted = false")
+    java.util.List<Department> findAll();
 }
