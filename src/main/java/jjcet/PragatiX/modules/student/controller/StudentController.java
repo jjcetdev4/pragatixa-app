@@ -1,0 +1,304 @@
+package jjcet.PragatiX.modules.student.controller;
+
+import jjcet.PragatiX.modules.student.service.StudentService;
+import jjcet.PragatiX.modules.student.service.StudentStageFacade;
+
+import jjcet.PragatiX.dto.*;
+import jjcet.PragatiX.modules.activity.dto.request.*;
+import jjcet.PragatiX.modules.activity.dto.response.*;
+import jjcet.PragatiX.modules.student.dto.request.*;
+import jjcet.PragatiX.modules.student.dto.response.*;
+import jjcet.PragatiX.common.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import jjcet.PragatiX.entity.DisciplineLog;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/students")
+@Tag(name = "Students", description = "Student management endpoints")
+@SecurityRequirement(name = "bearerAuth")
+public class StudentController {
+
+    private final StudentService studentService;
+    private final StudentStageFacade studentStageFacade;
+    private final jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver;
+    private final jjcet.PragatiX.modules.activity.repository.ActivityRepository activityRepository;
+    private final jjcet.PragatiX.modules.activity.service.ActivityStreakService activityStreakService;
+
+    public StudentController(StudentService studentService,
+            StudentStageFacade studentStageFacade,
+            jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver,
+            jjcet.PragatiX.modules.activity.repository.ActivityRepository activityRepository,
+            jjcet.PragatiX.modules.activity.service.ActivityStreakService activityStreakService) {
+        this.studentService = studentService;
+        this.studentStageFacade = studentStageFacade;
+        this.studentAuthResolver = studentAuthResolver;
+        this.activityRepository = activityRepository;
+        this.activityStreakService = activityStreakService;
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Add Student", description = "Creates a new student record. Requires ADMIN or TEACHER role.")
+    public ResponseEntity<ApiResponse<StudentResponse>> createStudent(
+            @Valid @RequestBody CreateStudentRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        ApiResponse<StudentResponse> response = studentService.createStudent(request, username);
+        return response.isSuccess() ? ResponseEntity.status(HttpStatus.CREATED).body(response)
+                : ResponseEntity.badRequest().body(response);
+    }
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StudentController.class);
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'HOD')")
+    @Operation(summary = "Get All Students", description = "Returns paginated list of all students with optional filters.")
+    public ResponseEntity<ApiResponse<Page<StudentResponse>>> getAllStudents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1000") int size,
+            @RequestParam(defaultValue = "fullName") String sortBy,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long sectionId) {
+        ApiResponse<Page<StudentResponse>> response = studentService.getAllStudents(page, size, sortBy, keyword, year,
+                departmentId, sectionId);
+        if (response.getData() != null) {
+            log.info(
+                    "\n=== STUDENT DIRECTORY API ===\nRequested Page: {}, Size: {}\nTotal in DB: {}\nReturned in Page: {}\n",
+                    page, size, response.getData().getTotalElements(), response.getData().getNumberOfElements());
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/export")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Export All Students", description = "Exports filtered list of all students to Excel.")
+    public ResponseEntity<byte[]> exportStudents(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long sectionId) {
+        try {
+            byte[] excelBytes = studentService.exportStudentsToExcel(keyword, year, departmentId, sectionId);
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDispositionFormData("attachment", "Students_Export.xlsx");
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+            
+            return new ResponseEntity<>(excelBytes, headers, org.springframework.http.HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Failed to export students", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/filters/departments")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR', 'HOD')")
+    @Operation(summary = "Get distinct departments for a specific year", description = "Returns departments that have students in the specified academic year.")
+    public ResponseEntity<ApiResponse<java.util.List<jjcet.PragatiX.entity.Department>>> getFilterDepartmentsByYear(
+            @RequestParam(required = false) String year) {
+        return ResponseEntity
+                .ok(ApiResponse.ok("Departments fetched", studentService.getFilterDepartmentsByYear(year)));
+    }
+
+    @GetMapping("/filters/sections")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'TEACHER', 'CLASS_COORDINATOR', 'HOD')")
+    @Operation(summary = "Get distinct sections for a specific year and department", description = "Returns sections that have students in the specified year and department.")
+    public ResponseEntity<ApiResponse<java.util.List<jjcet.PragatiX.entity.Section>>> getFilterSections(
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) Long departmentId) {
+        return ResponseEntity
+                .ok(ApiResponse.ok("Sections fetched", studentService.getFilterSections(year, departmentId)));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Get Student by ID")
+    public ResponseEntity<ApiResponse<StudentResponse>> getStudentById(@PathVariable Long id) {
+        ApiResponse<StudentResponse> response = studentService.getStudentById(id);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.status(404).body(response);
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD')")
+    @Operation(summary = "Search Students", description = "Search by name, student ID, or email.")
+    public ResponseEntity<ApiResponse<Page<StudentResponse>>> searchStudents(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1000") int size,
+            @RequestParam(required = false, defaultValue = "false") boolean unassignedOnly) {
+        ApiResponse<Page<StudentResponse>> response = studentService.searchStudents(keyword, page, size, unassignedOnly);
+        if (response.getData() != null) {
+            log.info(
+                    "\n=== STUDENT SEARCH API ===\nKeyword: '{}', Page: {}, Size: {}\nTotal Matches: {}\nReturned: {}\n",
+                    keyword, page, size, response.getData().getTotalElements(),
+                    response.getData().getNumberOfElements());
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/team-member-search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Smart search for team members", description = "Search active students by name, reg_no, or spr_no for team selection. Filters by team configuration.")
+    public ResponseEntity<ApiResponse<java.util.List<jjcet.PragatiX.modules.student.dto.response.StudentSearchDTO>>> searchActiveStudentsForTeam(
+            @RequestParam(required = false) String keyword,
+            @RequestParam Long teamId,
+            @RequestParam(required = false, defaultValue = "1") Integer currentStage) {
+        return ResponseEntity.ok(studentService.searchActiveStudentsForTeam(keyword, teamId, currentStage));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Delete Student", description = "Deletes a student record. Requires ADMIN or TEACHER role.")
+    public ResponseEntity<ApiResponse<Void>> deleteStudent(@PathVariable Long id) {
+        ApiResponse<Void> response = studentService.deleteStudent(id);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else if (response.getMessage() != null && response.getMessage().contains("authorized")) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).body(response);
+        } else {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Update Student", description = "Updates student profile details. Requires ADMIN or TEACHER role.")
+    public ResponseEntity<ApiResponse<StudentResponse>> updateStudent(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateStudentRequest request) {
+        ApiResponse<StudentResponse> response = studentService.updateStudent(id, request);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @GetMapping("/bulk-upload/template")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Download Student Bulk Upload Template", description = "Generates and downloads an Excel template for bulk student upload.")
+    public ResponseEntity<byte[]> downloadBulkUploadTemplate() {
+        try {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            byte[] excelBytes = studentService.generateExcelTemplate(username);
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDispositionFormData("attachment", "SPDMS_Student_Bulk_Upload_Template.xlsx");
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+            
+            return new ResponseEntity<>(excelBytes, headers, org.springframework.http.HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping(value = "/bulk-parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Bulk Parse Students Spreadsheet", description = "Parses Excel and returns JSON preview list of student records without saving. Requires ADMIN or TEACHER role.")
+    public ResponseEntity<ApiResponse<List<CreateStudentRequest>>> bulkParseStudents(
+            @RequestParam("file") MultipartFile file) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        ApiResponse<List<CreateStudentRequest>> response = studentService.bulkParse(file, username);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @PostMapping("/bulk-import")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Bulk Import Selected Students", description = "Saves selected list of parsed student records into the database. Requires ADMIN or TEACHER role.")
+    public ResponseEntity<ApiResponse<String>> bulkImportStudents(
+            @RequestBody List<CreateStudentRequest> requests) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        ApiResponse<String> response = studentService.bulkImport(requests, username);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @PostMapping("/{id}/adjust-points")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Adjust Student Points", description = "Adds or deducts points for a student. Checks activity-faculty assignments.")
+    public ResponseEntity<ApiResponse<StudentResponse>> adjustPoints(
+            @PathVariable Long id,
+            @Valid @RequestBody PointAdjustmentRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        ApiResponse<StudentResponse> response = studentService.adjustPoints(id, request, username);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @GetMapping("/{id}/discipline-logs")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @Operation(summary = "Get Discipline Logs", description = "Fetch history logs of points adjustments for a student.")
+    public ResponseEntity<ApiResponse<List<DisciplineLog>>> getDisciplineLogs(@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.getDisciplineLogs(id));
+    }
+
+    @GetMapping("/department-performance")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Get Department Performance Report", description = "Returns overall and year-wise average discipline scores. Requires sub-role HOD.")
+    public ResponseEntity<ApiResponse<DepartmentPerformanceResponse>> getDepartmentPerformance() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        ApiResponse<DepartmentPerformanceResponse> response = studentService.getDepartmentPerformance(username);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @PostMapping("/{id}/make-captain")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Promote Student to Team Captain", description = "Sets the student as the Captain of their assigned team.")
+    public ResponseEntity<ApiResponse<Void>> promoteToTeamCaptain(@PathVariable Long id) {
+        ApiResponse<Void> response = studentService.promoteToTeamCaptain(id);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @PostMapping("/{id}/remove-captain")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @Operation(summary = "Remove Student from Team Captain status", description = "Removes the student as the Captain of their assigned team.")
+    public ResponseEntity<ApiResponse<Void>> removeTeamCaptain(@PathVariable Long id) {
+        ApiResponse<Void> response = studentService.removeTeamCaptain(id);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/stages")
+    @PreAuthorize("hasAnyRole('STUDENT')")
+    @Operation(summary = "Get Stages Configured for Student", description = "Returns list of stages enriched with specific user validation (unlock rules).")
+    public ResponseEntity<?> getStudentStages() {
+        jjcet.PragatiX.entity.Student student = studentAuthResolver.getLoggedInStudent();
+        return studentStageFacade.getStudentStages(student);
+    }
+
+    @GetMapping("/subgroups/{subgroupId}/activities")
+    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Get all activities of a subgroup")
+    public ResponseEntity<ApiResponse<List<jjcet.PragatiX.entity.Activity>>> getActivitiesBySubgroup(
+            @PathVariable Long subgroupId) {
+        List<jjcet.PragatiX.entity.Activity> activities = activityRepository.findBySubgroupId(subgroupId);
+        return ResponseEntity.ok(ApiResponse.ok("Activities fetched successfully", activities));
+    }
+
+    @GetMapping("/me/activity-streaks")
+    @PreAuthorize("hasAnyRole('STUDENT')")
+    @Operation(summary = "Get Student Activity Streaks", description = "Returns all activity streaks for the logged-in student.")
+    public ResponseEntity<ApiResponse<List<StudentActivityStreakDTO>>> getMyActivityStreaks() {
+        jjcet.PragatiX.entity.Student student = studentAuthResolver.getLoggedInStudent();
+        List<jjcet.PragatiX.entity.StudentActivityStreak> streaks = activityStreakService
+                .getStudentActivityStreaks(student.getId());
+        List<StudentActivityStreakDTO> dtos = streaks.stream()
+                .map(s -> new StudentActivityStreakDTO(
+                        s.getActivity().getId(),
+                        s.getActivity().getName(),
+                        s.getCurrentStreak(),
+                        s.getLongestStreak(),
+                        s.getLastCompletedDate()))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok("Activity streaks fetched successfully", dtos));
+    }
+}
