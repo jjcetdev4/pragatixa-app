@@ -181,7 +181,10 @@ public class BadgeRequestService {
             dto.setBadgeName(r.getBadge().getName());
             dto.setBadgeIcon(r.getBadge().getIconUrl());
             dto.setDepartmentName(r.getDepartment() != null ? r.getDepartment().getName() : "");
+            dto.setDepartmentId(r.getDepartment() != null ? r.getDepartment().getId() : null);
             dto.setSectionName(r.getSection() != null ? r.getSection().getSectionName() : "");
+            dto.setSectionId(r.getSection() != null ? r.getSection().getId() : null);
+            dto.setAcademicYear(r.getStudent() != null && r.getStudent().getYearRef() != null ? r.getStudent().getYearRef().getYearName() : "");
             dto.setStatus(r.getStatus());
             dto.setRequestedAt(r.getRequestedAt());
             dto.setReviewedAt(r.getReviewedAt());

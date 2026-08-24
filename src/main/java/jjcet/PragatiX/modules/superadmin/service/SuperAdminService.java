@@ -107,6 +107,14 @@ public class SuperAdminService {
         java.util.Set<jjcet.PragatiX.entity.Role> roles = new java.util.HashSet<>();
         roles.add(adminRole);
 
+        jjcet.PragatiX.enums.AcademicYear mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.fromString(year.getYearName());
+        if (mappedAcademicYear == null && year.getYearNo() != null) {
+            if (year.getYearNo() == 1) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
+            else if (year.getYearNo() == 2) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.SECOND_YEAR;
+            else if (year.getYearNo() == 3) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.THIRD_YEAR;
+            else if (year.getYearNo() == 4) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR;
+        }
+
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -116,25 +124,35 @@ public class SuperAdminService {
                 .roles(roles)
                 .assignedYear(year)
                 .year(year.getYearName())
+                .academicYear(mappedAcademicYear)
                 .active(request.isActive())
                 .build();
 
-        User savedAdmin = userRepository.save(user);
+        User savedAdmin;
+        try {
+            savedAdmin = userRepository.save(user);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Username or Email is already taken."));
+        }
 
-        auditService.log(
-            jjcet.PragatiX.enums.AuditAction.CREATE,
-            jjcet.PragatiX.enums.AuditModule.ADMIN,
-            "ADMIN",
-            savedAdmin.getId(),
-            "Created admin " + savedAdmin.getUsername() + " (" + savedAdmin.getFullName() + ")"
-        );
+        try {
+            auditService.log(
+                jjcet.PragatiX.enums.AuditAction.CREATE,
+                jjcet.PragatiX.enums.AuditModule.ADMIN,
+                "ADMIN",
+                savedAdmin.getId(),
+                "Created admin " + savedAdmin.getUsername() + " (" + savedAdmin.getFullName() + ")"
+            );
+        } catch (Exception e) {
+            System.err.println("Audit log failed: " + e.getMessage());
+        }
 
         YearAdminResponse resp = new YearAdminResponse(
                 savedAdmin.getId(),
                 savedAdmin.getFullName(),
                 savedAdmin.getUsername(),
-                savedAdmin.getAssignedYear().getId(),
-                savedAdmin.getAssignedYear().getYearName(),
+                savedAdmin.getAssignedYear() != null ? savedAdmin.getAssignedYear().getId() : null,
+                savedAdmin.getAssignedYear() != null ? savedAdmin.getAssignedYear().getYearName() : null,
                 savedAdmin.getEmail(),
                 savedAdmin.getPhone(),
                 savedAdmin.isActive());
@@ -184,13 +202,26 @@ public class SuperAdminService {
                 return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(ApiResponse.error("Year " + year.getYearName() + " is already assigned to another Admin."));
             }
 
+            jjcet.PragatiX.enums.AcademicYear mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.fromString(year.getYearName());
+            if (mappedAcademicYear == null && year.getYearNo() != null) {
+                if (year.getYearNo() == 1) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
+                else if (year.getYearNo() == 2) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.SECOND_YEAR;
+                else if (year.getYearNo() == 3) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.THIRD_YEAR;
+                else if (year.getYearNo() == 4) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR;
+            }
+
             admin.setAssignedYear(year);
             admin.setYear(year.getYearName());
+            admin.setAcademicYear(mappedAcademicYear);
         } else {
             return ResponseEntity.badRequest().body(ApiResponse.error("Assigned Academic Year is required"));
         }
 
-        userRepository.save(admin);
+        try {
+            userRepository.save(admin);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Username or Email is already taken."));
+        }
 
         java.util.Map<String, Object> oldValues = new java.util.HashMap<>();
         java.util.Map<String, Object> newValues = new java.util.HashMap<>();
@@ -199,22 +230,26 @@ public class SuperAdminService {
         newValues.put("email", admin.getEmail());
         if (admin.getAssignedYear() != null) newValues.put("assignedYearId", admin.getAssignedYear().getId());
 
-        auditService.log(
-            jjcet.PragatiX.enums.AuditAction.UPDATE,
-            jjcet.PragatiX.enums.AuditModule.ADMIN,
-            "ADMIN",
-            admin.getId(),
-            "Updated admin " + admin.getUsername(),
-            oldValues,
-            newValues
-        );
+        try {
+            auditService.log(
+                jjcet.PragatiX.enums.AuditAction.UPDATE,
+                jjcet.PragatiX.enums.AuditModule.ADMIN,
+                "ADMIN",
+                admin.getId(),
+                "Updated admin " + admin.getUsername(),
+                oldValues,
+                newValues
+            );
+        } catch (Exception e) {
+            System.err.println("Audit log failed: " + e.getMessage());
+        }
 
         YearAdminResponse resp = new YearAdminResponse(
                 admin.getId(),
                 admin.getFullName(),
                 admin.getUsername(),
-                admin.getAssignedYear().getId(),
-                admin.getAssignedYear().getYearName(),
+                admin.getAssignedYear() != null ? admin.getAssignedYear().getId() : null,
+                admin.getAssignedYear() != null ? admin.getAssignedYear().getYearName() : null,
                 admin.getEmail(),
                 admin.getPhone(),
                 admin.isActive());
@@ -251,13 +286,17 @@ public class SuperAdminService {
 
         userRepository.delete(admin);
         
-        auditService.log(
-            jjcet.PragatiX.enums.AuditAction.PERMANENT_DELETE,
-            jjcet.PragatiX.enums.AuditModule.ADMIN,
-            "ADMIN",
-            id,
-            "Permanently deleted admin " + admin.getUsername()
-        );
+        try {
+            auditService.log(
+                jjcet.PragatiX.enums.AuditAction.PERMANENT_DELETE,
+                jjcet.PragatiX.enums.AuditModule.ADMIN,
+                "ADMIN",
+                id,
+                "Permanently deleted admin " + admin.getUsername()
+            );
+        } catch (Exception e) {
+            System.err.println("Audit log failed: " + e.getMessage());
+        }
         
         return ResponseEntity.ok(ApiResponse.ok("Year Admin deleted successfully", null));
     }

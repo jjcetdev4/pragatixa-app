@@ -67,23 +67,16 @@ public class AdminDepartmentCommandService {
         this.auditService = auditService;
     }
 
-    private static final List<String> DEFAULT_SECTION_DEPTS = java.util.Arrays.asList(
-            "Aeronautical Engineering",
-            "Artificial Intelligence and Data Science",
-            "Civil Engineering",
-            "Computer Science and Engineering",
-            "Computer Science and Engineering (Cyber Security)",
-            "Electrical and Electronics Engineering",
-            "Electronics and Communication Engineering",
-            "Information Technology",
-            "Mechanical Engineering"
-    );
+
 
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments(boolean all) {
         List<Department> depts = departmentRepository.findAll().stream()
                 .filter(d -> !d.isDeleted())
-                .filter(d -> all || Boolean.TRUE.equals(d.getSupportsSections()))
+                .filter(d -> {
+                    if (all) return true;
+                    return d.getSupportsSections() != null ? d.getSupportsSections() : false;
+                })
                 .collect(java.util.stream.Collectors.toList());
 
         List<Map<String, Object>> response = new ArrayList<>();
@@ -117,8 +110,7 @@ public class AdminDepartmentCommandService {
             map.put("sections", sectionMaps);
             map.put("hasSections", !sections.isEmpty());
             
-            boolean supportsSec = d.getSupportsSections() != null ? d.getSupportsSections() : 
-                                  DEFAULT_SECTION_DEPTS.contains(d.getName()) || DEFAULT_SECTION_DEPTS.contains(d.getDeptName());
+            boolean supportsSec = d.getSupportsSections() != null ? d.getSupportsSections() : false;
             map.put("supportsSections", supportsSec);
             
             response.add(map);

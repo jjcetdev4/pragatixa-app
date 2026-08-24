@@ -18,6 +18,9 @@ public class BadgeRequestDto {
     private String reviewedBy;
     private String remarks;
     private String proofLink;
+    private Long departmentId;
+    private Long sectionId;
+    private String academicYear;
 
     public BadgeRequestDto() {
     }
@@ -140,5 +143,29 @@ public class BadgeRequestDto {
 
     public void setProofLink(String proofLink) {
         this.proofLink = proofLink;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public Long getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(Long sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public String getAcademicYear() {
+        return academicYear;
+    }
+
+    public void setAcademicYear(String academicYear) {
+        this.academicYear = academicYear;
     }
 }

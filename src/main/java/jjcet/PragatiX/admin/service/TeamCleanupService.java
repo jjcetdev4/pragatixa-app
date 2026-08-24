@@ -8,6 +8,7 @@ import jjcet.PragatiX.repository.TeamRemovalRequestRepository;
 import jjcet.PragatiX.repository.TeamRepository;
 import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import jakarta.persistence.EntityManager;
@@ -41,7 +42,7 @@ public class TeamCleanupService {
      * @param team the team to check and delete if empty
      * @return true if the team was deleted, false otherwise
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean autoDeleteEmptyTeam(Team team) {
         if (team == null || team.getId() == null)
             return false;
@@ -60,16 +61,12 @@ public class TeamCleanupService {
 
             teamRemovalRequestRepository.deleteAll(teamRemovalRequestRepository.findByTeamId(team.getId()));
 
-            if (entityManager != null) {
-                try {
-                    entityManager.createNativeQuery("DELETE FROM team_members WHERE team_id = :tid")
-                            .setParameter("tid", team.getId())
-                            .executeUpdate();
-                } catch (Exception ignored) {
-                }
+            try {
+                teamRepository.delete(team);
+            } catch (Exception ex) {
+                team.setDeleted(true);
+                teamRepository.save(team);
             }
-
-            teamRepository.delete(team);
             System.out.println("TEAM CLEANUP: Automatically deleted empty team: " + team.getName() + " (ID: "
                     + team.getId() + ")");
             return true;

@@ -22,16 +22,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
         long countByDepartmentId(Long departmentId);
 
-        @org.springframework.data.jpa.repository.Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
+        @org.springframework.data.jpa.repository.Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.deleted = false")
         java.util.List<User> findByRoleName(
                         @org.springframework.data.repository.query.Param("roleName") String roleName);
 
-        @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) > 0 FROM User u JOIN u.roles r WHERE u.assignedYear.id = :yearId AND r.name = :roleName")
+        @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) > 0 FROM User u JOIN u.roles r WHERE u.assignedYear.id = :yearId AND r.name = :roleName AND u.deleted = false AND u.active = true")
         boolean existsByAssignedYearIdAndRolesName(
                         @org.springframework.data.repository.query.Param("yearId") Long yearId,
                         @org.springframework.data.repository.query.Param("roleName") String roleName);
 
-        @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) > 0 FROM User u JOIN u.roles r WHERE u.assignedYear.id = :yearId AND r.name = :roleName AND u.id != :adminId")
+        @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) > 0 FROM User u JOIN u.roles r WHERE u.assignedYear.id = :yearId AND r.name = :roleName AND u.id != :adminId AND u.deleted = false AND u.active = true")
         boolean existsByAssignedYearIdAndRolesNameAndIdNot(
                         @org.springframework.data.repository.query.Param("yearId") Long yearId,
                         @org.springframework.data.repository.query.Param("roleName") String roleName,
@@ -52,6 +52,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
         java.util.List<User> findClassCoordinatorsByDepartmentAndSection(
                         @org.springframework.data.repository.query.Param("departmentId") Long departmentId,
                         @org.springframework.data.repository.query.Param("sectionId") Long sectionId);
+
+        @org.springframework.data.jpa.repository.Query("SELECT DISTINCT u FROM User u " +
+                        "JOIN u.roles r " +
+                        "JOIN u.subRoles sr " +
+                        "WHERE u.department.id = :departmentId " +
+                        "AND r.name = 'ROLE_TEACHER' " +
+                        "AND UPPER(sr.name) = 'CC' " +
+                        "AND u.active = true")
+        java.util.List<User> findClassCoordinatorsByDepartment(
+                        @org.springframework.data.repository.query.Param("departmentId") Long departmentId);
 
         @org.springframework.data.jpa.repository.Query("SELECT DISTINCT u FROM User u " +
                         "JOIN u.roles r " +

@@ -83,10 +83,10 @@ public class TeamMemberService {
         long currentMembersCount = team.getMembers().size();
         boolean captainInMembers = team.getMembers().stream()
                 .anyMatch(m -> team.getCaptain() != null && m.getId().equals(team.getCaptain().getId()));
-        long totalSize = currentMembersCount + (captainInMembers ? 0 : 1) + 1;
+        long totalSize = currentMembersCount + (team.getCaptain() != null && !captainInMembers ? 1 : 0) + 1;
         if (totalSize > team.getSize()) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Cannot add member. Team size limit of " + team.getSize() + " exceeded."));
+                    .body(ApiResponse.error("Cannot add member. Team size limit of " + team.getSize() + " (including captain) exceeded."));
         }
 
         member.setTeam(team);
@@ -486,11 +486,11 @@ public class TeamMemberService {
         long currentMembersCount = team.getMembers().size();
         boolean captainInMembers = team.getMembers().stream()
                 .anyMatch(m -> team.getCaptain() != null && m.getId().equals(team.getCaptain().getId()));
-        long totalSize = currentMembersCount + (captainInMembers ? 0 : 1);
+        long totalSize = currentMembersCount + (team.getCaptain() != null && !captainInMembers ? 1 : 0);
 
         if (totalSize + regNos.size() > team.getSize()) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Cannot add members. Team size limit of " + team.getSize() + " exceeded."));
+                    .body(ApiResponse.error("Cannot add members. Team size limit of " + team.getSize() + " (including captain) exceeded."));
         }
 
         for (String regNo : regNos) {

@@ -38,7 +38,7 @@ public class AdminDepartmentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'CLASS_COORDINATOR', 'HOD')")
     @Operation(summary = "List Departments")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments(
-            @RequestParam(required = false, defaultValue = "false") boolean all) {
+            @RequestParam(required = false, defaultValue = "true") boolean all) {
         return adminDepartmentService.getAllDepartments(all);
     }
 

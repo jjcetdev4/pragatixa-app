@@ -294,7 +294,7 @@ public class ProfileService {
         d.setCurrentStage("Stage " + student.getStage());
         d.setCurrentLevel(String.valueOf(student.getStage()));
         d.setRank(studentRepository.getStudentRankByTotalXp(student.getTotalXp()));
-        d.setAttendancePercentage(100.0);
+        d.setAttendancePercentage(0.0);
         d.setTeamName(student.getTeam() != null ? student.getTeam().getName() : "N/A");
         d.setCaptain(isCap);
         d.setViceCaptain(isViceCap);

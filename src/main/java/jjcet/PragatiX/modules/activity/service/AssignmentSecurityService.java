@@ -91,10 +91,17 @@ public class AssignmentSecurityService {
             }
 
             // 5b. Otherwise fall back to Class-Coordinator resolution:
-            if (assignment.getDepartment() != null && assignment.getSection() != null) {
-                List<User> classCoordinators = userRepository.findClassCoordinatorsByDepartmentAndSection(
-                        assignment.getDepartment().getId(),
-                        assignment.getSection().getId());
+            if (assignment.getDepartment() != null) {
+                List<User> classCoordinators;
+
+                if (assignment.getSection() != null) {
+                    classCoordinators = userRepository.findClassCoordinatorsByDepartmentAndSection(
+                            assignment.getDepartment().getId(),
+                            assignment.getSection().getId());
+                } else {
+                    classCoordinators = userRepository.findClassCoordinatorsByDepartment(
+                            assignment.getDepartment().getId());
+                }
 
                 return classCoordinators.stream().anyMatch(cc -> cc.getId().equals(user.getId()));
             }

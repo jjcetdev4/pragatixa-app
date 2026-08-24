@@ -54,15 +54,10 @@ public class HodAnalyticsService {
 
     public HodDashboardResponse getDashboardData(String requestedYear) {
         User currentUser = authUtils.getCurrentUser();
-        Long deptId = 1L;
-        if (currentUser != null && currentUser.getDepartment() != null) {
-            deptId = currentUser.getDepartment().getId();
-        } else {
-            List<Department> depts = departmentRepository.findAll();
-            if (!depts.isEmpty()) {
-                deptId = depts.get(0).getId();
-            }
+        if (currentUser == null || currentUser.getDepartment() == null) {
+            throw new RuntimeException("HOD is not assigned to a valid department");
         }
+        Long deptId = currentUser.getDepartment().getId();
         return getDashboardData(deptId, requestedYear);
     }
 

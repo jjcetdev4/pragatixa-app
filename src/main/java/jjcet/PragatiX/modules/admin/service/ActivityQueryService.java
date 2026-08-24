@@ -69,7 +69,7 @@ public class ActivityQueryService {
         }
 
         System.out.println("Selected Academic Year : " + academicYear);
-        List<Activity> allActivities = activityRepository.findBySubgroupId(subgroupId);
+        List<Activity> allActivities = activityRepository.findBySubgroupId(subgroupId).stream().filter(a -> !a.isDeleted()).toList();
         System.out.println("Rows Before Filter : " + allActivities.size());
 
         List<Activity> activities = allActivities;
@@ -140,7 +140,7 @@ public class ActivityQueryService {
     public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup,
             jjcet.PragatiX.enums.AcademicYear academicYear) {
         System.out.println("Selected Academic Year : " + academicYear);
-        List<Activity> allActivities = activityRepository.findAll();
+        List<Activity> allActivities = activityRepository.findAll().stream().filter(a -> !a.isDeleted()).toList();
         System.out.println("Rows Before Filter : " + allActivities.size());
 
         List<Activity> activities = allActivities;
@@ -294,7 +294,7 @@ public class ActivityQueryService {
             }
         }
 
-        List<Activity> activities = activityRepository.findAll();
+        List<Activity> activities = activityRepository.findAll().stream().filter(a -> !a.isDeleted()).toList();
 
         final jjcet.PragatiX.enums.AcademicYear finalEffectiveYear = effectiveYear;
         if (finalEffectiveYear != null) {
@@ -437,7 +437,7 @@ public class ActivityQueryService {
         System.out.println("Fetching unfiltered activities for stageId: " + stageId + ", subgroup: " + subgroup
                 + ", academicYear: " + academicYear);
 
-        List<Activity> allActivities = activityRepository.findAll();
+        List<Activity> allActivities = activityRepository.findAll().stream().filter(a -> !a.isDeleted()).toList();
 
         List<jjcet.PragatiX.entity.ActivityStageMapping> mappings = activityStageMappingRepository
                 .findByStageId(stageId);

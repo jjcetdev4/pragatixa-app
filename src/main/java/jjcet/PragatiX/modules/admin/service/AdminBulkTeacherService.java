@@ -29,34 +29,6 @@ public class AdminBulkTeacherService {
     private final DepartmentRepository departmentRepository;
     private final SectionRepository sectionRepository;
 
-    private static final List<String> ALL_DEPARTMENTS = Arrays.asList(
-            "Aeronautical Engineering",
-            "Artificial Intelligence and Data Science",
-            "Civil Engineering",
-            "Computer Science and Engineering",
-            "Computer Science and Engineering (Cyber Security)",
-            "Department of Chemistry",
-            "Department of English",
-            "Department of Mathematics",
-            "Department of Physics",
-            "Department of Tamil",
-            "Electrical and Electronics Engineering",
-            "Electronics and Communication Engineering",
-            "Information Technology",
-            "Mechanical Engineering"
-    );
-
-    private static final List<String> SECTION_SUPPORTED_DEPTS = Arrays.asList(
-            "Aeronautical Engineering",
-            "Artificial Intelligence and Data Science",
-            "Civil Engineering",
-            "Computer Science and Engineering",
-            "Computer Science and Engineering (Cyber Security)",
-            "Electrical and Electronics Engineering",
-            "Electronics and Communication Engineering",
-            "Information Technology",
-            "Mechanical Engineering"
-    );
 
     public AdminBulkTeacherService(AdminUserService adminUserService, DepartmentRepository departmentRepository, SectionRepository sectionRepository) {
         this.adminUserService = adminUserService;
@@ -139,7 +111,7 @@ public class AdminBulkTeacherService {
                 }
             }
             if (deptNames.isEmpty()) {
-                deptNames.addAll(ALL_DEPARTMENTS); // Fallback
+                // If there are no departments in the DB, the list remains empty.
             }
             Collections.sort(deptNames, String.CASE_INSENSITIVE_ORDER);
 

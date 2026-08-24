@@ -42,6 +42,7 @@ public class AdminSubjectService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Subject already exists"));
         }
         Subject subject = new Subject(cleanName);
+        
         Subject saved = subjectRepository.save(subject);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Subject created successfully", saved));
     }

@@ -88,7 +88,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
                         @org.springframework.data.repository.query.Param("year") String year);
 
         @org.springframework.data.jpa.repository.Query("SELECT t FROM Team t " +
-                        "WHERE (:academicYear IS NULL OR t.year = :academicYear) " +
+                        "WHERE (t.deleted IS NULL OR t.deleted = false) " +
+                        "AND (:academicYear IS NULL OR t.year = :academicYear) " +
                         "AND (:departmentId IS NULL OR t.department.id = :departmentId) " +
                         "AND (:sectionId IS NULL OR t.section.id = :sectionId)")
         java.util.List<Team> findFilteredTeams(
