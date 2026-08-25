@@ -11,7 +11,8 @@ public class OtpToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(nullable = false, length = 255)
     private String email;
 
     @Column(nullable = false, length = 10)

@@ -57,11 +57,6 @@ public class LeaderboardService {
 
         boolean isAdmin = currentUser != null && authUtils.isAdmin(currentUser);
         boolean isSuperAdmin = currentUser != null && authUtils.isSuperAdmin(currentUser);
-        boolean isTeacher = currentUser != null && currentUser.getRoles().stream()
-                .anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_TEACHER"));
-        boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
-                .anyMatch(sr -> sr.getName().trim().equalsIgnoreCase("CC")
-                        || sr.getName().trim().equalsIgnoreCase("CLASS_COORDINATOR"));
 
         Long targetDeptId = departmentId;
         Long targetYearId = yearId;
@@ -75,14 +70,8 @@ public class LeaderboardService {
                     targetYearId = adminYearId;
                 }
             }
-        } else if (isTeacher && !isAdmin) {
-            // Teacher gets scoped down to their assigned class if CC
-            if (isCc) {
-                targetDeptId = currentUser.getDepartment() != null ? currentUser.getDepartment().getId() : null;
-                targetSectionId = currentUser.getSection() != null ? currentUser.getSection().getId() : null;
-                targetYearId = resolveYearId(currentUser.getYear());
-            }
         }
+        // Note: All teachers (including Class Coordinators) have read-only access to view any department/class leaderboard.
 
         List<Student> students = studentRepository.findAll();
 
@@ -145,11 +134,6 @@ public class LeaderboardService {
 
         boolean isAdmin = currentUser != null && authUtils.isAdmin(currentUser);
         boolean isSuperAdmin = currentUser != null && authUtils.isSuperAdmin(currentUser);
-        boolean isTeacher = currentUser != null && currentUser.getRoles().stream()
-                .anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_TEACHER"));
-        boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
-                .anyMatch(sr -> sr.getName().trim().equalsIgnoreCase("CC")
-                        || sr.getName().trim().equalsIgnoreCase("CLASS_COORDINATOR"));
 
         List<FilterOptionsDto.FilterItem> yearFilters = new ArrayList<>();
         List<FilterOptionsDto.FilterItem> deptFilters = new ArrayList<>();
@@ -165,42 +149,22 @@ public class LeaderboardService {
                     });
                 }
             }
-            List<Department> depts = departmentRepository.findAll().stream()
-                    .filter(d -> Boolean.TRUE.equals(d.getSupportsSections()))
-                    .collect(Collectors.toList());
-            depts.forEach(d -> deptFilters.add(new FilterOptionsDto.FilterItem(d.getId().toString(), d.getName())));
-            if (departmentId != null) {
-                List<Section> secs = sectionRepository.findByDepartment_Id(departmentId);
-                secs.forEach(s -> sectionFilters
-                        .add(new FilterOptionsDto.FilterItem(s.getId().toString(), s.getSectionName())));
-            }
-            return ApiResponse.ok(new FilterOptionsDto(yearFilters, deptFilters, sectionFilters));
-        } else if (isTeacher && !isAdmin && isCc) {
-            // Scoped purely to assigned class, no global filters
-            if (currentUser.getYear() != null) {
-                Long yId = resolveYearId(currentUser.getYear());
-                if (yId != null)
-                    yearFilters.add(new FilterOptionsDto.FilterItem(yId.toString(), currentUser.getYear()));
-            }
-            if (currentUser.getDepartment() != null) {
-                deptFilters.add(new FilterOptionsDto.FilterItem(currentUser.getDepartment().getId().toString(),
-                        currentUser.getDepartment().getName()));
-            }
-            if (currentUser.getSection() != null) {
-                sectionFilters.add(new FilterOptionsDto.FilterItem(currentUser.getSection().getId().toString(),
-                        currentUser.getSection().getSectionName()));
-            }
-            return ApiResponse.ok(new FilterOptionsDto(yearFilters, deptFilters, sectionFilters));
+        } else {
+            yearRepository.findAll()
+                    .forEach(y -> yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName())));
         }
 
-        // Global/Admin access
-        yearRepository.findAll()
-                .forEach(y -> yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName())));
-
         List<Department> depts = departmentRepository.findAll().stream()
+                .filter(d -> !d.isDeleted())
                 .filter(d -> Boolean.TRUE.equals(d.getSupportsSections()))
                 .collect(Collectors.toList());
-        depts.forEach(d -> deptFilters.add(new FilterOptionsDto.FilterItem(d.getId().toString(), d.getName())));
+
+        depts.forEach(d -> {
+            String deptCode = (d.getDeptCode() != null && !d.getDeptCode().isBlank())
+                    ? d.getDeptCode()
+                    : ((d.getCode() != null && !d.getCode().isBlank()) ? d.getCode() : d.getName());
+            deptFilters.add(new FilterOptionsDto.FilterItem(d.getId().toString(), deptCode, deptCode));
+        });
 
         if (departmentId != null) {
             List<Section> secs = sectionRepository.findByDepartment_Id(departmentId);

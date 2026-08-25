@@ -15,5 +15,6 @@ public enum AuditModule {
     RECYCLE_BIN,
     SYSTEM,
     DEPARTMENT,
+    ENROLLMENT,
     OTHER
 }

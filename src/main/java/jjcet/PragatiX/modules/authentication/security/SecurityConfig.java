@@ -21,13 +21,16 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Spring Security configuration – JWT stateless, CORS enabled, Swagger
- * whitelisted.
+ * whitelisted, and robust Security Headers configured.
  */
 @Configuration
 @EnableWebSecurity
@@ -62,6 +65,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/v1/auth/**",
+            "/api/v1/public/enrollment/**",
             "/api/swagger-ui/**",
             "/api/swagger-ui.html",
             "/api/api-docs/**",
@@ -75,6 +79,33 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp
+                                .policyDirectives(
+                                        "default-src 'self'; " +
+                                        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
+                                        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+                                        "font-src 'self' data: https://fonts.gstatic.com; " +
+                                        "img-src 'self' data: blob: https:; " +
+                                        "connect-src 'self' https://pragatix.in https://*.pragatix.in https://api.zeptomail.in http://localhost:* ws://localhost:*; " +
+                                        "frame-ancestors 'none'; " +
+                                        "object-src 'none'; " +
+                                        "base-uri 'self';"
+                                )
+                        )
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000)
+                                .preload(true)
+                        )
+                        .frameOptions(frame -> frame.deny())
+                        .referrerPolicy(referrer -> referrer
+                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                        )
+                        .addHeaderWriter(new StaticHeadersWriter("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()"))
+                        .addHeaderWriter(new StaticHeadersWriter("Cross-Origin-Opener-Policy", "same-origin"))
+                        .addHeaderWriter(new StaticHeadersWriter("Cross-Origin-Resource-Policy", "cross-origin"))
+                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
@@ -83,6 +114,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/debug-activities/**").permitAll()
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/v1/admin/enrollment/**").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/v1/students/bulk-upload/template", "/api/v1/students/bulk-parse", "/api/v1/students/bulk-import").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "CLASS_COORDINATOR", "CC")
                         .requestMatchers(HttpMethod.GET, "/api/v1/students/export").hasAnyRole("SUPERADMIN", "SUPER_ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/students/me").hasRole("STUDENT")

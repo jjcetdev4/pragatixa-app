@@ -42,10 +42,12 @@ public class User implements SoftDeletable {
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
-    @Column(unique = true, length = 150)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(unique = true, length = 255)
     private String email;
 
-    @Column(name = "phone", length = 15)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(name = "phone", length = 255)
     private String phone;
 
     @ManyToMany(fetch = FetchType.EAGER)

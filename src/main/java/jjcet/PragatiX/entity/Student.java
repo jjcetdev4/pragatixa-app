@@ -57,7 +57,8 @@ public class Student implements SoftDeletable {
     @JoinColumn(name = "gender_id", nullable = false)
     private Gender genderRef;
 
-    @Column(name = "phone_no", nullable = false, length = 15)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(name = "phone_no", nullable = false, length = 255)
     private String phoneNo;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -84,7 +85,8 @@ public class Student implements SoftDeletable {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
     @Column(name = "full_name", nullable = false, length = 100)
@@ -96,7 +98,8 @@ public class Student implements SoftDeletable {
     @Column(nullable = false, length = 255)
     private String password;
 
-    @Column(length = 20)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(length = 255)
     private String phone;
 
     @Column(nullable = false)

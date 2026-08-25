@@ -40,10 +40,21 @@ public class FilterOptionsDto {
     public static class FilterItem {
         private String id;
         private String name;
+        private String code;
+
+        public FilterItem() {
+        }
 
         public FilterItem(String id, String name) {
             this.id = id;
             this.name = name;
+            this.code = name;
+        }
+
+        public FilterItem(String id, String name, String code) {
+            this.id = id;
+            this.name = name;
+            this.code = code;
         }
 
         public String getId() {
@@ -60,6 +71,14 @@ public class FilterOptionsDto {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
         }
     }
 }

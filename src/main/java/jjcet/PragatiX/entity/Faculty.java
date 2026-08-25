@@ -42,7 +42,8 @@ public class Faculty implements SoftDeletable {
     @Column(nullable = false, length = 100)
     private String designation;
 
-    @Column(name = "phone_no", nullable = false, length = 15)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(name = "phone_no", nullable = false, length = 255)
     private String phoneNo;
 
     @Column(name = "created_at", insertable = false, updatable = false)

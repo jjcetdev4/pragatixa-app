@@ -35,6 +35,14 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        Optional<Student> findByEmail(String email);
 
+       boolean existsByPhoneNo(String phoneNo);
+
+       @Query("SELECT s.email FROM Student s WHERE s.email IN :emails")
+       java.util.Set<String> findExistingEmailsIn(@Param("emails") java.util.Set<String> emails);
+
+       @Query("SELECT s.phoneNo FROM Student s WHERE s.phoneNo IN :phones")
+       java.util.Set<String> findExistingPhonesIn(@Param("phones") java.util.Set<String> phones);
+
        @Modifying
        @Transactional
        @Query("UPDATE Student s SET s.stage = :stageOrder")

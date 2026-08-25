@@ -13,7 +13,7 @@ server:
 
 spring:
   application:
-    name: pragatix-backend # or spdms-backend
+    name: pragatix-backend
   datasource:
     url: ${DB_URL}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME}

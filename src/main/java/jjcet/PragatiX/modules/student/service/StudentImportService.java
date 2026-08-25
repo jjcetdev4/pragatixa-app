@@ -839,8 +839,8 @@ public class StudentImportService {
                 auditService.log(
                     jjcet.PragatiX.enums.AuditAction.CREATE,
                     jjcet.PragatiX.enums.AuditModule.STUDENT,
-                    "Bulk Import",
-                    creator != null ? creator.getId() : 0L,
+                    "STUDENT_IMPORT",
+                    null,
                     "Bulk imported " + successCount + " students successfully" + (updateCount > 0 ? " and updated " + updateCount : "")
                 );
             }

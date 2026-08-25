@@ -31,10 +31,12 @@ public class StudentGuardian {
     @Column(nullable = false)
     private RelationshipType relationship;
 
-    @Column(name = "phone_no", nullable = false, length = 15)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(name = "phone_no", nullable = false, length = 255)
     private String phoneNo;
 
-    @Column(length = 150)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(length = 255)
     private String email;
 
     @Column(name = "is_primary", nullable = false)

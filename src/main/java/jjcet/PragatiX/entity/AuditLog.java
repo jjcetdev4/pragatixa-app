@@ -39,7 +39,7 @@ public class AuditLog {
     @Column(name = "entity_type", nullable = false)
     private String entityType;
 
-    @Column(name = "entity_id", nullable = false)
+    @Column(name = "entity_id", nullable = true)
     private Long entityId;
 
     @Column(name = "description", columnDefinition = "TEXT")
