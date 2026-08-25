@@ -145,6 +145,15 @@ public class RecycleBinService {
 
     @Transactional(rollbackFor = Exception.class)
     public void permanentlyDeleteItem(String entityType, Long id) {
+        try {
+            entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
+            permanentlyDeleteItemInternal(entityType, id);
+        } finally {
+            entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+        }
+    }
+
+    private void permanentlyDeleteItemInternal(String entityType, Long id) {
         String actor = "SYSTEM";
         if (org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null) {
             actor = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
@@ -158,7 +167,7 @@ public class RecycleBinService {
                     List<?> facultyIds = entityManager.createNativeQuery("SELECT id FROM faculty WHERE user_id = :id").setParameter("id", id).getResultList();
                     for (Object facIdObj : facultyIds) {
                         if (facIdObj instanceof Number) {
-                            permanentlyDeleteItem("FACULTY", ((Number) facIdObj).longValue());
+                            permanentlyDeleteItemInternal("FACULTY", ((Number) facIdObj).longValue());
                         }
                     }
 
@@ -266,9 +275,14 @@ public class RecycleBinService {
                 throw new IllegalArgumentException("Unknown entity type: " + entityType);
         }
 
+        String moduleStr = entityType.toUpperCase();
+        if (moduleStr.equals("FACULTY")) {
+            moduleStr = "TEACHER";
+        }
+
         auditService.log(
             jjcet.PragatiX.enums.AuditAction.PERMANENT_DELETE,
-            jjcet.PragatiX.enums.AuditModule.valueOf(entityType.toUpperCase()),
+            jjcet.PragatiX.enums.AuditModule.valueOf(moduleStr),
             entityType,
             id,
             "Permanently deleted " + entityType.toLowerCase() + " from Recycle Bin"
