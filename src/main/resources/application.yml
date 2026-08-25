@@ -1,6 +1,5 @@
 server:
   port: 8080
-  forward-headers-strategy: framework
   tomcat:
     accesslog:
       enabled: true
@@ -14,20 +13,20 @@ server:
 
 spring:
   application:
-    name: pragatix-backend # or spdms-backend
+    name: pragatix-backend
   datasource:
-    url: jdbc:mysql://localhost:3307/spdms_lab?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: sharu
+    url: ${DB_URL}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: false
+        format_sql: true
   security:
     user:
       name: admin
@@ -37,11 +36,6 @@ jwt:
   secret: spdms_super_secret_key_must_be_at_least_256_bits_long_for_hs256_algorithm
   expiration: 57600000
   student-expiration: 57600000
-
-app:
-  security:
-    encryption:
-      secret: ${APP_ENCRYPTION_SECRET:PragatiXAES256GCMDatabaseEncryptionSecretKey2026!}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:https://pragatix.in,https://www.pragatix.in}
@@ -57,13 +51,8 @@ springdoc:
 
 logging:
   level:
-    com.pragatix: INFO
-    jjcet.PragatiX: INFO
+    com.pragatix: DEBUG
     org.springframework.security: INFO
-    org.hibernate.SQL: OFF
-    org.hibernate.orm.jdbc.bind: OFF
-    org.hibernate.orm.jdbc.extract: OFF
-    org.hibernate.type.descriptor.sql: OFF
 
 management:
   endpoints:
