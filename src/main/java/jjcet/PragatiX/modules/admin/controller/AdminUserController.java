@@ -86,12 +86,25 @@ public class AdminUserController {
         }
     }
 
-    @PostMapping(value = "/users/bulk-upload", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/users/bulk-parse", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Bulk Upload Teachers", description = "Uploads a completed Excel template to bulk create teachers.")
-    public ResponseEntity<ApiResponse<java.util.List<String>>> bulkUploadTeachers(
+    @Operation(summary = "Bulk Parse Teachers Spreadsheet", description = "Parses Excel and returns JSON list of valid teachers and any errors.")
+    public ResponseEntity<ApiResponse<List<CreateUserRequest>>> bulkParseTeachers(
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
-        ApiResponse<java.util.List<String>> response = adminBulkTeacherService.processBulkUpload(file);
+        ApiResponse<List<CreateUserRequest>> response = adminBulkTeacherService.bulkParse(file);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/users/bulk-import")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Bulk Import Selected Teachers", description = "Saves selected list of parsed teacher records into the database.")
+    public ResponseEntity<ApiResponse<String>> bulkImportTeachers(
+            @Valid @RequestBody List<CreateUserRequest> requests) {
+        ApiResponse<String> response = adminBulkTeacherService.bulkImport(requests);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {

@@ -187,8 +187,7 @@ public class AdminBulkTeacherService {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public ApiResponse<List<String>> processBulkUpload(MultipartFile file) {
+    public ApiResponse<List<CreateUserRequest>> bulkParse(MultipartFile file) {
         if (file.isEmpty()) {
             return ApiResponse.error("File is empty.");
         }
@@ -356,29 +355,48 @@ public class AdminBulkTeacherService {
             return ApiResponse.error("Failed to parse the Excel file: " + e.getMessage());
         }
 
-        // Phase 2: If there are validation errors, return them without saving anything
-        if (!errors.isEmpty()) {
-            return new ApiResponse<>(false, "Bulk upload failed.", null, errors);
+        String errorStr = String.join("; ", errors);
+        if (validRequests.isEmpty() && !errors.isEmpty()) {
+            return new ApiResponse<List<CreateUserRequest>>(false, "No valid records found.", errorStr, validRequests);
         }
-        
-        // Phase 3: Create records
+
+        return new ApiResponse<List<CreateUserRequest>>(true, "Parsed " + validRequests.size() + " valid teachers. Found " + errors.size() + " errors.", errorStr, validRequests);
+    }
+
+    public ApiResponse<String> bulkImport(List<CreateUserRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return ApiResponse.error("No data provided for import.");
+        }
+
         int successCount = 0;
-        for (CreateUserRequest req : validRequests) {
-            ResponseEntity<ApiResponse<jjcet.PragatiX.modules.authentication.dto.response.UserResponse>> responseEntity = adminUserService.createUser(req);
-            if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                successCount++;
-            } else {
-                // If a creation fails at this point (e.g. DB constraint violated like unique username/email in DB), 
-                // we should throw an exception to trigger the transaction rollback for the entire bulk upload.
-                String errMsg = "Failed to create user " + req.getEmail();
-                if (responseEntity.getBody() != null && responseEntity.getBody().getMessage() != null) {
-                    errMsg += ": " + responseEntity.getBody().getMessage();
+        List<String> importErrors = new ArrayList<>();
+
+        for (int i = 0; i < requests.size(); i++) {
+            CreateUserRequest req = requests.get(i);
+            try {
+                ResponseEntity<ApiResponse<jjcet.PragatiX.modules.authentication.dto.response.UserResponse>> responseEntity = adminUserService.createUser(req);
+                if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                    successCount++;
+                } else {
+                    String errMsg = "Row " + (i + 1) + " (" + req.getEmail() + "): ";
+                    if (responseEntity.getBody() != null && responseEntity.getBody().getMessage() != null) {
+                        errMsg += responseEntity.getBody().getMessage();
+                    } else {
+                        errMsg += "Failed to create user.";
+                    }
+                    importErrors.add(errMsg);
                 }
-                throw new IllegalArgumentException(errMsg);
+            } catch (Exception e) {
+                importErrors.add("Row " + (i + 1) + " (" + req.getEmail() + "): " + e.getMessage());
             }
         }
 
-        return ApiResponse.ok(successCount + " teachers created successfully.", Collections.emptyList());
+        String importErrorStr = String.join("; ", importErrors);
+        if (successCount == 0 && !importErrors.isEmpty()) {
+            return new ApiResponse<String>(false, "Bulk import failed completely.", importErrorStr, null);
+        }
+
+        return new ApiResponse<String>(true, "Bulk import processed: " + successCount + " teachers created.", importErrorStr, null);
     }
 
     private String getCellValue(Row row, Integer cellIndex) {
