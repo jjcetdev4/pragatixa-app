@@ -3,12 +3,25 @@ package jjcet.PragatiX.modules.enrollment.dto;
 public class PendingStudentDto {
     private Long id;
     private String fullName;
+    private String email;
+    private String maskedEmail;
     private String maskedMobile;
     private Long departmentId;
     private String departmentName;
     private String deptCode;
 
     public PendingStudentDto() {}
+
+    public PendingStudentDto(Long id, String fullName, String email, String maskedEmail, String maskedMobile, Long departmentId, String departmentName, String deptCode) {
+        this.id = id;
+        this.fullName = fullName;
+        this.email = email;
+        this.maskedEmail = maskedEmail;
+        this.maskedMobile = maskedMobile;
+        this.departmentId = departmentId;
+        this.departmentName = departmentName;
+        this.deptCode = deptCode;
+    }
 
     public PendingStudentDto(Long id, String fullName, String maskedMobile, Long departmentId, String departmentName, String deptCode) {
         this.id = id;
@@ -17,6 +30,39 @@ public class PendingStudentDto {
         this.departmentId = departmentId;
         this.departmentName = departmentName;
         this.deptCode = deptCode;
+    }
+
+    public static String maskEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return "******";
+        }
+        String clean = email.trim();
+        int atIndex = clean.indexOf('@');
+        if (atIndex <= 2) {
+            return clean;
+        }
+        String namePart = clean.substring(0, atIndex);
+        String domainPart = clean.substring(atIndex);
+        if (namePart.length() <= 3) {
+            return namePart.charAt(0) + "***" + domainPart;
+        }
+        return namePart.substring(0, 2) + "***" + namePart.substring(namePart.length() - 1) + domainPart;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getMaskedEmail() {
+        return maskedEmail;
+    }
+
+    public void setMaskedEmail(String maskedEmail) {
+        this.maskedEmail = maskedEmail;
     }
 
     public static String maskMobile(String mobile) {

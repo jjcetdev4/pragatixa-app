@@ -363,17 +363,20 @@ public class TeamCrudService {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
         }
 
-        boolean hasOtherMembers = team.getMembers().stream()
-                .anyMatch(m -> team.getCaptain() == null || !m.getId().equals(team.getCaptain().getId()));
-
-        if (hasOtherMembers) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiResponse.error("Cannot delete team because it still contains students."));
+        // Unassign all members from the team
+        if (team.getMembers() != null && !team.getMembers().isEmpty()) {
+            List<Student> currentMembers = new ArrayList<>(team.getMembers());
+            for (Student m : currentMembers) {
+                if (m != null) {
+                    m.setTeam(null);
+                    studentRepository.save(m);
+                }
+            }
+            team.getMembers().clear();
         }
 
         if (team.getCaptain() != null) {
             Student captain = team.getCaptain();
-            team.getMembers().remove(captain);
             captain.setTeam(null);
             studentRepository.save(captain);
             team.setCaptain(null);
@@ -381,10 +384,18 @@ public class TeamCrudService {
 
         if (team.getViceCaptain() != null) {
             Student vc = team.getViceCaptain();
-            team.getMembers().remove(vc);
             vc.setTeam(null);
             studentRepository.save(vc);
             team.setViceCaptain(null);
+        }
+
+        try {
+            if (entityManager != null) {
+                entityManager.createNativeQuery("DELETE FROM team_members WHERE team_id = :tid")
+                        .setParameter("tid", team.getId())
+                        .executeUpdate();
+            }
+        } catch (Exception ignored) {
         }
 
         // Soft Delete Team

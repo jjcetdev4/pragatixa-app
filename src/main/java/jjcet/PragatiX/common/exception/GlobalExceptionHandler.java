@@ -60,6 +60,13 @@ public class GlobalExceptionHandler {
         return ApiResponse.error("Validation failed: " + errors);
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.HandlerMethodValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse<Void> handleHandlerMethodValidation(org.springframework.web.method.annotation.HandlerMethodValidationException ex) {
+        log.warn("Handler method validation failed: {}", ex.getMessage());
+        return ApiResponse.error("Validation failed: Invalid request data.");
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {

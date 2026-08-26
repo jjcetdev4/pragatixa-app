@@ -50,6 +50,22 @@ public class TeamResponse {
     }
 
     public TeamResponse(Long teamId, String teamName, int teamCapacity, String captainId, String captainName,
+            String viceCaptainId, String viceCaptainName, List<StudentResponse> teamMembers, Long assignmentId,
+            String assignmentName, boolean canDelete) {
+        this.teamId = teamId;
+        this.teamName = teamName;
+        this.teamCapacity = teamCapacity;
+        this.captainId = captainId;
+        this.captainName = captainName;
+        this.viceCaptainId = viceCaptainId;
+        this.viceCaptainName = viceCaptainName;
+        this.teamMembers = teamMembers;
+        this.assignmentId = assignmentId;
+        this.assignmentName = assignmentName;
+        this.canDelete = canDelete;
+    }
+
+    public TeamResponse(Long teamId, String teamName, int teamCapacity, String captainId, String captainName,
             List<StudentResponse> teamMembers, Long assignmentId, String assignmentName) {
         this.teamId = teamId;
         this.teamName = teamName;
@@ -173,6 +189,15 @@ public class TeamResponse {
     private String semesterName;
     private Long sectionId;
     private String sectionName;
+    private int currentStage = 1;
+
+    public int getCurrentStage() {
+        return currentStage;
+    }
+
+    public void setCurrentStage(int currentStage) {
+        this.currentStage = currentStage;
+    }
 
     public Long getDepartmentId() {
         return departmentId;

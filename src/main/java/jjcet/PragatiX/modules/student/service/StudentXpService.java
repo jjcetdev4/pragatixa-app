@@ -159,9 +159,16 @@ public class StudentXpService {
                                 : (stageOrder > 0 ? "  <-- WARNING (not from assignment)" : "  (no restriction)")));
         System.out.println("======================================================");
 
-        if (stageOrder > 0 && student.getStage() != stageOrder && student.getCurrentStage() != stageOrder) {
+        int studentStage = student.getCurrentStage() > 0 ? student.getCurrentStage() : (student.getStage() > 0 ? student.getStage() : 1);
+        if (student.getStage() <= 0 || student.getCurrentStage() <= 0) {
+            student.setStage(studentStage);
+            student.setCurrentStage(studentStage);
+            studentRepository.save(student);
+        }
+
+        if (stageOrder > 0 && studentStage != stageOrder) {
             return ResponseEntity.badRequest().body(ApiResponse.<Void>error(
-                    "Student " + student.getFullName() + " is in Stage " + student.getStage()
+                    "Student " + student.getFullName() + " is in Stage " + studentStage
                             + " and is not eligible for Stage " + stageOrder + " activities."));
         }
 
@@ -284,9 +291,15 @@ public class StudentXpService {
                                                 : "  (no restriction)")));
                 System.out.println("======================================================");
 
-                if (batchStageOrder > 0 && student.getStage() != batchStageOrder
-                        && student.getCurrentStage() != batchStageOrder) {
-                    errors.add("Student " + student.getFullName() + " is in Stage " + student.getStage()
+                int studentStage = student.getCurrentStage() > 0 ? student.getCurrentStage() : (student.getStage() > 0 ? student.getStage() : 1);
+                if (student.getStage() <= 0 || student.getCurrentStage() <= 0) {
+                    student.setStage(studentStage);
+                    student.setCurrentStage(studentStage);
+                    studentRepository.save(student);
+                }
+
+                if (batchStageOrder > 0 && studentStage != batchStageOrder) {
+                    errors.add("Student " + student.getFullName() + " is in Stage " + studentStage
                             + " and is not eligible for Stage " + batchStageOrder + " activities.");
                     continue;
                 }

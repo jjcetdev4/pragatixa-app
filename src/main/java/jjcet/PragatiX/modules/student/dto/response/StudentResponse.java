@@ -30,11 +30,56 @@ public class StudentResponse {
     private LocalDateTime createdAt;
     private String sprNo;
     private int score;
+    private int totalXp;
+    private int currentXp;
+    private int mustXp;
+    private int individualXp;
+    private int groupXp;
     private Long teamId;
     private String teamName;
     private String teamRole;
     private GuardianDTO guardian;
     private int currentStage = 1;
+
+    public int getTotalXp() {
+        return totalXp;
+    }
+
+    public void setTotalXp(int totalXp) {
+        this.totalXp = totalXp;
+    }
+
+    public int getCurrentXp() {
+        return currentXp;
+    }
+
+    public void setCurrentXp(int currentXp) {
+        this.currentXp = currentXp;
+    }
+
+    public int getMustXp() {
+        return mustXp;
+    }
+
+    public void setMustXp(int mustXp) {
+        this.mustXp = mustXp;
+    }
+
+    public int getIndividualXp() {
+        return individualXp;
+    }
+
+    public void setIndividualXp(int individualXp) {
+        this.individualXp = individualXp;
+    }
+
+    public int getGroupXp() {
+        return groupXp;
+    }
+
+    public void setGroupXp(int groupXp) {
+        this.groupXp = groupXp;
+    }
 
     public StudentResponse() {
     }
@@ -117,6 +162,14 @@ public class StudentResponse {
 
     public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
+    }
+
+    public LocalDate getDob() {
+        return dateOfBirth;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dateOfBirth = dob;
     }
 
     public String getAddress() {
@@ -395,6 +448,31 @@ public class StudentResponse {
 
         public Builder score(int v) {
             r.score = v;
+            return this;
+        }
+
+        public Builder totalXp(int v) {
+            r.totalXp = v;
+            return this;
+        }
+
+        public Builder currentXp(int v) {
+            r.currentXp = v;
+            return this;
+        }
+
+        public Builder mustXp(int v) {
+            r.mustXp = v;
+            return this;
+        }
+
+        public Builder individualXp(int v) {
+            r.individualXp = v;
+            return this;
+        }
+
+        public Builder groupXp(int v) {
+            r.groupXp = v;
             return this;
         }
 

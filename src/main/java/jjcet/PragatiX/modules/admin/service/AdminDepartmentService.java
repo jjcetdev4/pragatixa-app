@@ -25,8 +25,12 @@ public class AdminDepartmentService {
         this.adminClassCoordinatorQueryService = adminClassCoordinatorQueryService;
     }
 
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments(String type, boolean all) {
+        return adminDepartmentCommandService.getAllDepartments(type, all);
+    }
+
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments(boolean all) {
-        return adminDepartmentCommandService.getAllDepartments(all);
+        return adminDepartmentCommandService.getAllDepartments(null, all);
     }
 
     public ResponseEntity<ApiResponse<Department>> createDepartment(CreateDepartmentRequest request) {

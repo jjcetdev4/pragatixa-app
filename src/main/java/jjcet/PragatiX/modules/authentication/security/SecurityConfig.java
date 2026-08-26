@@ -118,11 +118,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/students/bulk-upload/template", "/api/v1/students/bulk-parse", "/api/v1/students/bulk-import").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "CLASS_COORDINATOR", "CC")
                         .requestMatchers(HttpMethod.GET, "/api/v1/students/export").hasAnyRole("SUPERADMIN", "SUPER_ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/students/me").hasRole("STUDENT")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/students").hasAnyRole("ADMIN", "TEACHER", "HOD")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/students/**").hasAnyRole("ADMIN", "TEACHER", "HOD")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/students/**").hasAnyRole("ADMIN", "TEACHER", "HOD")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/students").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "HOD")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/students/**").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "HOD")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/students/**").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "HOD")
                         .requestMatchers(HttpMethod.GET, "/api/v1/students/**")
-                        .hasAnyRole("ADMIN", "TEACHER", "STUDENT", "HOD")
+                        .hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "STUDENT", "HOD")
                         .requestMatchers("/api/activity-requests/**")
                         .hasAnyRole("TEACHER", "CLASS_COORDINATOR", "ADMIN", "STUDENT", "HOD")
                         .requestMatchers("/api/v1/analytics/**")
@@ -199,7 +199,6 @@ public class SecurityConfig {
         boolean hasWildcard = originsList.contains("*");
         boolean allowCredentials = !hasWildcard;
         configuration.setAllowCredentials(allowCredentials);
-        System.out.println("Allow Credentials: " + allowCredentials);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

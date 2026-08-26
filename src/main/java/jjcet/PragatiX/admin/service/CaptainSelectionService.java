@@ -100,12 +100,5 @@ public class CaptainSelectionService {
         }
 
         leadershipSyncService.syncLeadership(team, currentCaptain, currentViceCaptain);
-
-        System.out.println("CAPTAIN SELECTION: Evaluated Captain for team: " + team.getName() + " -> "
-                + (currentCaptain != null ? currentCaptain.getRegNo() : "None"));
-        if (currentViceCaptain != null) {
-            System.out.println("CAPTAIN SELECTION: Evaluated Vice Captain for team: " + team.getName() + " -> "
-                    + currentViceCaptain.getRegNo());
-        }
     }
 }

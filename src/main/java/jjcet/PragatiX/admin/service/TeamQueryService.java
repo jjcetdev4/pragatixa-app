@@ -96,10 +96,26 @@ public class TeamQueryService {
         response.setSection(team.getSection() != null ? team.getSection().getSectionName() : "N/A");
         response.setAcademicYear(team.getYear() != null ? team.getYear() : "N/A");
         response.setSemester("N/A");
-        response.setCaptainName(team.getCaptain() != null ? team.getCaptain().getFullName() : "N/A");
+        if (team.getCaptain() != null) {
+            response.setCaptainName(team.getCaptain().getFullName());
+            response.setCaptainRegNo(team.getCaptain().getRegNo());
+            String cGender = team.getCaptain().getGender() != null ? team.getCaptain().getGender()
+                    : (team.getCaptain().getGenderRef() != null ? team.getCaptain().getGenderRef().getGenderName() : null);
+            response.setCaptainGender(cGender);
+        } else {
+            response.setCaptainName("N/A");
+        }
+        if (team.getViceCaptain() != null) {
+            response.setViceCaptainName(team.getViceCaptain().getFullName());
+            response.setViceCaptainRegNo(team.getViceCaptain().getRegNo());
+            String vcGender = team.getViceCaptain().getGender() != null ? team.getViceCaptain().getGender()
+                    : (team.getViceCaptain().getGenderRef() != null ? team.getViceCaptain().getGenderRef().getGenderName() : null);
+            response.setViceCaptainGender(vcGender);
+        } else {
+            response.setViceCaptainName("N/A");
+        }
         response.setMaxTeamSize(team.getSize() > 0 ? team.getSize() : 10);
 
-        String viceCaptainName = team.getViceCaptain() != null ? team.getViceCaptain().getFullName() : "N/A";
         String currentRole = "MEMBER";
 
         // Process members and calculate XP (deduplicated)
@@ -112,10 +128,24 @@ public class TeamQueryService {
             uniqueMembers.addAll(team.getMembers());
 
         for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
+            if (st.getCaptain() != null) {
+                uniqueMembers.add(st.getCaptain());
+                if ("N/A".equals(response.getCaptainName())) {
+                    response.setCaptainName(st.getCaptain().getFullName());
+                    response.setCaptainRegNo(st.getCaptain().getRegNo());
+                    String cGen = st.getCaptain().getGender() != null ? st.getCaptain().getGender()
+                            : (st.getCaptain().getGenderRef() != null ? st.getCaptain().getGenderRef().getGenderName() : null);
+                    response.setCaptainGender(cGen);
+                }
+            }
             if (st.getViceCaptain() != null) {
                 uniqueMembers.add(st.getViceCaptain());
-                if ("N/A".equals(viceCaptainName)) {
-                    viceCaptainName = st.getViceCaptain().getFullName();
+                if ("N/A".equals(response.getViceCaptainName())) {
+                    response.setViceCaptainName(st.getViceCaptain().getFullName());
+                    response.setViceCaptainRegNo(st.getViceCaptain().getRegNo());
+                    String vcGen = st.getViceCaptain().getGender() != null ? st.getViceCaptain().getGender()
+                            : (st.getViceCaptain().getGenderRef() != null ? st.getViceCaptain().getGenderRef().getGenderName() : null);
+                    response.setViceCaptainGender(vcGen);
                 }
             }
         }
@@ -162,8 +192,19 @@ public class TeamQueryService {
                 }
             }
 
-            if ("VICE_CAPTAIN".equals(role) && "N/A".equals(viceCaptainName)) {
-                viceCaptainName = m.getFullName();
+            if ("CAPTAIN".equals(role) && "N/A".equals(response.getCaptainName())) {
+                response.setCaptainName(m.getFullName());
+                response.setCaptainRegNo(m.getRegNo());
+                String cGen = m.getGender() != null ? m.getGender()
+                        : (m.getGenderRef() != null ? m.getGenderRef().getGenderName() : null);
+                response.setCaptainGender(cGen);
+            }
+            if ("VICE_CAPTAIN".equals(role) && "N/A".equals(response.getViceCaptainName())) {
+                response.setViceCaptainName(m.getFullName());
+                response.setViceCaptainRegNo(m.getRegNo());
+                String vcGen = m.getGender() != null ? m.getGender()
+                        : (m.getGenderRef() != null ? m.getGenderRef().getGenderName() : null);
+                response.setViceCaptainGender(vcGen);
             }
             if (m.getRegNo().equals(student.getRegNo())) {
                 currentRole = role;
@@ -181,7 +222,6 @@ public class TeamQueryService {
             ));
         }
 
-        response.setViceCaptainName(viceCaptainName);
         response.setCurrentStudentRole(currentRole);
 
         // Sort by XP descending

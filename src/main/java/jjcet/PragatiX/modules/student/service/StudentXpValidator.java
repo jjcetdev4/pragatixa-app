@@ -71,8 +71,9 @@ public class StudentXpValidator {
             }
         }
 
+        int studentStage = student.getCurrentStage() > 0 ? student.getCurrentStage() : (student.getStage() > 0 ? student.getStage() : 1);
         List<StudentActivityXp> history = studentActivityXpRepository.findByStudentIdAndActivityIdAndStage(
-                student.getId(), activity.getId(), student.getStage());
+                student.getId(), activity.getId(), studentStage);
 
         boolean completionExists = !history.isEmpty();
         boolean transactionExists = !history.isEmpty();

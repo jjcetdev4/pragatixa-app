@@ -105,7 +105,7 @@ public class Enrollment implements SoftDeletable {
     }
 
     public void setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = fullName != null ? fullName.trim().toUpperCase() : null;
     }
 
     public String getGender() {

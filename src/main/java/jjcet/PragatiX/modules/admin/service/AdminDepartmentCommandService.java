@@ -70,12 +70,25 @@ public class AdminDepartmentCommandService {
 
 
     @Transactional(readOnly = true)
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments(boolean all) {
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments(String type, boolean all) {
         List<Department> depts = departmentRepository.findAll().stream()
                 .filter(d -> !d.isDeleted())
                 .filter(d -> {
-                    if (all) return true;
-                    return d.getSupportsSections() != null ? d.getSupportsSections() : false;
+                    if (type != null && !type.trim().isEmpty()) {
+                        String cleanType = type.trim().toUpperCase();
+                        if ("MAIN".equals(cleanType)) {
+                            return d.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.MAIN;
+                        } else if ("SUB".equals(cleanType)) {
+                            return d.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.SUB;
+                        } else if ("ALL".equals(cleanType)) {
+                            return true;
+                        }
+                    }
+                    if (all) {
+                        return true;
+                    }
+                    // Default for operational calls without explicit 'all' or 'type' parameter is MAIN
+                    return d.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.MAIN;
                 })
                 .collect(java.util.stream.Collectors.toList());
 
@@ -96,6 +109,8 @@ public class AdminDepartmentCommandService {
             map.put("departmentName", d.getName());
             map.put("deptName", d.getDeptName());
             map.put("description", d.getDescription());
+            map.put("departmentType", d.getDepartmentType() != null ? d.getDepartmentType().name() : "MAIN");
+            map.put("type", d.getDepartmentType() != null ? d.getDepartmentType().name() : "MAIN");
 
             List<Section> sections = sectionsByDept.getOrDefault(d.getId(), new ArrayList<>());
             List<Map<String, Object>> sectionMaps = new ArrayList<>();
@@ -110,12 +125,18 @@ public class AdminDepartmentCommandService {
             map.put("sections", sectionMaps);
             map.put("hasSections", !sections.isEmpty());
             
-            boolean supportsSec = d.getSupportsSections() != null ? d.getSupportsSections() : false;
+            boolean supportsSec = d.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.SUB ? false
+                    : (d.getSupportsSections() != null ? d.getSupportsSections() : true);
             map.put("supportsSections", supportsSec);
             
             response.add(map);
         }
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments(boolean all) {
+        return getAllDepartments(null, all);
     }
 
     @Transactional
@@ -127,18 +148,28 @@ public class AdminDepartmentCommandService {
         if (departmentRepository.findByNameIgnoreCase(request.getName()).isPresent()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Department name already exists"));
         }
+
+        jjcet.PragatiX.enums.DepartmentType deptType = request.getDepartmentType() != null 
+                ? request.getDepartmentType() 
+                : jjcet.PragatiX.enums.DepartmentType.MAIN;
+
+        boolean supportsSections = deptType == jjcet.PragatiX.enums.DepartmentType.SUB 
+                ? false 
+                : (request.getSupportsSections() != null ? request.getSupportsSections() : true);
+
         Department dept = Department.builder()
                 .deptCode(request.getCode())
                 .deptName(request.getName())
                 .code(request.getCode())
                 .name(request.getName())
                 .description(request.getDescription())
-                .supportsSections(request.getSupportsSections() != null ? request.getSupportsSections() : false)
+                .departmentType(deptType)
+                .supportsSections(supportsSections)
                 .build();
         Department saved = departmentRepository.save(dept);
 
         List<Section> savedSections = new ArrayList<>();
-        if (request.getSections() != null) {
+        if (supportsSections && request.getSections() != null) {
             List<Section> sectionsToSave = new ArrayList<>();
             for (String sec : request.getSections()) {
                 Section section = new Section();
@@ -155,7 +186,7 @@ public class AdminDepartmentCommandService {
             jjcet.PragatiX.enums.AuditModule.DEPARTMENT,
             "DEPARTMENT",
             saved.getId(),
-            "Created department " + saved.getName()
+            "Created department " + saved.getName() + " (" + deptType + ")"
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Department created successfully", saved));
@@ -181,12 +212,26 @@ public class AdminDepartmentCommandService {
                     .body(ApiResponse.error("Department name already registered by another department"));
         }
 
+        if (request.getDepartmentType() != null && request.getDepartmentType() != dept.getDepartmentType()) {
+            if (request.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.SUB) {
+                long studentCount = studentRepository.countByDepartmentId(id);
+                if (studentCount > 0) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error(
+                            "Cannot change department type to SUB because " + studentCount + " students are currently enrolled in this department."));
+                }
+            }
+            dept.setDepartmentType(request.getDepartmentType());
+        }
+
         dept.setName(request.getName());
         dept.setCode(request.getCode());
         dept.setDeptCode(request.getCode());
         dept.setDeptName(request.getName());
         dept.setDescription(request.getDescription());
-        if (request.getSupportsSections() != null) {
+
+        if (dept.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.SUB) {
+            dept.setSupportsSections(false);
+        } else if (request.getSupportsSections() != null) {
             dept.setSupportsSections(request.getSupportsSections());
         }
 

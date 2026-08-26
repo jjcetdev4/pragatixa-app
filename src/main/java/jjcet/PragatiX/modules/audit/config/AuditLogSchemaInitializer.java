@@ -20,9 +20,9 @@ public class AuditLogSchemaInitializer {
     @PostConstruct
     public void init() {
         try {
-            log.info("Ensuring audit_logs.entity_id allows NULL for batch operations...");
+            log.debug("Ensuring audit_logs.entity_id allows NULL for batch operations...");
             jdbcTemplate.execute("ALTER TABLE audit_logs MODIFY COLUMN entity_id BIGINT NULL");
-            log.info("Successfully ensured audit_logs.entity_id is NULLABLE.");
+            log.debug("Successfully ensured audit_logs.entity_id is NULLABLE.");
         } catch (Exception e) {
             log.debug("audit_logs schema check/alter: {}", e.getMessage());
         }

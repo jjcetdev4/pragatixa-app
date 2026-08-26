@@ -124,7 +124,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'TEACHER', 'HOD')")
     @Operation(summary = "Get Student by ID")
     public ResponseEntity<ApiResponse<StudentResponse>> getStudentById(@PathVariable Long id) {
         ApiResponse<StudentResponse> response = studentService.getStudentById(id);

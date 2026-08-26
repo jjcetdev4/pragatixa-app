@@ -62,7 +62,7 @@ public class Student implements SoftDeletable {
     private String phoneNo;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "academic_year_id", nullable = false)
+    @JoinColumn(name = "academic_year_id", nullable = true)
     private AcademicYear academicYearRef;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -167,7 +167,7 @@ public class Student implements SoftDeletable {
     }
 
     public void setRegNo(String regNo) {
-        this.regNo = regNo;
+        this.regNo = regNo != null ? regNo.trim().toUpperCase() : null;
     }
 
     public String getSprNo() {
@@ -295,7 +295,7 @@ public class Student implements SoftDeletable {
     }
 
     public void setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = fullName != null ? fullName.trim().toUpperCase() : null;
     }
 
     public String getGender() {
@@ -473,7 +473,7 @@ public static Builder builder() {
         private final Student s = new Student();
 
         public Builder regNo(String v) {
-            s.regNo = v;
+            s.regNo = v != null ? v.trim().toUpperCase() : null;
             return this;
         }
 
@@ -558,7 +558,7 @@ public static Builder builder() {
         }
 
         public Builder fullName(String v) {
-            s.fullName = v;
+            s.fullName = v != null ? v.trim().toUpperCase() : null;
             return this;
         }
 

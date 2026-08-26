@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
 public class CreateStudentRequest {
-    @NotBlank(message = "Student ID is required")
+    @NotBlank(message = "Register number is required")
     @Size(max = 100)
     private String regNo;
 
@@ -71,7 +71,7 @@ public class CreateStudentRequest {
     }
 
     public void setRegNo(String regNo) {
-        this.regNo = regNo;
+        this.regNo = regNo != null ? regNo.trim().toUpperCase() : null;
     }
 
     public String getFullName() {
@@ -79,7 +79,7 @@ public class CreateStudentRequest {
     }
 
     public void setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = fullName != null ? fullName.trim().toUpperCase() : null;
     }
 
     public String getEmail() {

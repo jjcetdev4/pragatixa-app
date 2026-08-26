@@ -190,7 +190,7 @@ public class StudentImportService {
                 Cell cell = sampleRow.createCell(i);
                 switch(headerName) {
                     case "Student Name":
-                    case "Full Name": cell.setCellValue("Arun Kumar"); break;
+                    case "Full Name": cell.setCellValue("ARUN KUMAR"); break;
                     case "Register Number": cell.setCellValue("24CSC101"); break;
                     case "SPR Number": cell.setCellValue("SPR001"); break;
                     case "Email": cell.setCellValue("arun@example.com"); break;
@@ -218,11 +218,11 @@ public class StudentImportService {
             Sheet listSheet = workbook.createSheet("_Lists");
             workbook.setSheetHidden(workbook.getSheetIndex("_Lists"), true);
 
-            List<Department> dbDepartments = departmentRepository.findAll();
+            List<Department> dbDepartments = departmentRepository.findByDepartmentTypeAndDeletedFalse(jjcet.PragatiX.enums.DepartmentType.MAIN);
             List<String> deptNames = new ArrayList<>();
             for (Department d : dbDepartments) {
-                if (d.getDeptName() != null && !d.getDeptName().trim().isEmpty() && !d.isDeleted()) {
-                    deptNames.add(d.getDeptName().trim());
+                if (d.getName() != null && !d.getName().trim().isEmpty()) {
+                    deptNames.add(d.getName().trim());
                 }
             }
             java.util.Collections.sort(deptNames, String.CASE_INSENSITIVE_ORDER);
@@ -410,9 +410,15 @@ public class StudentImportService {
                 }
 
                 String name = getColValue(row, csvRow, nameIdx, isCsvMode, excelStudentParser);
+                if (name != null) {
+                    name = name.trim().toUpperCase();
+                }
                 String deptName = getColValue(row, csvRow, deptIdx, isCsvMode, excelStudentParser);
                 String sprNo = getColValue(row, csvRow, sprIdx, isCsvMode, excelStudentParser);
                 String regNo = getColValue(row, csvRow, regIdx, isCsvMode, excelStudentParser);
+                if (regNo != null) {
+                    regNo = regNo.trim().toUpperCase();
+                }
 
                 LocalDate dob = null;
                 if (dobIdx >= 0) {
@@ -482,7 +488,7 @@ public class StudentImportService {
                 if (guardNameIdx != -1) {
                     GuardianDTO guardian = new GuardianDTO();
                     guardian.setGuardianName(gName);
-                    guardian.setRelationship(gRel.isEmpty() ? "Parent" : gRel);
+                    guardian.setRelationship(gRel.isEmpty() ? "Guardian" : gRel);
                     guardian.setPhoneNo(gPhone);
                     guardian.setEmail(gEmail);
                     req.setGuardian(guardian);

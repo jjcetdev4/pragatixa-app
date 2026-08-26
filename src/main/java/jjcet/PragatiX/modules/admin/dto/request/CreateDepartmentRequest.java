@@ -2,6 +2,7 @@ package jjcet.PragatiX.modules.admin.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jjcet.PragatiX.enums.DepartmentType;
 import java.util.List;
 
 public class CreateDepartmentRequest {
@@ -15,11 +16,21 @@ public class CreateDepartmentRequest {
 
     private String description;
 
+    private DepartmentType departmentType;
+
     private Boolean supportsSections;
 
     private List<String> sections;
 
     public CreateDepartmentRequest() {
+    }
+
+    public DepartmentType getDepartmentType() {
+        return departmentType;
+    }
+
+    public void setDepartmentType(DepartmentType departmentType) {
+        this.departmentType = departmentType;
     }
 
     public String getName() {

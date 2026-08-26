@@ -204,15 +204,11 @@ public class GroupActivityController {
                     .filter(s -> {
                         if (activityStageOrder <= 0)
                             return true;
-                        int sStage = s.getCurrentStage() > 0 ? s.getCurrentStage() : s.getStage();
+                        int sStage = s.getCurrentStage() > 0 ? s.getCurrentStage()
+                                : (s.getStage() > 0 ? s.getStage() : 1);
                         return sStage == activityStageOrder;
                     })
-                    .sorted(Comparator
-                            .comparing((Student s) -> s.getFullName() != null ? s.getFullName().trim() : "",
-                                    String.CASE_INSENSITIVE_ORDER)
-                            .thenComparing((Student s) -> s.getRegNo() != null ? s.getRegNo().trim() : "",
-                                    String.CASE_INSENSITIVE_ORDER))
-                    .map(this::toStudentResponse)
+                    .map(s -> toStudentResponse(g, s))
                     .collect(Collectors.toList());
 
             String captainId = null;
@@ -220,7 +216,7 @@ public class GroupActivityController {
 
             if (g.getCaptain() != null && g.getCaptain().isActive()) {
                 int capStage = g.getCaptain().getCurrentStage() > 0 ? g.getCaptain().getCurrentStage()
-                        : g.getCaptain().getStage();
+                        : (g.getCaptain().getStage() > 0 ? g.getCaptain().getStage() : 1);
                 if (activityStageOrder <= 0 || capStage == activityStageOrder) {
                     final String finalCaptainId = g.getCaptain().getRegNo();
                     captainId = finalCaptainId;
@@ -228,10 +224,62 @@ public class GroupActivityController {
                     boolean captainInMembers = studentResponses.stream()
                             .anyMatch(s -> s.getRegNo().equals(finalCaptainId));
                     if (!captainInMembers) {
-                        studentResponses.add(0, toStudentResponse(g.getCaptain()));
+                        studentResponses.add(0, toStudentResponse(g, g.getCaptain()));
                     }
                 }
             }
+
+            String viceCaptainId = null;
+            String viceCaptainName = null;
+
+            Student resolvedVc = g.getViceCaptain();
+            if (resolvedVc == null) {
+                List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(g.getId());
+                if (stageTeams != null) {
+                    for (StageTeam st : stageTeams) {
+                        if (st.getViceCaptain() != null) {
+                            resolvedVc = st.getViceCaptain();
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (resolvedVc != null && resolvedVc.isActive()) {
+                int vcStage = resolvedVc.getCurrentStage() > 0 ? resolvedVc.getCurrentStage()
+                        : (resolvedVc.getStage() > 0 ? resolvedVc.getStage() : 1);
+                if (activityStageOrder <= 0 || vcStage == activityStageOrder) {
+                    final String finalVcId = resolvedVc.getRegNo();
+                    viceCaptainId = finalVcId;
+                    viceCaptainName = resolvedVc.getFullName();
+                    boolean vcInMembers = studentResponses.stream()
+                            .anyMatch(s -> s.getRegNo().equals(finalVcId));
+                    if (!vcInMembers) {
+                        studentResponses.add(toStudentResponse(g, resolvedVc));
+                    }
+                }
+            }
+
+            studentResponses.sort((s1, s2) -> {
+                int xp1 = s1.getTotalXp() > 0 ? s1.getTotalXp() : s1.getCurrentXp();
+                int xp2 = s2.getTotalXp() > 0 ? s2.getTotalXp() : s2.getCurrentXp();
+                if (xp1 != xp2) {
+                    return Integer.compare(xp2, xp1);
+                }
+                boolean isCap1 = "CAPTAIN".equalsIgnoreCase(s1.getTeamRole());
+                boolean isCap2 = "CAPTAIN".equalsIgnoreCase(s2.getTeamRole());
+                if (isCap1 && !isCap2) return -1;
+                if (!isCap1 && isCap2) return 1;
+
+                boolean isVc1 = "VICE_CAPTAIN".equalsIgnoreCase(s1.getTeamRole());
+                boolean isVc2 = "VICE_CAPTAIN".equalsIgnoreCase(s2.getTeamRole());
+                if (isVc1 && !isVc2) return -1;
+                if (!isVc1 && isVc2) return 1;
+
+                String n1 = s1.getFullName() != null ? s1.getFullName() : "";
+                String n2 = s2.getFullName() != null ? s2.getFullName() : "";
+                return n1.compareToIgnoreCase(n2);
+            });
 
             return new TeamResponse(
                     g.getId(),
@@ -239,6 +287,8 @@ public class GroupActivityController {
                     g.getSize(),
                     captainId,
                     captainName,
+                    viceCaptainId,
+                    viceCaptainName,
                     studentResponses,
                     assignment.getId(),
                     assignment.getActivity() != null ? assignment.getActivity().getActivityName() : "",
@@ -362,12 +412,49 @@ public class GroupActivityController {
         return ResponseEntity.ok(ApiResponse.ok("XP awarded successfully", null));
     }
 
-    private StudentResponse toStudentResponse(Student student) {
+    private String resolveTeamRole(Team team, Student student) {
+        if (team == null || student == null)
+            return "MEMBER";
+
+        if (team.getCaptain() != null && team.getCaptain().getId().equals(student.getId())) {
+            return "CAPTAIN";
+        }
+
+        if (team.getViceCaptain() != null && team.getViceCaptain().getId().equals(student.getId())) {
+            return "VICE_CAPTAIN";
+        }
+
+        List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
+        if (stageTeams != null) {
+            for (StageTeam st : stageTeams) {
+                if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                    return "VICE_CAPTAIN";
+                }
+            }
+        }
+
+        return "MEMBER";
+    }
+
+    private StudentResponse toStudentResponse(Team team, Student student) {
+        int sStage = student.getCurrentStage() > 0 ? student.getCurrentStage()
+                : (student.getStage() > 0 ? student.getStage() : 1);
         StudentResponse s = new StudentResponse();
+        s.setId(student.getId());
         s.setRegNo(student.getRegNo());
         s.setFullName(student.getFullName());
+        s.setEmail(student.getEmail());
+        s.setPhone(student.getPhone());
         s.setDepartmentName(student.getDepartment() != null ? student.getDepartment().getName() : null);
         s.setSection(student.getSection() != null ? student.getSection().getSectionName() : null);
+        s.setScore(student.getScore());
+        s.setTotalXp(student.getTotalXp());
+        s.setCurrentXp(student.getTotalXp());
+        s.setMustXp(student.getMustXp());
+        s.setIndividualXp(student.getIndividualXp());
+        s.setGroupXp(student.getGroupXp());
+        s.setCurrentStage(sStage);
+        s.setTeamRole(resolveTeamRole(team, student));
         return s;
     }
 

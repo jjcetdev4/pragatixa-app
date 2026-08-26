@@ -43,9 +43,7 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        log.info("=================================================================");
-        log.info("TEAM DATA INTEGRITY AUDIT & REPAIR: Starting validation check...");
-        log.info("=================================================================");
+        log.debug("TEAM DATA INTEGRITY AUDIT & REPAIR: Starting validation check...");
 
         int repairedCaptains = 0;
         int repairedViceCaptains = 0;
@@ -237,14 +235,7 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
             }
         }
 
-        log.info("=================================================================");
-        log.info("TEAM DATA INTEGRITY AUDIT & REPAIR COMPLETED:");
-        log.info(" - Repaired Team Captains: {}", repairedCaptains);
-        log.info(" - Repaired Team Vice Captains: {}", repairedViceCaptains);
-        log.info(" - Repaired Stage Captains: {}", repairedStageCaptains);
-        log.info(" - Repaired Stage Vice Captains: {}", repairedStageViceCaptains);
-        log.info(" - Cleaned up Empty Teams: {}", deletedEmptyTeams);
-        log.info("Database integrity verified: Each student belongs to at most ONE team.");
-        log.info("=================================================================");
+        log.debug("TEAM DATA INTEGRITY AUDIT & REPAIR COMPLETED: Repaired Captains: {}, Stage Captains: {}, Cleaned Empty Teams: {}",
+                repairedCaptains, repairedStageCaptains, deletedEmptyTeams);
     }
 }

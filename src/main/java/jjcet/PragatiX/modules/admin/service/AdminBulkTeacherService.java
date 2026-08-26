@@ -50,8 +50,8 @@ public class AdminBulkTeacherService {
                 "3. Username must be unique across the system.",
                 "4. Email must be valid and unique.",
                 "5. Department must be selected from the dropdown.",
-                "6. Sub Role can be HOD, CC, or blank.",
-                "7. CC requires a Section. Sections must be uppercase (e.g. A, B).",
+                "6. Sub Role can be HOD, CC, Other, or blank.",
+                "7. Section is optional for CC (e.g. A, B).",
                 "8. HOD does not require a Section.",
                 "9. Normal Teacher does not require a Section.",
                 "10. Sections are automatically created for CC when needed.",
@@ -87,7 +87,7 @@ public class AdminBulkTeacherService {
             
             // Sample Row (Optional, clearly marked as sample)
             Row sampleRow = sheet.createRow(1);
-            sampleRow.createCell(0).setCellValue("Sample Teacher");
+            sampleRow.createCell(0).setCellValue("SAMPLE TEACHER");
             sampleRow.createCell(1).setCellValue("sample@example.com");
             sampleRow.createCell(2).setCellValue("Computer Science and Engineering");
             sampleRow.createCell(3).setCellValue("CC");
@@ -123,7 +123,7 @@ public class AdminBulkTeacherService {
                 row.createCell(0).setCellValue(deptNames.get(i));
             }
 
-            String[] subRoles = {"None", "HOD", "CC"};
+            String[] subRoles = {"Other", "HOD", "CC"};
             for (int i = 0; i < subRoles.length; i++) {
                 Row row = listSheet.getRow(i);
                 if (row == null) row = listSheet.createRow(i);
@@ -224,6 +224,9 @@ public class AdminBulkTeacherService {
                 int rowNum = row.getRowNum() + 1;
 
                 String fullName = getCellValue(row, columnMap.get("Full Name"));
+                if (fullName != null) {
+                    fullName = fullName.trim().toUpperCase();
+                }
                 String email = getCellValue(row, columnMap.get("Email"));
                 String deptName = getCellValue(row, columnMap.get("Department"));
                 String subRole = columnMap.containsKey("Sub Role") ? getCellValue(row, columnMap.get("Sub Role")) : "";
@@ -249,12 +252,12 @@ public class AdminBulkTeacherService {
                 }
                 excelEmails.add(email);
 
-                if (subRole.equalsIgnoreCase("None")) {
+                if (subRole.equalsIgnoreCase("None") || subRole.equalsIgnoreCase("Other")) {
                     subRole = "";
                 }
                 
                 if (!subRole.isEmpty() && !subRole.equalsIgnoreCase("HOD") && !subRole.equalsIgnoreCase("CC")) {
-                    errors.add("Row " + rowNum + ": Invalid Sub Role '" + subRole + "'. Only HOD, CC, or None are allowed.");
+                    errors.add("Row " + rowNum + ": Invalid Sub Role '" + subRole + "'. Only HOD, CC, or Other are allowed.");
                     continue;
                 }
 
@@ -273,11 +276,6 @@ public class AdminBulkTeacherService {
                 
                 boolean isCC = subRole.equalsIgnoreCase("CC");
                 boolean isHOD = subRole.equalsIgnoreCase("HOD");
-                
-                if (isCC && supportsSections && sectionName.isEmpty()) {
-                    errors.add("Row " + rowNum + ": Section is required for CC when department supports sections.");
-                    continue;
-                }
                 
                 if (isCC && yearStr.isEmpty()) {
                     errors.add("Row " + rowNum + ": Year is required for CC.");
@@ -308,11 +306,6 @@ public class AdminBulkTeacherService {
                 
                 if (!isCC && !isHOD && !yearStr.isEmpty()) {
                     errors.add("Row " + rowNum + ": Year can only be assigned to CC.");
-                    continue;
-                }
-                
-                if (isCC && !supportsSections) {
-                    errors.add("Row " + rowNum + ": Department " + department.getName() + " does not support Sections.");
                     continue;
                 }
 
@@ -374,6 +367,12 @@ public class AdminBulkTeacherService {
         for (int i = 0; i < requests.size(); i++) {
             CreateUserRequest req = requests.get(i);
             try {
+                if (req.getPassword() == null || req.getPassword().trim().isEmpty()) {
+                    req.setPassword("Spdms@123");
+                }
+                if (req.getRoles() == null || req.getRoles().isEmpty()) {
+                    req.setRoles(new HashSet<>(Collections.singletonList("ROLE_TEACHER")));
+                }
                 ResponseEntity<ApiResponse<jjcet.PragatiX.modules.authentication.dto.response.UserResponse>> responseEntity = adminUserService.createUser(req);
                 if (responseEntity.getStatusCode().is2xxSuccessful()) {
                     successCount++;

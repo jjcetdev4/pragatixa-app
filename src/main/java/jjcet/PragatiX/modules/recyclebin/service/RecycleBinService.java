@@ -288,4 +288,18 @@ public class RecycleBinService {
             "Permanently deleted " + entityType.toLowerCase() + " from Recycle Bin"
         );
     }
+
+    @Transactional
+    public int clearAllItems() {
+        List<RecycleBinItem> items = getDeletedItems();
+        int count = 0;
+        for (RecycleBinItem item : items) {
+            try {
+                permanentlyDeleteItem(item.getEntityType(), item.getId());
+                count++;
+            } catch (Exception ignored) {
+            }
+        }
+        return count;
+    }
 }

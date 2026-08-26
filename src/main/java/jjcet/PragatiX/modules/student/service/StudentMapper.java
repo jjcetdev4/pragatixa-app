@@ -36,6 +36,8 @@ public class StudentMapper {
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                 && student.getTeam().getCaptain().getId().equals(student.getId());
 
+        int sStage = student.getCurrentStage() > 0 ? student.getCurrentStage() : (student.getStage() > 0 ? student.getStage() : 1);
+
         return StudentResponse.builder()
                 .id(student.getId())
                 .regNo(student.getRegNo())
@@ -61,9 +63,15 @@ public class StudentMapper {
                 .createdAt(student.getCreatedAt())
                 .sprNo(student.getSprNo())
                 .score(student.getScore())
+                .totalXp(student.getTotalXp())
+                .currentXp(student.getTotalXp())
+                .mustXp(student.getMustXp())
+                .individualXp(student.getIndividualXp())
+                .groupXp(student.getGroupXp())
                 .teamId(teamId)
                 .teamName(teamName)
                 .teamRole(resolveTeamRole(student))
+                .currentStage(sStage)
                 .guardian(guardian != null ? mapGuardianToDto(guardian) : null)
                 .build();
     }

@@ -43,7 +43,7 @@ public class EnrollmentService {
 
     private static final Logger log = LoggerFactory.getLogger(EnrollmentService.class);
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
-    private static final Pattern MOBILE_PATTERN = Pattern.compile("^[0-9]{10,15}$");
+    private static final Pattern MOBILE_PATTERN = Pattern.compile("^[0-9]{10}$");
 
     public static final List<String> APPROVED_STUDENT_DEPARTMENTS = Arrays.asList(
             "Aeronautical Engineering",
@@ -172,7 +172,7 @@ public class EnrollmentService {
             // Sample row 1
             Row sampleRow1 = sheet.createRow(1);
             sampleRow1.createCell(0).setCellValue(1);
-            sampleRow1.createCell(1).setCellValue("Arun Kumar");
+            sampleRow1.createCell(1).setCellValue("ARUN KUMAR");
             sampleRow1.createCell(2).setCellValue("Male");
             sampleRow1.createCell(3).setCellValue("arun@gmail.com");
             sampleRow1.createCell(4).setCellValue("9876543210");
@@ -181,7 +181,7 @@ public class EnrollmentService {
             // Sample row 2
             Row sampleRow2 = sheet.createRow(2);
             sampleRow2.createCell(0).setCellValue(2);
-            sampleRow2.createCell(1).setCellValue("Priya Kumar");
+            sampleRow2.createCell(1).setCellValue("PRIYA KUMAR");
             sampleRow2.createCell(2).setCellValue("Female");
             sampleRow2.createCell(3).setCellValue("priya@gmail.com");
             sampleRow2.createCell(4).setCellValue("9876543211");
@@ -207,8 +207,15 @@ public class EnrollmentService {
                 row.createCell(0).setCellValue(genderList.get(r));
             }
 
-            // 2. Branch Lookup (9 Approved Student Departments)
-            List<String> branchNames = new ArrayList<>(APPROVED_STUDENT_DEPARTMENTS);
+            // 2. Branch Lookup (MAIN Approved Student Departments from Database)
+            List<Department> mainDepts = departmentRepository.findByDepartmentTypeAndDeletedFalse(jjcet.PragatiX.enums.DepartmentType.MAIN);
+            List<String> branchNames = new ArrayList<>();
+            for (Department d : mainDepts) {
+                branchNames.add(d.getName());
+            }
+            if (branchNames.isEmpty()) {
+                branchNames.addAll(APPROVED_STUDENT_DEPARTMENTS);
+            }
 
             for (int r = 0; r < branchNames.size(); r++) {
                 Row row = listSheet.getRow(r);
@@ -324,7 +331,7 @@ public class EnrollmentService {
                 }
 
                 int rowNum = r + 1; // 1-based display row
-                String name = getCellValue(row.getCell(nameCol)).trim();
+                String name = getCellValue(row.getCell(nameCol)).trim().toUpperCase();
                 String gender = genderCol != -1 ? getCellValue(row.getCell(genderCol)).trim() : "Male";
                 String email = getCellValue(row.getCell(emailCol)).trim().toLowerCase();
                 String mobile = cleanMobileNumber(getCellValue(row.getCell(mobileCol)).trim());
@@ -393,15 +400,9 @@ public class EnrollmentService {
                     continue;
                 }
 
-                String lowerBranch = branch.trim().toLowerCase();
-                if (lowerBranch.contains("tamil") || lowerBranch.contains("chemistry") || lowerBranch.contains("math") || lowerBranch.contains("english") || lowerBranch.contains("physics")) {
-                    result.addError("Row " + rowNum + ": " + branch + " is not allowed for enrollment. Only the 9 main departments are supported.");
-                    continue;
-                }
-
                 Department resolvedDept = resolveDepartment(branch, allDepts);
                 if (resolvedDept == null || !isMainStudentDepartment(resolvedDept)) {
-                    result.addError("Row " + rowNum + ": " + branch + " is not allowed for enrollment. Only the 9 main departments are supported.");
+                    result.addError("Row " + rowNum + ": " + branch + " is not allowed for student enrollment. Only MAIN departments are supported.");
                     continue;
                 }
 
@@ -485,7 +486,7 @@ public class EnrollmentService {
             throw new IllegalArgumentException("Enrollment details cannot be empty.");
         }
 
-        String name = dto.getFullName() != null ? dto.getFullName().trim() : "";
+        String name = dto.getFullName() != null ? dto.getFullName().trim().toUpperCase() : "";
         if (name.isEmpty()) {
             throw new IllegalArgumentException("Student name is required.");
         }
@@ -499,7 +500,7 @@ public class EnrollmentService {
 
         String mobile = dto.getMobile() != null ? dto.getMobile().trim() : "";
         if (mobile.isEmpty() || !MOBILE_PATTERN.matcher(mobile).matches()) {
-            throw new IllegalArgumentException("A valid 10-15 digit mobile number is required.");
+            throw new IllegalArgumentException("A valid 10-digit mobile number is required.");
         }
 
         if (dto.getDepartmentId() == null) {
@@ -574,7 +575,7 @@ public class EnrollmentService {
             throw new IllegalStateException("Cannot edit an already enrolled student record.");
         }
 
-        String name = dto.getFullName() != null ? dto.getFullName().trim() : "";
+        String name = dto.getFullName() != null ? dto.getFullName().trim().toUpperCase() : "";
         if (name.isEmpty()) {
             throw new IllegalArgumentException("Student name is required.");
         }
@@ -588,7 +589,7 @@ public class EnrollmentService {
 
         String mobile = dto.getMobile() != null ? dto.getMobile().trim() : "";
         if (mobile.isEmpty() || !MOBILE_PATTERN.matcher(mobile).matches()) {
-            throw new IllegalArgumentException("A valid 10-15 digit mobile number is required.");
+            throw new IllegalArgumentException("A valid 10-digit mobile number is required.");
         }
 
         if (dto.getDepartmentId() == null) {
@@ -685,28 +686,27 @@ public class EnrollmentService {
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getMainStudentDepartments() {
-        List<Department> allDepts = departmentRepository.findAll();
+        List<Department> mainDepts = departmentRepository.findByDepartmentTypeAndDeletedFalse(jjcet.PragatiX.enums.DepartmentType.MAIN);
+        if (mainDepts == null || mainDepts.isEmpty()) {
+            List<Department> all = departmentRepository.findAll();
+            mainDepts = all.stream()
+                    .filter(d -> !d.isDeleted() && (d.getDepartmentType() == null || d.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.MAIN))
+                    .collect(Collectors.toList());
+        }
         List<Map<String, Object>> result = new ArrayList<>();
-        Set<Long> addedDeptIds = new HashSet<>();
-
-        for (String approvedName : APPROVED_STUDENT_DEPARTMENTS) {
-            Department dept = resolveDepartment(approvedName, allDepts);
-            if (dept != null && !dept.isDeleted() && addedDeptIds.add(dept.getId())) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", dept.getId());
-                map.put("name", dept.getName());
-                map.put("deptCode", dept.getDeptCode() != null ? dept.getDeptCode() : (dept.getCode() != null ? dept.getCode() : dept.getName()));
-                result.add(map);
-            }
+        for (Department dept : mainDepts) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", dept.getId());
+            map.put("name", dept.getName() != null ? dept.getName() : "");
+            map.put("deptCode", dept.getDeptCode() != null ? dept.getDeptCode() : (dept.getCode() != null ? dept.getCode() : (dept.getName() != null ? dept.getName() : "")));
+            map.put("departmentType", dept.getDepartmentType() != null ? dept.getDepartmentType().name() : "MAIN");
+            result.add(map);
         }
         return result;
     }
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getPendingDepartments() {
-        if (!isEnrollmentEnabled()) {
-            return Collections.emptyList();
-        }
         return getMainStudentDepartments();
     }
 
@@ -731,6 +731,8 @@ public class EnrollmentService {
         return list.stream().map(e -> new PendingStudentDto(
                 e.getId(),
                 e.getFullName(),
+                e.getEmail(),
+                PendingStudentDto.maskEmail(e.getEmail()),
                 PendingStudentDto.maskMobile(e.getMobile()),
                 e.getDepartment() != null ? e.getDepartment().getId() : null,
                 e.getDepartment() != null ? e.getDepartment().getName() : "",
@@ -920,27 +922,21 @@ public class EnrollmentService {
     }
 
     public boolean isMainStudentDepartment(Department d) {
-        if (d == null || d.getName() == null) return false;
-        String name = d.getName().trim().toLowerCase();
-        if (name.contains("tamil") || name.contains("chemistry") || name.contains("math") || name.contains("english") || name.contains("physics")) {
-            return false;
-        }
-        for (String approved : APPROVED_STUDENT_DEPARTMENTS) {
-            if (approved.equalsIgnoreCase(d.getName().trim())) {
-                return true;
-            }
-        }
-        return false;
+        if (d == null || d.isDeleted()) return false;
+        if (d.getDepartmentType() == null) return true;
+        return d.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.MAIN;
     }
 
     public Set<Long> getMainDepartmentIds() {
-        List<Department> allDepts = departmentRepository.findAll();
-        Set<Long> ids = new HashSet<>();
-        for (String approvedName : APPROVED_STUDENT_DEPARTMENTS) {
-            Department dept = resolveDepartment(approvedName, allDepts);
-            if (dept != null && !dept.isDeleted()) {
-                ids.add(dept.getId());
-            }
+        Set<Long> ids = departmentRepository.findByDepartmentTypeAndDeletedFalse(jjcet.PragatiX.enums.DepartmentType.MAIN)
+                .stream()
+                .map(Department::getId)
+                .collect(Collectors.toSet());
+        if (ids.isEmpty()) {
+            ids = departmentRepository.findAll().stream()
+                    .filter(d -> !d.isDeleted() && (d.getDepartmentType() == null || d.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.MAIN))
+                    .map(Department::getId)
+                    .collect(Collectors.toSet());
         }
         return ids;
     }

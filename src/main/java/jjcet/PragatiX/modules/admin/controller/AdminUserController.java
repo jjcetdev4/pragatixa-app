@@ -103,7 +103,7 @@ public class AdminUserController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Bulk Import Selected Teachers", description = "Saves selected list of parsed teacher records into the database.")
     public ResponseEntity<ApiResponse<String>> bulkImportTeachers(
-            @Valid @RequestBody List<CreateUserRequest> requests) {
+            @RequestBody List<CreateUserRequest> requests) {
         ApiResponse<String> response = adminBulkTeacherService.bulkImport(requests);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

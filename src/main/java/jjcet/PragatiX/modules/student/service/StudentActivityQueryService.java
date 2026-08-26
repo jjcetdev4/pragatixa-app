@@ -14,6 +14,9 @@ import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import jjcet.PragatiX.modules.student.dto.response.MyActivityStudentsResponse;
 import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import jjcet.PragatiX.repository.SectionRepository;
+import jjcet.PragatiX.entity.Department;
+import jjcet.PragatiX.repository.DepartmentRepository;
+import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,8 @@ public class StudentActivityQueryService {
     private final ActivityStageRepository activityStageRepository;
     private final StudentRepository studentRepository;
     private final SectionRepository sectionRepository;
+    private final DepartmentRepository departmentRepository;
+    private final ActivityRepository activityRepository;
     private final AssignmentSecurityService assignmentSecurityService;
     private final StudentXpMapper mapper;
 
@@ -39,6 +44,8 @@ public class StudentActivityQueryService {
             ActivityStageRepository activityStageRepository,
             StudentRepository studentRepository,
             SectionRepository sectionRepository,
+            DepartmentRepository departmentRepository,
+            ActivityRepository activityRepository,
             AssignmentSecurityService assignmentSecurityService,
             StudentXpMapper mapper) {
         this.userRepository = userRepository;
@@ -46,6 +53,8 @@ public class StudentActivityQueryService {
         this.activityStageRepository = activityStageRepository;
         this.studentRepository = studentRepository;
         this.sectionRepository = sectionRepository;
+        this.departmentRepository = departmentRepository;
+        this.activityRepository = activityRepository;
         this.assignmentSecurityService = assignmentSecurityService;
         this.mapper = mapper;
     }
@@ -105,13 +114,10 @@ public class StudentActivityQueryService {
 
         List<Map<String, Object>> depts;
         if (isGlobalActivity) {
-            depts = allAssignments.stream()
-                    .filter(a -> stageId == null || a.getStage() == null || a.getStage().getId().equals(stageId))
-                    .filter(a -> isYearMatching(targetYear, a.getYear()))
-                    .map(ActivityAssignment::getDepartment)
-                    .filter(Objects::nonNull)
-                    .distinct()
-                    .map(d -> {
+            List<Department> mainDepts = departmentRepository.findByDepartmentTypeAndDeletedFalse(jjcet.PragatiX.enums.DepartmentType.MAIN);
+            depts = mainDepts.stream()
+                    .filter(d -> !d.getName().toLowerCase().startsWith("department of"))
+                    .<Map<String, Object>>map(d -> {
                         Map<String, Object> map = new HashMap<>();
                         map.put("id", d.getId());
                         map.put("name", d.getName());
@@ -125,8 +131,10 @@ public class StudentActivityQueryService {
                     .filter(a -> isYearMatching(targetYear, a.getYear()))
                     .map(ActivityAssignment::getDepartment)
                     .filter(Objects::nonNull)
+                    .filter(d -> !d.isDeleted() && (d.getDepartmentType() == null || d.getDepartmentType() == jjcet.PragatiX.enums.DepartmentType.MAIN))
+                    .filter(d -> !d.getName().toLowerCase().startsWith("department of"))
                     .distinct()
-                    .map(d -> {
+                    .<Map<String, Object>>map(d -> {
                         Map<String, Object> map = new HashMap<>();
                         map.put("id", d.getId());
                         map.put("name", d.getName());
@@ -250,18 +258,35 @@ public class StudentActivityQueryService {
                     .<MyActivityStudentsResponse>error("Access Denied: You are not assigned to this activity."));
 
         ActivityAssignment priorityAssignment = getPriorityAssignment(matching);
-        Activity activity = priorityAssignment.getActivity();
-        String targetYear = (year == null || year.trim().isEmpty()) ? "1" : year;
+        Activity activity = priorityAssignment != null ? priorityAssignment.getActivity() : null;
+        if (activity == null) {
+            activity = activityRepository.findById(activityId).orElse(null);
+        }
+        if (activity == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse
+                    .<MyActivityStudentsResponse>error("Activity not found"));
+        }
+
+        String targetYear = (year == null || year.trim().isEmpty() || year.equalsIgnoreCase("null") || year.equalsIgnoreCase("all")) ? null : year.trim();
 
         // Determine the stage order number that this activity belongs to.
-        // 1. If stageId is explicitly passed, resolve displayOrder from the stage.
-        // 2. Else check priorityAssignment.getStage() (assigned stage).
-        // 3. Else check activity.getStage() or subgroup's stage.
         int stageOrder = 0;
         if (stageId != null) {
             ActivityStage targetStage = activityStageRepository.findById(stageId).orElse(null);
             if (targetStage != null) {
                 stageOrder = targetStage.getDisplayOrder();
+                if (stageOrder <= 0 && targetStage.getStageName() != null) {
+                    String num = targetStage.getStageName().replaceAll("[^0-9]", "");
+                    if (!num.isEmpty()) {
+                        try { stageOrder = Integer.parseInt(num); } catch (Exception ignored) {}
+                    }
+                }
+                if (stageOrder <= 0 && targetStage.getName() != null) {
+                    String num = targetStage.getName().replaceAll("[^0-9]", "");
+                    if (!num.isEmpty()) {
+                        try { stageOrder = Integer.parseInt(num); } catch (Exception ignored) {}
+                    }
+                }
             }
         }
         if (stageOrder == 0 && priorityAssignment != null && priorityAssignment.getStage() != null) {
@@ -274,57 +299,43 @@ public class StudentActivityQueryService {
                 && activity.getSubgroup().getStage() != null) {
             stageOrder = activity.getSubgroup().getStage().getDisplayOrder();
         }
-        final int activityStageOrder = stageOrder;
+        final int activityStageOrder = stageOrder > 0 ? stageOrder : 1;
 
         List<Student> rawStudents;
-        if (departmentId != null) {
-            if (sectionId != null) {
-                if (activityStageOrder > 0) {
-                    rawStudents = studentRepository.findByDepartmentIdAndSectionIdAndStage(departmentId, sectionId,
-                            activityStageOrder);
-                } else {
-                    rawStudents = studentRepository.findByDepartmentIdAndSectionId(departmentId, sectionId);
-                }
-            } else {
-                if (activityStageOrder > 0) {
-                    rawStudents = studentRepository.findByDepartmentIdAndStage(departmentId, activityStageOrder);
-                } else {
-                    rawStudents = studentRepository.findByDepartmentId(departmentId);
-                }
-            }
+        if (departmentId != null && sectionId != null) {
+            rawStudents = studentRepository.findByDepartmentIdAndSectionId(departmentId, sectionId);
+        } else if (departmentId != null) {
+            rawStudents = studentRepository.findByDepartmentId(departmentId);
         } else {
-            if (activityStageOrder > 0) {
-                rawStudents = studentRepository.findByStage(activityStageOrder);
-            } else {
-                rawStudents = studentRepository.findAll();
-            }
+            rawStudents = studentRepository.findAll();
         }
 
         Set<Student> uniqueStudents = new java.util.HashSet<>();
         if (rawStudents != null) {
             for (Student s : rawStudents) {
-                if (s.isActive()) {
-                    if (departmentId != null
-                            && (s.getDepartment() == null || !s.getDepartment().getId().equals(departmentId))) {
-                        continue;
-                    }
-                    if (!isYearMatching(targetYear, s.getYear())) {
-                        continue;
-                    }
-                    if (sectionId != null) {
-                        if (s.getSection() == null || !s.getSection().getId().equals(sectionId)) {
-                            continue;
-                        }
-                    }
-                    // Stage filter: only include students whose current stage matches the
-                    // activity's stage.
-                    // This ensures promoted students are hidden from activities of their old stage.
-                    if (activityStageOrder > 0 && s.getStage() != activityStageOrder
-                            && s.getCurrentStage() != activityStageOrder) {
-                        continue;
-                    }
-                    uniqueStudents.add(s);
+                if (s == null || !s.isActive() || s.isDeleted()) {
+                    continue;
                 }
+                if (departmentId != null
+                        && (s.getDepartment() == null || !s.getDepartment().getId().equals(departmentId))) {
+                    continue;
+                }
+                if (sectionId != null) {
+                    if (s.getSection() == null || !s.getSection().getId().equals(sectionId)) {
+                        continue;
+                    }
+                }
+                if (targetYear != null && !isStudentYearMatching(targetYear, s)) {
+                    continue;
+                }
+                // Stage filter: only include students currently active in or belonging to this stage
+                if (activityStageOrder > 0) {
+                    int sStage = s.getCurrentStage() > 0 ? s.getCurrentStage() : (s.getStage() > 0 ? s.getStage() : 1);
+                    if (sStage != activityStageOrder && s.getStage() != activityStageOrder) {
+                        continue;
+                    }
+                }
+                uniqueStudents.add(s);
             }
         }
 
@@ -348,7 +359,7 @@ public class StudentActivityQueryService {
     }
 
     public ActivityAssignment getPriorityAssignment(List<ActivityAssignment> matches) {
-        if (matches.isEmpty())
+        if (matches == null || matches.isEmpty())
             return null;
         for (ActivityAssignment a : matches) {
             if (a.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY)
@@ -369,9 +380,35 @@ public class StudentActivityQueryService {
         return matches.get(0);
     }
 
+    public boolean isStudentYearMatching(String targetYear, Student s) {
+        if (targetYear == null || targetYear.trim().isEmpty() || targetYear.equalsIgnoreCase("all")) {
+            return true;
+        }
+        if (s == null) return false;
+        if (s.getYear() != null && isYearMatching(targetYear, s.getYear())) {
+            return true;
+        }
+        if (s.getYearRef() != null) {
+            if (s.getYearRef().getYearNo() != null && isYearMatching(targetYear, String.valueOf(s.getYearRef().getYearNo()))) {
+                return true;
+            }
+            if (s.getYearRef().getYearName() != null && isYearMatching(targetYear, s.getYearRef().getYearName())) {
+                return true;
+            }
+        }
+        if (s.getYear() == null && s.getYearRef() == null) {
+            return true;
+        }
+        return false;
+    }
+
     public boolean isYearMatching(String yr1, String yr2) {
-        String y1 = (yr1 == null || yr1.trim().isEmpty()) ? "1" : yr1.trim().toLowerCase();
-        String y2 = (yr2 == null || yr2.trim().isEmpty()) ? "1" : yr2.trim().toLowerCase();
+        if (yr1 == null || yr1.trim().isEmpty() || yr1.equalsIgnoreCase("all"))
+            return true;
+        if (yr2 == null || yr2.trim().isEmpty() || yr2.equalsIgnoreCase("all"))
+            return true;
+        String y1 = yr1.trim().toLowerCase();
+        String y2 = yr2.trim().toLowerCase();
         if (y1.equals(y2))
             return true;
 

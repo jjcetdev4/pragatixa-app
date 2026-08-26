@@ -42,11 +42,21 @@ public class AuthResponse {
     private boolean isViceCaptain;
     @JsonProperty("isMember")
     private boolean isMember;
+    private String gender;
 
     public AuthResponse() {
     }
 
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
     public String getToken() {
+
         return token;
     }
 
@@ -495,6 +505,11 @@ public class AuthResponse {
 
         public Builder isMember(boolean v) {
             r.isMember = v;
+            return this;
+        }
+
+        public Builder gender(String v) {
+            r.gender = v;
             return this;
         }
 

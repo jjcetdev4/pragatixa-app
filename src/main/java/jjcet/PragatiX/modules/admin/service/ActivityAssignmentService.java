@@ -112,7 +112,7 @@ public class ActivityAssignmentService {
                 activityRepository.save(activity);
             }
 
-            List<Department> allDepts = departmentRepository.findAll();
+            List<Department> allDepts = departmentRepository.findByDepartmentTypeAndDeletedFalse(jjcet.PragatiX.enums.DepartmentType.MAIN);
             List<String> warnings = new ArrayList<>();
             List<ActivityAssignment> assignmentsToSave = new ArrayList<>();
 
@@ -179,7 +179,7 @@ public class ActivityAssignmentService {
                     .filter(a -> a.getAssignmentScope() == AssignmentScope.GLOBAL)
                     .collect(java.util.stream.Collectors.toList());
 
-            List<Department> allDepts = departmentRepository.findAll();
+            List<Department> allDepts = departmentRepository.findByDepartmentTypeAndDeletedFalse(jjcet.PragatiX.enums.DepartmentType.MAIN);
             List<ActivityAssignment> assignmentsToSave = new ArrayList<>();
             for (Department dept : allDepts) {
                 ActivityAssignment aa = new ActivityAssignment();

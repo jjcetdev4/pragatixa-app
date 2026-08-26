@@ -28,6 +28,8 @@ public class TeamMapper {
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null
                 && student.getTeam().getCaptain().getId().equals(student.getId());
 
+        int sStage = student.getCurrentStage() > 0 ? student.getCurrentStage() : (student.getStage() > 0 ? student.getStage() : 1);
+
         return StudentResponse.builder()
                 .id(student.getId())
                 .regNo(student.getRegNo())
@@ -44,10 +46,15 @@ public class TeamMapper {
                 .createdAt(student.getCreatedAt())
                 .sprNo(student.getSprNo())
                 .score(student.getScore())
+                .totalXp(student.getTotalXp())
+                .currentXp(student.getTotalXp())
+                .mustXp(student.getMustXp())
+                .individualXp(student.getIndividualXp())
+                .groupXp(student.getGroupXp())
                 .teamId(teamId)
                 .teamName(teamName)
                 .teamRole(resolveTeamRole(student))
-                .currentStage(student.getCurrentStage())
+                .currentStage(sStage)
                 .build();
     }
 
@@ -100,6 +107,28 @@ public class TeamMapper {
                 studentResponses.add(toStudentResponse(team.getViceCaptain()));
             }
         }
+
+        // Sort members by XP descending (highest XP on top)
+        studentResponses.sort((s1, s2) -> {
+            int xp1 = s1.getTotalXp() > 0 ? s1.getTotalXp() : s1.getCurrentXp();
+            int xp2 = s2.getTotalXp() > 0 ? s2.getTotalXp() : s2.getCurrentXp();
+            if (xp1 != xp2) {
+                return Integer.compare(xp2, xp1); // Descending order
+            }
+            boolean isCap1 = "CAPTAIN".equalsIgnoreCase(s1.getTeamRole());
+            boolean isCap2 = "CAPTAIN".equalsIgnoreCase(s2.getTeamRole());
+            if (isCap1 && !isCap2) return -1;
+            if (!isCap1 && isCap2) return 1;
+
+            boolean isVc1 = "VICE_CAPTAIN".equalsIgnoreCase(s1.getTeamRole());
+            boolean isVc2 = "VICE_CAPTAIN".equalsIgnoreCase(s2.getTeamRole());
+            if (isVc1 && !isVc2) return -1;
+            if (!isVc1 && isVc2) return 1;
+
+            String n1 = s1.getFullName() != null ? s1.getFullName() : "";
+            String n2 = s2.getFullName() != null ? s2.getFullName() : "";
+            return n1.compareToIgnoreCase(n2);
+        });
 
         TeamResponse response = new TeamResponse(
                 team.getId(),
@@ -161,6 +190,18 @@ public class TeamMapper {
             response.setSectionId(representative.getSection().getId());
             response.setSectionName(representative.getSection().getSectionName());
         }
+
+        int teamStage = 1;
+        if (team.getCaptain() != null) {
+            int capStage = team.getCaptain().getCurrentStage() > 0 ? team.getCaptain().getCurrentStage()
+                    : (team.getCaptain().getStage() > 0 ? team.getCaptain().getStage() : 1);
+            teamStage = capStage;
+        } else if (representative != null) {
+            int repStage = representative.getCurrentStage() > 0 ? representative.getCurrentStage()
+                    : (representative.getStage() > 0 ? representative.getStage() : 1);
+            teamStage = repStage;
+        }
+        response.setCurrentStage(teamStage);
 
         return response;
     }

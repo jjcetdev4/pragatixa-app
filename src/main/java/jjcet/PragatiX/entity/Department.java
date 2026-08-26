@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jjcet.PragatiX.enums.DepartmentType;
 
 import org.hibernate.annotations.Filter;
 
@@ -33,6 +34,10 @@ public class Department implements SoftDeletable {
 
     @Column(length = 255)
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "department_type", length = 20)
+    private DepartmentType departmentType = DepartmentType.MAIN;
 
     @Column(name = "supports_sections")
     private Boolean supportsSections;
@@ -108,6 +113,14 @@ public class Department implements SoftDeletable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public DepartmentType getDepartmentType() {
+        return departmentType != null ? departmentType : DepartmentType.MAIN;
+    }
+
+    public void setDepartmentType(DepartmentType departmentType) {
+        this.departmentType = departmentType;
     }
 
     public Boolean getSupportsSections() {
@@ -207,6 +220,11 @@ public class Department implements SoftDeletable {
 
         public Builder description(String v) {
             dept.description = v;
+            return this;
+        }
+
+        public Builder departmentType(DepartmentType v) {
+            dept.departmentType = v;
             return this;
         }
 

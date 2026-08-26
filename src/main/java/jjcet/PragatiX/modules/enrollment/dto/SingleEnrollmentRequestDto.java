@@ -18,7 +18,7 @@ public class SingleEnrollmentRequestDto {
     private String email;
 
     @NotBlank(message = "Mobile number is required")
-    @Pattern(regexp = "^[0-9]{10,15}$", message = "Mobile number must be 10 to 15 digits")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Mobile number must be exactly 10 digits")
     private String mobile;
 
     @NotNull(message = "Department is required")
@@ -39,7 +39,7 @@ public class SingleEnrollmentRequestDto {
     }
 
     public void setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = fullName != null ? fullName.trim().toUpperCase() : null;
     }
 
     public String getGender() {

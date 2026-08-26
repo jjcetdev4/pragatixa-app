@@ -31,10 +31,10 @@ public class EncryptionSchemaInitializer {
 
     @PostConstruct
     public void init() {
-        log.info("Initializing AES-256-GCM database encryption schema & migration...");
+        log.debug("Initializing AES-256-GCM database encryption schema & migration...");
         ensureColumnLengths();
         migrateExistingPlaintextData();
-        log.info("AES-256-GCM database encryption initialized successfully.");
+        log.debug("AES-256-GCM database encryption initialized successfully.");
     }
 
     private void ensureColumnLengths() {

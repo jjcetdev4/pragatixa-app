@@ -11,8 +11,12 @@ public class StudentTeamDetailsResponse {
     private String academicYear;
     private String semester;
     private String captainName;
+    private String captainGender;
+    private String captainRegNo;
     private String viceCaptainId;
     private String viceCaptainName;
+    private String viceCaptainGender;
+    private String viceCaptainRegNo;
     private String currentStudentRole;
     private int totalTeamXp;
     private int teamRank;
@@ -87,6 +91,22 @@ public class StudentTeamDetailsResponse {
         this.captainName = captainName;
     }
 
+    public String getCaptainGender() {
+        return captainGender;
+    }
+
+    public void setCaptainGender(String captainGender) {
+        this.captainGender = captainGender;
+    }
+
+    public String getCaptainRegNo() {
+        return captainRegNo;
+    }
+
+    public void setCaptainRegNo(String captainRegNo) {
+        this.captainRegNo = captainRegNo;
+    }
+
     public String getViceCaptainId() {
         return viceCaptainId;
     }
@@ -101,6 +121,22 @@ public class StudentTeamDetailsResponse {
 
     public void setViceCaptainName(String viceCaptainName) {
         this.viceCaptainName = viceCaptainName;
+    }
+
+    public String getViceCaptainGender() {
+        return viceCaptainGender;
+    }
+
+    public void setViceCaptainGender(String viceCaptainGender) {
+        this.viceCaptainGender = viceCaptainGender;
+    }
+
+    public String getViceCaptainRegNo() {
+        return viceCaptainRegNo;
+    }
+
+    public void setViceCaptainRegNo(String viceCaptainRegNo) {
+        this.viceCaptainRegNo = viceCaptainRegNo;
     }
 
     public String getCurrentStudentRole() {

@@ -128,7 +128,7 @@ public class User implements SoftDeletable {
     }
 
     public void setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = fullName != null ? fullName.trim().toUpperCase() : null;
     }
 
     public String getEmail() {
@@ -258,7 +258,7 @@ public static Builder builder() {
         }
 
         public Builder fullName(String v) {
-            user.fullName = v;
+            user.fullName = v != null ? v.trim().toUpperCase() : null;
             return this;
         }
 

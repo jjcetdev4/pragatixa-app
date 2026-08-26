@@ -68,9 +68,7 @@ public class ActivityQueryService {
                     .body(ApiResponse.<List<Activity>>error("Subgroup not found"));
         }
 
-        System.out.println("Selected Academic Year : " + academicYear);
         List<Activity> allActivities = activityRepository.findBySubgroupId(subgroupId).stream().filter(a -> !a.isDeleted()).toList();
-        System.out.println("Rows Before Filter : " + allActivities.size());
 
         List<Activity> activities = allActivities;
         if (academicYear != null) {
@@ -139,9 +137,7 @@ public class ActivityQueryService {
 
     public ResponseEntity<ApiResponse<List<Activity>>> getAllActivities(String subgroup,
             jjcet.PragatiX.enums.AcademicYear academicYear) {
-        System.out.println("Selected Academic Year : " + academicYear);
         List<Activity> allActivities = activityRepository.findAll().stream().filter(a -> !a.isDeleted()).toList();
-        System.out.println("Rows Before Filter : " + allActivities.size());
 
         List<Activity> activities = allActivities;
         if (academicYear != null) {

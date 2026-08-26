@@ -28,6 +28,7 @@ public class UpdateStudentRequest {
     @Size(max = 100)
     private String sprNo;
 
+    @com.fasterxml.jackson.annotation.JsonAlias({"dateOfBirth", "dob"})
     private LocalDate dob;
     private String address;
     private Long academicYearId;
@@ -48,7 +49,7 @@ public class UpdateStudentRequest {
     }
 
     public void setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = fullName != null ? fullName.trim().toUpperCase() : null;
     }
 
     public String getEmail() {
@@ -129,6 +130,14 @@ public class UpdateStudentRequest {
 
     public void setDob(LocalDate dob) {
         this.dob = dob;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dob;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dob = dateOfBirth;
     }
 
     public String getAddress() {

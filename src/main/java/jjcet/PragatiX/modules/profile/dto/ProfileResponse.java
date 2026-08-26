@@ -13,6 +13,7 @@ public class ProfileResponse {
     private String phone;
     private String role;
     private String department;
+    private String gender;
     private String accountStatus;
     private LocalDateTime createdDate;
     private LocalDateTime lastUpdated;
@@ -82,6 +83,14 @@ public class ProfileResponse {
 
     public void setDepartment(String department) {
         this.department = department;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 
     public String getAccountStatus() {
@@ -369,10 +378,19 @@ public class ProfileResponse {
         private String teamName;
         private boolean isCaptain;
         private boolean isViceCaptain;
+        private String gender;
         private long teamMembersCount;
         private long teamXp;
         private long teamRank;
         private List<String> permissions;
+
+        public String getGender() {
+            return gender;
+        }
+
+        public void setGender(String gender) {
+            this.gender = gender;
+        }
 
         public String getRegisterNumber() {
             return registerNumber;

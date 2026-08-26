@@ -94,6 +94,9 @@ public class ProfileService {
             response.setCreatedDate(student.getCreatedAt());
             response.setLastUpdated(student.getUpdatedAt());
             response.setRole(primaryRole);
+            response.setGender(student.getGenderRef() != null && student.getGenderRef().getGenderName() != null
+                    ? student.getGenderRef().getGenderName()
+                    : (student.getGender() != null ? student.getGender() : "Male"));
             response.setStudentDetails(buildStudentDetails(student));
             return response;
         }
@@ -269,6 +272,9 @@ public class ProfileService {
         d.setSemester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName()
                 : (student.getSemester() != null ? student.getSemester() : "N/A"));
         d.setBatch("N/A");
+        d.setGender(student.getGenderRef() != null && student.getGenderRef().getGenderName() != null
+                ? student.getGenderRef().getGenderName()
+                : (student.getGender() != null ? student.getGender() : "Male"));
         d.setPermissions(List.of("View Profile", "View Attendance", "View Leaderboard"));
 
         boolean isCap = student.getTeam() != null && student.getTeam().getCaptain() != null

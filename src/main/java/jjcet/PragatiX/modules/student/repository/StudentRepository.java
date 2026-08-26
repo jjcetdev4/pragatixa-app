@@ -94,7 +94,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
        @Query("SELECT s FROM Student s WHERE s.yearRef.id = :yearId ORDER BY s.fullName ASC, s.regNo ASC")
        List<Student> findByYearRefId(@Param("yearId") Long yearId);
 
-       @Query("SELECT DISTINCT s.department FROM Student s WHERE s.yearRef.id = :yearId AND s.department IS NOT NULL")
+       @Query("SELECT DISTINCT s.department FROM Student s WHERE s.yearRef.id = :yearId AND s.department IS NOT NULL AND s.department.deleted = false AND s.department.departmentType = jjcet.PragatiX.enums.DepartmentType.MAIN")
        List<Department> findDistinctDepartmentsByYearId(@Param("yearId") Long yearId);
 
        long countByDepartmentId(Long departmentId);
@@ -150,46 +150,57 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
                      "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
        Page<Student> searchStudents(@Param("keyword") String keyword, @Param("unassignedOnly") boolean unassignedOnly, Pageable pageable);
 
-       @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
-                     "academicYearRef", "yearRef", "semesterRef", "team" })
-       @Query("SELECT s FROM Student s WHERE s.active = true " +
-                     "AND (:keyword IS NULL OR :keyword = '' OR (LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))) "
-                     +
-                     "AND (:year IS NULL OR :year = '' OR s.year = :year) " +
-                     "AND (:departmentId IS NULL OR s.department.id = :departmentId) " +
-                     "AND (:sectionId IS NULL OR s.section.id = :sectionId)")
-       Page<Student> findByFilters(
-                     @Param("keyword") String keyword,
-                     @Param("year") String year,
-                     @Param("departmentId") Long departmentId,
-                     @Param("sectionId") Long sectionId,
-                     Pageable pageable);
+        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
+                      "academicYearRef", "yearRef", "semesterRef", "team" })
+        @Query("SELECT s FROM Student s WHERE s.deleted = false " +
+                      "AND (:keyword IS NULL OR :keyword = '' OR (LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))) "
+                      +
+                      "AND (:year IS NULL OR :year = '' OR s.year = :year OR s.year = :yearNo " +
+                      "OR (s.yearRef IS NOT NULL AND (s.yearRef.yearName = :year OR (:yearNoByte IS NOT NULL AND s.yearRef.yearNo = :yearNoByte)))) " +
+                      "AND (:departmentId IS NULL OR s.department.id = :departmentId) " +
+                      "AND (:sectionId IS NULL OR s.section.id = :sectionId)")
+        Page<Student> findByFilters(
+                      @Param("keyword") String keyword,
+                      @Param("year") String year,
+                      @Param("yearNo") String yearNo,
+                      @Param("yearNoByte") Byte yearNoByte,
+                      @Param("departmentId") Long departmentId,
+                      @Param("sectionId") Long sectionId,
+                      Pageable pageable);
 
-       @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
-                     "academicYearRef", "yearRef", "semesterRef", "team" })
-       @Query("SELECT s FROM Student s WHERE s.active = true " +
-                     "AND (:keyword IS NULL OR :keyword = '' OR (LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))) "
-                     +
-                     "AND (s.yearRef.id = :yearId) " +
-                     "AND (:departmentId IS NULL OR s.department.id = :departmentId) " +
-                     "AND (:sectionId IS NULL OR s.section.id = :sectionId)")
-       Page<Student> findByFiltersWithYearRef(
-                     @Param("keyword") String keyword,
-                     @Param("yearId") Long yearId,
-                     @Param("departmentId") Long departmentId,
-                     @Param("sectionId") Long sectionId,
-                     Pageable pageable);
+        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "department", "section", "genderRef",
+                      "academicYearRef", "yearRef", "semesterRef", "team" })
+        @Query("SELECT s FROM Student s WHERE s.deleted = false " +
+                      "AND (:keyword IS NULL OR :keyword = '' OR (LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.regNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')))) "
+                      +
+                      "AND (s.yearRef.id = :yearId) " +
+                      "AND (:departmentId IS NULL OR s.department.id = :departmentId) " +
+                      "AND (:sectionId IS NULL OR s.section.id = :sectionId)")
+        Page<Student> findByFiltersWithYearRef(
+                      @Param("keyword") String keyword,
+                      @Param("yearId") Long yearId,
+                      @Param("departmentId") Long departmentId,
+                      @Param("sectionId") Long sectionId,
+                      Pageable pageable);
 
-       @Query("SELECT DISTINCT s.section FROM Student s WHERE s.active = true AND s.section IS NOT NULL " +
-                     "AND (:year IS NULL OR :year = '' OR s.year = :year) " +
-                     "AND (:departmentId IS NULL OR s.department.id = :departmentId)")
-       List<jjcet.PragatiX.entity.Section> findDistinctSectionsByYearAndDepartment(
-                     @Param("year") String year,
-                     @Param("departmentId") Long departmentId);
+        @Query("SELECT DISTINCT s.section FROM Student s WHERE s.deleted = false AND s.section IS NOT NULL " +
+                      "AND (:year IS NULL OR :year = '' OR s.year = :year OR s.year = :yearNo " +
+                      "OR (s.yearRef IS NOT NULL AND (s.yearRef.yearName = :year OR (:yearNoByte IS NOT NULL AND s.yearRef.yearNo = :yearNoByte)))) " +
+                      "AND (:departmentId IS NULL OR s.department.id = :departmentId)")
+        List<jjcet.PragatiX.entity.Section> findDistinctSectionsByYearAndDepartment(
+                      @Param("year") String year,
+                      @Param("yearNo") String yearNo,
+                      @Param("yearNoByte") Byte yearNoByte,
+                      @Param("departmentId") Long departmentId);
 
-       @Query("SELECT DISTINCT s.department FROM Student s WHERE s.active = true AND s.department IS NOT NULL " +
-                     "AND (:year IS NULL OR :year = '' OR s.year = :year)")
-       List<Department> findDistinctDepartmentsByYear(@Param("year") String year);
+        @Query("SELECT DISTINCT s.department FROM Student s WHERE s.deleted = false AND s.department IS NOT NULL " +
+                      "AND s.department.deleted = false " +
+                      "AND (:year IS NULL OR :year = '' OR s.year = :year OR s.year = :yearNo " +
+                      "OR (s.yearRef IS NOT NULL AND (s.yearRef.yearName = :year OR (:yearNoByte IS NOT NULL AND s.yearRef.yearNo = :yearNoByte))))")
+        List<Department> findDistinctDepartmentsByYear(
+                      @Param("year") String year,
+                      @Param("yearNo") String yearNo,
+                      @Param("yearNoByte") Byte yearNoByte);
 
        @Query("SELECT s FROM Student s WHERE s.deleted = false AND s.year = :year")
        Page<Student> findAllByYear(@Param("year") String year, Pageable pageable);

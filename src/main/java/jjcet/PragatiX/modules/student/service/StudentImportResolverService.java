@@ -55,7 +55,7 @@ public class StudentImportResolverService {
         if (deptName == null || deptName.trim().isEmpty())
             return null;
         String normInput = normalizeBasic(deptName);
-        List<Department> allDepts = departmentRepository.findAll();
+        List<Department> allDepts = departmentRepository.findByDepartmentTypeAndDeletedFalse(jjcet.PragatiX.enums.DepartmentType.MAIN);
 
         for (Department d : allDepts) {
             String dbName = normalizeBasic(d.getName());
@@ -70,7 +70,7 @@ public class StudentImportResolverService {
         }
 
         List<String> avail = allDepts.stream().map(Department::getName).collect(Collectors.toList());
-        log.warn("Cannot resolve Department\nInput: {}\nAvailable database values: {}\nResolved ID: NULL", deptName,
+        log.warn("Cannot resolve Department (must be a MAIN department)\nInput: {}\nAvailable database values: {}\nResolved ID: NULL", deptName,
                 avail);
         return null;
     }

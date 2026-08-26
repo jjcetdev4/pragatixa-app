@@ -365,29 +365,27 @@ public class CCActivityService {
                                     + ") does not belong to your assigned Class (" + dept.getName()
                                     + (sec != null ? " - Section " + sec.getSectionName() : "") + ")."));
                 }
-                if (activityStageOrder > 0 && s.getStage() != activityStageOrder
-                        && s.getCurrentStage() != activityStageOrder) {
+                int sStage = s.getCurrentStage() > 0 ? s.getCurrentStage() : (s.getStage() > 0 ? s.getStage() : 1);
+                if (activityStageOrder > 0 && sStage != activityStageOrder) {
                     return ResponseEntity.badRequest().body(ApiResponse.error(
-                            "Student " + s.getFullName() + " (" + s.getRegNo() + ") is in Stage " + s.getStage()
+                            "Student " + s.getFullName() + " (" + s.getRegNo() + ") is in Stage " + sStage
                                     + " and is not eligible for Stage " + activityStageOrder + " activities."));
                 }
             }
         } else {
             List<Student> allClassStudents;
             if (sec != null) {
-                allClassStudents = (activityStageOrder > 0)
-                        ? studentRepository.findByDepartmentIdAndSectionIdAndStage(dept.getId(), sec.getId(), activityStageOrder)
-                        : studentRepository.findByDepartmentIdAndSectionId(dept.getId(), sec.getId());
+                allClassStudents = studentRepository.findByDepartmentIdAndSectionId(dept.getId(), sec.getId());
             } else {
-                allClassStudents = (activityStageOrder > 0)
-                        ? studentRepository.findByDepartmentIdAndStage(dept.getId(), activityStageOrder)
-                        : studentRepository.findByDepartmentId(dept.getId());
+                allClassStudents = studentRepository.findByDepartmentId(dept.getId());
             }
             assignedStudents = allClassStudents.stream()
                     .filter(Student::isActive)
                     .filter(s -> isYearMatching(s.getYear(), year))
-                    .filter(s -> activityStageOrder <= 0 || s.getStage() == activityStageOrder
-                            || s.getCurrentStage() == activityStageOrder)
+                    .filter(s -> {
+                        int sStage = s.getCurrentStage() > 0 ? s.getCurrentStage() : (s.getStage() > 0 ? s.getStage() : 1);
+                        return activityStageOrder <= 0 || sStage == activityStageOrder;
+                    })
                     .collect(Collectors.toList());
         }
 

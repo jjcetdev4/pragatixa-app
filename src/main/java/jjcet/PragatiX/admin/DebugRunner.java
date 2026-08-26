@@ -12,7 +12,7 @@ import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component
+//@Component
 public class DebugRunner {
     
     @Autowired

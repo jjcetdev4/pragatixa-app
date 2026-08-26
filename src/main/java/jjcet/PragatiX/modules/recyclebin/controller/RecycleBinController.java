@@ -52,4 +52,17 @@ public class RecycleBinController {
                     .body(ApiResponse.error("Failed to delete permanently: " + e.getMessage()));
         }
     }
+
+    @DeleteMapping("/clear")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @Operation(summary = "Clear/Empty the entire Recycle Bin")
+    public ResponseEntity<ApiResponse<Void>> clearRecycleBin() {
+        try {
+            int clearedCount = recycleBinService.clearAllItems();
+            return ResponseEntity.ok(ApiResponse.ok("Recycle bin emptied successfully (" + clearedCount + " items removed)", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to clear recycle bin: " + e.getMessage()));
+        }
+    }
 }

@@ -126,8 +126,8 @@ public class StudentCommandService {
         }
 
         Student student = Student.builder()
-                .regNo(request.getRegNo().trim())
-                .fullName(request.getFullName().trim())
+                .regNo(request.getRegNo() != null ? request.getRegNo().trim().toUpperCase() : null)
+                .fullName(request.getFullName() != null ? request.getFullName().trim().toUpperCase() : null)
                 .email(request.getEmail().trim())
                 .password(passwordEncoder.encode(rawPassword))
                 .phone(request.getPhone() != null ? request.getPhone().trim() : null)
@@ -136,7 +136,7 @@ public class StudentCommandService {
                 .address(request.getAddress())
                 .department(department)
                 .academicYearRef(academicYear)
-                .academicYear(academicYear.getAcademicYear())
+                .academicYear(academicYear != null ? academicYear.getAcademicYear() : null)
                 .yearRef(year)
                 .year(String.valueOf(year.getYearNo()))
                 .semesterRef(semester)
@@ -297,7 +297,7 @@ public class StudentCommandService {
             teamCleanupService.autoDeleteEmptyTeam(oldTeam);
         }
 
-        student.setFullName(request.getFullName().trim());
+        student.setFullName(request.getFullName() != null ? request.getFullName().trim().toUpperCase() : null);
         student.setEmail(request.getEmail().trim());
         student.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
         student.setPhoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000");
@@ -308,7 +308,7 @@ public class StudentCommandService {
 
         student.setDepartment(department);
         student.setAcademicYearRef(academicYear);
-        student.setAcademicYear(academicYear.getAcademicYear());
+        student.setAcademicYear(academicYear != null ? academicYear.getAcademicYear() : null);
         student.setYearRef(year);
         student.setYear(String.valueOf(year.getYearNo()));
         student.setSemesterRef(semester);

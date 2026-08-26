@@ -156,7 +156,6 @@ public class ActivityStageService {
         }
 
         List<ActivityStage> allStages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
-        System.out.println("Rows Before Filter : " + allStages.size());
 
         final jjcet.PragatiX.enums.AcademicYear finalEffectiveYear = effectiveYear;
         List<ActivityStage> stages;

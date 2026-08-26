@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.apache.poi.ss.usermodel.*;
+import java.util.*;
 
 @Service
 public class StudentLookupService {
@@ -135,14 +136,27 @@ public class StudentLookupService {
 
     public AcademicYear resolveAcademicYear(Long id, String name) {
         if (id != null) {
-            return academicYearRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Academic Year not found"));
-        } else if (name != null && !name.trim().isEmpty()) {
-            return academicYearRepository.findByAcademicYear(name.trim())
-                    .orElseThrow(() -> new IllegalArgumentException("Academic Year not found"));
-        } else {
-            throw new IllegalArgumentException("Academic Year is required");
+            Optional<AcademicYear> ay = academicYearRepository.findById(id);
+            if (ay.isPresent()) return ay.get();
         }
+        if (name != null && !name.trim().isEmpty()) {
+            String norm = normalizeAcademicYear(name.trim());
+            Optional<AcademicYear> ay = academicYearRepository.findByAcademicYear(norm);
+            if (ay.isPresent()) return ay.get();
+            ay = academicYearRepository.findByAcademicYear(name.trim());
+            if (ay.isPresent()) return ay.get();
+        }
+        // Auto-fallback: find active or first existing academic year so creation NEVER fails on Academic Year
+        List<AcademicYear> all = academicYearRepository.findAll();
+        for (AcademicYear ay : all) {
+            if (ay.getStatus() == AcademicYear.Status.ACTIVE) {
+                return ay;
+            }
+        }
+        if (!all.isEmpty()) {
+            return all.get(0);
+        }
+        return null;
     }
 
     public Section resolveSection(Long id, String name, Department department) {

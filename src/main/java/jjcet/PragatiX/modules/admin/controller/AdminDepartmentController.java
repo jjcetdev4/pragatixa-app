@@ -36,10 +36,11 @@ public class AdminDepartmentController {
 
     @GetMapping("/departments")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'CLASS_COORDINATOR', 'HOD')")
-    @Operation(summary = "List Departments")
+    @Operation(summary = "List Departments (filter by type: MAIN, SUB, ALL)")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllDepartments(
-            @RequestParam(required = false, defaultValue = "true") boolean all) {
-        return adminDepartmentService.getAllDepartments(all);
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false, defaultValue = "false") boolean all) {
+        return adminDepartmentService.getAllDepartments(type, all);
     }
 
     @PostMapping("/departments")
