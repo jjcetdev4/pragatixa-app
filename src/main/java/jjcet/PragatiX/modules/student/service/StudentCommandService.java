@@ -70,8 +70,9 @@ public class StudentCommandService {
         if (studentRepository.existsByRegNo(request.getRegNo())) {
             return ApiResponse.error("Student ID '" + request.getRegNo() + "' already exists");
         }
-        if (studentRepository.existsByEmail(request.getEmail())) {
-            return ApiResponse.error("Email '" + request.getEmail() + "' is already registered");
+        String cleanEmail = request.getEmail() != null && !request.getEmail().trim().isEmpty() ? request.getEmail().trim() : null;
+        if (cleanEmail != null && studentRepository.existsByEmail(cleanEmail)) {
+            return ApiResponse.error("Email '" + cleanEmail + "' is already registered");
         }
 
         Department department;
@@ -121,14 +122,11 @@ public class StudentCommandService {
         if (studentRepository.existsByRegNo(request.getRegNo().trim())) {
             return ApiResponse.error("Student with Register No '" + request.getRegNo().trim() + "' already exists.");
         }
-        if (studentRepository.existsByEmail(request.getEmail().trim())) {
-            return ApiResponse.error("Student with Email '" + request.getEmail().trim() + "' already exists.");
-        }
 
         Student student = Student.builder()
                 .regNo(request.getRegNo() != null ? request.getRegNo().trim().toUpperCase() : null)
                 .fullName(request.getFullName() != null ? request.getFullName().trim().toUpperCase() : null)
-                .email(request.getEmail().trim())
+                .email(cleanEmail)
                 .password(passwordEncoder.encode(rawPassword))
                 .phone(request.getPhone() != null ? request.getPhone().trim() : null)
                 .phoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000")
@@ -214,11 +212,14 @@ public class StudentCommandService {
             return ApiResponse.error("Student not found with ID: " + id);
         }
 
-        studentRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
-            if (!existing.getId().equals(id)) {
-                throw new RuntimeException("Email already registered by another student");
-            }
-        });
+        String cleanEmail = request.getEmail() != null && !request.getEmail().trim().isEmpty() ? request.getEmail().trim() : null;
+        if (cleanEmail != null) {
+            studentRepository.findByEmail(cleanEmail).ifPresent(existing -> {
+                if (!existing.getId().equals(id)) {
+                    throw new RuntimeException("Email already registered by another student");
+                }
+            });
+        }
 
         String sprNoStr = request.getSprNo() != null ? request.getSprNo().trim() : null;
         if (sprNoStr != null && sprNoStr.isEmpty())
@@ -298,7 +299,7 @@ public class StudentCommandService {
         }
 
         student.setFullName(request.getFullName() != null ? request.getFullName().trim().toUpperCase() : null);
-        student.setEmail(request.getEmail().trim());
+        student.setEmail(cleanEmail);
         student.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
         student.setPhoneNo(request.getPhone() != null ? request.getPhone().trim() : "0000000000");
         student.setAddress(request.getAddress());

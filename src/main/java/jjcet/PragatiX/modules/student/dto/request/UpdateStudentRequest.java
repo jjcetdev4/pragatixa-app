@@ -10,8 +10,6 @@ public class UpdateStudentRequest {
     @Size(max = 255)
     private String fullName;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
     @Size(max = 255)
     private String email;
 

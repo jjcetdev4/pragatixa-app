@@ -454,8 +454,6 @@ public class StudentImportService {
                 List<String> errors = new ArrayList<>();
                 if (regNo.isEmpty())
                     errors.add("Register Number missing");
-                if (email.isEmpty())
-                    errors.add("Email missing");
                 if (name.isEmpty())
                     errors.add("Student Name missing");
 
@@ -477,7 +475,7 @@ public class StudentImportService {
                 req.setRegNo(regNo);
                 req.setDateOfBirth(dob);
                 req.setPhone(phoneNo);
-                req.setEmail(email);
+                req.setEmail(email.isEmpty() ? null : email.trim());
                 req.setGender(gender);
                 req.setYear(year);
                 req.setSemester(semester);
@@ -630,18 +628,22 @@ public class StudentImportService {
                 }
                 
                 
-                if (request.getRegNo() == null || request.getRegNo().trim().isEmpty() ||
-                        request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+                if (request.getRegNo() == null || request.getRegNo().trim().isEmpty()) {
                     continue;
                 }
 
                 String regNo = request.getRegNo().trim();
-                String email = request.getEmail().trim();
+                String email = (request.getEmail() != null && !request.getEmail().trim().isEmpty())
+                        ? request.getEmail().trim()
+                        : null;
 
                 if (processedStudentIds.contains(regNo))
                     return ApiResponse.error("Duplicate Register No '" + regNo + "' found in the uploaded batch.");
-                if (processedEmails.contains(email))
-                    return ApiResponse.error("Duplicate Email '" + email + "' found in the uploaded batch.");
+                if (email != null) {
+                    if (processedEmails.contains(email))
+                        return ApiResponse.error("Duplicate Email '" + email + "' found in the uploaded batch.");
+                    processedEmails.add(email);
+                }
                 if (request.getSprNo() != null && !request.getSprNo().trim().isEmpty()) {
                     String cleanSpr = request.getSprNo().trim();
                     if (processedSprs.contains(cleanSpr))
@@ -650,7 +652,6 @@ public class StudentImportService {
                     processedSprs.add(cleanSpr);
                 }
                 processedStudentIds.add(regNo);
-                processedEmails.add(email);
 
                 // Reduced row-level logging to prevent console flooding
                 // log.debug("Validating row for {}", request.getFullName());
@@ -703,7 +704,8 @@ public class StudentImportService {
                 String rawPassword = dob != null ? dob.format(DateTimeFormatter.ofPattern("ddMMyyyy")) : regNo;
                 String encodedPassword = passwordEncoder.encode(rawPassword);
 
-                Student student = studentRepository.findByRegNo(regNo).or(() -> studentRepository.findByEmail(email))
+                Student student = studentRepository.findByRegNo(regNo)
+                        .or(() -> email != null ? studentRepository.findByEmail(email) : java.util.Optional.empty())
                         .orElse(null);
 
                 if (student != null) {
@@ -715,10 +717,12 @@ public class StudentImportService {
                                     + duplicateSpr.get().getFullName());
                         }
                     }
-                    java.util.Optional<Student> duplicateEmail = studentRepository.findByEmail(email);
-                    if (duplicateEmail.isPresent() && !duplicateEmail.get().getId().equals(student.getId())) {
-                        return ApiResponse.error("Email '" + email + "' is already assigned to student: "
-                                + duplicateEmail.get().getFullName());
+                    if (email != null) {
+                        java.util.Optional<Student> duplicateEmail = studentRepository.findByEmail(email);
+                        if (duplicateEmail.isPresent() && !duplicateEmail.get().getId().equals(student.getId())) {
+                            return ApiResponse.error("Email '" + email + "' is already assigned to student: "
+                                    + duplicateEmail.get().getFullName());
+                        }
                     }
 
                     student.setFullName(request.getFullName().trim());
@@ -758,7 +762,7 @@ public class StudentImportService {
                         guardian.setGuardianName(gDto.getGuardianName());
                         try {
                             guardian.setRelationship(
-                                    StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()));
+                                     StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()));
                         } catch (Exception e) {
                             guardian.setRelationship(StudentGuardian.RelationshipType.GUARDIAN);
                         }
@@ -772,7 +776,7 @@ public class StudentImportService {
                 } else {
                     if (studentRepository.existsByRegNo(regNo))
                         return ApiResponse.error("Student Register No '" + regNo + "' already exists.");
-                    if (studentRepository.existsByEmail(email))
+                    if (email != null && studentRepository.existsByEmail(email))
                         return ApiResponse.error("Email '" + email + "' already exists.");
                     if (request.getSprNo() != null && !request.getSprNo().trim().isEmpty()) {
                         String cleanSpr = request.getSprNo().trim();
