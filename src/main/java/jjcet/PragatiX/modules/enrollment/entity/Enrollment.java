@@ -29,7 +29,7 @@ public class Enrollment implements SoftDeletable {
     private String gender;
 
     @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
-    @Column(name = "email", nullable = false, length = 255)
+    @Column(name = "email", nullable = true, length = 255)
     private String email;
 
     @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
