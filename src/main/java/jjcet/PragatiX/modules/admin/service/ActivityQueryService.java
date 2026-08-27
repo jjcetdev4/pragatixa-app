@@ -445,7 +445,7 @@ public class ActivityQueryService {
 
         for (jjcet.PragatiX.entity.ActivityStageMapping mapping : mappings) {
             Activity act = mapping.getActivity();
-            if (act != null) {
+            if (act != null && !act.isDeleted()) {
                 boolean isActive = (act.getStatus() == null || "ACTIVE".equalsIgnoreCase(act.getStatus()));
                 if (isActive) {
                     mappedActivities.add(act);
@@ -456,7 +456,7 @@ public class ActivityQueryService {
 
         // 2. Include legacy activities mapped directly via activity.stage_id
         for (Activity act : legacyActivities) {
-            if (act != null) {
+            if (act != null && !act.isDeleted()) {
                 boolean isActive = (act.getStatus() == null || "ACTIVE".equalsIgnoreCase(act.getStatus()));
                 if (!mappedActivityIds.contains(act.getId()) && isActive) {
                     mappedActivities.add(act);

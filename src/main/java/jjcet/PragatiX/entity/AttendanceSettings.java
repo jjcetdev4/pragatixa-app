@@ -66,8 +66,20 @@ public class AttendanceSettings {
     @Column(name = "last_daily_run")
     private LocalDateTime lastDailyRun;
 
+    @Column(name = "last_daily_run_type", length = 20)
+    private String lastDailyRunType; // "MANUAL", "AUTOMATIC"
+
+    @Column(name = "last_daily_run_status", length = 20)
+    private String lastDailyRunStatus; // "SUCCESS", "FAILED", "RUNNING", "WAITING"
+
     @Column(name = "last_weekly_run")
     private LocalDateTime lastWeeklyRun;
+
+    @Column(name = "last_weekly_run_type", length = 20)
+    private String lastWeeklyRunType; // "MANUAL", "AUTOMATIC"
+
+    @Column(name = "last_weekly_run_status", length = 20)
+    private String lastWeeklyRunStatus; // "SUCCESS", "FAILED", "RUNNING", "WAITING"
 
     @Column(name = "daily_engine_status", length = 20)
     private String dailyEngineStatus = "WAITING";
@@ -248,12 +260,44 @@ public class AttendanceSettings {
         this.lastDailyRun = lastDailyRun;
     }
 
+    public String getLastDailyRunType() {
+        return lastDailyRunType;
+    }
+
+    public void setLastDailyRunType(String lastDailyRunType) {
+        this.lastDailyRunType = lastDailyRunType;
+    }
+
+    public String getLastDailyRunStatus() {
+        return lastDailyRunStatus;
+    }
+
+    public void setLastDailyRunStatus(String lastDailyRunStatus) {
+        this.lastDailyRunStatus = lastDailyRunStatus;
+    }
+
     public LocalDateTime getLastWeeklyRun() {
         return lastWeeklyRun;
     }
 
     public void setLastWeeklyRun(LocalDateTime lastWeeklyRun) {
         this.lastWeeklyRun = lastWeeklyRun;
+    }
+
+    public String getLastWeeklyRunType() {
+        return lastWeeklyRunType;
+    }
+
+    public void setLastWeeklyRunType(String lastWeeklyRunType) {
+        this.lastWeeklyRunType = lastWeeklyRunType;
+    }
+
+    public String getLastWeeklyRunStatus() {
+        return lastWeeklyRunStatus;
+    }
+
+    public void setLastWeeklyRunStatus(String lastWeeklyRunStatus) {
+        this.lastWeeklyRunStatus = lastWeeklyRunStatus;
     }
 
     public String getDailyEngineStatus() {

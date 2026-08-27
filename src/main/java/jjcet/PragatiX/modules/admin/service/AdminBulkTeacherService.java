@@ -219,6 +219,9 @@ public class AdminBulkTeacherService {
                 return ApiResponse.error("Invalid template. Please download the latest template.");
             }
 
+            Set<Long> excelHodDeptIds = new HashSet<>();
+            Set<String> excelCcClasses = new HashSet<>();
+
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
                 int rowNum = row.getRowNum() + 1;
@@ -276,6 +279,14 @@ public class AdminBulkTeacherService {
                 
                 boolean isCC = subRole.equalsIgnoreCase("CC");
                 boolean isHOD = subRole.equalsIgnoreCase("HOD");
+
+                if (isHOD) {
+                    if (excelHodDeptIds.contains(department.getId())) {
+                        errors.add("Row " + rowNum + ": Duplicate HOD for department '" + department.getName() + "' in this upload file.");
+                        continue;
+                    }
+                    excelHodDeptIds.add(department.getId());
+                }
                 
                 if (isCC && yearStr.isEmpty()) {
                     errors.add("Row " + rowNum + ": Year is required for CC.");
@@ -288,6 +299,12 @@ public class AdminBulkTeacherService {
                         errors.add("Row " + rowNum + ": Invalid year. Allowed values are I, II, III and IV.");
                         continue;
                     }
+                    String ccKey = department.getId() + "_" + acYear.name() + "_" + sectionName.trim().toUpperCase();
+                    if (excelCcClasses.contains(ccKey)) {
+                        errors.add("Row " + rowNum + ": Duplicate CC for this class in this upload file.");
+                        continue;
+                    }
+                    excelCcClasses.add(ccKey);
                 }
                 
                 if (!isCC && !sectionName.isEmpty()) {

@@ -1,6 +1,7 @@
 package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,14 +15,20 @@ public class SmsNotification {
     @Column(name = "student_id", nullable = false)
     private Long studentId;
 
-    @Column(name = "guardian_phone", nullable = false, length = 15)
+    @Column(name = "attendance_date")
+    private LocalDate attendanceDate;
+
+    @Column(name = "period_no")
+    private Integer periodNo;
+
+    @Column(name = "guardian_phone", nullable = false, length = 20)
     private String guardianPhone;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String message;
 
     @Column(nullable = false, length = 50)
-    private String provider = "TWILIO";
+    private String provider = "AIRTEL";
 
     @Column(nullable = false, length = 50)
     private String status;
@@ -58,6 +65,22 @@ public class SmsNotification {
 
     public void setStudentId(Long studentId) {
         this.studentId = studentId;
+    }
+
+    public LocalDate getAttendanceDate() {
+        return attendanceDate;
+    }
+
+    public void setAttendanceDate(LocalDate attendanceDate) {
+        this.attendanceDate = attendanceDate;
+    }
+
+    public Integer getPeriodNo() {
+        return periodNo;
+    }
+
+    public void setPeriodNo(Integer periodNo) {
+        this.periodNo = periodNo;
     }
 
     public String getGuardianPhone() {
@@ -100,6 +123,14 @@ public class SmsNotification {
         this.twilioSid = twilioSid;
     }
 
+    public String getMessageRequestId() {
+        return twilioSid;
+    }
+
+    public void setMessageRequestId(String messageRequestId) {
+        this.twilioSid = messageRequestId;
+    }
+
     public String getErrorMessage() {
         return errorMessage;
     }
@@ -110,5 +141,9 @@ public class SmsNotification {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

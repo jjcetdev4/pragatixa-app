@@ -26,7 +26,11 @@ public class AttendanceSettingsDto {
     private String testDate; // "yyyy-MM-dd"
     private String testTime; // "HH:mm:ss"
     private String lastDailyRun; // ISO datetime string
+    private String lastDailyRunType; // "MANUAL", "AUTOMATIC"
+    private String lastDailyRunStatus; // "SUCCESS", "FAILED", "RUNNING", "WAITING"
     private String lastWeeklyRun; // ISO datetime string
+    private String lastWeeklyRunType; // "MANUAL", "AUTOMATIC"
+    private String lastWeeklyRunStatus; // "SUCCESS", "FAILED", "RUNNING", "WAITING"
     private String dailyEngineStatus;
     private String weeklyEngineStatus;
 
@@ -168,12 +172,44 @@ public class AttendanceSettingsDto {
         this.lastDailyRun = lastDailyRun;
     }
 
+    public String getLastDailyRunType() {
+        return lastDailyRunType;
+    }
+
+    public void setLastDailyRunType(String lastDailyRunType) {
+        this.lastDailyRunType = lastDailyRunType;
+    }
+
+    public String getLastDailyRunStatus() {
+        return lastDailyRunStatus;
+    }
+
+    public void setLastDailyRunStatus(String lastDailyRunStatus) {
+        this.lastDailyRunStatus = lastDailyRunStatus;
+    }
+
     public String getLastWeeklyRun() {
         return lastWeeklyRun;
     }
 
     public void setLastWeeklyRun(String lastWeeklyRun) {
         this.lastWeeklyRun = lastWeeklyRun;
+    }
+
+    public String getLastWeeklyRunType() {
+        return lastWeeklyRunType;
+    }
+
+    public void setLastWeeklyRunType(String lastWeeklyRunType) {
+        this.lastWeeklyRunType = lastWeeklyRunType;
+    }
+
+    public String getLastWeeklyRunStatus() {
+        return lastWeeklyRunStatus;
+    }
+
+    public void setLastWeeklyRunStatus(String lastWeeklyRunStatus) {
+        this.lastWeeklyRunStatus = lastWeeklyRunStatus;
     }
 
     public String getDailyEngineStatus() {

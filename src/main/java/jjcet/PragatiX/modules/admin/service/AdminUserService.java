@@ -162,6 +162,11 @@ public class AdminUserService {
             }
         }
 
+        String conflictError = validateHodAndCcUniqueness(null, isHOD, isCC, department, academicYearEnum, request.getYear(), section);
+        if (conflictError != null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(conflictError));
+        }
+
         User user = User.builder()
                 .username(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -278,6 +283,14 @@ public class AdminUserService {
                 assignedYear = yearRepository.findByYearNo(yearNo).orElse(null);
             }
         }
+
+        if (request.isActive()) {
+            String conflictError = validateHodAndCcUniqueness(id, isHOD, isCC, department, academicYearEnum, request.getYear(), section);
+            if (conflictError != null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(conflictError));
+            }
+        }
+
         user.setAcademicYear(academicYearEnum);
         user.setAssignedYear(assignedYear);
 
@@ -361,4 +374,70 @@ public class AdminUserService {
         return subRoles;
     }
 
+    private String validateHodAndCcUniqueness(Long targetUserId, boolean isHOD, boolean isCC, Department department, AcademicYear academicYearEnum, String yearStr, Section section) {
+        if (isHOD) {
+            if (department == null) {
+                return "Department is required for HOD.";
+            }
+            List<User> existingHods = userRepository.findAll().stream()
+                    .filter(u -> !u.isDeleted() && u.isActive())
+                    .filter(u -> (targetUserId == null || !u.getId().equals(targetUserId)))
+                    .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(department.getId()))
+                    .filter(u -> u.getSubRoles().stream().anyMatch(sr -> "HOD".equalsIgnoreCase(sr.getName()) || "ROLE_HOD".equalsIgnoreCase(sr.getName())))
+                    .collect(Collectors.toList());
+            if (!existingHods.isEmpty()) {
+                String existingName = existingHods.get(0).getFullName() != null && !existingHods.get(0).getFullName().trim().isEmpty()
+                        ? existingHods.get(0).getFullName().trim()
+                        : existingHods.get(0).getEmail();
+                return "Department '" + department.getName() + "' already has an assigned HOD: " + existingName;
+            }
+        }
+
+        if (isCC) {
+            if (department == null) {
+                return "Department is required for Class Coordinator (CC).";
+            }
+            if (academicYearEnum == null && (yearStr == null || yearStr.trim().isEmpty())) {
+                return "Year is required for Class Coordinator (CC).";
+            }
+
+            final AcademicYear targetYearEnum = academicYearEnum;
+            final String targetYearStr = yearStr;
+            final Section targetSection = section;
+
+            List<User> existingCcs = userRepository.findAll().stream()
+                    .filter(u -> !u.isDeleted() && u.isActive())
+                    .filter(u -> (targetUserId == null || !u.getId().equals(targetUserId)))
+                    .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(department.getId()))
+                    .filter(u -> u.getSubRoles().stream().anyMatch(sr -> "CC".equalsIgnoreCase(sr.getName()) || "ROLE_CC".equalsIgnoreCase(sr.getName()) || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName())))
+                    .filter(u -> isMatchingUserYear(u, targetYearEnum, targetYearStr))
+                    .filter(u -> isMatchingUserSection(u, targetSection))
+                    .collect(Collectors.toList());
+            if (!existingCcs.isEmpty()) {
+                String existingName = existingCcs.get(0).getFullName() != null && !existingCcs.get(0).getFullName().trim().isEmpty()
+                        ? existingCcs.get(0).getFullName().trim()
+                        : existingCcs.get(0).getEmail();
+                String secName = (targetSection != null) ? " Section " + targetSection.getSectionName() : "";
+                String yrName = (targetYearEnum != null) ? " " + targetYearEnum.name() : (targetYearStr != null ? " Year " + targetYearStr : "");
+                return "A Class Coordinator (CC) is already assigned for " + department.getName() + yrName + secName + ": " + existingName;
+            }
+        }
+        return null;
+    }
+
+    private boolean isMatchingUserYear(User u, AcademicYear targetEnum, String targetYearStr) {
+        if (targetEnum != null && u.getAcademicYear() != null) {
+            if (u.getAcademicYear() == targetEnum) return true;
+        }
+        String uYear = u.getYear() != null ? u.getYear() : (u.getAcademicYear() != null ? u.getAcademicYear().name() : null);
+        String targetYear = targetYearStr != null ? targetYearStr : (targetEnum != null ? targetEnum.name() : null);
+        return jjcet.PragatiX.admin.service.TeamValidationService.isMatchingYear(uYear, targetYear);
+    }
+
+    private boolean isMatchingUserSection(User u, Section targetSection) {
+        if (targetSection == null) {
+            return u.getSection() == null;
+        }
+        return u.getSection() != null && u.getSection().getId().equals(targetSection.getId());
+    }
 }

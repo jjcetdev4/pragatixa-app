@@ -2,6 +2,7 @@ package jjcet.PragatiX.admin.service;
 
 import jjcet.PragatiX.entity.ActivityAssignment;
 import jjcet.PragatiX.entity.Role;
+import jjcet.PragatiX.entity.Student;
 import jjcet.PragatiX.entity.SubRole;
 import jjcet.PragatiX.entity.User;
 import jjcet.PragatiX.modules.activity.service.AssignmentSecurityService;
@@ -89,8 +90,30 @@ public class TeamValidationService {
         if (authUtils.isAdmin(user)) {
             String adminYear = jjcet.PragatiX.modules.authentication.security.AuthUtils
                     .getAssignedYearString(user.getAcademicYear());
-            if (adminYear != null && adminYear.equals(team.getYear())) {
+            if (adminYear == null) {
                 return true;
+            }
+            if (isMatchingYear(adminYear, team.getYear())) {
+                return true;
+            }
+            if (team.getCaptain() != null) {
+                if (team.getCaptain().getYearRef() != null &&
+                        isMatchingYear(adminYear, String.valueOf(team.getCaptain().getYearRef().getYearNo()))) {
+                    return true;
+                }
+                if (isMatchingYear(adminYear, team.getCaptain().getYear())) {
+                    return true;
+                }
+            }
+            if (team.getMembers() != null && !team.getMembers().isEmpty()) {
+                for (Student m : team.getMembers()) {
+                    if (m.getYearRef() != null && isMatchingYear(adminYear, String.valueOf(m.getYearRef().getYearNo()))) {
+                        return true;
+                    }
+                    if (isMatchingYear(adminYear, m.getYear())) {
+                        return true;
+                    }
+                }
             }
             throw new org.springframework.security.access.AccessDeniedException(
                     "You do not have permission to view this team's details.");
@@ -149,5 +172,22 @@ public class TeamValidationService {
 
         throw new org.springframework.security.access.AccessDeniedException(
                 "You do not have permission to manage this team.");
+    }
+
+    public static boolean isMatchingYear(String yearA, String yearB) {
+        if (yearA == null || yearB == null) return false;
+        String a = normalizeYear(yearA);
+        String b = normalizeYear(yearB);
+        return a != null && a.equals(b);
+    }
+
+    public static String normalizeYear(String year) {
+        if (year == null) return null;
+        String clean = year.trim().toUpperCase();
+        if (clean.equals("1") || clean.contains("FIRST") || clean.contains("1ST") || clean.equals("I")) return "1";
+        if (clean.equals("2") || clean.contains("SECOND") || clean.contains("2ND") || clean.equals("II")) return "2";
+        if (clean.equals("3") || clean.contains("THIRD") || clean.contains("3RD") || clean.equals("III")) return "3";
+        if (clean.equals("4") || clean.contains("FOURTH") || clean.contains("4TH") || clean.equals("IV")) return "4";
+        return clean;
     }
 }

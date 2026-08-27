@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,20 +26,57 @@ public class StudentAttendanceService {
 
     @Transactional(readOnly = true)
     public StudentAttendanceSummaryResponse getSummary(Long studentId) {
-        long totalPresent = attendanceRepository.countByStudentIdAndStatus(studentId,
-                Attendance.AttendanceStatus.PRESENT);
-        long totalAbsent = attendanceRepository.countByStudentIdAndStatus(studentId,
-                Attendance.AttendanceStatus.ABSENT);
-        long totalDays = totalPresent + totalAbsent;
-        double overallPercentage = totalDays == 0 ? 0 : ((double) totalPresent / totalDays) * 100.0;
+        List<Attendance> allRecords = attendanceRepository.findByStudentIdOrderByAttendanceDateDescPeriodNoDesc(studentId);
+
+        // Group attendance records by attendance date to calculate DAY-WISE counts
+        Map<LocalDate, List<Attendance>> recordsByDate = allRecords.stream()
+                .filter(r -> r.getAttendanceDate() != null)
+                .collect(Collectors.groupingBy(Attendance::getAttendanceDate));
+
+        long totalPresentDays = 0;
+        long totalAbsentDays = 0;
 
         LocalDate now = LocalDate.now();
-        long monthPresent = attendanceRepository.countByStudentIdAndMonthAndYearAndStatus(studentId,
-                now.getMonthValue(), now.getYear(), Attendance.AttendanceStatus.PRESENT);
-        long monthAbsent = attendanceRepository.countByStudentIdAndMonthAndYearAndStatus(studentId, now.getMonthValue(),
-                now.getYear(), Attendance.AttendanceStatus.ABSENT);
-        long monthTotal = monthPresent + monthAbsent;
-        double monthlyPercentage = monthTotal == 0 ? 0 : ((double) monthPresent / monthTotal) * 100.0;
+        long monthPresentDays = 0;
+        long monthAbsentDays = 0;
+
+        for (Map.Entry<LocalDate, List<Attendance>> entry : recordsByDate.entrySet()) {
+            LocalDate date = entry.getKey();
+            List<Attendance> dayRecords = entry.getValue();
+
+            if (dayRecords.isEmpty()) {
+                continue;
+            }
+
+            long presentCount = dayRecords.stream()
+                    .filter(r -> r.getStatus() == Attendance.AttendanceStatus.PRESENT || r.getStatus() == Attendance.AttendanceStatus.OD)
+                    .count();
+            long absentCount = dayRecords.stream()
+                    .filter(r -> r.getStatus() == Attendance.AttendanceStatus.ABSENT)
+                    .count();
+
+            // A student is considered Present for the Day if they have no absences on that marked day
+            boolean isPresentDay = (absentCount == 0 && presentCount > 0);
+            boolean isAbsentDay = (absentCount > 0);
+
+            if (isPresentDay) {
+                totalPresentDays++;
+                if (date.getMonthValue() == now.getMonthValue() && date.getYear() == now.getYear()) {
+                    monthPresentDays++;
+                }
+            } else if (isAbsentDay) {
+                totalAbsentDays++;
+                if (date.getMonthValue() == now.getMonthValue() && date.getYear() == now.getYear()) {
+                    monthAbsentDays++;
+                }
+            }
+        }
+
+        long totalDays = totalPresentDays + totalAbsentDays;
+        double overallPercentage = totalDays == 0 ? 0.0 : ((double) totalPresentDays / totalDays) * 100.0;
+
+        long monthTotalDays = monthPresentDays + monthAbsentDays;
+        double monthlyPercentage = monthTotalDays == 0 ? 0.0 : ((double) monthPresentDays / monthTotalDays) * 100.0;
 
         Streak existingStreak = streakRepository.findByStudentIdAndStreakType(studentId, "ATTENDANCE").orElse(null);
         int streak = existingStreak != null ? existingStreak.getCurrentStreak() : 0;
@@ -47,8 +85,8 @@ public class StudentAttendanceService {
         res.setAttendancePercentage(Math.round(overallPercentage * 100.0) / 100.0);
         res.setMonthlyAttendancePercentage(Math.round(monthlyPercentage * 100.0) / 100.0);
         res.setCurrentStreak(streak);
-        res.setTotalPresentDays(totalPresent);
-        res.setTotalAbsentDays(totalAbsent);
+        res.setTotalPresentDays(totalPresentDays);
+        res.setTotalAbsentDays(totalAbsentDays);
 
         return res;
     }

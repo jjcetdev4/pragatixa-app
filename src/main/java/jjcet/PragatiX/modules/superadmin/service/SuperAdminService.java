@@ -6,13 +6,16 @@ import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import jjcet.PragatiX.modules.superadmin.dto.YearAdminResponse;
 import jjcet.PragatiX.modules.superadmin.dto.AssignAcademicYearRequest;
 import jjcet.PragatiX.enums.AcademicYear;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -25,6 +28,9 @@ public class SuperAdminService {
     private final jjcet.PragatiX.repository.ActivityAssignmentRepository activityAssignmentRepository;
     private final jjcet.PragatiX.repository.YearRepository yearRepository;
     private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
+
+    @Autowired(required = false)
+    private JdbcTemplate jdbcTemplate;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -41,6 +47,17 @@ public class SuperAdminService {
         this.activityAssignmentRepository = activityAssignmentRepository;
         this.yearRepository = yearRepository;
         this.auditService = auditService;
+    }
+
+    @PostConstruct
+    public void initSchema() {
+        if (jdbcTemplate != null) {
+            try {
+                jdbcTemplate.execute("ALTER TABLE users MODIFY COLUMN year VARCHAR(50)");
+            } catch (Exception e) {
+                System.out.println("Users year column modify notice: " + e.getMessage());
+            }
+        }
     }
 
     public ResponseEntity<ApiResponse<Void>> refreshDbCache() {
@@ -82,11 +99,34 @@ public class SuperAdminService {
     @Transactional
     public ResponseEntity<ApiResponse<YearAdminResponse>> createYearAdmin(
             jjcet.PragatiX.modules.superadmin.dto.CreateYearAdminRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Username already exists"));
+        
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Full name is required"));
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Email already registered"));
+
+        String username = request.getUsername();
+        if (username == null || username.trim().isEmpty()) {
+            // Auto generate unique username from full name
+            String base = request.getFullName().trim().toLowerCase().replaceAll("[^a-z0-9_]", "_");
+            if (base.isEmpty()) {
+                base = "admin";
+            }
+            username = base;
+            int counter = 1;
+            while (userRepository.existsByUsername(username)) {
+                username = base + "_" + counter;
+                counter++;
+            }
+        } else {
+            if (userRepository.existsByUsername(username)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Username already exists"));
+            }
+        }
+
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Email already registered"));
+            }
         }
 
         if (request.getAssignedYearId() == null) {
@@ -115,15 +155,25 @@ public class SuperAdminService {
             else if (year.getYearNo() == 4) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR;
         }
 
+        String rawPassword = request.getPassword();
+        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+            rawPassword = "Admin@" + (int)(Math.random() * 9000 + 1000);
+        }
+
+        String yearStr = year.getYearName();
+        if (yearStr != null && yearStr.length() > 50) {
+            yearStr = yearStr.substring(0, 50);
+        }
+
         User user = User.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .username(username)
+                .password(passwordEncoder.encode(rawPassword))
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .roles(roles)
                 .assignedYear(year)
-                .year(year.getYearName())
+                .year(yearStr)
                 .academicYear(mappedAcademicYear)
                 .active(request.isActive())
                 .build();
@@ -173,22 +223,28 @@ public class SuperAdminService {
             return ResponseEntity.badRequest().body(ApiResponse.error("User is not a Year Admin"));
         }
 
-        if (userRepository.existsByUsernameAndIdNot(request.getUsername(), admin.getId())) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Username already exists"));
+        if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
+            admin.setFullName(request.getFullName().trim().toUpperCase());
         }
+
+        if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
+            if (userRepository.existsByUsernameAndIdNot(request.getUsername(), admin.getId())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Username already exists"));
+            }
+            admin.setUsername(request.getUsername().trim());
+        }
+
         if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
             if (userRepository.existsByEmailAndIdNot(request.getEmail(), admin.getId())) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Email already registered"));
             }
+            admin.setEmail(request.getEmail());
         }
 
-        // Update fields
-        admin.setFullName(request.getFullName());
-        admin.setUsername(request.getUsername());
+        // Update password only if provided
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
             admin.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        admin.setEmail(request.getEmail());
         admin.setPhone(request.getPhone());
         admin.setActive(request.isActive());
 
@@ -210,8 +266,13 @@ public class SuperAdminService {
                 else if (year.getYearNo() == 4) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR;
             }
 
+            String yearStr = year.getYearName();
+            if (yearStr != null && yearStr.length() > 50) {
+                yearStr = yearStr.substring(0, 50);
+            }
+
             admin.setAssignedYear(year);
-            admin.setYear(year.getYearName());
+            admin.setYear(yearStr);
             admin.setAcademicYear(mappedAcademicYear);
         } else {
             return ResponseEntity.badRequest().body(ApiResponse.error("Assigned Academic Year is required"));

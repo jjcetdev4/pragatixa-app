@@ -100,7 +100,15 @@ public class LeaderboardService {
 
         List<StudentResponse> responses = students.stream()
                 .map(studentMapper::toResponse)
-                .sorted((a, b) -> Integer.compare(b.getScore(), a.getScore()))
+                .sorted((a, b) -> {
+                    int cmp = Integer.compare(b.getScore(), a.getScore());
+                    if (cmp != 0) return cmp;
+                    cmp = Integer.compare(b.getTotalXp(), a.getTotalXp());
+                    if (cmp != 0) return cmp;
+                    String nameA = a.getFullName() != null ? a.getFullName() : "";
+                    String nameB = b.getFullName() != null ? b.getFullName() : "";
+                    return nameA.compareToIgnoreCase(nameB);
+                })
                 .collect(Collectors.toList());
 
         return ApiResponse.ok(responses);

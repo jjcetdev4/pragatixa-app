@@ -528,12 +528,16 @@ public class ActivityCrudService {
         activity.setDeleted(true);
         activity.setDeletedAt(java.time.LocalDateTime.now());
         activity.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
+        activity.setStage(null);
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getName() != null) {
             activity.setDeletedBy(auth.getName());
         }
         
         activityRepository.save(activity);
+
+        // Remove from stage mappings so it no longer appears in any stage
+        activityStageMappingRepository.deleteByActivityId(activityId);
 
         auditService.log(
                 jjcet.PragatiX.enums.AuditAction.DELETE,
@@ -543,7 +547,7 @@ public class ActivityCrudService {
                 "Soft deleted activity: " + activity.getName()
         );
 
-        log.info("Admin deleted activity with ID and all its references: {}", activityId);
+        log.info("Admin soft-deleted activity with ID {} and unlinked stage mappings", activityId);
         return ResponseEntity.ok(ApiResponse.ok("Activity deleted successfully", null));
     }
 
@@ -656,17 +660,26 @@ public class ActivityCrudService {
 
     @Transactional
     public ResponseEntity<ApiResponse<Void>> unmapActivityFromStage(Long stageId, Long activityId) {
-        ActivityStageMapping mapping = activityStageMappingRepository.findByStageIdAndActivityId(stageId, activityId)
-                .orElse(null);
-        if (mapping != null) {
-            activityStageMappingRepository.delete(mapping);
-            return ResponseEntity.ok(ApiResponse.ok("Activity removed from stage successfully", null));
+        boolean removed = false;
+
+        List<ActivityStageMapping> mappings = activityStageMappingRepository.findByActivityId(activityId)
+                .stream()
+                .filter(m -> m.getStage() != null && m.getStage().getId().equals(stageId))
+                .toList();
+        if (!mappings.isEmpty()) {
+            activityStageMappingRepository.deleteAll(mappings);
+            removed = true;
         }
 
         Activity activity = activityRepository.findById(activityId).orElse(null);
         if (activity != null && activity.getStage() != null && activity.getStage().getId().equals(stageId)) {
             activity.setStage(null);
             activityRepository.save(activity);
+            removed = true;
+        }
+
+        if (removed) {
+            log.info("Activity ID {} completely unmapped from Stage ID {}", activityId, stageId);
             return ResponseEntity.ok(ApiResponse.ok("Activity removed from stage successfully", null));
         }
 

@@ -54,12 +54,57 @@ public class TeamQueryService {
         if (currentUser == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
 
-        List<Team> teams = teamRepository.findFilteredTeams(academicYear, departmentId, sectionId);
+        boolean isYearAdmin = currentUser.getRoles().stream()
+                .anyMatch(r -> r.getName() != null && (r.getName().equalsIgnoreCase("ROLE_ADMIN") || r.getName().equalsIgnoreCase("ADMIN")))
+                && !currentUser.getRoles().stream()
+                .anyMatch(r -> r.getName() != null && (r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN") || r.getName().equalsIgnoreCase("ROLE_SUPERADMIN") || r.getName().equalsIgnoreCase("SUPER_ADMIN")));
+
+        String effectiveYear = academicYear;
+        if (isYearAdmin) {
+            String adminYear = jjcet.PragatiX.modules.authentication.security.AuthUtils
+                    .getAssignedYearString(currentUser.getAcademicYear());
+            if (adminYear != null) {
+                effectiveYear = adminYear;
+            }
+        }
+
+        List<Team> teams = teamRepository.findFilteredTeams(effectiveYear, departmentId, sectionId);
+        if (teams.isEmpty() && effectiveYear != null) {
+            teams = teamRepository.findFilteredTeams(null, departmentId, sectionId);
+        }
+
+        final String yearFilter = effectiveYear;
         List<TeamResponse> responses = teams.stream()
                 .filter(team -> {
                     if (team.getCaptain() == null && (team.getMembers() == null || team.getMembers().isEmpty())) {
                         teamCleanupService.autoDeleteEmptyTeam(team);
                         return false;
+                    }
+                    if (yearFilter != null && !yearFilter.equalsIgnoreCase("ALL")) {
+                        boolean yearMatch = TeamValidationService.isMatchingYear(yearFilter, team.getYear());
+                        if (!yearMatch && team.getCaptain() != null) {
+                            if (team.getCaptain().getYearRef() != null) {
+                                yearMatch = TeamValidationService.isMatchingYear(yearFilter, String.valueOf(team.getCaptain().getYearRef().getYearNo()));
+                            }
+                            if (!yearMatch) {
+                                yearMatch = TeamValidationService.isMatchingYear(yearFilter, team.getCaptain().getYear());
+                            }
+                        }
+                        if (!yearMatch && team.getMembers() != null && !team.getMembers().isEmpty()) {
+                            for (Student m : team.getMembers()) {
+                                if (m.getYearRef() != null && TeamValidationService.isMatchingYear(yearFilter, String.valueOf(m.getYearRef().getYearNo()))) {
+                                    yearMatch = true;
+                                    break;
+                                }
+                                if (TeamValidationService.isMatchingYear(yearFilter, m.getYear())) {
+                                    yearMatch = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!yearMatch) {
+                            return false;
+                        }
                     }
                     try {
                         validationService.validateTeamAccess(currentUser, team);
@@ -159,17 +204,17 @@ public class TeamQueryService {
         int maxStage = 1;
 
         for (Student m : allMembers) {
-            jjcet.PragatiX.modules.student.dto.response.StudentProgressionDto progression = studentLevelService
-                    .getStudentProgression(m.getRegNo());
-            int xp = progression.getTotalXp();
-            int stage = 1;
-            String currentLevel = "Explorer";
-            if (progression.getUnlockedLevels() != null && !progression.getUnlockedLevels().isEmpty()) {
-                jjcet.PragatiX.modules.student.dto.response.StudentProgressionDto.LevelDto lastLevel = progression
-                        .getUnlockedLevels().get(progression.getUnlockedLevels().size() - 1);
-                stage = lastLevel.getStage();
-                currentLevel = lastLevel.getTitle() != null ? lastLevel.getTitle() : "Explorer";
-            }
+            jjcet.PragatiX.modules.student.dto.response.StudentProgressionDto progression = null;
+            try {
+                progression = studentLevelService.getStudentProgression(m.getRegNo());
+            } catch (Exception ignored) {}
+
+            int xp = progression != null ? progression.getTotalXp() : m.getTotalXp();
+            int stage = m.getStage() > 0 ? m.getStage() : 1;
+            String currentLevel = (progression != null && progression.getCurrentLevelName() != null)
+                    ? progression.getCurrentLevelName()
+                    : "Explorer";
+
             totalTeamXp += xp;
             if (stage > maxStage)
                 maxStage = stage;
@@ -235,7 +280,8 @@ public class TeamQueryService {
 
         response.setMembers(rankDtos);
         response.setTotalTeamXp(totalTeamXp);
-        response.setStage("Stage " + maxStage);
+        int activeStage = student.getStage() > 0 ? student.getStage() : maxStage;
+        response.setStage("Stage " + activeStage);
         response.setTeamRank(1); // Placeholder for global rank as discussed
 
         return ResponseEntity.ok(ApiResponse.ok("Team leaderboard retrieved successfully", response));

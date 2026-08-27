@@ -116,8 +116,20 @@ public class TeacherAttendanceService {
         for (Student s : students) {
             StudentAttendanceListItemResponse res = new StudentAttendanceListItemResponse();
             res.setStudentId(s.getId());
-            res.setStudentName(s.getFullName());
-            res.setRegisterNumber(s.getRegNo());
+            String name = s.getFullName();
+            if (name == null || name.trim().isEmpty()) {
+                name = s.getUser() != null ? s.getUser().getFullName() : null;
+            }
+            if (name == null || name.trim().isEmpty()) {
+                name = s.getRegNo() != null ? s.getRegNo() : s.getSprNo();
+            }
+            res.setStudentName(name != null ? name.trim() : "Unknown");
+
+            String reg = s.getRegNo();
+            if (reg == null || reg.trim().isEmpty()) {
+                reg = s.getSprNo();
+            }
+            res.setRegisterNumber(reg != null ? reg : "");
 
             Optional<Attendance> recordOpt = attendanceRepository.findByStudentIdAndAttendanceDateAndPeriodNo(s.getId(),
                     date, period);
@@ -192,28 +204,34 @@ public class TeacherAttendanceService {
                         "You are not authorized to mark attendance for students outside your academic year.");
             }
 
-            Attendance attendance = attendanceRepository.findByStudentIdAndAttendanceDateAndPeriodNo(
-                    student.getId(), request.getDate(), request.getPeriod())
-                    .orElseGet(() -> Attendance.builder()
-                            .student(student)
-                            .faculty(teacher)
-                            .regNo(student.getRegNo())
-                            .attendanceDate(request.getDate())
-                            .periodNo(request.getPeriod())
-                            .build());
+            Optional<Attendance> existingOpt = attendanceRepository.findByStudentIdAndAttendanceDateAndPeriodNo(
+                    student.getId(), request.getDate(), request.getPeriod());
 
-            attendance.setStatus(Attendance.AttendanceStatus.valueOf(recordReq.getStatus().name()));
+            Attendance.AttendanceStatus oldStatus = existingOpt.map(Attendance::getStatus).orElse(null);
+            Attendance.AttendanceStatus newStatus = Attendance.AttendanceStatus.valueOf(recordReq.getStatus().name());
+
+            Attendance attendance = existingOpt.orElseGet(() -> Attendance.builder()
+                    .student(student)
+                    .faculty(teacher)
+                    .regNo(student.getRegNo())
+                    .attendanceDate(request.getDate())
+                    .periodNo(request.getPeriod())
+                    .build());
+
+            attendance.setStatus(newStatus);
             attendance.setRemarks(recordReq.getRemarks());
 
             attendanceRepository.save(attendance);
             count++;
 
-            if (attendance.getStatus() == Attendance.AttendanceStatus.ABSENT) {
+            // Trigger absence notification ONLY when student is marked ABSENT (e.g. PRESENT -> ABSENT, or initial ABSENT)
+            // If already ABSENT (ABSENT -> ABSENT), or PRESENT, no SMS is triggered.
+            if (newStatus == Attendance.AttendanceStatus.ABSENT && oldStatus != Attendance.AttendanceStatus.ABSENT) {
                 try {
                     notificationService.sendAbsenceNotification(student.getId(), request.getDate(),
                             request.getPeriod());
                 } catch (Exception e) {
-                    log.error("Failed to queue SMS notification for student {}", student.getRegNo(), e);
+                    log.error("Failed to trigger SMS notification for student {}", student.getRegNo(), e);
                 }
             }
         }

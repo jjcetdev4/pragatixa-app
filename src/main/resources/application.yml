@@ -73,3 +73,28 @@ zepto:
     template-key: 2518b.27e5cd5171e7cdd6.k1.3c2208d0-9356-11f1-8e34-d2cf08f4ca8c.19fe29d81dd
     sender-address: noreply@pragatix.in
     sender-name: Pragatix
+
+sms:
+  provider: AIRTEL
+  fallback-enabled: false
+  test-endpoint-enabled: true
+
+airtel:
+  sms:
+    enabled: true
+    url: https://iqsms.airtel.in/api/v1/send-sms
+    customer-id: d6c8a572-be52-4a2d-b856-a900cfa706f8
+    username: da34b3c7_6989_43c8_bc42_5e222bcbf9bf
+    password: N4EP4Df16M
+    dlt-template-id: 1077017800020412986
+    entity-id: 1001957316262867460
+    source-address: JJECTR
+    message-type: SERVICE_IMPLICIT
+
+twilio:
+  account:
+    sid: ACca4ac3e3458e54f87188d5a48043dfcf
+  auth:
+    token: e0980e6cd9f00cc2acef81fea5d76388
+  phone:
+    number: "+16206701804"

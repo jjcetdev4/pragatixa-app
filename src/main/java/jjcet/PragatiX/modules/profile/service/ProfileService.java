@@ -299,7 +299,7 @@ public class ProfileService {
         d.setCurrentXp(student.getTotalXp());
         d.setCurrentStage("Stage " + student.getStage());
         d.setCurrentLevel(String.valueOf(student.getStage()));
-        d.setRank(studentRepository.getStudentRankByTotalXp(student.getTotalXp()));
+        d.setRank(studentRepository.getStudentRankByScore(student.getScore()));
         d.setAttendancePercentage(0.0);
         d.setTeamName(student.getTeam() != null ? student.getTeam().getName() : "N/A");
         d.setCaptain(isCap);

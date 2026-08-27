@@ -281,4 +281,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        @Query("SELECT COUNT(s) + 1 FROM Student s WHERE s.active = true AND s.totalXp > :xp")
        int getStudentRankByTotalXp(@Param("xp") int xp);
+
+       @Query("SELECT COUNT(s) + 1 FROM Student s WHERE s.active = true AND s.score > :score")
+       int getStudentRankByScore(@Param("score") int score);
 }

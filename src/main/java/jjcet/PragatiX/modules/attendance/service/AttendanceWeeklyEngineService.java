@@ -1,9 +1,12 @@
 package jjcet.PragatiX.modules.attendance.service;
 
 import jjcet.PragatiX.entity.Attendance;
+import jjcet.PragatiX.entity.AttendanceEngineExecution;
+import jjcet.PragatiX.entity.AttendanceSettings;
 import jjcet.PragatiX.entity.Student;
 import jjcet.PragatiX.enums.AcademicYear;
 import jjcet.PragatiX.modules.academiccalendar.service.AcademicCalendarResolver;
+import jjcet.PragatiX.modules.attendance.repository.AttendanceEngineExecutionRepository;
 import jjcet.PragatiX.modules.attendance.repository.AttendanceRepository;
 import jjcet.PragatiX.modules.attendancesettings.repository.AttendanceSettingsRepository;
 import jjcet.PragatiX.modules.attendancesettings.service.EngineClockService;
@@ -16,12 +19,8 @@ import jjcet.PragatiX.modules.academiccalendar.repository.AcademicWeekRepository
 import jjcet.PragatiX.modules.student.service.XpEngineService;
 import jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository;
 import jjcet.PragatiX.repository.XpTransactionRepository;
-import jjcet.PragatiX.entity.StudentActivityXp;
-import jjcet.PragatiX.entity.AttendanceSettings;
-
 import jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository;
 import jjcet.PragatiX.entity.ActivityStageMapping;
-
 import jjcet.PragatiX.entity.ActivityAssignment;
 import jjcet.PragatiX.entity.ActivityStage;
 import jjcet.PragatiX.repository.ActivityAssignmentRepository;
@@ -34,21 +33,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * AttendanceWeeklyEngineService - executes the Weekly Attendance Engine for a
- * given Academic Year.
- *
- * Uses EngineClockService to respect Production vs Test Mode.
- * Logs detailed results per student.
- * XP reward transactions will be applied in the next XP Engine step.
+ * AttendanceWeeklyEngineService - executes the Weekly Attendance Engine for a given Academic Year.
+ * 
+ * Unified service for both Manual Trigger and Automatic Cron Scheduler.
+ * Features:
+ * - Weekly full-attendance award calculation (all working days present)
+ * - Strict duplicate protection per student + week
+ * - Execution History tracking (AttendanceEngineExecution)
+ * - Concurrency protection
+ * - Independent from daily streak logic (does NOT touch streak)
  */
 @Service
 public class AttendanceWeeklyEngineService {
@@ -79,63 +82,153 @@ public class AttendanceWeeklyEngineService {
     private StudentActivityXpRepository studentActivityXpRepository;
     @Autowired
     private XpTransactionRepository xpTransactionRepository;
-
     @Autowired
     private ActivityStageMappingRepository activityStageMappingRepository;
     @Autowired
     private AcademicWeekRepository academicWeekRepository;
+    @Autowired
+    private AttendanceEngineExecutionRepository executionRepository;
+
+    public AttendanceWeeklyEngineService(StudentRepository studentRepository,
+            AttendanceRepository attendanceRepository,
+            ActivityStageMappingRepository activityStageMappingRepository,
+            ActivityRepository activityRepository,
+            ActivityAssignmentRepository activityAssignmentRepository,
+            ActivityStageRepository activityStageRepository,
+            StudentActivityXpRepository studentActivityXpRepository,
+            XpTransactionRepository xpTransactionRepository,
+            AttendanceSettingsRepository settingsRepository,
+            XpEngineService xpEngineService,
+            AcademicWeekRepository academicWeekRepository,
+            AttendanceEngineExecutionRepository executionRepository) {
+        this.studentRepository = studentRepository;
+        this.attendanceRepository = attendanceRepository;
+        this.activityStageMappingRepository = activityStageMappingRepository;
+        this.activityRepository = activityRepository;
+        this.activityAssignmentRepository = activityAssignmentRepository;
+        this.activityStageRepository = activityStageRepository;
+        this.studentActivityXpRepository = studentActivityXpRepository;
+        this.xpTransactionRepository = xpTransactionRepository;
+        this.settingsRepository = settingsRepository;
+        this.xpEngineService = xpEngineService;
+        this.academicWeekRepository = academicWeekRepository;
+        this.executionRepository = executionRepository;
+    }
 
     @Transactional
     public Map<String, Object> execute(AcademicYear academicYear) {
+        return execute(academicYear, null, null, "AUTOMATIC", "SYSTEM");
+    }
+
+    @Transactional
+    public Map<String, Object> execute(AcademicYear academicYear, LocalDate customStartDate, LocalDate customEndDate, String executionType, String triggeredBy) {
         long startTime = System.currentTimeMillis();
         LocalDate engineDate = clockService.getEffectiveDate(academicYear);
-        boolean testMode = clockService.isTestMode(academicYear);
+        if (executionType == null || executionType.trim().isEmpty()) {
+            executionType = "MANUAL";
+        }
+        if (triggeredBy == null || triggeredBy.trim().isEmpty()) {
+            triggeredBy = "SYSTEM";
+        }
 
         AttendanceSettings settings = settingsRepository.findByAcademicYear(academicYear).orElse(null);
         if (settings == null) {
-            return buildResult("ERROR", "Settings not found", 0, 0, 0, 0, 0);
+            return buildResult("ERROR", "Settings not found for " + academicYear, 0, 0, 0, 0, 0, 1,
+                    System.currentTimeMillis() - startTime, executionType, engineDate, engineDate);
         }
 
-        AcademicWeek activeWeek = academicWeekRepository.findActiveWeekForDate(academicYear, engineDate).orElse(null);
+        LocalDate startDate = customStartDate;
+        LocalDate endDate = customEndDate;
 
-        if (activeWeek == null) {
-            return buildResult("ERROR", "No active Academic Week configured", 0, 0, 0, 0, 0);
+        if (startDate == null || endDate == null) {
+            AcademicWeek activeWeek = academicWeekRepository.findActiveWeekForDate(academicYear, engineDate).orElse(null);
+            if (activeWeek == null) {
+                return buildResult("ERROR", "No active Academic Week configured for " + academicYear + " on date " + engineDate,
+                        0, 0, 0, 0, 0, 1, System.currentTimeMillis() - startTime, executionType, engineDate, engineDate);
+            }
+            startDate = activeWeek.getStartDate();
+            endDate = activeWeek.getEndDate();
         }
 
-        LocalDate startDate = activeWeek.getStartDate();
-        LocalDate endDate = activeWeek.getEndDate();
-
-        if (!engineDate.isEqual(endDate)) {
-            return buildResult("SKIPPED", "Engine Date is not End Date", 0, 0, 0, 0, 0);
-        }
-
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM");
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy");
         String weekStr = startDate.format(formatter) + " - " + endDate.format(formatter);
 
         log.info("========================================");
         log.info("WEEKLY ATTENDANCE ENGINE");
-        log.info("Week :");
-        log.info(weekStr);
+        log.info("Academic Year  : {}", academicYear);
+        log.info("Week Range     : {}", weekStr);
+        log.info("Execution Type : {}", executionType);
+        log.info("Triggered By   : {}", triggeredBy);
         log.info("========================================");
 
-        // Count working days in the week
+        // 1. Duplicate Execution Check (Idempotency)
+        Optional<AttendanceEngineExecution> successfulRun = executionRepository
+                .findFirstByAcademicYearAndEngineTypeAndPeriodStartAndPeriodEndAndStatus(
+                        academicYear, "WEEKLY", startDate, endDate, "SUCCESS");
+
+        if (successfulRun.isPresent()) {
+            log.info("Weekly Engine already successfully processed for {}. Skipping duplicate execution.", weekStr);
+            return buildResult("SKIPPED", "Weekly Engine for " + weekStr + " has already been successfully processed.",
+                    successfulRun.get().getProcessedCount(), successfulRun.get().getPresentCount(),
+                    successfulRun.get().getAbsentCount(), successfulRun.get().getPenaltiesApplied(),
+                    successfulRun.get().getSkippedCount(), 0, System.currentTimeMillis() - startTime,
+                    executionType, startDate, endDate);
+        }
+
+        // 2. Concurrency Protection (Check if currently running)
+        Optional<AttendanceEngineExecution> runningRun = executionRepository
+                .findFirstByAcademicYearAndEngineTypeAndPeriodStartAndPeriodEndAndStatus(
+                        academicYear, "WEEKLY", startDate, endDate, "RUNNING");
+        if (runningRun.isPresent() && runningRun.get().getStartedAt() != null
+                && runningRun.get().getStartedAt().isAfter(LocalDateTime.now().minusMinutes(10))) {
+            log.warn("Weekly Engine is already RUNNING for {}. Concurrency lock applied.", weekStr);
+            return buildResult("RUNNING", "Weekly Engine is currently running for " + weekStr,
+                    0, 0, 0, 0, 0, 0, System.currentTimeMillis() - startTime, executionType, startDate, endDate);
+        }
+
+        // 3. Create Execution Tracking Record
+        AttendanceEngineExecution execution = new AttendanceEngineExecution();
+        execution.setAcademicYear(academicYear);
+        execution.setEngineType("WEEKLY");
+        execution.setPeriodStart(startDate);
+        execution.setPeriodEnd(endDate);
+        execution.setExecutionType(executionType);
+        execution.setStatus("RUNNING");
+        execution.setStartedAt(LocalDateTime.now());
+        execution.setTriggeredBy(triggeredBy);
+        execution = executionRepository.save(execution);
+
+        updateEngineStatus(academicYear, "RUNNING", executionType, "RUNNING", LocalDateTime.now());
+
+        // 4. Working days calculation for the week (excluding holidays)
         List<LocalDate> workingDays = new ArrayList<>();
-        int holidayCount = 0;
         for (LocalDate d = startDate; !d.isAfter(endDate); d = d.plusDays(1)) {
             if (calendarResolver.isWorkingDay(d, academicYear)) {
                 workingDays.add(d);
-            } else {
-                holidayCount++;
             }
         }
 
-        // Resolve yearId
+        if (workingDays.isEmpty()) {
+            execution.setStatus("SUCCESS");
+            execution.setCompletedAt(LocalDateTime.now());
+            execution.setErrorMessage("No working days in week range " + weekStr);
+            executionRepository.save(execution);
+            updateEngineStatus(academicYear, "SUCCESS", executionType, "SUCCESS", LocalDateTime.now());
+            return buildResult("SUCCESS", "No working days detected in the week. Engine completed.",
+                    0, 0, 0, 0, 0, 0, System.currentTimeMillis() - startTime, executionType, startDate, endDate);
+        }
+
+        // 5. Resolve yearId
         byte yearNo = resolveYearNo(academicYear);
         Long yearId = yearRepository.findByYearNo(yearNo).map(y -> y.getId()).orElse(null);
         if (yearId == null) {
-            updateEngineStatus(academicYear, "ERROR", null);
-            return buildResult("ERROR", "Could not resolve Year entity.", 0, 0, 0, 1,
-                    System.currentTimeMillis() - startTime);
+            execution.setStatus("FAILED");
+            execution.setErrorMessage("Could not resolve Year entity for " + academicYear);
+            execution.setCompletedAt(LocalDateTime.now());
+            executionRepository.save(execution);
+            updateEngineStatus(academicYear, "ERROR", executionType, "FAILED", null);
+            return buildResult("ERROR", "Could not resolve Year entity.", 0, 0, 0, 0, 0, 1,
+                    System.currentTimeMillis() - startTime, executionType, startDate, endDate);
         }
 
         List<Student> allStudents = studentRepository.findAll().stream()
@@ -144,45 +237,32 @@ public class AttendanceWeeklyEngineService {
 
         List<ActivityStage> stages = activityStageRepository.findByAcademicYearOrderByDisplayOrderAsc(academicYear);
 
-        int errors = 0;
+        int processed = 0;
         int eligibleStudentsCount = 0;
+        int ineligibleStudentsCount = 0;
         int rewardedStudentsCount = 0;
+        int skippedStudentsCount = 0;
         int totalXpAwarded = 0;
+        int errors = 0;
 
         try {
-
-            // Get settings for perfect week reward
-            int perfectWeekReward = settingsRepository.findByAcademicYear(academicYear)
-                    .map(s -> s.getPerfectWeekReward() != null ? s.getPerfectWeekReward() : 0)
-                    .orElse(0);
+            int perfectWeekReward = settings.getPerfectWeekReward() != null ? settings.getPerfectWeekReward() : 0;
 
             for (ActivityStage stage : stages) {
                 List<ActivityStageMapping> mappings = activityStageMappingRepository.findByStageId(stage.getId());
-
                 Activity engineActivity = null;
 
                 for (ActivityStageMapping mapping : mappings) {
                     Activity act = mapping.getActivity();
-
-                    boolean included = true;
-                    if (!Boolean.TRUE.equals(act.getAttendanceEngineEnabled())) {
-                        included = false;
-                    } else if (!"ACTIVE".equals(act.getStatus())) {
-                        included = false;
-                    } else if (!academicYear.equals(act.getAcademicYear())) {
-                        included = false;
-                    }
-
-                    if (included && engineActivity == null) {
+                    if (act != null && Boolean.TRUE.equals(act.getAttendanceEngineEnabled())
+                            && "ACTIVE".equals(act.getStatus())
+                            && academicYear.equals(act.getAcademicYear())) {
                         engineActivity = act;
+                        break;
                     }
                 }
 
-                if (engineActivity == null) {
-                    continue;
-                }
-
-                if (!Boolean.TRUE.equals(engineActivity.getAttendanceEngineEnabled())) {
+                if (engineActivity == null || !Boolean.TRUE.equals(engineActivity.getAttendanceEngineEnabled())) {
                     continue;
                 }
 
@@ -191,16 +271,15 @@ public class AttendanceWeeklyEngineService {
                     continue;
                 }
 
-                List<ActivityAssignment> assignments = activityAssignmentRepository
-                        .findByActivityId(engineActivity.getId());
+                List<ActivityAssignment> assignments = activityAssignmentRepository.findByActivityId(engineActivity.getId());
                 if (assignments.isEmpty()) {
                     continue;
                 }
 
-                int perfectReward = settings.getPerfectWeekReward() != null ? settings.getPerfectWeekReward() : 0;
                 for (Student student : allStudents) {
-                    if (student.getStage() != stage.getDisplayOrder())
+                    if (student.getStage() != stage.getDisplayOrder()) {
                         continue;
+                    }
 
                     boolean matchesAssignment = false;
                     for (ActivityAssignment aa : assignments) {
@@ -208,14 +287,12 @@ public class AttendanceWeeklyEngineService {
                             matchesAssignment = true;
                             break;
                         } else if (aa.getAssignmentScope() == AssignmentScope.DEPARTMENT) {
-                            if (student.getDepartment() != null
-                                    && student.getDepartment().getId().equals(aa.getDepartment().getId())) {
+                            if (student.getDepartment() != null && student.getDepartment().getId().equals(aa.getDepartment().getId())) {
                                 matchesAssignment = true;
                                 break;
                             }
                         } else if (aa.getAssignmentScope() == AssignmentScope.SECTION) {
-                            if (student.getSection() != null
-                                    && student.getSection().getId().equals(aa.getSection().getId())) {
+                            if (student.getSection() != null && student.getSection().getId().equals(aa.getSection().getId())) {
                                 matchesAssignment = true;
                                 break;
                             }
@@ -227,73 +304,40 @@ public class AttendanceWeeklyEngineService {
                     }
 
                     try {
+                        long daysWithAttendance = 0;
                         long totalPresent = 0;
                         long totalAbsent = 0;
                         long totalMarked = 0;
-
-                        for (LocalDate workDay : workingDays) {
-                            totalPresent += attendanceRepository.countByStudentIdAndAttendanceDateAndStatus(
-                                    student.getId(), workDay, Attendance.AttendanceStatus.PRESENT);
-                            totalAbsent += attendanceRepository.countByStudentIdAndAttendanceDateAndStatus(
-                                    student.getId(), workDay, Attendance.AttendanceStatus.ABSENT);
-                            totalMarked += attendanceRepository.countByStudentIdAndAttendanceDate(student.getId(),
-                                    workDay);
-                        }
-
-                        if (totalMarked == 0) {
-                            continue;
-                        }
-
-                        double attendancePct = totalMarked == 0 ? 0 : (totalPresent * 100.0 / totalMarked);
-
-                        // Root Cause Fix: totalMarked is the number of periods/records across the week,
-                        // not days.
-                        // We just need to ensure they have some attendance marked, and that all marked
-                        // records are PRESENT.
-                        // Also, we can optionally ensure they have attendance marked on every working
-                        // day.
-                        // Let's count how many distinct working days they have attendance for.
-                        long daysWithAttendance = 0;
-                        long partialDays = 0;
-                        long fullAbsentDays = 0;
-                        long fullPresentDays = 0;
 
                         for (LocalDate workDay : workingDays) {
                             long dPresent = attendanceRepository.countByStudentIdAndAttendanceDateAndStatus(
                                     student.getId(), workDay, Attendance.AttendanceStatus.PRESENT);
                             long dAbsent = attendanceRepository.countByStudentIdAndAttendanceDateAndStatus(
                                     student.getId(), workDay, Attendance.AttendanceStatus.ABSENT);
-                            long dMarked = attendanceRepository.countByStudentIdAndAttendanceDate(student.getId(),
-                                    workDay);
+                            long dMarked = attendanceRepository.countByStudentIdAndAttendanceDate(student.getId(), workDay);
 
                             if (dMarked > 0) {
                                 daysWithAttendance++;
-                                if (dAbsent == 0) {
-                                    fullPresentDays++;
-                                } else if (dPresent > 0) {
-                                    partialDays++;
-                                } else {
-                                    fullAbsentDays++;
-                                }
+                                totalPresent += dPresent;
+                                totalAbsent += dAbsent;
+                                totalMarked += dMarked;
                             }
                         }
 
-                        boolean perfectWeek = false;
-
-                        if (daysWithAttendance < workingDays.size()) {
-                            perfectWeek = false;
-                        } else if (totalAbsent > 0) {
-                            perfectWeek = false;
-                        } else if (totalPresent == totalMarked && totalMarked > 0) {
-                            perfectWeek = true;
-                        } else {
-                            perfectWeek = false;
+                        if (totalMarked == 0) {
+                            skippedStudentsCount++;
+                            continue;
                         }
 
-                        if (perfectWeek) {
+                        processed++;
+
+                        // Perfect week: marked attendance on EVERY working day, 0 absences, all marked are present
+                        boolean isPerfectWeek = (daysWithAttendance == workingDays.size() && totalAbsent == 0 && totalPresent == totalMarked && totalMarked > 0);
+
+                        if (isPerfectWeek) {
                             eligibleStudentsCount++;
 
-                            // Duplicate Protection
+                            // Idempotency check against XP transactions for this week
                             String transactionRemark = "Weekly Reward: " + startDate + " to " + endDate;
                             boolean alreadyProcessed = false;
                             List<jjcet.PragatiX.entity.XpTransaction> existingXp = xpTransactionRepository
@@ -305,59 +349,40 @@ public class AttendanceWeeklyEngineService {
                                 }
                             }
 
-                            if (alreadyProcessed) {
-                                continue;
-                            }
+                            if (!alreadyProcessed) {
+                                int awardXp = 0;
+                                String ruleApplied = "Perfect Week Reward";
 
-                            int awardXp = 0;
-                            String ruleApplied = "";
-                            boolean executeXp = false;
+                                if (Boolean.TRUE.equals(engineActivity.getAwardEnabled())) {
+                                    awardXp = perfectWeekReward > 0 ? perfectWeekReward
+                                            : (engineActivity.getAwardXp() != null ? engineActivity.getAwardXp() : 0);
+                                }
 
-                            if (Boolean.TRUE.equals(engineActivity.getAwardEnabled())) {
-                                awardXp = perfectReward > 0 ? perfectReward
-                                        : (engineActivity.getAwardXp() != null ? engineActivity.getAwardXp() : 0);
-                                ruleApplied = "Perfect Week Reward";
-                                executeXp = awardXp > 0;
-                            } else {
-                                ruleApplied = "Perfect Week (Reward Disabled)";
-                            }
-
-                            if (executeXp) {
-                                try {
+                                if (awardXp > 0) {
                                     jjcet.PragatiX.modules.attendance.dto.AttendanceXpExecutionRequest req = new jjcet.PragatiX.modules.attendance.dto.AttendanceXpExecutionRequest();
                                     req.setStudentId(student.getId());
                                     req.setActivityId(engineActivity.getId());
                                     req.setAttendanceRule(ruleApplied);
                                     req.setCalculatedXp(awardXp);
-                                    req.setIsPenalty(awardXp < 0);
+                                    req.setIsPenalty(false);
                                     req.setAttendanceDate(endDate);
                                     req.setWeekStartDate(startDate);
                                     req.setWeekEndDate(endDate);
                                     req.setReason("Attendance Weekly Rule: " + ruleApplied);
                                     req.setRemarks(transactionRemark);
 
-                                    Student savedStudent = xpEngineService.awardXp(student, engineActivity, null, null,
-                                            awardXp, transactionRemark, req);
-
-                                    log.info("Student:");
-                                    log.info(student.getRegNo());
-                                    log.info("");
-                                    log.info("Reward:");
-                                    log.info("+{} XP", awardXp);
-                                    log.info("");
-                                    log.info("----------------------------------------");
-                                    log.info("");
+                                    xpEngineService.awardXp(student, engineActivity, null, null, awardXp, transactionRemark, req);
 
                                     rewardedStudentsCount++;
                                     totalXpAwarded += awardXp;
-
-                                } catch (Exception e) {
-                                    log.error("XP Execution Error : {}", e.getMessage(), e);
                                 }
                             }
+                        } else {
+                            ineligibleStudentsCount++;
                         }
+
                     } catch (Exception e) {
-                        log.error("Error processing student {}: {}", student.getId(), e.getMessage());
+                        log.error("Error processing weekly attendance for student {}: {}", student.getId(), e.getMessage());
                         errors++;
                     }
                 }
@@ -365,44 +390,61 @@ public class AttendanceWeeklyEngineService {
 
             long elapsed = System.currentTimeMillis() - startTime;
             log.info("SUMMARY");
-            log.info("");
-            log.info("Students Processed : {}", allStudents.size());
-            log.info("");
-            log.info("Eligible Students : {}", eligibleStudentsCount);
-            log.info("");
-            log.info("Rewarded Students : {}", rewardedStudentsCount);
-            log.info("");
-            log.info("Total XP Awarded : +{}", totalXpAwarded);
-            log.info("");
-            log.info("Execution Time : {} seconds", String.format("%.1f", elapsed / 1000.0));
-            log.info("");
+            log.info("Students Processed : {}", processed);
+            log.info("Eligible Students  : {}", eligibleStudentsCount);
+            log.info("Ineligible Students: {}", ineligibleStudentsCount);
+            log.info("Rewarded Students  : {}", rewardedStudentsCount);
+            log.info("Total XP Awarded   : +{} XP", totalXpAwarded);
+            log.info("Execution Time     : {} ms", elapsed);
             log.info("WEEKLY ENGINE COMPLETED");
 
-            if (rewardedStudentsCount == 0) {
-                updateEngineStatus(academicYear, "NO DATA PROCESSED", LocalDateTime.now());
-                return buildResult("SUCCESS", "Weekly engine completed but no students were processed.",
-                        allStudents.size(), 0, allStudents.size() - rewardedStudentsCount, errors, elapsed);
-            } else {
-                updateEngineStatus(academicYear, "DONE", LocalDateTime.now());
-                return buildResult("SUCCESS", "Weekly engine completed successfully.",
-                        allStudents.size(), rewardedStudentsCount, allStudents.size() - rewardedStudentsCount, errors,
-                        elapsed);
-            }
+            // Update Execution Record
+            execution.setStatus("SUCCESS");
+            execution.setCompletedAt(LocalDateTime.now());
+            execution.setProcessedCount(processed);
+            execution.setPresentCount(eligibleStudentsCount);
+            execution.setAbsentCount(ineligibleStudentsCount);
+            execution.setPenaltiesApplied(rewardedStudentsCount); // stores award count
+            execution.setSkippedCount(skippedStudentsCount);
+            execution.setFailureCount(errors);
+            execution.setExecutionTimeMs(elapsed);
+            executionRepository.save(execution);
+
+            updateEngineStatus(academicYear, "SUCCESS", executionType, "SUCCESS", LocalDateTime.now());
+
+            return buildResult("SUCCESS", "Weekly Attendance Engine completed successfully.",
+                    processed, eligibleStudentsCount, ineligibleStudentsCount, rewardedStudentsCount,
+                    skippedStudentsCount, errors, elapsed, executionType, startDate, endDate);
 
         } catch (Exception e) {
-            log.error("AttendanceService failed");
-            log.error("Exception: {}", e.getMessage(), e);
-            updateEngineStatus(academicYear, "FAILED", null);
-            return buildResult("ERROR", "Engine execution failed: " + e.getMessage(), 0, 0, 0, 1,
-                    System.currentTimeMillis() - startTime);
+            log.error("Weekly Attendance Engine failed: {}", e.getMessage(), e);
+            execution.setStatus("FAILED");
+            execution.setErrorMessage(e.getMessage());
+            execution.setCompletedAt(LocalDateTime.now());
+            execution.setExecutionTimeMs(System.currentTimeMillis() - startTime);
+            executionRepository.save(execution);
+
+            updateEngineStatus(academicYear, "FAILED", executionType, "FAILED", LocalDateTime.now());
+
+            return buildResult("ERROR", "Engine execution failed: " + e.getMessage(),
+                    processed, eligibleStudentsCount, ineligibleStudentsCount, rewardedStudentsCount,
+                    skippedStudentsCount, errors + 1, System.currentTimeMillis() - startTime,
+                    executionType, startDate, endDate);
         }
     }
 
-    private void updateEngineStatus(AcademicYear academicYear, String status, LocalDateTime runTime) {
+    private void updateEngineStatus(AcademicYear academicYear, String status, String runType, String runStatus, LocalDateTime runTime) {
         settingsRepository.findByAcademicYear(academicYear).ifPresent(settings -> {
             settings.setWeeklyEngineStatus(status);
-            if (runTime != null)
+            if (runType != null) {
+                settings.setLastWeeklyRunType(runType);
+            }
+            if (runStatus != null) {
+                settings.setLastWeeklyRunStatus(runStatus);
+            }
+            if (runTime != null) {
                 settings.setLastWeeklyRun(runTime);
+            }
             settingsRepository.save(settings);
         });
     }
@@ -417,15 +459,22 @@ public class AttendanceWeeklyEngineService {
         };
     }
 
-    private Map<String, Object> buildResult(String status, String message, int total, int rewarded, int notEligible,
-            int errors, long elapsedMs) {
-        return Map.of(
-                "status", status,
-                "message", message,
-                "totalStudents", total,
-                "rewarded", rewarded,
-                "notEligible", notEligible,
-                "errors", errors,
-                "executionTimeSeconds", String.format("%.1f", elapsedMs / 1000.0));
+    private Map<String, Object> buildResult(String status, String message, int total, int eligible, int ineligible,
+            int rewarded, int skipped, int errors, long elapsedMs,
+            String executionType, LocalDate periodStart, LocalDate periodEnd) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", status);
+        result.put("message", message);
+        result.put("processedStudents", total);
+        result.put("eligibleStudents", eligible);
+        result.put("ineligibleStudents", ineligible);
+        result.put("awardsApplied", rewarded);
+        result.put("skippedStudents", skipped);
+        result.put("failedStudents", errors);
+        result.put("executionType", executionType);
+        result.put("periodStart", periodStart != null ? periodStart.toString() : null);
+        result.put("periodEnd", periodEnd != null ? periodEnd.toString() : null);
+        result.put("executionTimeSeconds", String.format("%.1f", elapsedMs / 1000.0));
+        return result;
     }
 }

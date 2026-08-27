@@ -39,12 +39,8 @@ public class AttendanceStreakService {
                 .build());
 
         if (streak.getLastProcessedDate() != null && streak.getLastProcessedDate().isEqual(engineDate)) {
-            log.info("ATTENDANCE STREAK ENGINE");
-            log.info("Student ID: {}", student.getId());
-            log.info("Execution Date: {}", engineDate);
-            log.info("Already Processed: true");
-            log.info("Current Streak: {}", streak.getCurrentStreak());
-            log.info("Action: SKIPPED - ALREADY PROCESSED");
+            log.info("ATTENDANCE STREAK ENGINE | Student: {} | Date: {} | Already Processed | Current Streak: {}",
+                    student.getRegNo(), engineDate, streak.getCurrentStreak());
             return;
         }
 
@@ -55,15 +51,32 @@ public class AttendanceStreakService {
         streak.setLastProcessedDate(engineDate);
         streakRepository.save(streak);
 
-        log.info("ATTENDANCE STREAK ENGINE");
-        log.info("Student ID: {}", student.getId());
-        log.info("Execution Date: {}", engineDate);
-        log.info("Working Day: true");
-        log.info("Required Periods: 8");
-        log.info("Present Periods: 8");
-        log.info("Eligible For Streak: true");
-        log.info("Already Processed: false");
-        log.info("Previous Streak: {}", previousStreak);
-        log.info("New Streak: {}", streak.getCurrentStreak());
+        log.info("ATTENDANCE STREAK INCREMENTED | Student: {} | Date: {} | Prev: {} -> New: {}",
+                student.getRegNo(), engineDate, previousStreak, streak.getCurrentStreak());
+    }
+
+    @Transactional
+    public void handleAbsenceStreak(Student student, LocalDate engineDate) {
+        Optional<Streak> existingStreak = streakRepository.findByStudentRegNoAndStreakType(student.getRegNo(),
+                "ATTENDANCE");
+        if (existingStreak.isEmpty()) {
+            return;
+        }
+        Streak streak = existingStreak.get();
+
+        if (streak.getLastProcessedDate() != null && streak.getLastProcessedDate().isEqual(engineDate)) {
+            log.info("ATTENDANCE STREAK (ABSENT) | Student: {} | Date: {} | Already Processed",
+                    student.getRegNo(), engineDate);
+            return;
+        }
+
+        streak.setCurrentStreak(0);
+        streak.setBroken(true);
+        streak.setLastUpdated(LocalDateTime.now());
+        streak.setLastProcessedDate(engineDate);
+        streakRepository.save(streak);
+
+        log.info("ATTENDANCE STREAK RESET (ABSENCE) | Student: {} | Date: {}",
+                student.getRegNo(), engineDate);
     }
 }

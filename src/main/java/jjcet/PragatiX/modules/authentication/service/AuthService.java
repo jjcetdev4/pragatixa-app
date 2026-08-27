@@ -43,6 +43,10 @@ import jjcet.PragatiX.modules.authentication.dto.request.OtpVerifyRequest;
 import java.time.LocalDateTime;
 import java.util.Random;
 
+import jjcet.PragatiX.modules.notification.service.SmsService;
+import jjcet.PragatiX.modules.notification.util.PhoneNumberUtil;
+import java.util.Optional;
+
 @Service
 public class AuthService {
 
@@ -57,6 +61,7 @@ public class AuthService {
     private final StageTeamRepository stageTeamRepository;
     private final OtpTokenRepository otpTokenRepository;
     private final ZeptoMailService zeptoMailService;
+    private final SmsService smsService;
 
     public AuthService(AuthenticationManager authenticationManager,
             UserDetailsService userDetailsService,
@@ -66,7 +71,8 @@ public class AuthService {
             PasswordEncoder passwordEncoder,
             StageTeamRepository stageTeamRepository,
             OtpTokenRepository otpTokenRepository,
-            ZeptoMailService zeptoMailService) {
+            ZeptoMailService zeptoMailService,
+            SmsService smsService) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.studentRepository = studentRepository;
@@ -76,6 +82,7 @@ public class AuthService {
         this.stageTeamRepository = stageTeamRepository;
         this.otpTokenRepository = otpTokenRepository;
         this.zeptoMailService = zeptoMailService;
+        this.smsService = smsService;
     }
 
     // ====================================================================================
@@ -232,7 +239,7 @@ public class AuthService {
             }
         }
         boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
-        int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
+        int rank = studentRepository.getStudentRankByScore(student.getScore());
 
         List<String> subRoles = new ArrayList<>();
         if (isCap)
@@ -322,6 +329,30 @@ public class AuthService {
             throw new RuntimeException("Unable to send OTP. Please try again later.");
         }
 
+        // Send OTP via SMS if phone number is available for the account
+        try {
+            String phone = null;
+            Optional<Student> studentOpt = studentRepository.findByEmail(email);
+            if (studentOpt.isPresent()) {
+                Student s = studentOpt.get();
+                phone = (s.getPhoneNo() != null && !s.getPhoneNo().trim().isEmpty()) ? s.getPhoneNo().trim() : s.getPhone();
+            } else {
+                Optional<User> userOpt = userRepository.findByEmail(email);
+                if (userOpt.isPresent()) {
+                    User u = userOpt.get();
+                    phone = u.getPhone();
+                }
+            }
+
+            if (phone != null && !phone.trim().isEmpty() && smsService != null) {
+                String otpSms = "Your Pragatix verification OTP is " + generatedOtp + ". Valid for 5 minutes.";
+                smsService.sendSms(phone.trim(), otpSms, "OTP");
+                log.info("OTP SMS sent to {} for email: {}", PhoneNumberUtil.maskPhoneNumber(phone), email);
+            }
+        } catch (Exception smsEx) {
+            log.warn("Failed to send OTP via SMS for email {}: {}", email, smsEx.getMessage());
+        }
+
         OtpToken otpToken = new OtpToken(email, generatedOtp, LocalDateTime.now().plusMinutes(5));
         otpTokenRepository.save(otpToken);
 
@@ -388,7 +419,7 @@ public class AuthService {
                 }
             }
             boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
-            int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
+            int rank = studentRepository.getStudentRankByScore(student.getScore());
 
             List<String> subRoles = new ArrayList<>();
             if (isCap)
@@ -522,7 +553,7 @@ public class AuthService {
             }
 
             boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
-            int rank = studentRepository.getStudentRankByTotalXp(student.getTotalXp());
+            int rank = studentRepository.getStudentRankByScore(student.getScore());
 
             List<String> subRoles = new ArrayList<>();
             if (isCap)

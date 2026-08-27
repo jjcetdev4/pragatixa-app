@@ -1,24 +1,19 @@
 package jjcet.PragatiX.modules.superadmin.dto;
 
-import jjcet.PragatiX.enums.AcademicYear;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class CreateYearAdminRequest {
-    @NotBlank(message = "Username is required")
     @Size(max = 100)
     private String username;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 4, message = "Password must be at least 4 characters")
     private String password;
 
     @NotBlank(message = "Full name is required")
     @Size(max = 255)
     private String fullName;
 
-    @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
     @Size(max = 255)
     private String email;

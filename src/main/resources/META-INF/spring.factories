@@ -1,0 +1,1 @@
+org.springframework.boot.env.EnvironmentPostProcessor=jjcet.PragatiX.util.env.DotenvEnvironmentPostProcessor

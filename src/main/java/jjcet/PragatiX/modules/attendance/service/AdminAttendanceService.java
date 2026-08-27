@@ -77,8 +77,20 @@ public class AdminAttendanceService {
         List<StudentAttendanceMatrixItemResponse> matrixItems = allStudents.stream().map(student -> {
             StudentAttendanceMatrixItemResponse item = new StudentAttendanceMatrixItemResponse();
             item.setStudentId(student.getId());
-            item.setStudentName(student.getUser() != null ? student.getUser().getFullName() : student.getRegNo());
-            item.setRegisterNumber(student.getRegNo());
+            String name = student.getFullName();
+            if (name == null || name.trim().isEmpty()) {
+                name = student.getUser() != null ? student.getUser().getFullName() : null;
+            }
+            if (name == null || name.trim().isEmpty()) {
+                name = student.getRegNo() != null ? student.getRegNo() : student.getSprNo();
+            }
+            item.setStudentName(name != null ? name.trim() : "Unknown");
+
+            String reg = student.getRegNo();
+            if (reg == null || reg.trim().isEmpty()) {
+                reg = student.getSprNo();
+            }
+            item.setRegisterNumber(reg != null ? reg : "");
 
             Map<Integer, String> periodStatuses = new HashMap<>();
             for (int i = 1; i <= 8; i++) {

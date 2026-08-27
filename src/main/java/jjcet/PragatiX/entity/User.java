@@ -69,7 +69,7 @@ public class User implements SoftDeletable {
     @JoinColumn(name = "section_id")
     private Section section;
 
-    @Column(name = "year", length = 10)
+    @Column(name = "year", length = 50)
     private String year;
 
     @Enumerated(EnumType.STRING)

@@ -69,7 +69,7 @@ public class AttendanceCronScheduler {
 
             if (shouldExecuteDaily) {
                 try {
-                    dailyEngineService.execute(year);
+                    dailyEngineService.execute(year, effectiveDate, "AUTOMATIC", "SYSTEM");
                 } catch (Exception e) {
                     log.error("Error executing Daily Engine for year {}: {}", year, e.getMessage(), e);
                 }
@@ -93,7 +93,7 @@ public class AttendanceCronScheduler {
 
             if (shouldExecuteWeekly) {
                 try {
-                    weeklyEngineService.execute(year);
+                    weeklyEngineService.execute(year, activeWeek.getStartDate(), activeWeek.getEndDate(), "AUTOMATIC", "SYSTEM");
                 } catch (Exception e) {
                     log.error("Error executing Weekly Engine for year {}: {}", year, e.getMessage(), e);
                 }

@@ -11,6 +11,8 @@ import java.util.List;
 public interface StudentGuardianRepository extends JpaRepository<StudentGuardian, Long> {
     Optional<StudentGuardian> findByStudentId(Long studentId);
 
+    Optional<StudentGuardian> findFirstByStudentIdOrderByIsPrimaryDesc(Long studentId);
+
     Optional<StudentGuardian> findByRegNo(String regNo);
 
     List<StudentGuardian> findByStudentIdIn(List<Long> studentIds);

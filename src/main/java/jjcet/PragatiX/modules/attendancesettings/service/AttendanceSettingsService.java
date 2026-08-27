@@ -105,7 +105,11 @@ public class AttendanceSettingsService {
         dto.setTestDate(entity.getTestDate() != null ? entity.getTestDate().toString() : null);
         dto.setTestTime(entity.getTestTime() != null ? entity.getTestTime().toString() : null);
         dto.setLastDailyRun(entity.getLastDailyRun() != null ? entity.getLastDailyRun().toString() : null);
+        dto.setLastDailyRunType(entity.getLastDailyRunType());
+        dto.setLastDailyRunStatus(entity.getLastDailyRunStatus());
         dto.setLastWeeklyRun(entity.getLastWeeklyRun() != null ? entity.getLastWeeklyRun().toString() : null);
+        dto.setLastWeeklyRunType(entity.getLastWeeklyRunType());
+        dto.setLastWeeklyRunStatus(entity.getLastWeeklyRunStatus());
         dto.setDailyEngineStatus(entity.getDailyEngineStatus());
         dto.setWeeklyEngineStatus(entity.getWeeklyEngineStatus());
         return dto;
