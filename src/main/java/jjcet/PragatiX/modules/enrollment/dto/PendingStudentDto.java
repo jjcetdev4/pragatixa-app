@@ -34,7 +34,7 @@ public class PendingStudentDto {
 
     public static String maskEmail(String email) {
         if (email == null || email.trim().isEmpty()) {
-            return "";
+            return "******";
         }
         String clean = email.trim();
         int atIndex = clean.indexOf('@');

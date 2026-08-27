@@ -311,7 +311,7 @@ public class EnrollmentService {
             if (mobileCol == -1 && lastCellNum >= 5) mobileCol = 4;
             if (branchCol == -1 && lastCellNum >= 6) branchCol = 5;
 
-            if (nameCol == -1 || mobileCol == -1 || branchCol == -1) {
+            if (nameCol == -1 || emailCol == -1 || mobileCol == -1 || branchCol == -1) {
                 result.addError("Invalid template format. The template must contain: Sl.No., Name, Gender, Email, Mobile, Branch.");
                 return result;
             }
@@ -333,7 +333,7 @@ public class EnrollmentService {
                 int rowNum = r + 1; // 1-based display row
                 String name = getCellValue(row.getCell(nameCol)).trim().toUpperCase();
                 String gender = genderCol != -1 ? getCellValue(row.getCell(genderCol)).trim() : "Male";
-                String email = emailCol != -1 ? getCellValue(row.getCell(emailCol)).trim().toLowerCase() : "";
+                String email = getCellValue(row.getCell(emailCol)).trim().toLowerCase();
                 String mobile = cleanMobileNumber(getCellValue(row.getCell(mobileCol)).trim());
                 String branch = getCellValue(row.getCell(branchCol)).trim();
 
@@ -374,8 +374,12 @@ public class EnrollmentService {
                 }
                 gender = normalizeGender(gender);
 
-                // Validation 3: Email (Optional / Nullable)
-                if (!email.isEmpty() && !EMAIL_PATTERN.matcher(email).matches()) {
+                // Validation 3: Email
+                if (email.isEmpty()) {
+                    result.addError("Row " + rowNum + ": Email is required.");
+                    continue;
+                }
+                if (!EMAIL_PATTERN.matcher(email).matches()) {
                     result.addError("Row " + rowNum + ": Invalid email format ('" + email + "').");
                     continue;
                 }
@@ -403,7 +407,7 @@ public class EnrollmentService {
                 }
 
                 // Validation 6: In-File Duplicate Check
-                if (!email.isEmpty() && seenEmailsInFile.contains(email)) {
+                if (seenEmailsInFile.contains(email)) {
                     result.addError("Row " + rowNum + ": Duplicate email in uploaded file ('" + email + "').");
                     continue;
                 }
@@ -413,7 +417,7 @@ public class EnrollmentService {
                 }
 
                 // Validation 7: Existing Pending Enrollment Duplicate Check
-                if (!email.isEmpty() && existingEnrollmentEmails.contains(email)) {
+                if (existingEnrollmentEmails.contains(email)) {
                     result.addError("Row " + rowNum + ": Student with email '" + email + "' already exists in enrollment list.");
                     continue;
                 }
@@ -423,7 +427,7 @@ public class EnrollmentService {
                 }
 
                 // Validation 8: Existing Student Duplicate Check
-                if (!email.isEmpty() && existingStudentEmails.contains(email)) {
+                if (existingStudentEmails.contains(email)) {
                     result.addError("Row " + rowNum + ": Student already exists with email '" + email + "'.");
                     continue;
                 }
@@ -432,16 +436,14 @@ public class EnrollmentService {
                     continue;
                 }
 
-                if (!email.isEmpty()) {
-                    seenEmailsInFile.add(email);
-                }
+                seenEmailsInFile.add(email);
                 seenMobilesInFile.add(mobile);
 
                 // Create Pending Enrollment Entity (NO user or student record created)
                 Enrollment enrollment = new Enrollment();
                 enrollment.setFullName(name);
                 enrollment.setGender(gender);
-                enrollment.setEmail(!email.isEmpty() ? email : null);
+                enrollment.setEmail(email);
                 enrollment.setMobile(mobile);
                 enrollment.setDepartment(resolvedDept);
                 enrollment.setStatus(EnrollmentStatus.PENDING);
@@ -491,8 +493,8 @@ public class EnrollmentService {
 
         String gender = normalizeGender(dto.getGender());
 
-        String email = dto.getEmail() != null && !dto.getEmail().trim().isEmpty() ? dto.getEmail().trim().toLowerCase() : null;
-        if (email != null && !EMAIL_PATTERN.matcher(email).matches()) {
+        String email = dto.getEmail() != null ? dto.getEmail().trim().toLowerCase() : "";
+        if (email.isEmpty() || !EMAIL_PATTERN.matcher(email).matches()) {
             throw new IllegalArgumentException("A valid email address is required.");
         }
 
@@ -513,7 +515,7 @@ public class EnrollmentService {
         }
 
         // Duplicate checks in Enrollment
-        if (email != null && enrollmentRepository.existsByEmailAndDeletedFalse(email)) {
+        if (enrollmentRepository.existsByEmailAndDeletedFalse(email)) {
             throw new IllegalArgumentException("Student with email '" + email + "' already exists in enrollment list.");
         }
         if (enrollmentRepository.existsByMobileAndDeletedFalse(mobile)) {
@@ -521,7 +523,7 @@ public class EnrollmentService {
         }
 
         // Duplicate checks in Student
-        if (email != null && studentRepository.existsByEmail(email)) {
+        if (studentRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Student already exists with email '" + email + "'.");
         }
         if (studentRepository.existsByPhoneNo(mobile)) {
@@ -580,8 +582,8 @@ public class EnrollmentService {
 
         String gender = normalizeGender(dto.getGender());
 
-        String email = dto.getEmail() != null && !dto.getEmail().trim().isEmpty() ? dto.getEmail().trim().toLowerCase() : null;
-        if (email != null && !EMAIL_PATTERN.matcher(email).matches()) {
+        String email = dto.getEmail() != null ? dto.getEmail().trim().toLowerCase() : "";
+        if (email.isEmpty() || !EMAIL_PATTERN.matcher(email).matches()) {
             throw new IllegalArgumentException("A valid email address is required.");
         }
 
@@ -602,7 +604,7 @@ public class EnrollmentService {
         }
 
         // Duplicate checks in Enrollment (excluding this ID)
-        if (email != null && enrollmentRepository.existsByEmailAndIdNotAndDeletedFalse(email, id)) {
+        if (enrollmentRepository.existsByEmailAndIdNotAndDeletedFalse(email, id)) {
             throw new IllegalArgumentException("Another student with email '" + email + "' already exists in enrollment list.");
         }
         if (enrollmentRepository.existsByMobileAndIdNotAndDeletedFalse(mobile, id)) {
@@ -610,7 +612,7 @@ public class EnrollmentService {
         }
 
         // Duplicate checks in active Student table (if changed)
-        if (email != null && !email.equalsIgnoreCase(enrollment.getEmail()) && studentRepository.existsByEmail(email)) {
+        if (!email.equalsIgnoreCase(enrollment.getEmail()) && studentRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Student already exists with email '" + email + "'.");
         }
         if (!mobile.equals(enrollment.getMobile()) && studentRepository.existsByPhoneNo(mobile)) {
@@ -762,7 +764,7 @@ public class EnrollmentService {
         }
 
         // 3. Duplicate checks in Student entity
-        if (enrollment.getEmail() != null && !enrollment.getEmail().trim().isEmpty() && studentRepository.existsByEmail(enrollment.getEmail().trim())) {
+        if (studentRepository.existsByEmail(enrollment.getEmail())) {
             throw new IllegalStateException("Student already exists with email: " + enrollment.getEmail());
         }
         if (studentRepository.existsByPhoneNo(enrollment.getMobile())) {
@@ -797,7 +799,7 @@ public class EnrollmentService {
         Student student = Student.builder()
                 .regNo(regNo)
                 .fullName(enrollment.getFullName().trim())
-                .email(enrollment.getEmail() != null && !enrollment.getEmail().trim().isEmpty() ? enrollment.getEmail().trim() : null)
+                .email(enrollment.getEmail().trim())
                 .phone(enrollment.getMobile().trim())
                 .phoneNo(enrollment.getMobile().trim())
                 .gender(genderRef != null ? genderRef.getGenderName() : enrollment.getGender())
