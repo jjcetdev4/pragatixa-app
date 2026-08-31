@@ -174,10 +174,14 @@ public class ProfileService {
 
     private ProfileResponse.SuperAdminDetails buildSuperAdminDetails(User user) {
         ProfileResponse.SuperAdminDetails d = new ProfileResponse.SuperAdminDetails();
-        d.setTotalDepartments(departmentRepository.count());
+        d.setTotalDepartments(departmentRepository.countByDeletedFalse());
         d.setTotalStudents(studentRepository.count());
-        d.setTotalTeachers(facultyRepository.count());
-        d.setTotalAdmins(0);
+        long teachersCount = userRepository.countActiveGenuineTeachers();
+        if (teachersCount == 0) {
+            teachersCount = userRepository.countAllTeachers();
+        }
+        d.setTotalTeachers(teachersCount);
+        d.setTotalAdmins(userRepository.findByRoleName("ROLE_ADMIN").size());
         d.setTotalActivities(0);
         d.setTotalStages(0);
         d.setPermissions(List.of("Full System Access", "Manage Users", "System Configuration"));
@@ -202,7 +206,10 @@ public class ProfileService {
         long totalStudents = 0;
 
         if (user.getDepartment() != null) {
-            totalFaculty = facultyRepository.countByDepartmentId(user.getDepartment().getId());
+            totalFaculty = userRepository.countTeachersByDepartmentId(user.getDepartment().getId());
+            if (totalFaculty == 0) {
+                totalFaculty = facultyRepository.countByDepartmentId(user.getDepartment().getId());
+            }
             totalStudents = studentRepository.countByDepartmentId(user.getDepartment().getId());
         }
 
@@ -299,7 +306,7 @@ public class ProfileService {
         d.setCurrentXp(student.getTotalXp());
         d.setCurrentStage("Stage " + student.getStage());
         d.setCurrentLevel(String.valueOf(student.getStage()));
-        d.setRank(studentRepository.getStudentRankByScore(student.getScore()));
+        d.setRank(calculateStudentLeaderboardRank(student));
         d.setAttendancePercentage(0.0);
         d.setTeamName(student.getTeam() != null ? student.getTeam().getName() : "N/A");
         d.setCaptain(isCap);
@@ -310,5 +317,32 @@ public class ProfileService {
         }
 
         return d;
+    }
+
+    public int calculateStudentLeaderboardRank(Student currentStudent) {
+        if (currentStudent == null || currentStudent.getId() == null) {
+            return 1;
+        }
+        java.util.List<Student> students = studentRepository.findAll().stream()
+                .filter(Student::isActive)
+                .sorted((a, b) -> {
+                    int cmp = Integer.compare(b.getTotalXp(), a.getTotalXp());
+                    if (cmp != 0) return cmp;
+                    cmp = Integer.compare(b.getScore(), a.getScore());
+                    if (cmp != 0) return cmp;
+                    String nameA = a.getFullName() != null ? a.getFullName() : "";
+                    String nameB = b.getFullName() != null ? b.getFullName() : "";
+                    int nameCmp = nameA.compareToIgnoreCase(nameB);
+                    if (nameCmp != 0) return nameCmp;
+                    return Long.compare(a.getId() != null ? a.getId() : 0L, b.getId() != null ? b.getId() : 0L);
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        for (int i = 0; i < students.size(); i++) {
+            if (currentStudent.getId().equals(students.get(i).getId())) {
+                return i + 1;
+            }
+        }
+        return 1;
     }
 }

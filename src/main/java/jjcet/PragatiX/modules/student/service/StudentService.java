@@ -48,6 +48,11 @@ public class StudentService {
     }
 
     @Transactional
+    public ApiResponse<Integer> batchUpdateStudents(BatchUpdateStudentsRequest request, String username) {
+        return studentCrudService.batchUpdateStudents(request, username);
+    }
+
+    @Transactional
     public ApiResponse<Void> deleteStudent(Long id) {
         return studentCrudService.deleteStudent(id);
     }
@@ -101,7 +106,7 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<DisciplineLog>> getDisciplineLogs(Long regNo) {
+    public ApiResponse<List<?>> getDisciplineLogs(Long regNo) {
         return studentDisciplineService.getDisciplineLogs(regNo);
     }
 

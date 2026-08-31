@@ -1,15 +1,11 @@
 package jjcet.PragatiX.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.URL;
 
 public class BadgeRequestCreateDto {
     @NotNull(message = "Badge ID is required")
     private Long badgeId;
 
-    @NotBlank(message = "Proof Link is required")
-    @URL(message = "Proof Link must be a valid URL")
     private String proofLink;
 
     public BadgeRequestCreateDto() {
@@ -31,3 +27,4 @@ public class BadgeRequestCreateDto {
         this.proofLink = proofLink;
     }
 }
+

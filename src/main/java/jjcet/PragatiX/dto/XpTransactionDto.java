@@ -15,6 +15,7 @@ public class XpTransactionDto {
     private String approvedBy;
     private boolean isPenalty;
     private boolean capApplied;
+    private Integer stage;
 
     public XpTransactionDto() {
     }
@@ -113,5 +114,13 @@ public class XpTransactionDto {
 
     public void setCapApplied(boolean capApplied) {
         this.capApplied = capApplied;
+    }
+
+    public Integer getStage() {
+        return stage;
+    }
+
+    public void setStage(Integer stage) {
+        this.stage = stage;
     }
 }

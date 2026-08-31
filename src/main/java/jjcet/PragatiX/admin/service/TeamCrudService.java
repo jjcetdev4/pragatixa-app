@@ -114,9 +114,13 @@ public class TeamCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Proposed Captain " + captain.getFullName()
                     + " already belongs to an existing team."));
 
-        Long deptId = captain.getDepartment() != null ? captain.getDepartment().getId() : null;
-        String year = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(captain.getYear());
-        Long sectionId = captain.getSection() != null ? captain.getSection().getId() : null;
+        Long deptId = request.getDepartmentId() != null ? request.getDepartmentId()
+                : (captain.getDepartment() != null ? captain.getDepartment().getId() : null);
+        String year = request.getAcademicYear() != null && !request.getAcademicYear().trim().isEmpty()
+                ? jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(request.getAcademicYear())
+                : (captain.getYear() != null ? jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(captain.getYear()) : null);
+        Long sectionId = request.getSectionId() != null ? request.getSectionId()
+                : (captain.getSection() != null ? captain.getSection().getId() : null);
 
         boolean isCcOrHod = creator.getSubRoles().stream().map(jjcet.PragatiX.entity.SubRole::getName)
                 .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("HOD"));
@@ -128,7 +132,7 @@ public class TeamCrudService {
         }
 
         if (teamRepository.existsByTeamNameAndClass(request.getName(), deptId, year, sectionId)) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT)
+            return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Team name '" + request.getName() + "' already exists in this class."));
         }
 
@@ -218,15 +222,17 @@ public class TeamCrudService {
             studentResponses.add(mapper.toStudentResponse(m));
 
         // Auto-assign to Stage 1
-        jjcet.PragatiX.entity.ActivityStage stage1 = activityStageRepository.findByDisplayOrder(1).orElse(null);
-        if (stage1 != null) {
-            StageTeam st = new StageTeam();
-            st.setTeam(savedTeam);
-            st.setStage(stage1);
-            st.setCaptain(captain);
-            // Vice-captain logic can be handled separately or added later
-            stageTeamRepository.save(st);
-            log.debug("Mapped Team '{}' to Stage 1", savedTeam.getName());
+        if (activityStageRepository != null && stageTeamRepository != null) {
+            jjcet.PragatiX.entity.ActivityStage stage1 = activityStageRepository.findByDisplayOrder(1).orElse(null);
+            if (stage1 != null) {
+                StageTeam st = new StageTeam();
+                st.setTeam(savedTeam);
+                st.setStage(stage1);
+                st.setCaptain(captain);
+                // Vice-captain logic can be handled separately or added later
+                stageTeamRepository.save(st);
+                log.debug("Mapped Team '{}' to Stage 1", savedTeam.getName());
+            }
         }
         
         auditService.log(
@@ -379,14 +385,12 @@ public class TeamCrudService {
             Student captain = team.getCaptain();
             captain.setTeam(null);
             studentRepository.save(captain);
-            team.setCaptain(null);
         }
 
         if (team.getViceCaptain() != null) {
             Student vc = team.getViceCaptain();
             vc.setTeam(null);
             studentRepository.save(vc);
-            team.setViceCaptain(null);
         }
 
         try {

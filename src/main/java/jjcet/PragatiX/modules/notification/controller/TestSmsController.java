@@ -31,7 +31,7 @@ public class TestSmsController {
     }
 
     @PostMapping({"/api/test/sms", "/api/v1/test/sms"})
-    @Operation(summary = "Send Test SMS", description = "Sends a test SMS through the configured SMS provider (Airtel IQ or Twilio).")
+    @Operation(summary = "Send Test SMS", description = "Sends a test SMS through Airtel IQ SMS Gateway.")
     public ResponseEntity<TestSmsResponse> sendTestSms(@Valid @RequestBody TestSmsRequest request) {
         if (!smsProperties.isTestEndpointEnabled()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)

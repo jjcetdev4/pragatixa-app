@@ -53,16 +53,18 @@ public class DebugRunnerActivities {
     }
 
     @org.springframework.context.annotation.Bean
-    public org.springframework.boot.CommandLineRunner fixTeamYears(jjcet.PragatiX.repository.TeamRepository repo) {
+    public org.springframework.boot.CommandLineRunner fixStudentScores(org.springframework.jdbc.core.JdbcTemplate jdbc) {
         return args -> {
-            List<jjcet.PragatiX.entity.Team> teams = repo.findAll();
-            for (jjcet.PragatiX.entity.Team t : teams) {
-                if ("1".equals(t.getYear())) t.setYear("FIRST_YEAR");
-                else if ("2".equals(t.getYear())) t.setYear("SECOND_YEAR");
-                else if ("3".equals(t.getYear())) t.setYear("THIRD_YEAR");
-                else if ("4".equals(t.getYear())) t.setYear("FOURTH_YEAR");
+            try {
+                int updated = jdbc.update("UPDATE students SET score = total_xp WHERE score = total_xp + 100 OR score > total_xp");
+                if (updated > 0) {
+                    System.out.println("Cleaned up " + updated + " student scores by removing extra 100 offset.");
+                }
+                jdbc.update("UPDATE levels SET academic_year = 'FIRST_YEAR' WHERE academic_year IS NULL");
+                jdbc.update("UPDATE levels SET is_deleted = false WHERE is_deleted IS NULL");
+            } catch (Exception e) {
+                System.out.println("Could not run fixStudentScores/initLevels: " + e.getMessage());
             }
-            repo.saveAll(teams);
         };
     }
 

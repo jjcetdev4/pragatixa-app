@@ -81,12 +81,21 @@ public class SuperAdminService {
                 .filter(u -> u.getRoles().stream().noneMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName())))
                 .map(u -> {
                     System.out.println("Admin : " + u.getUsername() + ", Assigned Year : " + (u.getAssignedYear() != null ? u.getAssignedYear().getYearName() : "None"));
+                    Long assignedYearId = u.getAssignedYear() != null ? u.getAssignedYear().getId() : null;
+                    String assignedYearName = u.getAssignedYear() != null ? u.getAssignedYear().getYearName() : null;
+                    if (assignedYearName == null && u.getAcademicYear() != null) {
+                        assignedYearName = u.getAcademicYear().name();
+                    }
+                    if (assignedYearName == null && u.getYear() != null) {
+                        assignedYearName = u.getYear();
+                    }
+
                     return new YearAdminResponse(
                             u.getId(),
                             u.getFullName(),
                             u.getUsername(),
-                            u.getAssignedYear() != null ? u.getAssignedYear().getId() : null,
-                            u.getAssignedYear() != null ? u.getAssignedYear().getYearName() : null,
+                            assignedYearId,
+                            assignedYearName,
                             u.getEmail(),
                             u.getPhone(),
                             u.isActive());

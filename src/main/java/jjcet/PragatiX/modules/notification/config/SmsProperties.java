@@ -8,12 +8,10 @@ import org.springframework.context.annotation.Configuration;
 public class SmsProperties {
 
     public enum SmsProvider {
-        TWILIO,
         AIRTEL
     }
 
     private SmsProvider provider = SmsProvider.AIRTEL;
-    private boolean fallbackEnabled = false;
     private boolean testEndpointEnabled = true;
 
     public SmsProvider getProvider() {
@@ -22,14 +20,6 @@ public class SmsProperties {
 
     public void setProvider(SmsProvider provider) {
         this.provider = provider;
-    }
-
-    public boolean isFallbackEnabled() {
-        return fallbackEnabled;
-    }
-
-    public void setFallbackEnabled(boolean fallbackEnabled) {
-        this.fallbackEnabled = fallbackEnabled;
     }
 
     public boolean isTestEndpointEnabled() {

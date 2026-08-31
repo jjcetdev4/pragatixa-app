@@ -8,8 +8,7 @@ public class AttendanceDistributionDTO {
     public AttendanceDistributionDTO() {
     }
 
-    public AttendanceDistributionDTO(Double presentPercentage, Double partialAbsentPercentage,
-            Double fullAbsentPercentage) {
+    public AttendanceDistributionDTO(Double presentPercentage, Double partialAbsentPercentage, Double fullAbsentPercentage) {
         this.presentPercentage = presentPercentage;
         this.partialAbsentPercentage = partialAbsentPercentage;
         this.fullAbsentPercentage = fullAbsentPercentage;

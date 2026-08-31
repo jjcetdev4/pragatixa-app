@@ -5,8 +5,7 @@ public class LowAttendanceStudentDTO {
     private String name;
     private Double attendancePercentage;
 
-    public LowAttendanceStudentDTO() {
-    }
+    public LowAttendanceStudentDTO() {}
 
     public LowAttendanceStudentDTO(String rollNo, String name, Double attendancePercentage) {
         this.rollNo = rollNo;

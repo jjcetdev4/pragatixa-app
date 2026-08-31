@@ -26,6 +26,10 @@ public class StudentCrudService {
         return studentCommandService.updateStudent(id, request);
     }
 
+    public ApiResponse<Integer> batchUpdateStudents(BatchUpdateStudentsRequest request, String username) {
+        return studentCommandService.batchUpdateStudents(request, username);
+    }
+
     public ApiResponse<Void> deleteStudent(Long id) {
         return studentCommandService.deleteStudent(id);
     }

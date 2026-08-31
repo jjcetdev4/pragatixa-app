@@ -72,7 +72,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
         java.util.List<User> findAllClassCoordinators();
 
         @org.springframework.data.jpa.repository.Query("SELECT COUNT(DISTINCT u) FROM User u JOIN u.roles r " +
-                        "WHERE r.name = 'ROLE_TEACHER' AND u.active = true " +
-                        "AND NOT EXISTS (SELECT 1 FROM u.roles r2 WHERE r2.name IN ('ROLE_ADMIN', 'ROLE_STUDENT'))")
+                        "WHERE (UPPER(r.name) LIKE '%TEACHER%' OR UPPER(r.name) LIKE '%FACULTY%') " +
+                        "AND u.active = true AND (u.deleted = false OR u.deleted IS NULL) " +
+                        "AND NOT EXISTS (SELECT 1 FROM u.roles r2 WHERE UPPER(r2.name) LIKE '%ADMIN%' OR UPPER(r2.name) LIKE '%STUDENT%')")
         long countActiveGenuineTeachers();
+
+        @org.springframework.data.jpa.repository.Query("SELECT COUNT(DISTINCT u) FROM User u JOIN u.roles r " +
+                        "WHERE (UPPER(r.name) LIKE '%TEACHER%' OR UPPER(r.name) LIKE '%FACULTY%') " +
+                        "AND (u.deleted = false OR u.deleted IS NULL)")
+        long countAllTeachers();
+
+        @org.springframework.data.jpa.repository.Query("SELECT COUNT(DISTINCT u) FROM User u JOIN u.roles r " +
+                        "WHERE u.department.id = :departmentId " +
+                        "AND (UPPER(r.name) LIKE '%TEACHER%' OR UPPER(r.name) LIKE '%FACULTY%') " +
+                        "AND (u.deleted = false OR u.deleted IS NULL)")
+        long countTeachersByDepartmentId(@org.springframework.data.repository.query.Param("departmentId") Long departmentId);
 }

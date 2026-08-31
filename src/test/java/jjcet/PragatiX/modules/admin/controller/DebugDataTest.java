@@ -21,6 +21,7 @@ public class DebugDataTest {
     @Autowired
     private ActivityStageMappingRepository mappingRepository;
 
+
     @Test
     public void dumpAttendanceEngineActivities() {
         System.out.println("======================================");

@@ -21,11 +21,20 @@ public class TeamValidationService {
     }
 
     public boolean canCreateTeam(User creator, ActivityAssignment assignment) {
-        boolean isAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        if (creator == null) return false;
+        if (authUtils.isSuperAdmin(creator) || authUtils.isAdmin(creator)) {
+            return true;
+        }
+        boolean isAdmin = creator.getRoles().stream().anyMatch(r -> {
+            String name = r.getName() != null ? r.getName().toUpperCase() : "";
+            return name.contains("ADMIN");
+        });
         boolean isCc = creator.getSubRoles().stream().map(SubRole::getName)
-                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR"));
+                .anyMatch(sr -> sr != null && (sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR")));
         boolean isHod = creator.getSubRoles().stream().map(SubRole::getName)
-                .anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
+                .anyMatch(sr -> sr != null && sr.trim().equalsIgnoreCase("HOD")) ||
+                creator.getRoles().stream().map(Role::getName)
+                .anyMatch(r -> r != null && (r.trim().equalsIgnoreCase("HOD") || r.trim().equalsIgnoreCase("ROLE_HOD")));
         boolean isAssignedFaculty = false;
 
         if (assignment != null && assignment.getTeacher() != null) {
@@ -36,13 +45,23 @@ public class TeamValidationService {
     }
 
     public boolean canDeleteTeam(User currentUser, ActivityAssignment assignment) {
-        if (assignment == null)
-            return false;
-        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
+        if (currentUser == null) return false;
+        if (authUtils.isSuperAdmin(currentUser) || authUtils.isAdmin(currentUser)) {
+            return true;
+        }
+        boolean isAdmin = currentUser.getRoles().stream().anyMatch(r -> {
+            String name = r.getName() != null ? r.getName().toUpperCase() : "";
+            return name.contains("ADMIN");
+        });
+        if (assignment == null) {
+            return isAdmin;
+        }
         boolean isCc = currentUser.getSubRoles().stream().map(SubRole::getName)
-                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR"));
+                .anyMatch(sr -> sr != null && (sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR")));
         boolean isHod = currentUser.getSubRoles().stream().map(SubRole::getName)
-                .anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD"));
+                .anyMatch(sr -> sr != null && sr.trim().equalsIgnoreCase("HOD")) ||
+                currentUser.getRoles().stream().map(Role::getName)
+                .anyMatch(r -> r != null && (r.trim().equalsIgnoreCase("HOD") || r.trim().equalsIgnoreCase("ROLE_HOD")));
         boolean isAssignedFaculty = assignment.getTeacher() != null
                 && assignment.getTeacher().getUsername().equals(currentUser.getUsername());
 

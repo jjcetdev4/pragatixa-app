@@ -1,7 +1,7 @@
 package jjcet.PragatiX.modules.analytics.controller;
 
 import jjcet.PragatiX.modules.analytics.dto.*;
-import jjcet.PragatiX.modules.analytics.service.AttendanceAnalyticsService;
+import jjcet.PragatiX.modules.analytics.service.attendance.AttendanceAnalyticsService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,9 +14,10 @@ import java.util.List;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
-@RestController
+// Legacy controller superseded by api.controller.AnalyticsController
+// @RestController
 @RequestMapping("/api/v1/analytics/attendance")
-@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_SUPERADMIN', 'ADMIN', 'SUPER_ADMIN', 'SUPERADMIN')")
+@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_SUPERADMIN', 'ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'ROLE_HOD', 'HOD', 'ROLE_FACULTY', 'FACULTY', 'ROLE_STUDENT', 'STUDENT')")
 public class AttendanceAnalyticsController {
 
     private final AttendanceAnalyticsService service;
@@ -34,9 +35,7 @@ public class AttendanceAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Integer period) {
-        System.out.println("\n====== FORENSIC: ENTERED AttendanceAnalyticsController getOverview ======\n");
-        return ResponseEntity
-                .ok(service.getOverview(academicYear, departmentId, stageId, sectionId, startDate, endDate, period));
+        return ResponseEntity.ok(service.getOverview(academicYear, departmentId, stageId, sectionId, startDate, endDate, period));
     }
 
     @RequestMapping(value = "/trend", method = RequestMethod.GET)
@@ -48,8 +47,7 @@ public class AttendanceAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Integer period) {
-        return ResponseEntity
-                .ok(service.getTrend(academicYear, departmentId, stageId, sectionId, startDate, endDate, period));
+        return ResponseEntity.ok(service.getTrend(academicYear, departmentId, stageId, sectionId, startDate, endDate, period));
     }
 
     @RequestMapping(value = "/distribution", method = RequestMethod.GET)
@@ -61,8 +59,7 @@ public class AttendanceAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Integer period) {
-        return ResponseEntity.ok(
-                service.getDistribution(academicYear, departmentId, stageId, sectionId, startDate, endDate, period));
+        return ResponseEntity.ok(service.getDistribution(academicYear, departmentId, stageId, sectionId, startDate, endDate, period));
     }
 
     @RequestMapping(value = "/departments", method = RequestMethod.GET)
@@ -84,8 +81,7 @@ public class AttendanceAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Integer period,
             @RequestParam(required = false, defaultValue = "75.0") Double threshold) {
-        return ResponseEntity.ok(service.getLowAttendanceStudents(academicYear, departmentId, stageId, sectionId,
-                startDate, endDate, period, threshold));
+        return ResponseEntity.ok(service.getLowAttendanceStudents(academicYear, departmentId, stageId, sectionId, startDate, endDate, period, threshold));
     }
 
     @RequestMapping(value = "/sections", method = RequestMethod.GET)
@@ -96,8 +92,7 @@ public class AttendanceAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Integer period) {
-        return ResponseEntity
-                .ok(service.getSectionWiseAttendance(academicYear, departmentId, stageId, startDate, endDate, period));
+        return ResponseEntity.ok(service.getSectionWiseAttendance(academicYear, departmentId, stageId, startDate, endDate, period));
     }
 
     @RequestMapping(value = "/summary-table", method = RequestMethod.GET)
@@ -109,8 +104,7 @@ public class AttendanceAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Integer period) {
-        return ResponseEntity.ok(
-                service.getSummaryTable(academicYear, departmentId, stageId, sectionId, startDate, endDate, period));
+        return ResponseEntity.ok(service.getSummaryTable(academicYear, departmentId, stageId, sectionId, startDate, endDate, period));
     }
 
     @RequestMapping(value = "/export", method = RequestMethod.GET)
@@ -122,19 +116,17 @@ public class AttendanceAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Integer period) {
-
-        byte[] excelData = service.exportAttendanceReport(academicYear, departmentId, stageId, sectionId, startDate,
-                endDate, period);
-
+        
+        byte[] excelData = service.exportAttendanceReport(academicYear, departmentId, stageId, sectionId, startDate, endDate, period);
+        
         String dateStr = (startDate != null) ? startDate.toString() : LocalDate.now().toString();
-        String prefix = (departmentId != null) ? (sectionId != null ? "SectionReport_" : "DepartmentReport_")
-                : "AttendanceReport_";
+        String prefix = (departmentId != null) ? (sectionId != null ? "SectionReport_" : "DepartmentReport_") : "AttendanceReport_";
         String filename = prefix + dateStr + ".xlsx";
 
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=\"" + filename + "\"");
         headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
+        
         return new ResponseEntity<>(excelData, headers, org.springframework.http.HttpStatus.OK);
     }
 }

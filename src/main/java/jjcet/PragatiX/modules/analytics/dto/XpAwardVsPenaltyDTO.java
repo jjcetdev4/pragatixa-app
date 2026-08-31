@@ -5,8 +5,7 @@ public class XpAwardVsPenaltyDTO {
     private Long awardXp;
     private Long penaltyXp;
 
-    public XpAwardVsPenaltyDTO() {
-    }
+    public XpAwardVsPenaltyDTO() {}
 
     public XpAwardVsPenaltyDTO(String departmentName, Long awardXp, Long penaltyXp) {
         this.departmentName = departmentName;
@@ -14,27 +13,12 @@ public class XpAwardVsPenaltyDTO {
         this.penaltyXp = penaltyXp;
     }
 
-    public String getDepartmentName() {
-        return departmentName;
-    }
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
 
-    public void setDepartmentName(String departmentName) {
-        this.departmentName = departmentName;
-    }
+    public Long getAwardXp() { return awardXp; }
+    public void setAwardXp(Long awardXp) { this.awardXp = awardXp; }
 
-    public Long getAwardXp() {
-        return awardXp;
-    }
-
-    public void setAwardXp(Long awardXp) {
-        this.awardXp = awardXp;
-    }
-
-    public Long getPenaltyXp() {
-        return penaltyXp;
-    }
-
-    public void setPenaltyXp(Long penaltyXp) {
-        this.penaltyXp = penaltyXp;
-    }
+    public Long getPenaltyXp() { return penaltyXp; }
+    public void setPenaltyXp(Long penaltyXp) { this.penaltyXp = penaltyXp; }
 }

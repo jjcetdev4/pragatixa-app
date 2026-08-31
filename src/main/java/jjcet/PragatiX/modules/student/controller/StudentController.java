@@ -184,6 +184,17 @@ public class StudentController {
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @PutMapping("/batch-update")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPERADMIN', 'ADMIN')")
+    @Operation(summary = "Batch Update Students", description = "Updates Year, Semester, Department, and Section for multiple students at once. Super Admin only.")
+    public ResponseEntity<ApiResponse<Integer>> batchUpdateStudents(
+            @Valid @RequestBody BatchUpdateStudentsRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        ApiResponse<Integer> response = studentService.batchUpdateStudents(request, username);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
+    }
+
     @GetMapping("/bulk-upload/template")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     @Operation(summary = "Download Student Bulk Upload Template", description = "Generates and downloads an Excel template for bulk student upload.")
@@ -223,7 +234,7 @@ public class StudentController {
     }
 
     @PostMapping("/{id}/adjust-points")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Adjust Student Points", description = "Adds or deducts points for a student. Checks activity-faculty assignments.")
     public ResponseEntity<ApiResponse<StudentResponse>> adjustPoints(
             @PathVariable Long id,
@@ -235,14 +246,14 @@ public class StudentController {
     }
 
     @GetMapping("/{id}/discipline-logs")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Get Discipline Logs", description = "Fetch history logs of points adjustments for a student.")
-    public ResponseEntity<ApiResponse<List<DisciplineLog>>> getDisciplineLogs(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<List<?>>> getDisciplineLogs(@PathVariable Long id) {
         return ResponseEntity.ok(studentService.getDisciplineLogs(id));
     }
 
     @GetMapping("/department-performance")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Get Department Performance Report", description = "Returns overall and year-wise average discipline scores. Requires sub-role HOD.")
     public ResponseEntity<ApiResponse<DepartmentPerformanceResponse>> getDepartmentPerformance() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -252,7 +263,7 @@ public class StudentController {
     }
 
     @PostMapping("/{id}/make-captain")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Promote Student to Team Captain", description = "Sets the student as the Captain of their assigned team.")
     public ResponseEntity<ApiResponse<Void>> promoteToTeamCaptain(@PathVariable Long id) {
         ApiResponse<Void> response = studentService.promoteToTeamCaptain(id);
@@ -260,7 +271,7 @@ public class StudentController {
     }
 
     @PostMapping("/{id}/remove-captain")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Remove Student from Team Captain status", description = "Removes the student as the Captain of their assigned team.")
     public ResponseEntity<ApiResponse<Void>> removeTeamCaptain(@PathVariable Long id) {
         ApiResponse<Void> response = studentService.removeTeamCaptain(id);
@@ -281,6 +292,19 @@ public class StudentController {
     public ResponseEntity<ApiResponse<List<jjcet.PragatiX.entity.Activity>>> getActivitiesBySubgroup(
             @PathVariable Long subgroupId) {
         List<jjcet.PragatiX.entity.Activity> activities = activityRepository.findBySubgroupId(subgroupId);
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equalsIgnoreCase(a.getAuthority())
+                        || "ROLE_SUPER_ADMIN".equalsIgnoreCase(a.getAuthority())
+                        || "ROLE_SUPERADMIN".equalsIgnoreCase(a.getAuthority())
+                        || "ADMIN".equalsIgnoreCase(a.getAuthority())
+                        || "SUPER_ADMIN".equalsIgnoreCase(a.getAuthority()));
+        if (!isAdmin && activities != null) {
+            activities = activities.stream()
+                    .filter(a -> !a.isDeleted() && !Boolean.TRUE.equals(a.getAttendanceEngineEnabled()))
+                    .collect(java.util.stream.Collectors.toList());
+        }
         return ResponseEntity.ok(ApiResponse.ok("Activities fetched successfully", activities));
     }
 

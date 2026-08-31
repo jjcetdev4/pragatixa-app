@@ -50,7 +50,7 @@ public class LevelBadgeService {
     }
 
     public List<Badge> getAllBadges() {
-        return badgeRepository.findAll();
+        return badgeRepository.findByDeletedFalse();
     }
 
     public List<StudentBadgeResponse> getBadgesForStudent(String regNo) {
@@ -69,13 +69,17 @@ public class LevelBadgeService {
         if (studentOpt.isEmpty()) {
             return ApiResponse.error("Student not found");
         }
-        Optional<Badge> badgeOpt = badgeRepository.findByName(badgeName);
+        Optional<Badge> badgeOpt = badgeRepository.findByNameAndDeletedFalse(badgeName);
         if (badgeOpt.isEmpty()) {
             return ApiResponse.error("Badge '" + badgeName + "' not found");
         }
 
         Student student = studentOpt.get();
         Badge badge = badgeOpt.get();
+
+        if (badge.isProofRequired() && (evidenceUrl == null || evidenceUrl.trim().isEmpty())) {
+            return ApiResponse.error("Proof link is required for this badge");
+        }
 
         List<StudentBadge> existingClaims = studentBadgeRepository.findByStudentIdAndBadgeId(student.getId(),
                 badge.getId());
@@ -91,7 +95,7 @@ public class LevelBadgeService {
         StudentBadge claim = StudentBadge.builder()
                 .student(student)
                 .badge(badge)
-                .evidenceUrl(evidenceUrl)
+                .evidenceUrl(evidenceUrl != null ? evidenceUrl.trim() : null)
                 .status("PENDING")
                 .awardedAt(LocalDateTime.now())
                 .build();

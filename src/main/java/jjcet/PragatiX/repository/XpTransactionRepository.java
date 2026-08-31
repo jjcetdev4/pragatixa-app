@@ -28,4 +28,8 @@ public interface XpTransactionRepository extends JpaRepository<XpTransaction, Lo
     @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(tx.xpPoints), 0) FROM XpTransaction tx WHERE tx.student.id = :regNo AND tx.activity.id = :activityId AND tx.status = 'APPROVED'")
     int sumApprovedPointsByStudentAndActivity(@org.springframework.data.repository.query.Param("regNo") Long regNo,
             @org.springframework.data.repository.query.Param("activityId") Long activityId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT tx FROM XpTransaction tx WHERE (tx.approvedBy IS NOT NULL AND (tx.approvedBy = :fullName OR tx.approvedBy = :username)) ORDER BY tx.submittedAt DESC")
+    List<XpTransaction> findByApprovedByNameOrUsername(@org.springframework.data.repository.query.Param("fullName") String fullName,
+            @org.springframework.data.repository.query.Param("username") String username);
 }

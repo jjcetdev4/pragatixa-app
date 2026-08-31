@@ -51,6 +51,14 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
+    <!-- Spring Boot DevTools -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
+    </dependency>
+
     <!-- Spring Boot Actuator -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -99,14 +107,6 @@
       <artifactId>jjwt-jackson</artifactId>
       <version>${jjwt.version}</version>
       <scope>runtime</scope>
-    </dependency>
-
-
-    <!-- Twilio Java SDK -->
-    <dependency>
-      <groupId>com.twilio.sdk</groupId>
-      <artifactId>twilio</artifactId>
-      <version>9.14.0</version>
     </dependency>
 
     <!-- Springdoc OpenAPI / Swagger UI -->

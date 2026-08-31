@@ -25,4 +25,7 @@ public interface DisciplineLogRepository extends JpaRepository<DisciplineLog, Lo
 
     @Query("SELECT COALESCE(SUM(dl.points), 0) FROM DisciplineLog dl WHERE dl.student.id = :regNo AND dl.activity.id = :activityId AND (dl.remarks IS NULL OR dl.remarks NOT IN ('PENDING', 'PENDING REVIEW', 'REJECTED'))")
     int sumApprovedPointsByStudentAndActivity(@Param("regNo") Long regNo, @Param("activityId") Long activityId);
+
+    @Query("SELECT dl FROM DisciplineLog dl WHERE dl.recordedBy.id = :userId OR (dl.recordedByFaculty IS NOT NULL AND dl.recordedByFaculty.user.id = :userId) ORDER BY dl.createdAt DESC")
+    List<DisciplineLog> findByTeacherUserId(@Param("userId") Long userId);
 }

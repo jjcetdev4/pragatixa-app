@@ -103,7 +103,7 @@ public class Student implements SoftDeletable {
     private String phone;
 
     @Column(nullable = false)
-    private int score = 100;
+    private int score = 0;
 
     @Column(length = 20)
     private String semester;

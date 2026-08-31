@@ -32,7 +32,24 @@ public class StudentLevelService {
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         int totalXp = student.getTotalXp();
-        List<Level> levels = levelRepository.findAllByOrderByXpMinAsc();
+        jjcet.PragatiX.enums.AcademicYear studentYear = null;
+        if (student.getYearRef() != null) {
+            studentYear = jjcet.PragatiX.enums.AcademicYear.fromString(String.valueOf(student.getYearRef().getYearNo()));
+        }
+        if (studentYear == null && student.getAcademicYear() != null && !student.getAcademicYear().trim().isEmpty()) {
+            studentYear = jjcet.PragatiX.enums.AcademicYear.fromString(student.getAcademicYear());
+        }
+
+        List<Level> levels = new ArrayList<>();
+        if (studentYear != null) {
+            levels = levelRepository.findByAcademicYearAndDeletedFalseOrderByXpMinAsc(studentYear);
+        }
+        if (levels.isEmpty()) {
+            levels = levelRepository.findByDeletedFalseOrderByXpMinAsc();
+        }
+        if (levels.isEmpty()) {
+            levels = levelRepository.findAllByOrderByXpMinAsc();
+        }
 
         if (levels.isEmpty()) {
             throw new RuntimeException("No levels configured in the system.");

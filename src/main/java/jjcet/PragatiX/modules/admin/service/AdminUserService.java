@@ -26,8 +26,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,11 +52,16 @@ public class AdminUserService {
     private final AdminMapper adminMapper;
     private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
     private final YearRepository yearRepository;
+    private final jjcet.PragatiX.repository.DisciplineLogRepository disciplineLogRepository;
+    private final jjcet.PragatiX.repository.XpTransactionRepository xpTransactionRepository;
+    private final jjcet.PragatiX.modules.faculty.repository.FacultyRepository facultyRepository;
 
     public AdminUserService(DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder,
             RoleRepository roleRepository, SectionRepository sectionRepository, SubRoleRepository subRoleRepository,
             UserRepository userRepository, AdminMapper adminMapper, jjcet.PragatiX.modules.audit.service.AuditService auditService,
-            YearRepository yearRepository) {
+            YearRepository yearRepository, jjcet.PragatiX.repository.DisciplineLogRepository disciplineLogRepository,
+            jjcet.PragatiX.repository.XpTransactionRepository xpTransactionRepository,
+            jjcet.PragatiX.modules.faculty.repository.FacultyRepository facultyRepository) {
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
@@ -62,6 +71,9 @@ public class AdminUserService {
         this.adminMapper = adminMapper;
         this.auditService = auditService;
         this.yearRepository = yearRepository;
+        this.disciplineLogRepository = disciplineLogRepository;
+        this.xpTransactionRepository = xpTransactionRepository;
+        this.facultyRepository = facultyRepository;
     }
 
     @Transactional(readOnly = true)
@@ -439,5 +451,261 @@ public class AdminUserService {
             return u.getSection() == null;
         }
         return u.getSection() != null && u.getSection().getId().equals(targetSection.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getTeacherPointsHistory(Long teacherId) {
+        User user = userRepository.findById(teacherId).orElse(null);
+        if (user == null) {
+            jjcet.PragatiX.entity.Faculty faculty = facultyRepository.findById(teacherId).orElse(null);
+            if (faculty != null) {
+                user = faculty.getUser();
+            }
+        }
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Teacher not found"));
+        }
+
+        List<jjcet.PragatiX.entity.DisciplineLog> disciplineLogs = disciplineLogRepository.findByTeacherUserId(user.getId());
+        List<jjcet.PragatiX.entity.XpTransaction> xpTransactions = xpTransactionRepository
+                .findByApprovedByNameOrUsername(user.getFullName(), user.getUsername());
+
+        List<java.util.Map<String, Object>> historyList = new java.util.ArrayList<>();
+        Set<String> uniqueStudents = new HashSet<>();
+        int totalPositive = 0;
+        int totalPenalty = 0;
+
+        Map<String, Map<String, Object>> groupDlMap = new LinkedHashMap<>();
+        Map<String, Map<String, Object>> groupXpMap = new LinkedHashMap<>();
+
+        // 1. Process Discipline Logs
+        if (disciplineLogs != null) {
+            for (jjcet.PragatiX.entity.DisciplineLog dl : disciplineLogs) {
+                if (dl.getStudent() != null && dl.getStudent().getRegNo() != null) {
+                    uniqueStudents.add(dl.getStudent().getRegNo());
+                }
+                if (dl.getPoints() >= 0) {
+                    totalPositive += dl.getPoints();
+                } else {
+                    totalPenalty += Math.abs(dl.getPoints());
+                }
+
+                String category = dl.getSubgroup() != null ? dl.getSubgroup().getName()
+                        : (dl.getActivity() != null ? dl.getActivity().getName() : "Discipline");
+                String reason = dl.getReason() != null ? dl.getReason() : "Points Update";
+                String createdStr = dl.getCreatedAt() != null ? dl.getCreatedAt().toString()
+                        : (dl.getIncidentDate() != null ? dl.getIncidentDate().toString() : "");
+                String timeKey = createdStr.length() >= 16 ? createdStr.substring(0, 16) : createdStr;
+
+                boolean isGroup = (category != null && category.toUpperCase().contains("GROUP"))
+                        || (reason != null && reason.toUpperCase().contains("TEAM"))
+                        || (dl.getActivity() != null && "GROUP".equalsIgnoreCase(dl.getActivity().getModeType()));
+
+                if (isGroup) {
+                    jjcet.PragatiX.entity.Student st = dl.getStudent();
+                    jjcet.PragatiX.entity.Team team = st != null ? st.getTeam() : null;
+                    Long teamId = team != null ? team.getId() : 0L;
+                    String teamName = team != null && team.getName() != null ? team.getName()
+                            : (reason.toUpperCase().startsWith("TEAM") ? reason.split("/")[0].trim() : "Team Activity");
+                    String dept = team != null && team.getDepartment() != null ? team.getDepartment().getName()
+                            : (st != null && st.getDepartment() != null ? st.getDepartment().getName() : "");
+                    String yr = team != null && team.getYear() != null ? team.getYear()
+                            : (st != null && st.getYear() != null ? st.getYear() : (st != null && st.getAcademicYear() != null ? st.getAcademicYear() : ""));
+                    String sec = team != null && team.getSection() != null ? team.getSection().getSectionName()
+                            : (st != null && st.getSection() != null ? st.getSection().getSectionName() : "");
+
+                    String groupKey = "DL_" + teamId + "_" + (dl.getActivity() != null ? dl.getActivity().getId() : 0L) + "_" + reason + "_" + timeKey + "_" + dl.getPoints();
+
+                    if (groupDlMap.containsKey(groupKey)) {
+                        Map<String, Object> gItem = groupDlMap.get(groupKey);
+                        int count = (int) gItem.getOrDefault("memberCount", 1) + 1;
+                        gItem.put("memberCount", count);
+                        if (st != null) {
+                            List<Map<String, Object>> mems = (List<Map<String, Object>>) gItem.get("members");
+                            Map<String, Object> mData = new HashMap<>();
+                            mData.put("id", st.getId());
+                            mData.put("name", st.getFullName());
+                            mData.put("regNo", st.getRegNo());
+                            mData.put("dept", st.getDepartment() != null ? st.getDepartment().getName() : "");
+                            mData.put("gender", st.getGender() != null ? st.getGender() : "");
+                            mData.put("points", dl.getPoints());
+                            mems.add(mData);
+                        }
+                    } else {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("id", dl.getId());
+                        item.put("source", "DISCIPLINE_LOG");
+                        item.put("isGroup", true);
+                        item.put("points", dl.getPoints());
+                        item.put("reason", reason);
+                        item.put("remarks", dl.getRemarks());
+                        item.put("category", category);
+                        item.put("createdAt", createdStr);
+                        item.put("teamId", teamId);
+                        item.put("teamName", teamName);
+                        item.put("department", dept);
+                        item.put("year", yr);
+                        item.put("section", sec);
+                        item.put("memberCount", 1);
+                        List<Map<String, Object>> mems = new ArrayList<>();
+                        if (st != null) {
+                            Map<String, Object> mData = new HashMap<>();
+                            mData.put("id", st.getId());
+                            mData.put("name", st.getFullName());
+                            mData.put("regNo", st.getRegNo());
+                            mData.put("dept", st.getDepartment() != null ? st.getDepartment().getName() : "");
+                            mData.put("gender", st.getGender() != null ? st.getGender() : "");
+                            mData.put("points", dl.getPoints());
+                            mems.add(mData);
+                        }
+                        item.put("members", mems);
+                        groupDlMap.put(groupKey, item);
+                        historyList.add(item);
+                    }
+                } else {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("id", dl.getId());
+                    item.put("source", "DISCIPLINE_LOG");
+                    item.put("isGroup", false);
+                    item.put("points", dl.getPoints());
+                    item.put("reason", reason);
+                    item.put("remarks", dl.getRemarks());
+                    item.put("category", category);
+                    if (dl.getStudent() != null) {
+                        item.put("studentId", dl.getStudent().getId());
+                        item.put("studentName", dl.getStudent().getFullName());
+                        item.put("studentRegNo", dl.getStudent().getRegNo());
+                        item.put("studentDept", dl.getStudent().getDepartment() != null ? dl.getStudent().getDepartment().getName() : "");
+                    }
+                    item.put("createdAt", createdStr);
+                    historyList.add(item);
+                }
+            }
+        }
+
+        // 2. Process XP Transactions
+        if (xpTransactions != null) {
+            for (jjcet.PragatiX.entity.XpTransaction tx : xpTransactions) {
+                if (tx.getStudent() != null && tx.getStudent().getRegNo() != null) {
+                    uniqueStudents.add(tx.getStudent().getRegNo());
+                }
+                if (tx.getXpPoints() >= 0) {
+                    totalPositive += tx.getXpPoints();
+                } else {
+                    totalPenalty += Math.abs(tx.getXpPoints());
+                }
+
+                String category = tx.getCategory() != null ? tx.getCategory() : "Activity";
+                String actName = tx.getActivityName() != null ? tx.getActivityName()
+                        : (tx.getActivity() != null ? tx.getActivity().getName() : "Activity XP");
+                String createdStr = tx.getSubmittedAt() != null ? tx.getSubmittedAt().toString() : "";
+                String timeKey = createdStr.length() >= 16 ? createdStr.substring(0, 16) : createdStr;
+
+                boolean isGroup = (category != null && category.toUpperCase().contains("GROUP"))
+                        || (actName != null && actName.toUpperCase().contains("TEAM"))
+                        || (tx.getActivity() != null && "GROUP".equalsIgnoreCase(tx.getActivity().getModeType()));
+
+                if (isGroup) {
+                    jjcet.PragatiX.entity.Student st = tx.getStudent();
+                    jjcet.PragatiX.entity.Team team = st != null ? st.getTeam() : null;
+                    Long teamId = team != null ? team.getId() : 0L;
+                    String teamName = team != null && team.getName() != null ? team.getName()
+                            : (actName.toUpperCase().startsWith("TEAM") ? actName.split("/")[0].trim() : "Team Activity");
+                    String dept = team != null && team.getDepartment() != null ? team.getDepartment().getName()
+                            : (st != null && st.getDepartment() != null ? st.getDepartment().getName() : "");
+                    String yr = team != null && team.getYear() != null ? team.getYear()
+                            : (st != null && st.getYear() != null ? st.getYear() : (st != null && st.getAcademicYear() != null ? st.getAcademicYear() : ""));
+                    String sec = team != null && team.getSection() != null ? team.getSection().getSectionName()
+                            : (st != null && st.getSection() != null ? st.getSection().getSectionName() : "");
+
+                    String groupKey = "XP_" + teamId + "_" + (tx.getActivity() != null ? tx.getActivity().getId() : 0L) + "_" + actName + "_" + timeKey + "_" + tx.getXpPoints();
+
+                    if (groupXpMap.containsKey(groupKey)) {
+                        Map<String, Object> gItem = groupXpMap.get(groupKey);
+                        int count = (int) gItem.getOrDefault("memberCount", 1) + 1;
+                        gItem.put("memberCount", count);
+                        if (st != null) {
+                            List<Map<String, Object>> mems = (List<Map<String, Object>>) gItem.get("members");
+                            Map<String, Object> mData = new HashMap<>();
+                            mData.put("id", st.getId());
+                            mData.put("name", st.getFullName());
+                            mData.put("regNo", st.getRegNo());
+                            mData.put("dept", st.getDepartment() != null ? st.getDepartment().getName() : "");
+                            mData.put("gender", st.getGender() != null ? st.getGender() : "");
+                            mData.put("points", tx.getXpPoints());
+                            mems.add(mData);
+                        }
+                    } else {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("id", tx.getId());
+                        item.put("source", "XP_TRANSACTION");
+                        item.put("isGroup", true);
+                        item.put("points", tx.getXpPoints());
+                        item.put("reason", actName);
+                        item.put("remarks", tx.getCategory());
+                        item.put("category", category);
+                        item.put("createdAt", createdStr);
+                        item.put("teamId", teamId);
+                        item.put("teamName", teamName);
+                        item.put("department", dept);
+                        item.put("year", yr);
+                        item.put("section", sec);
+                        item.put("memberCount", 1);
+                        List<Map<String, Object>> mems = new ArrayList<>();
+                        if (st != null) {
+                            Map<String, Object> mData = new HashMap<>();
+                            mData.put("id", st.getId());
+                            mData.put("name", st.getFullName());
+                            mData.put("regNo", st.getRegNo());
+                            mData.put("dept", st.getDepartment() != null ? st.getDepartment().getName() : "");
+                            mData.put("gender", st.getGender() != null ? st.getGender() : "");
+                            mData.put("points", tx.getXpPoints());
+                            mems.add(mData);
+                        }
+                        item.put("members", mems);
+                        groupXpMap.put(groupKey, item);
+                        historyList.add(item);
+                    }
+                } else {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("id", tx.getId());
+                    item.put("source", "XP_TRANSACTION");
+                    item.put("isGroup", false);
+                    item.put("points", tx.getXpPoints());
+                    item.put("reason", actName);
+                    item.put("remarks", tx.getCategory());
+                    item.put("category", category);
+                    if (tx.getStudent() != null) {
+                        item.put("studentId", tx.getStudent().getId());
+                        item.put("studentName", tx.getStudent().getFullName());
+                        item.put("studentRegNo", tx.getStudent().getRegNo());
+                        item.put("studentDept", tx.getStudent().getDepartment() != null ? tx.getStudent().getDepartment().getName() : "");
+                    }
+                    item.put("createdAt", createdStr);
+                    historyList.add(item);
+                }
+            }
+        }
+
+        // Sort descending by createdAt
+        historyList.sort((a, b) -> {
+            String tA = (String) a.get("createdAt");
+            String tB = (String) b.get("createdAt");
+            if (tA == null && tB == null) return 0;
+            if (tA == null) return 1;
+            if (tB == null) return -1;
+            return tB.compareTo(tA);
+        });
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("teacher", adminMapper.toUserResponse(user));
+        result.put("totalPositivePoints", totalPositive);
+        result.put("totalPenaltyPoints", totalPenalty);
+        result.put("totalActions", historyList.size());
+        result.put("studentsImpacted", uniqueStudents.size());
+        result.put("history", historyList);
+
+        return ResponseEntity.ok(ApiResponse.ok("Teacher points history loaded successfully", result));
     }
 }

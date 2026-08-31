@@ -1,30 +1,41 @@
 package jjcet.PragatiX.modules.admin.service;
 
 import jjcet.PragatiX.common.response.ApiResponse;
+import jjcet.PragatiX.entity.ActivityCategory;
+import jjcet.PragatiX.repository.ActivityCategoryRepository;
 import jjcet.PragatiX.repository.CustomFrequencyRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ActivityValidationService {
 
     private final CustomFrequencyRepository customFrequencyRepository;
+    private final ActivityCategoryRepository activityCategoryRepository;
 
-    public ActivityValidationService(CustomFrequencyRepository customFrequencyRepository) {
+    public ActivityValidationService(CustomFrequencyRepository customFrequencyRepository,
+                                     ActivityCategoryRepository activityCategoryRepository) {
         this.customFrequencyRepository = customFrequencyRepository;
+        this.activityCategoryRepository = activityCategoryRepository;
     }
 
     public ResponseEntity<ApiResponse<String>> validateXpCategory(String xpCategory) {
         if (xpCategory == null || xpCategory.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(ApiResponse.<String>error("XP Category is required"));
         }
-        List<String> allowedCategories = List.of(
-                "Academic", "Skill", "Communication", "Leadership", "Discipline",
-                "Placement", "Innovation", "Community", "Sports", "Cultural");
-        boolean isAllowed = allowedCategories.stream().anyMatch(cat -> cat.equalsIgnoreCase(xpCategory.trim()));
-        if (!isAllowed) {
-            return ResponseEntity.badRequest().body(ApiResponse.<String>error("Invalid XP Category: " + xpCategory));
+        String trimmed = xpCategory.trim();
+        Optional<ActivityCategory> catOpt = activityCategoryRepository.findByNameIgnoreCaseAndDeletedFalse(trimmed);
+        if (catOpt.isEmpty()) {
+            List<String> allowedCategories = List.of(
+                    "Academic", "Skill", "Communication", "Leadership", "Discipline",
+                    "Placement", "Innovation", "Community", "Sports", "Cultural");
+            boolean isAllowed = allowedCategories.stream().anyMatch(cat -> cat.equalsIgnoreCase(trimmed));
+            if (!isAllowed) {
+                return ResponseEntity.badRequest().body(ApiResponse.<String>error("Invalid XP Category: " + xpCategory));
+            }
         }
         return null; // OK
     }
@@ -32,14 +43,20 @@ public class ActivityValidationService {
     public String matchXpCategory(String xpCategory) {
         if (xpCategory == null || xpCategory.trim().isEmpty())
             return xpCategory;
+        String trimmed = xpCategory.trim();
+        Optional<ActivityCategory> catOpt = activityCategoryRepository.findByNameIgnoreCaseAndDeletedFalse(trimmed);
+        if (catOpt.isPresent()) {
+            return catOpt.get().getName();
+        }
         List<String> allowedCategories = List.of(
                 "Academic", "Skill", "Communication", "Leadership", "Discipline",
                 "Placement", "Innovation", "Community", "Sports", "Cultural");
         return allowedCategories.stream()
-                .filter(cat -> cat.equalsIgnoreCase(xpCategory.trim()))
+                .filter(cat -> cat.equalsIgnoreCase(trimmed))
                 .findFirst()
                 .orElse(xpCategory);
     }
+
 
     public ResponseEntity<ApiResponse<String>> validateXpConfiguration(boolean awardEnabled, boolean penaltyEnabled,
             Integer awardXp, Integer penaltyXp) {

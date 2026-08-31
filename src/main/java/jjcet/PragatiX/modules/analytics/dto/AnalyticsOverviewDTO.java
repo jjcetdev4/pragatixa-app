@@ -10,8 +10,7 @@ public class AnalyticsOverviewDTO {
     public AnalyticsOverviewDTO() {
     }
 
-    public AnalyticsOverviewDTO(Double overallAttendancePercentage, Integer presentStudents, Integer partialAbsentees,
-            Integer fullDayAbsentees, Integer totalStudents) {
+    public AnalyticsOverviewDTO(Double overallAttendancePercentage, Integer presentStudents, Integer partialAbsentees, Integer fullDayAbsentees, Integer totalStudents) {
         this.overallAttendancePercentage = overallAttendancePercentage;
         this.presentStudents = presentStudents;
         this.partialAbsentees = partialAbsentees;

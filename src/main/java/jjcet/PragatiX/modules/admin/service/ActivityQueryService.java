@@ -123,7 +123,15 @@ public class ActivityQueryService {
                                         || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
                                 .toList();
                     }
+
+                    activities = activities.stream()
+                            .filter(a -> !Boolean.TRUE.equals(a.getAttendanceEngineEnabled()))
+                            .toList();
                 }
+            } else {
+                activities = activities.stream()
+                        .filter(a -> !Boolean.TRUE.equals(a.getAttendanceEngineEnabled()))
+                        .toList();
             }
         }
 
@@ -570,7 +578,15 @@ public class ActivityQueryService {
                         System.out.println("Rows After Teacher Assignment Filter for Teacher ["
                                 + currentUser.getUsername() + "]: " + activities.size());
                     }
+
+                    activities = activities.stream()
+                            .filter(a -> !Boolean.TRUE.equals(a.getAttendanceEngineEnabled()))
+                            .toList();
                 }
+            } else {
+                activities = activities.stream()
+                        .filter(a -> !Boolean.TRUE.equals(a.getAttendanceEngineEnabled()))
+                        .toList();
             }
         }
 

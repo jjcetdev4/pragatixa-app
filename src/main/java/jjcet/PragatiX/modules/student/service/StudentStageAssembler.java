@@ -104,6 +104,7 @@ public class StudentStageAssembler {
                                     return true;
                                 return mappedActivityIds.contains(a.getId());
                             })
+                            .filter(a -> !Boolean.TRUE.equals(a.getAttendanceEngineEnabled()))
                             .collect(java.util.stream.Collectors.toList());
                     List<ActivityResponse> enrichedActs = activityAssembler.enrichActivities(student, activities,
                             assignmentsByActivity, aggregatedXp, stage.getId());

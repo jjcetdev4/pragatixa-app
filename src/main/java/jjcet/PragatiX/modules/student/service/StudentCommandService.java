@@ -459,4 +459,96 @@ public class StudentCommandService {
 
         return ApiResponse.ok("Student deleted successfully", null);
     }
+
+    @Transactional
+    public ApiResponse<Integer> batchUpdateStudents(BatchUpdateStudentsRequest request, String username) {
+        if (request.getStudentIds() == null || request.getStudentIds().isEmpty()) {
+            return ApiResponse.error("No students selected for batch update.");
+        }
+
+        Department department = null;
+        if (request.getDepartmentId() != null) {
+            department = studentLookupService.resolveDepartment(request.getDepartmentId(), null);
+        }
+
+        Year year = null;
+        if (request.getYearId() != null || (request.getYear() != null && !request.getYear().trim().isEmpty())) {
+            year = studentLookupService.resolveYear(request.getYearId(), request.getYear());
+        }
+
+        Semester semester = null;
+        if (request.getSemesterId() != null || (request.getSemester() != null && !request.getSemester().trim().isEmpty())) {
+            semester = studentLookupService.resolveSemester(request.getSemesterId(), request.getSemester());
+        }
+
+        // Validate Semester vs Year rules:
+        // Year 1 -> Semesters 1, 2
+        // Year 2 -> Semesters 3, 4
+        // Year 3 -> Semesters 5, 6
+        // Year 4 -> Semesters 7, 8
+        if (year != null && semester != null) {
+            byte yNo = year.getYearNo();
+            byte sNo = semester.getSemesterNo();
+            boolean valid = false;
+            if (yNo == 1 && (sNo == 1 || sNo == 2)) valid = true;
+            else if (yNo == 2 && (sNo == 3 || sNo == 4)) valid = true;
+            else if (yNo == 3 && (sNo == 5 || sNo == 6)) valid = true;
+            else if (yNo == 4 && (sNo == 7 || sNo == 8)) valid = true;
+
+            if (!valid) {
+                return ApiResponse.error("Invalid Semester " + sNo + " for Year " + yNo + ". Year 1 has Sem 1-2, Year 2 has Sem 3-4, Year 3 has Sem 5-6, Year 4 has Sem 7-8.");
+            }
+        }
+
+        AcademicYear academicYear = null;
+        if (request.getAcademicYearId() != null || (request.getAcademicYear() != null && !request.getAcademicYear().trim().isEmpty())) {
+            academicYear = studentLookupService.resolveAcademicYear(request.getAcademicYearId(), request.getAcademicYear());
+        }
+
+        Section section = null;
+        if (request.getSectionId() != null) {
+            section = studentLookupService.resolveSection(request.getSectionId(), null, department);
+        }
+
+        java.util.List<Student> students = studentRepository.findAllById(request.getStudentIds());
+        int updatedCount = 0;
+
+        for (Student student : students) {
+            if (student.isDeleted()) continue;
+
+            if (department != null) {
+                student.setDepartment(department);
+            }
+            if (year != null) {
+                student.setYearRef(year);
+                student.setYear(String.valueOf(year.getYearNo()));
+            }
+            if (semester != null) {
+                student.setSemesterRef(semester);
+                student.setSemester(String.valueOf(semester.getSemesterNo()));
+            }
+            if (section != null) {
+                student.setSection(section);
+            }
+            if (academicYear != null) {
+                student.setAcademicYearRef(academicYear);
+                student.setAcademicYear(academicYear.getAcademicYear());
+            }
+
+            studentRepository.save(student);
+            updatedCount++;
+        }
+
+        if (username != null) {
+            auditService.log(
+                    jjcet.PragatiX.enums.AuditAction.UPDATE,
+                    jjcet.PragatiX.enums.AuditModule.STUDENT,
+                    "STUDENT_BATCH",
+                    0L,
+                    "Batch updated " + updatedCount + " students by " + username
+            );
+        }
+
+        return ApiResponse.ok("Successfully updated " + updatedCount + " students.", updatedCount);
+    }
 }

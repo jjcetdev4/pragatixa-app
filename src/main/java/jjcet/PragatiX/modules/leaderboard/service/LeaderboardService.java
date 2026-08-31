@@ -10,10 +10,6 @@ import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
 import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import jjcet.PragatiX.modules.student.service.StudentMapper;
 import jjcet.PragatiX.repository.YearRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +19,6 @@ import jjcet.PragatiX.modules.leaderboard.dto.response.FilterOptionsDto;
 import jjcet.PragatiX.entity.Department;
 import java.util.stream.Collectors;
 import java.util.List;
-import java.util.Map;
 import java.util.ArrayList;
 import jjcet.PragatiX.modules.authentication.security.AuthUtils;
 
@@ -62,7 +57,22 @@ public class LeaderboardService {
         Long targetYearId = yearId;
         Long targetSectionId = sectionId;
 
-        if (isAdmin && !isSuperAdmin) {
+        // Auto-scope for regular students / captains to strictly compare within their own year
+        if (currentUser != null && !isAdmin && !isSuperAdmin) {
+            Student student = studentRepository.findByUserId(currentUser.getId())
+                    .or(() -> studentRepository.findByRegNo(currentUser.getUsername()))
+                    .or(() -> studentRepository.findByEmail(currentUser.getEmail()))
+                    .orElse(null);
+            if (student != null) {
+                if (targetYearId == null) {
+                    if (student.getYearRef() != null) {
+                        targetYearId = student.getYearRef().getId();
+                    } else if (student.getYear() != null) {
+                        targetYearId = resolveYearId(student.getYear());
+                    }
+                }
+            }
+        } else if (isAdmin && !isSuperAdmin) {
             String adminYearStr = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
             if (adminYearStr != null) {
                 Long adminYearId = resolveYearId(adminYearStr);
@@ -71,10 +81,8 @@ public class LeaderboardService {
                 }
             }
         }
-        // Note: All teachers (including Class Coordinators) have read-only access to view any department/class leaderboard.
 
         List<Student> students = studentRepository.findAll();
-
         students = students.stream().filter(Student::isActive).collect(Collectors.toList());
 
         final Long finalDeptId = targetDeptId;
@@ -101,9 +109,9 @@ public class LeaderboardService {
         List<StudentResponse> responses = students.stream()
                 .map(studentMapper::toResponse)
                 .sorted((a, b) -> {
-                    int cmp = Integer.compare(b.getScore(), a.getScore());
+                    int cmp = Integer.compare(b.getTotalXp(), a.getTotalXp());
                     if (cmp != 0) return cmp;
-                    cmp = Integer.compare(b.getTotalXp(), a.getTotalXp());
+                    cmp = Integer.compare(b.getScore(), a.getScore());
                     if (cmp != 0) return cmp;
                     String nameA = a.getFullName() != null ? a.getFullName() : "";
                     String nameB = b.getFullName() != null ? b.getFullName() : "";
@@ -157,6 +165,28 @@ public class LeaderboardService {
                     });
                 }
             }
+        } else if (isSuperAdmin) {
+            List<User> yearAdmins = userRepository.findByRoleName("ROLE_ADMIN");
+            java.util.Set<Long> assignedIds = new java.util.HashSet<>();
+            for (User u : yearAdmins) {
+                if (u.getRoles().stream().noneMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()) || "SUPER_ADMIN".equals(r.getName()))) {
+                    if (u.getAssignedYear() != null) {
+                        assignedIds.add(u.getAssignedYear().getId());
+                    } else if (u.getAcademicYear() != null) {
+                        String adminYearStr = AuthUtils.getAssignedYearString(u.getAcademicYear());
+                        Long aId = resolveYearId(adminYearStr);
+                        if (aId != null) assignedIds.add(aId);
+                    }
+                }
+            }
+            if (!assignedIds.isEmpty()) {
+                yearRepository.findAll().stream()
+                        .filter(y -> assignedIds.contains(y.getId()))
+                        .forEach(y -> yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName())));
+            } else {
+                yearRepository.findAll()
+                        .forEach(y -> yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName())));
+            }
         } else {
             yearRepository.findAll()
                     .forEach(y -> yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName())));
@@ -176,8 +206,18 @@ public class LeaderboardService {
 
         if (departmentId != null) {
             List<Section> secs = sectionRepository.findByDepartment_Id(departmentId);
-            secs.forEach(
-                    s -> sectionFilters.add(new FilterOptionsDto.FilterItem(s.getId().toString(), s.getSectionName())));
+            secs.forEach(s -> {
+                String rawName = s.getSectionName() != null ? s.getSectionName() : "";
+                String cleanName = rawName.replaceAll("(?i)\\s*-\\s*\\d{4}\\s*Batch.*", "").trim();
+                sectionFilters.add(new FilterOptionsDto.FilterItem(s.getId().toString(), cleanName));
+            });
+        } else {
+            List<Section> secs = sectionRepository.findAll();
+            secs.forEach(s -> {
+                String rawName = s.getSectionName() != null ? s.getSectionName() : "";
+                String cleanName = rawName.replaceAll("(?i)\\s*-\\s*\\d{4}\\s*Batch.*", "").trim();
+                sectionFilters.add(new FilterOptionsDto.FilterItem(s.getId().toString(), cleanName));
+            });
         }
 
         return ApiResponse.ok(new FilterOptionsDto(yearFilters, deptFilters, sectionFilters));

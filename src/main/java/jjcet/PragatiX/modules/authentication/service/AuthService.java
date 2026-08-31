@@ -239,7 +239,7 @@ public class AuthService {
             }
         }
         boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
-        int rank = studentRepository.getStudentRankByScore(student.getScore());
+        int rank = calculateStudentLeaderboardRank(student);
 
         List<String> subRoles = new ArrayList<>();
         if (isCap)
@@ -269,7 +269,7 @@ public class AuthService {
                 .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName()
                         : student.getSemester())
                 .sprNo(student.getSprNo())
-                .score(student.getScore())
+                .score(student.getTotalXp())
                 .totalXp(student.getTotalXp())
                 .stage(student.getStage())
                 .teamRole(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "MEMBER"))
@@ -419,7 +419,7 @@ public class AuthService {
                 }
             }
             boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
-            int rank = studentRepository.getStudentRankByScore(student.getScore());
+            int rank = calculateStudentLeaderboardRank(student);
 
             List<String> subRoles = new ArrayList<>();
             if (isCap)
@@ -449,7 +449,7 @@ public class AuthService {
                     .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName()
                             : student.getSemester())
                     .sprNo(student.getSprNo())
-                    .score(student.getScore())
+                    .score(student.getTotalXp())
                     .totalXp(student.getTotalXp())
                     .stage(student.getStage())
                     .teamRole(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "MEMBER"))
@@ -553,7 +553,7 @@ public class AuthService {
             }
 
             boolean isMem = student.getTeam() != null && !isCap && !isViceCap;
-            int rank = studentRepository.getStudentRankByScore(student.getScore());
+            int rank = calculateStudentLeaderboardRank(student);
 
             List<String> subRoles = new ArrayList<>();
             if (isCap)
@@ -583,7 +583,7 @@ public class AuthService {
                     .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName()
                             : student.getSemester())
                     .sprNo(student.getSprNo())
-                    .score(student.getScore())
+                    .score(student.getTotalXp())
                     .totalXp(student.getTotalXp())
                     .stage(student.getStage())
                     .teamRole(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "MEMBER"))
@@ -654,5 +654,32 @@ public class AuthService {
         }
 
         return ApiResponse.error("User profile not found");
+    }
+
+    public int calculateStudentLeaderboardRank(Student currentStudent) {
+        if (currentStudent == null || currentStudent.getId() == null) {
+            return 1;
+        }
+        List<Student> students = studentRepository.findAll().stream()
+                .filter(Student::isActive)
+                .sorted((a, b) -> {
+                    int cmp = Integer.compare(b.getTotalXp(), a.getTotalXp());
+                    if (cmp != 0) return cmp;
+                    cmp = Integer.compare(b.getScore(), a.getScore());
+                    if (cmp != 0) return cmp;
+                    String nameA = a.getFullName() != null ? a.getFullName() : "";
+                    String nameB = b.getFullName() != null ? b.getFullName() : "";
+                    int nameCmp = nameA.compareToIgnoreCase(nameB);
+                    if (nameCmp != 0) return nameCmp;
+                    return Long.compare(a.getId() != null ? a.getId() : 0L, b.getId() != null ? b.getId() : 0L);
+                })
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < students.size(); i++) {
+            if (currentStudent.getId().equals(students.get(i).getId())) {
+                return i + 1;
+            }
+        }
+        return 1;
     }
 }

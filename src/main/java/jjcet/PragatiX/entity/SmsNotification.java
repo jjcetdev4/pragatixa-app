@@ -33,8 +33,8 @@ public class SmsNotification {
     @Column(nullable = false, length = 50)
     private String status;
 
-    @Column(name = "twilio_sid", length = 100)
-    private String twilioSid;
+    @Column(name = "message_request_id", length = 100)
+    private String messageRequestId;
 
     @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
@@ -115,20 +115,12 @@ public class SmsNotification {
         this.status = status;
     }
 
-    public String getTwilioSid() {
-        return twilioSid;
-    }
-
-    public void setTwilioSid(String twilioSid) {
-        this.twilioSid = twilioSid;
-    }
-
     public String getMessageRequestId() {
-        return twilioSid;
+        return messageRequestId;
     }
 
     public void setMessageRequestId(String messageRequestId) {
-        this.twilioSid = messageRequestId;
+        this.messageRequestId = messageRequestId;
     }
 
     public String getErrorMessage() {

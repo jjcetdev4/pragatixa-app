@@ -88,29 +88,30 @@ public class TestDataSeederRunner implements ApplicationRunner {
 
             // 3. Resolve SubRoles
             SubRole ccSubRole = getOrCreateSubRole("CC", teacherRole);
+            SubRole hodSubRole = getOrCreateSubRole("HOD", teacherRole);
 
             // 4. Seed Users
             String defaultHashedPassword = passwordEncoder.encode("password");
 
             // Super Admin: test1@gmail.com
             seedUser("test1@gmail.com", "superadmin_test", "Test Super Admin", defaultHashedPassword,
-                    Set.of(superAdminRole), Set.of(), dept, sec);
+                    Set.of(superAdminRole), Set.of(), dept, sec, "1st Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
             // Admin: test2@gmail.com
-            seedUser("test2@gmail.com", "admin_test", "Test Admin", defaultHashedPassword, Set.of(adminRole), Set.of(),
-                    dept, sec);
+            seedUser("test2@gmail.com", "admin_test", "Test Admin", defaultHashedPassword,
+                    Set.of(adminRole), Set.of(), dept, sec, "First Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
             // HOD: test3@gmail.com
-            seedUser("test3@gmail.com", "hod_test", "Test HOD", defaultHashedPassword, Set.of(hodRole), Set.of(), dept,
-                    sec);
+            seedUser("test3@gmail.com", "hod_test", "Test HOD", defaultHashedPassword,
+                    Set.of(teacherRole, hodRole), Set.of(hodSubRole), dept, sec, "1st Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
             // CC: test4@gmail.com
-            seedUser("test4@gmail.com", "cc_test", "Test Class Coordinator", defaultHashedPassword, Set.of(teacherRole),
-                    Set.of(ccSubRole), dept, sec);
+            seedUser("test4@gmail.com", "cc_test", "Test Class Coordinator", defaultHashedPassword,
+                    Set.of(teacherRole), Set.of(ccSubRole), dept, sec, "1st Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
             // Teacher: test5@gmail.com
-            seedUser("test5@gmail.com", "teacher_test", "Test Teacher", defaultHashedPassword, Set.of(teacherRole),
-                    Set.of(), dept, sec);
+            seedUser("test5@gmail.com", "teacher_test", "Test Teacher", defaultHashedPassword,
+                    Set.of(teacherRole), Set.of(), dept, sec, "1st Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
             // 5. Seed Students & Team
             Student captain = seedStudent("test6@gmail.com", "test6", "spr6", "Test Captain", defaultHashedPassword,
@@ -146,38 +147,42 @@ public class TestDataSeederRunner implements ApplicationRunner {
     }
 
     private void seedUser(String email, String username, String fullName, String password, Set<Role> roles,
-            Set<SubRole> subRoles, Department dept, Section sec) {
-        Optional<User> existing = userRepository.findByEmail(email);
-        if (existing.isPresent()) {
-            log.debug("User already exists: {}", email);
-            return;
+            Set<SubRole> subRoles, Department dept, Section sec, String year, jjcet.PragatiX.enums.AcademicYear academicYear) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            user = userRepository.findByUsername(username).orElse(null);
         }
-        User user = User.builder()
-                .email(email)
-                .username(username)
-                .fullName(fullName)
-                .password(password)
-                .roles(roles)
-                .subRoles(subRoles)
-                .department(dept)
-                .section(sec)
-                .active(true)
-                .build();
+        if (user == null) {
+            user = new User();
+            user.setEmail(email);
+            user.setUsername(username);
+        }
+        user.setFullName(fullName);
+        user.setPassword(password);
+        user.setRoles(roles);
+        user.setSubRoles(subRoles);
+        user.setDepartment(dept);
+        user.setSection(sec);
+        user.setYear(year);
+        user.setAcademicYear(academicYear);
+        user.setActive(true);
+        user.setDeleted(false);
         userRepository.save(user);
-        log.info("Seeded User: {} ({})", fullName, email);
+        log.info("Seeded/Updated User: {} ({}) with roles: {} and subroles: {}", fullName, email, roles, subRoles);
     }
 
     private Student seedStudent(String email, String regNo, String sprNo, String fullName, String password,
             Department dept, Section sec, Gender gen, AcademicYear ay, Year yr, Semester sem, boolean isCaptain) {
-        Optional<Student> existing = studentRepository.findByEmail(email);
-        if (existing.isPresent()) {
-            log.debug("Student already exists: {}", email);
-            return existing.get();
+        Student s = studentRepository.findByEmail(email).orElse(null);
+        if (s == null) {
+            s = studentRepository.findByRegNo(regNo).orElse(null);
         }
-        Student s = new Student();
-        s.setEmail(email);
-        s.setRegNo(regNo);
-        s.setSprNo(sprNo);
+        if (s == null) {
+            s = new Student();
+            s.setEmail(email);
+            s.setRegNo(regNo);
+            s.setSprNo(sprNo);
+        }
         s.setFullName(fullName);
         s.setPassword(password);
         s.setDepartment(dept);
@@ -189,31 +194,46 @@ public class TestDataSeederRunner implements ApplicationRunner {
         s.setPhoneNo("1234567890");
         s.setCaptain(isCaptain);
         s.setActive(true);
-        s.setScore(100);
-        s.setTotalXp(0);
-        s.setGroupXp(0);
-        s.setIndividualXp(0);
-        s.setMustXp(0);
-        s.setStage(1);
-        s.setCurrentStage(1);
+        s.setDeleted(false);
+        if (s.getTotalXp() == 0) {
+            s.setScore(0);
+            s.setTotalXp(0);
+            s.setGroupXp(0);
+            s.setIndividualXp(0);
+            s.setMustXp(0);
+            s.setStage(1);
+            s.setCurrentStage(1);
+        }
         Student saved = studentRepository.save(s);
-        log.info("Seeded Student: {} ({})", fullName, email);
+        log.info("Seeded/Updated Student: {} ({})", fullName, email);
         return saved;
     }
 
     private Department getOrCreateDepartment() {
         List<Department> list = departmentRepository.findAll();
+        for (Department d : list) {
+            if ("Information Technology".equalsIgnoreCase(d.getName()) || "IT".equalsIgnoreCase(d.getDeptCode())
+                    || "Computer Science and Engineering".equalsIgnoreCase(d.getName()) || "CSE".equalsIgnoreCase(d.getDeptCode())) {
+                return d;
+            }
+        }
         if (!list.isEmpty()) {
             return list.get(0);
         }
         Department d = new Department();
-        d.setDeptCode("TEST");
-        d.setDeptName("Test Department");
-        d.setName("Test Department");
+        d.setDeptCode("IT");
+        d.setDeptName("Information Technology");
+        d.setName("Information Technology");
         return departmentRepository.save(d);
     }
 
     private Section getOrCreateSection(Department dept) {
+        if (dept != null && dept.getId() != null) {
+            List<Section> list = sectionRepository.findByDepartment_Id(dept.getId());
+            if (!list.isEmpty()) {
+                return list.get(0);
+            }
+        }
         List<Section> list = sectionRepository.findAll();
         if (!list.isEmpty()) {
             return list.get(0);

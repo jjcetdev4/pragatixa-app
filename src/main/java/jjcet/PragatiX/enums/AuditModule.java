@@ -16,5 +16,8 @@ public enum AuditModule {
     SYSTEM,
     DEPARTMENT,
     ENROLLMENT,
+    BADGE,
+    LEVEL,
     OTHER
 }
+

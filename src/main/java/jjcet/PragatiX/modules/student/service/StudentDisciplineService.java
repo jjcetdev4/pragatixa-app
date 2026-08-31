@@ -35,19 +35,22 @@ public class StudentDisciplineService {
     private final UserRepository userRepository;
     private final StudentMapper studentMapper;
     private final XpEngineService xpEngineService;
+    private final XpTransactionRepository xpTransactionRepository;
 
     public StudentDisciplineService(ActivitySubgroupRepository activitySubgroupRepository,
             DisciplineLogRepository disciplineLogRepository,
             StudentRepository studentRepository,
             UserRepository userRepository,
             StudentMapper studentMapper,
-            XpEngineService xpEngineService) {
+            XpEngineService xpEngineService,
+            XpTransactionRepository xpTransactionRepository) {
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.disciplineLogRepository = disciplineLogRepository;
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.studentMapper = studentMapper;
         this.xpEngineService = xpEngineService;
+        this.xpTransactionRepository = xpTransactionRepository;
     }
 
     @Transactional
@@ -104,12 +107,63 @@ public class StudentDisciplineService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<DisciplineLog>> getDisciplineLogs(Long regNo) {
-        if (!studentRepository.existsById(regNo)) {
+    public ApiResponse<List<?>> getDisciplineLogs(Long regNo) {
+        Student student = studentRepository.findById(regNo).orElse(null);
+        if (student == null) {
             return ApiResponse.error("Student not found");
         }
+
+        List<Map<String, Object>> combined = new java.util.ArrayList<>();
+
+        // 1. Fetch Discipline Logs (manual point adjustments)
         List<DisciplineLog> logs = disciplineLogRepository.findByStudentIdOrderByCreatedAtDesc(regNo);
-        return ApiResponse.ok("Discipline logs loaded", logs);
+        if (logs != null) {
+            for (DisciplineLog dl : logs) {
+                Map<String, Object> item = new java.util.HashMap<>();
+                item.put("id", dl.getId());
+                item.put("points", dl.getPoints());
+                item.put("reason", dl.getReason());
+                item.put("remarks", dl.getRemarks());
+                item.put("recordedByName", dl.getRecordedBy() != null ? dl.getRecordedBy().getFullName() : "Faculty");
+                item.put("subgroupName", dl.getSubgroup() != null ? dl.getSubgroup().getName()
+                        : (dl.getActivity() != null ? dl.getActivity().getName() : "Discipline"));
+                item.put("createdAt", dl.getCreatedAt() != null ? dl.getCreatedAt().toString()
+                        : (dl.getIncidentDate() != null ? dl.getIncidentDate().toString() : null));
+                combined.add(item);
+            }
+        }
+
+        // 2. Fetch XP Transactions (Attendance, Activities, Penalties, Captaincy)
+        List<XpTransaction> txs = xpTransactionRepository.findByStudentRegNo(student.getRegNo());
+        if (txs != null) {
+            for (XpTransaction tx : txs) {
+                Map<String, Object> item = new java.util.HashMap<>();
+                item.put("id", tx.getId());
+                item.put("points", tx.getXpPoints());
+                item.put("reason", tx.getActivityName() != null && !tx.getActivityName().isEmpty()
+                        ? tx.getActivityName()
+                        : (tx.getActivity() != null ? tx.getActivity().getName() : "XP Activity"));
+                item.put("remarks", tx.getCategory());
+                item.put("recordedByName", tx.getApprovedBy() != null && !tx.getApprovedBy().isEmpty()
+                        ? tx.getApprovedBy()
+                        : "System");
+                item.put("subgroupName", tx.getCategory() != null ? tx.getCategory() : "Activity");
+                item.put("createdAt", tx.getSubmittedAt() != null ? tx.getSubmittedAt().toString() : null);
+                combined.add(item);
+            }
+        }
+
+        // 3. Sort descending by createdAt
+        combined.sort((a, b) -> {
+            String tA = (String) a.get("createdAt");
+            String tB = (String) b.get("createdAt");
+            if (tA == null && tB == null) return 0;
+            if (tA == null) return 1;
+            if (tB == null) return -1;
+            return tB.compareTo(tA);
+        });
+
+        return ApiResponse.ok("Discipline logs loaded", combined);
     }
 
     @Transactional(readOnly = true)

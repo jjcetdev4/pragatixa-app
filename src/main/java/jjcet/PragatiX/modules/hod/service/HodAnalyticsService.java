@@ -107,9 +107,9 @@ public class HodAnalyticsService {
 
         // 4. Department Overview
         long totalStudents = filteredStudents.size();
-        long totalTeachers = facultyRepository.countByDepartmentId(deptId);
+        long totalTeachers = userRepository.countTeachersByDepartmentId(deptId);
         if (totalTeachers == 0) {
-            totalTeachers = userRepository.countByDepartmentId(deptId);
+            totalTeachers = facultyRepository.countByDepartmentId(deptId);
         }
         long totalSections = deptSections.size();
         double averageXp = filteredStudents.isEmpty() ? 0.0

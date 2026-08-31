@@ -137,8 +137,8 @@ public class TeamClassScopedValidationTest {
     @DisplayName("Allow same team name 'Team A' across different classes (Section, Dept, Year)")
     void testSameTeamNameAllowedInDifferentClasses() {
         // 1. Team A in CS - 1st Year - Section A
-        Student student1 = createMockStudent("REG001", "Student 1", deptCS, "1st Year", secA);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "1st Year", secA.getId()))
+        Student student1 = createMockStudent("REG001", "Student 1", deptCS, "FIRST_YEAR", secA);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "FIRST_YEAR", secA.getId()))
                 .thenReturn(false);
 
         CreateTeamRequest req1 = new CreateTeamRequest();
@@ -151,8 +151,8 @@ public class TeamClassScopedValidationTest {
         assertTrue(res1.getBody().isSuccess());
 
         // 2. Team A in CS - 1st Year - Section B (different section)
-        Student student2 = createMockStudent("REG002", "Student 2", deptCS, "1st Year", secB);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "1st Year", secB.getId()))
+        Student student2 = createMockStudent("REG002", "Student 2", deptCS, "FIRST_YEAR", secB);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "FIRST_YEAR", secB.getId()))
                 .thenReturn(false);
 
         CreateTeamRequest req2 = new CreateTeamRequest();
@@ -165,8 +165,8 @@ public class TeamClassScopedValidationTest {
         assertTrue(res2.getBody().isSuccess());
 
         // 3. Team A in IT - 1st Year - Section A (different department)
-        Student student3 = createMockStudent("REG003", "Student 3", deptIT, "1st Year", secA);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptIT.getId(), "1st Year", secA.getId()))
+        Student student3 = createMockStudent("REG003", "Student 3", deptIT, "FIRST_YEAR", secA);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptIT.getId(), "FIRST_YEAR", secA.getId()))
                 .thenReturn(false);
 
         CreateTeamRequest req3 = new CreateTeamRequest();
@@ -179,8 +179,8 @@ public class TeamClassScopedValidationTest {
         assertTrue(res3.getBody().isSuccess());
 
         // 4. Team A in CS - 2nd Year - Section A (different year)
-        Student student4 = createMockStudent("REG004", "Student 4", deptCS, "2nd Year", secA);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "2nd Year", secA.getId()))
+        Student student4 = createMockStudent("REG004", "Student 4", deptCS, "SECOND_YEAR", secA);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "SECOND_YEAR", secA.getId()))
                 .thenReturn(false);
 
         CreateTeamRequest req4 = new CreateTeamRequest();
@@ -197,8 +197,8 @@ public class TeamClassScopedValidationTest {
     @DisplayName("Reject duplicate team name 'Team A' within the exact same class")
     void testDuplicateTeamNameRejectedInSameClass() {
         // Given Team A already exists in CS - 1st Year - Section A
-        Student student5 = createMockStudent("REG005", "Student 5", deptCS, "1st Year", secA);
-        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "1st Year", secA.getId()))
+        Student student5 = createMockStudent("REG005", "Student 5", deptCS, "FIRST_YEAR", secA);
+        when(teamRepository.existsByTeamNameAndClass("Team A", deptCS.getId(), "FIRST_YEAR", secA.getId()))
                 .thenReturn(true);
 
         CreateTeamRequest req = new CreateTeamRequest();

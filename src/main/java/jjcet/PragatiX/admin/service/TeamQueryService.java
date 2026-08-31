@@ -29,13 +29,17 @@ public class TeamQueryService {
     private final TeamCleanupService teamCleanupService;
     private final jjcet.PragatiX.modules.student.service.StudentLevelService studentLevelService;
     private final jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository;
+    private final jjcet.PragatiX.modules.student.service.TeamAssignmentService teamAssignmentService;
+    private final jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository;
 
     public TeamQueryService(TeamRepository teamRepository, StudentRepository studentRepository, TeamMapper mapper,
             jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository,
             TeamValidationService validationService,
             TeamCleanupService teamCleanupService,
             jjcet.PragatiX.modules.student.service.StudentLevelService studentLevelService,
-            jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository) {
+            jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository,
+            jjcet.PragatiX.modules.student.service.TeamAssignmentService teamAssignmentService,
+            jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository) {
         this.teamRepository = teamRepository;
         this.studentRepository = studentRepository;
         this.mapper = mapper;
@@ -44,6 +48,8 @@ public class TeamQueryService {
         this.teamCleanupService = teamCleanupService;
         this.studentLevelService = studentLevelService;
         this.stageTeamRepository = stageTeamRepository;
+        this.teamAssignmentService = teamAssignmentService;
+        this.activityStageRepository = activityStageRepository;
     }
 
     public ResponseEntity<ApiResponse<List<TeamResponse>>> getAllTeams(String academicYear, Long departmentId,
@@ -76,10 +82,6 @@ public class TeamQueryService {
         final String yearFilter = effectiveYear;
         List<TeamResponse> responses = teams.stream()
                 .filter(team -> {
-                    if (team.getCaptain() == null && (team.getMembers() == null || team.getMembers().isEmpty())) {
-                        teamCleanupService.autoDeleteEmptyTeam(team);
-                        return false;
-                    }
                     if (yearFilter != null && !yearFilter.equalsIgnoreCase("ALL")) {
                         boolean yearMatch = TeamValidationService.isMatchingYear(yearFilter, team.getYear());
                         if (!yearMatch && team.getCaptain() != null) {
@@ -118,16 +120,44 @@ public class TeamQueryService {
         return ResponseEntity.ok(ApiResponse.ok(responses));
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<TeamResponse>> getMyTeam(Student student) {
         Team team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
+        if (team == null && student.getStage() >= 1) {
+            try {
+                jjcet.PragatiX.entity.ActivityStage currentStage = activityStageRepository
+                        .findByDisplayOrder(student.getStage()).orElse(null);
+                if (currentStage != null) {
+                    teamAssignmentService.assignTeamOnPromotion(student, currentStage);
+                    team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
+                }
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(TeamQueryService.class).warn(
+                        "Auto-assign team on getMyTeam failed for student {}: {}", student.getRegNo(), e.getMessage());
+            }
+        }
         if (team == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("You do not belong to any team"));
         return ResponseEntity.ok(ApiResponse.ok("Team details retrieved successfully", mapper.toTeamResponse(team)));
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.StudentTeamDetailsResponse>> getMyTeamDetails(
             Student student) {
         Team team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
+        if (team == null && student.getStage() >= 1) {
+            try {
+                jjcet.PragatiX.entity.ActivityStage currentStage = activityStageRepository
+                        .findByDisplayOrder(student.getStage()).orElse(null);
+                if (currentStage != null) {
+                    teamAssignmentService.assignTeamOnPromotion(student, currentStage);
+                    team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
+                }
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(TeamQueryService.class).warn(
+                        "Auto-assign team on getMyTeamDetails failed for student {}: {}", student.getRegNo(), e.getMessage());
+            }
+        }
         if (team == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("You do not belong to any team"));
         }

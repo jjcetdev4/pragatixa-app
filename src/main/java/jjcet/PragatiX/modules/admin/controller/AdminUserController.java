@@ -37,7 +37,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
     @Operation(summary = "List All Users", description = "Returns all staff/users (teachers and admins) with optional department and keyword filters.")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(
             @RequestParam(required = false) Long departmentId,
@@ -45,15 +45,22 @@ public class AdminUserController {
         return adminUserService.getAllUsers(departmentId, keyword);
     }
 
+    @GetMapping("/users/{id}/points-history")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'TEACHER', 'CLASS_COORDINATOR')")
+    @Operation(summary = "Get Teacher Points History", description = "Returns profile and detailed history of all points awarded by a teacher.")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getTeacherPointsHistory(@PathVariable Long id) {
+        return adminUserService.getTeacherPointsHistory(id);
+    }
+
     @PostMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Create User", description = "Creates a new teacher or admin account.")
     public ResponseEntity<ApiResponse<UserResponse>> createUser(@Valid @RequestBody CreateUserRequest request) {
         return adminUserService.createUser(request);
     }
 
     @PutMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Update User", description = "Updates teacher or admin profile information and role selections.")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
             @PathVariable Long id,
@@ -62,7 +69,7 @@ public class AdminUserController {
     }
 
     @DeleteMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Delete User", description = "Deletes a teacher or admin staff account. Requires ADMIN role.")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         return adminUserService.deleteUser(id);

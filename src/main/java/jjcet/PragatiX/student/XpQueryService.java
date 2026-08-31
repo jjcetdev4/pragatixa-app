@@ -7,6 +7,8 @@ import jjcet.PragatiX.entity.XpTransaction;
 import jjcet.PragatiX.repository.StreakRepository;
 import jjcet.PragatiX.repository.XpTransactionRepository;
 import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import jjcet.PragatiX.modules.student.service.StageXpSummaryService;
+import jjcet.PragatiX.modules.student.dto.StageXpSummary;
 import jjcet.PragatiX.entity.Student;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,12 +30,15 @@ public class XpQueryService {
     private final XpTransactionRepository xpTransactionRepository;
     private final StreakRepository streakRepository;
     private final StudentRepository studentRepository;
+    private final StageXpSummaryService stageXpSummaryService;
 
     public XpQueryService(XpTransactionRepository xpTransactionRepository, StreakRepository streakRepository,
-            StudentRepository studentRepository) {
+            StudentRepository studentRepository,
+            StageXpSummaryService stageXpSummaryService) {
         this.xpTransactionRepository = xpTransactionRepository;
         this.streakRepository = streakRepository;
         this.studentRepository = studentRepository;
+        this.stageXpSummaryService = stageXpSummaryService;
     }
 
     private Student findStudentByIdentifier(String identifier) {
@@ -72,11 +77,16 @@ public class XpQueryService {
     public Map<String, Integer> getXpSummary(String regNo) {
         Student student = findStudentByIdentifier(regNo);
 
+        int currentStage = student.getStage();
+        StageXpSummary stageXp = stageXpSummaryService.getStageXp(student.getId(), currentStage);
+
         Map<String, Integer> summary = new HashMap<>();
         summary.put("totalXp", student.getTotalXp());
-        summary.put("groupXp", student.getGroupXp());
-        summary.put("individualXp", student.getIndividualXp());
-        summary.put("mustXp", student.getMustXp());
+        summary.put("groupXp", stageXp.getGroupXp());
+        summary.put("individualXp", stageXp.getIndividualXp());
+        summary.put("mustXp", stageXp.getMustXp());
+        summary.put("stageOrder", currentStage);
+        summary.put("stageTotalXp", stageXp.getTotalXp());
 
         return summary;
     }
@@ -97,6 +107,7 @@ public class XpQueryService {
             dto.setApprovedBy(tx.getApprovedBy());
             dto.setPenalty(tx.isPenalty());
             dto.setCapApplied(tx.isCapApplied());
+            dto.setStage(tx.getStage());
             return dto;
         });
     }

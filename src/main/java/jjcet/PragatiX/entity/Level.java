@@ -1,16 +1,18 @@
 package jjcet.PragatiX.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import jjcet.PragatiX.enums.AcademicYear;
 
 @Entity
 @Table(name = "levels")
-public class Level {
+public class Level implements SoftDeletable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "level_number", nullable = false, unique = true)
+    @Column(name = "level_number", nullable = false)
     private int levelNumber;
 
     @Column(nullable = false, length = 100)
@@ -30,6 +32,22 @@ public class Level {
 
     @Column(name = "key_unlocks", columnDefinition = "TEXT")
     private String keyUnlocks;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "academic_year", length = 30)
+    private AcademicYear academicYear;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "permanent_delete_at")
+    private LocalDateTime permanentDeleteAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 
     public Level() {
     }
@@ -98,6 +116,54 @@ public class Level {
         this.keyUnlocks = keyUnlocks;
     }
 
+    public AcademicYear getAcademicYear() {
+        return academicYear;
+    }
+
+    public void setAcademicYear(AcademicYear academicYear) {
+        this.academicYear = academicYear;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    @Override
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    @Override
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    @Override
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    @Override
+    public LocalDateTime getPermanentDeleteAt() {
+        return permanentDeleteAt;
+    }
+
+    @Override
+    public void setPermanentDeleteAt(LocalDateTime permanentDeleteAt) {
+        this.permanentDeleteAt = permanentDeleteAt;
+    }
+
+    @Override
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    @Override
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -137,6 +203,16 @@ public class Level {
 
         public Builder keyUnlocks(String v) {
             level.keyUnlocks = v;
+            return this;
+        }
+
+        public Builder academicYear(AcademicYear v) {
+            level.academicYear = v;
+            return this;
+        }
+
+        public Builder deleted(boolean v) {
+            level.deleted = v;
             return this;
         }
 

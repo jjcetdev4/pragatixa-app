@@ -6,8 +6,7 @@ public class GroupedXpDTO {
     private Long totalXp;
     private Long studentCount;
 
-    public GroupedXpDTO() {
-    }
+    public GroupedXpDTO() {}
 
     public GroupedXpDTO(String groupName, Double averageXp, Long totalXp, Long studentCount) {
         this.groupName = groupName;
@@ -16,35 +15,15 @@ public class GroupedXpDTO {
         this.studentCount = studentCount;
     }
 
-    public String getGroupName() {
-        return groupName;
-    }
+    public String getGroupName() { return groupName; }
+    public void setGroupName(String groupName) { this.groupName = groupName; }
 
-    public void setGroupName(String groupName) {
-        this.groupName = groupName;
-    }
+    public Double getAverageXp() { return averageXp; }
+    public void setAverageXp(Double averageXp) { this.averageXp = averageXp; }
 
-    public Double getAverageXp() {
-        return averageXp;
-    }
+    public Long getTotalXp() { return totalXp; }
+    public void setTotalXp(Long totalXp) { this.totalXp = totalXp; }
 
-    public void setAverageXp(Double averageXp) {
-        this.averageXp = averageXp;
-    }
-
-    public Long getTotalXp() {
-        return totalXp;
-    }
-
-    public void setTotalXp(Long totalXp) {
-        this.totalXp = totalXp;
-    }
-
-    public Long getStudentCount() {
-        return studentCount;
-    }
-
-    public void setStudentCount(Long studentCount) {
-        this.studentCount = studentCount;
-    }
+    public Long getStudentCount() { return studentCount; }
+    public void setStudentCount(Long studentCount) { this.studentCount = studentCount; }
 }

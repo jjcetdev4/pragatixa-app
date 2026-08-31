@@ -61,6 +61,11 @@ public class XpCommandService {
             }
         }
 
+        int stageOrder = student.getStage();
+        if (resolvedActivity != null && resolvedActivity.getStage() != null) {
+            stageOrder = resolvedActivity.getStage().getDisplayOrder();
+        }
+
         XpTransaction claim = XpTransaction.builder()
                 .student(student)
                 .activity(resolvedActivity)
@@ -72,6 +77,7 @@ public class XpCommandService {
                 .status("PENDING")
                 .isPenalty(false)
                 .capApplied(capApplied)
+                .stage(stageOrder)
                 .build();
 
         XpTransaction saved = xpTransactionRepository.save(claim);

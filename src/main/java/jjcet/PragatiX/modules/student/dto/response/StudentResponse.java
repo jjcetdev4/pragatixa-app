@@ -40,6 +40,8 @@ public class StudentResponse {
     private String teamRole;
     private GuardianDTO guardian;
     private int currentStage = 1;
+    private int currentStreak = 0;
+    private java.util.List<jjcet.PragatiX.dto.StreakResponse> streaks;
 
     public int getTotalXp() {
         return totalXp;
@@ -324,6 +326,22 @@ public class StudentResponse {
         this.guardian = guardian;
     }
 
+    public int getCurrentStreak() {
+        return currentStreak;
+    }
+
+    public void setCurrentStreak(int currentStreak) {
+        this.currentStreak = currentStreak;
+    }
+
+    public java.util.List<jjcet.PragatiX.dto.StreakResponse> getStreaks() {
+        return streaks;
+    }
+
+    public void setStreaks(java.util.List<jjcet.PragatiX.dto.StreakResponse> streaks) {
+        this.streaks = streaks;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -498,6 +516,16 @@ public class StudentResponse {
 
         public Builder guardian(GuardianDTO v) {
             r.guardian = v;
+            return this;
+        }
+
+        public Builder currentStreak(int v) {
+            r.currentStreak = v;
+            return this;
+        }
+
+        public Builder streaks(java.util.List<jjcet.PragatiX.dto.StreakResponse> v) {
+            r.streaks = v;
             return this;
         }
 

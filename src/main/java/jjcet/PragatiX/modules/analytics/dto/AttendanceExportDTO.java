@@ -12,11 +12,9 @@ public class AttendanceExportDTO {
     private Integer period;
     private String status;
 
-    public AttendanceExportDTO() {
-    }
+    public AttendanceExportDTO() {}
 
-    public AttendanceExportDTO(String regNo, String studentName, String departmentName, String sectionName,
-            LocalDate attendanceDate, Integer period, String status) {
+    public AttendanceExportDTO(String regNo, String studentName, String departmentName, String sectionName, LocalDate attendanceDate, Integer period, String status) {
         this.regNo = regNo;
         this.studentName = studentName;
         this.departmentName = departmentName;

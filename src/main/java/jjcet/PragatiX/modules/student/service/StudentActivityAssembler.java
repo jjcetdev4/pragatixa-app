@@ -30,6 +30,9 @@ public class StudentActivityAssembler {
         List<ActivityResponse> enrichedActivities = new ArrayList<>();
 
         for (Activity act : activities) {
+            if (Boolean.TRUE.equals(act.getAttendanceEngineEnabled())) {
+                continue;
+            }
             ActivityResponse actMap = new ActivityResponse();
             actMap.setActivityId(act.getId());
 

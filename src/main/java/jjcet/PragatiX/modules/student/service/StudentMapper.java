@@ -21,9 +21,12 @@ public class StudentMapper {
     private static final Logger log = LoggerFactory.getLogger(StudentMapper.class);
 
     private final jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository;
+    private final jjcet.PragatiX.repository.StreakRepository streakRepository;
 
-    public StudentMapper(jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository) {
+    public StudentMapper(jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository,
+            jjcet.PragatiX.repository.StreakRepository streakRepository) {
         this.stageTeamRepository = stageTeamRepository;
+        this.streakRepository = streakRepository;
     }
 
     public StudentResponse toResponse(Student student) {
@@ -38,13 +41,34 @@ public class StudentMapper {
 
         int sStage = student.getCurrentStage() > 0 ? student.getCurrentStage() : (student.getStage() > 0 ? student.getStage() : 1);
 
+        List<jjcet.PragatiX.entity.Streak> studentStreaks = streakRepository != null && student.getRegNo() != null
+                ? streakRepository.findByStudentRegNo(student.getRegNo())
+                : java.util.Collections.emptyList();
+        int maxStreak = studentStreaks.stream()
+                .filter(s -> !s.isBroken())
+                .mapToInt(jjcet.PragatiX.entity.Streak::getCurrentStreak)
+                .max()
+                .orElse(0);
+
+        List<jjcet.PragatiX.dto.StreakResponse> mappedStreaks = studentStreaks.stream().map(s -> {
+            jjcet.PragatiX.dto.StreakResponse sr = new jjcet.PragatiX.dto.StreakResponse();
+            sr.setCurrentStreak(s.getCurrentStreak());
+            sr.setIsBroken(s.isBroken());
+            sr.setLastUpdated(s.getLastUpdated());
+            sr.setStreakType(s.getStreakType());
+            sr.setPenaltyPerBreak(s.getPenaltyPerBreak());
+            return sr;
+        }).collect(java.util.stream.Collectors.toList());
+
         return StudentResponse.builder()
                 .id(student.getId())
                 .regNo(student.getRegNo())
                 .fullName(student.getFullName())
                 .email(student.getEmail())
                 .phone(student.getPhone())
-                .gender(student.getGender())
+                .gender(student.getGender() != null && !student.getGender().trim().isEmpty()
+                        ? student.getGender()
+                        : (student.getGenderRef() != null ? student.getGenderRef().getGenderName() : null))
                 .genderId(student.getGenderRef() != null ? student.getGenderRef().getId() : null)
                 .dateOfBirth(student.getDateOfBirth())
                 .address(student.getAddress())
@@ -73,6 +97,8 @@ public class StudentMapper {
                 .teamRole(resolveTeamRole(student))
                 .currentStage(sStage)
                 .guardian(guardian != null ? mapGuardianToDto(guardian) : null)
+                .currentStreak(maxStreak)
+                .streaks(mappedStreaks)
                 .build();
     }
 
