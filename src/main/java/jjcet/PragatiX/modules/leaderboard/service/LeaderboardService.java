@@ -101,8 +101,21 @@ public class LeaderboardService {
 
         final Long finalSectionId = targetSectionId;
         if (finalSectionId != null) {
+            Section targetSec = sectionRepository.findById(finalSectionId).orElse(null);
+            final String targetSecName = targetSec != null && targetSec.getSectionName() != null
+                    ? targetSec.getSectionName().replaceAll("(?i)\\s*-\\s*\\d{4}\\s*Batch.*", "").trim().toLowerCase()
+                    : null;
+
             students = students.stream()
-                    .filter(s -> s.getSection() != null && s.getSection().getId().equals(finalSectionId))
+                    .filter(s -> {
+                        if (s.getSection() == null) return false;
+                        if (s.getSection().getId().equals(finalSectionId)) return true;
+                        if (targetSecName != null && s.getSection().getSectionName() != null) {
+                            String sSecName = s.getSection().getSectionName().replaceAll("(?i)\\s*-\\s*\\d{4}\\s*Batch.*", "").trim().toLowerCase();
+                            return sSecName.equals(targetSecName);
+                        }
+                        return false;
+                    })
                     .collect(Collectors.toList());
         }
 
@@ -165,11 +178,11 @@ public class LeaderboardService {
                     });
                 }
             }
-        } else if (isSuperAdmin) {
+        } else {
             List<User> yearAdmins = userRepository.findByRoleName("ROLE_ADMIN");
             java.util.Set<Long> assignedIds = new java.util.HashSet<>();
             for (User u : yearAdmins) {
-                if (u.getRoles().stream().noneMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()) || "SUPER_ADMIN".equals(r.getName()))) {
+                if (!u.isDeleted() && u.getRoles().stream().noneMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getName()) || "SUPER_ADMIN".equals(r.getName()))) {
                     if (u.getAssignedYear() != null) {
                         assignedIds.add(u.getAssignedYear().getId());
                     } else if (u.getAcademicYear() != null) {
@@ -187,9 +200,6 @@ public class LeaderboardService {
                 yearRepository.findAll()
                         .forEach(y -> yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName())));
             }
-        } else {
-            yearRepository.findAll()
-                    .forEach(y -> yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName())));
         }
 
         List<Department> depts = departmentRepository.findAll().stream()
@@ -204,20 +214,53 @@ public class LeaderboardService {
             deptFilters.add(new FilterOptionsDto.FilterItem(d.getId().toString(), deptCode, deptCode));
         });
 
+        Long targetYearId = yearId;
+        if (currentUser != null && !isAdmin && !isSuperAdmin) {
+            Student student = studentRepository.findByUserId(currentUser.getId())
+                    .or(() -> studentRepository.findByRegNo(currentUser.getUsername()))
+                    .or(() -> studentRepository.findByEmail(currentUser.getEmail()))
+                    .orElse(null);
+            if (student != null) {
+                if (targetYearId == null) {
+                    if (student.getYearRef() != null) {
+                        targetYearId = student.getYearRef().getId();
+                    } else if (student.getYear() != null) {
+                        targetYearId = resolveYearId(student.getYear());
+                    }
+                }
+            }
+        }
+
         if (departmentId != null) {
-            List<Section> secs = sectionRepository.findByDepartment_Id(departmentId);
-            secs.forEach(s -> {
+            List<Section> candidateSecs = new ArrayList<>();
+            if (targetYearId != null) {
+                final Long finalYId = targetYearId;
+                List<Section> studentSecs = studentRepository.findAll().stream()
+                        .filter(Student::isActive)
+                        .filter(s -> s.getDepartment() != null && s.getDepartment().getId().equals(departmentId))
+                        .filter(s -> s.getYearRef() != null && s.getYearRef().getId().equals(finalYId))
+                        .map(Student::getSection)
+                        .filter(java.util.Objects::nonNull)
+                        .collect(Collectors.toList());
+                if (!studentSecs.isEmpty()) {
+                    candidateSecs.addAll(studentSecs);
+                }
+            }
+            if (candidateSecs.isEmpty()) {
+                candidateSecs.addAll(sectionRepository.findByDepartment_Id(departmentId));
+            }
+
+            java.util.Set<String> seenNames = new java.util.HashSet<>();
+            for (Section s : candidateSecs) {
                 String rawName = s.getSectionName() != null ? s.getSectionName() : "";
                 String cleanName = rawName.replaceAll("(?i)\\s*-\\s*\\d{4}\\s*Batch.*", "").trim();
-                sectionFilters.add(new FilterOptionsDto.FilterItem(s.getId().toString(), cleanName));
-            });
-        } else {
-            List<Section> secs = sectionRepository.findAll();
-            secs.forEach(s -> {
-                String rawName = s.getSectionName() != null ? s.getSectionName() : "";
-                String cleanName = rawName.replaceAll("(?i)\\s*-\\s*\\d{4}\\s*Batch.*", "").trim();
-                sectionFilters.add(new FilterOptionsDto.FilterItem(s.getId().toString(), cleanName));
-            });
+                if (cleanName.equalsIgnoreCase("SECTION")) continue;
+                String norm = cleanName.toLowerCase();
+                if (!norm.isEmpty() && seenNames.add(norm)) {
+                    sectionFilters.add(new FilterOptionsDto.FilterItem(s.getId().toString(), cleanName));
+                }
+            }
+            sectionFilters.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
         }
 
         return ApiResponse.ok(new FilterOptionsDto(yearFilters, deptFilters, sectionFilters));
