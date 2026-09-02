@@ -355,8 +355,6 @@ public class AdminBulkTeacherService {
                     request.setSectionId(section.getId());
                 }
 
-                request.setPassword(UUID.randomUUID().toString().substring(0, 8));
-                
                 validRequests.add(request);
             }
 
@@ -384,9 +382,6 @@ public class AdminBulkTeacherService {
         for (int i = 0; i < requests.size(); i++) {
             CreateUserRequest req = requests.get(i);
             try {
-                if (req.getPassword() == null || req.getPassword().trim().isEmpty()) {
-                    req.setPassword("Spdms@123");
-                }
                 if (req.getRoles() == null || req.getRoles().isEmpty()) {
                     req.setRoles(new HashSet<>(Collections.singletonList("ROLE_TEACHER")));
                 }

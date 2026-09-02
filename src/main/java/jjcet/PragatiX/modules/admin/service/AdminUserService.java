@@ -58,7 +58,8 @@ public class AdminUserService {
 
     public AdminUserService(DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder,
             RoleRepository roleRepository, SectionRepository sectionRepository, SubRoleRepository subRoleRepository,
-            UserRepository userRepository, AdminMapper adminMapper, jjcet.PragatiX.modules.audit.service.AuditService auditService,
+            UserRepository userRepository, AdminMapper adminMapper,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService,
             YearRepository yearRepository, jjcet.PragatiX.repository.DisciplineLogRepository disciplineLogRepository,
             jjcet.PragatiX.repository.XpTransactionRepository xpTransactionRepository,
             jjcet.PragatiX.modules.faculty.repository.FacultyRepository facultyRepository) {
@@ -90,9 +91,9 @@ public class AdminUserService {
             String lowerKeyword = keyword.toLowerCase().trim();
             users = users.stream()
                     .filter(u -> (u.getFullName() != null && u.getFullName().toLowerCase().contains(lowerKeyword)) ||
-                                 (u.getUsername() != null && u.getUsername().toLowerCase().contains(lowerKeyword)) ||
-                                 (u.getEmail() != null && u.getEmail().toLowerCase().contains(lowerKeyword)) ||
-                                 (u.getPhone() != null && u.getPhone().contains(lowerKeyword)))
+                            (u.getUsername() != null && u.getUsername().toLowerCase().contains(lowerKeyword)) ||
+                            (u.getEmail() != null && u.getEmail().toLowerCase().contains(lowerKeyword)) ||
+                            (u.getPhone() != null && u.getPhone().contains(lowerKeyword)))
                     .collect(Collectors.toList());
         }
         List<UserResponse> responses = users.stream()
@@ -121,7 +122,8 @@ public class AdminUserService {
                 } else if (upper.equals("HOD")) {
                     isHOD = true;
                 } else {
-                    return ResponseEntity.badRequest().body(ApiResponse.error("Sub-role '" + subRole + "' is not permitted for new teachers. Only HOD and CC are allowed."));
+                    return ResponseEntity.badRequest().body(ApiResponse.error("Sub-role '" + subRole
+                            + "' is not permitted for new teachers. Only HOD and CC are allowed."));
                 }
             }
         }
@@ -163,25 +165,33 @@ public class AdminUserService {
         Year assignedYear = null;
         if (academicYearEnum != null) {
             Byte yearNo = null;
-            switch(academicYearEnum) {
-                case FIRST_YEAR: yearNo = 1; break;
-                case SECOND_YEAR: yearNo = 2; break;
-                case THIRD_YEAR: yearNo = 3; break;
-                case FOURTH_YEAR: yearNo = 4; break;
+            switch (academicYearEnum) {
+                case FIRST_YEAR:
+                    yearNo = 1;
+                    break;
+                case SECOND_YEAR:
+                    yearNo = 2;
+                    break;
+                case THIRD_YEAR:
+                    yearNo = 3;
+                    break;
+                case FOURTH_YEAR:
+                    yearNo = 4;
+                    break;
             }
             if (yearNo != null) {
                 assignedYear = yearRepository.findByYearNo(yearNo).orElse(null);
             }
         }
 
-        String conflictError = validateHodAndCcUniqueness(null, isHOD, isCC, department, academicYearEnum, request.getYear(), section);
+        String conflictError = validateHodAndCcUniqueness(null, isHOD, isCC, department, academicYearEnum,
+                request.getYear(), section);
         if (conflictError != null) {
             return ResponseEntity.badRequest().body(ApiResponse.error(conflictError));
         }
 
         User user = User.builder()
                 .username(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
@@ -192,20 +202,20 @@ public class AdminUserService {
                 .year(request.getYear())
                 .active(true)
                 .build();
-                
+
         user.setAcademicYear(academicYearEnum);
         user.setAssignedYear(assignedYear);
 
         User saved = userRepository.save(user);
-        
+
         auditService.log(
-            jjcet.PragatiX.enums.AuditAction.CREATE,
-            jjcet.PragatiX.enums.AuditModule.USER,
-            "USER",
-            saved.getId(),
-            "Created user " + saved.getUsername() + (saved.getFullName() != null ? " (" + saved.getFullName() + ")" : "")
-        );
-        
+                jjcet.PragatiX.enums.AuditAction.CREATE,
+                jjcet.PragatiX.enums.AuditModule.USER,
+                "USER",
+                saved.getId(),
+                "Created user " + saved.getUsername()
+                        + (saved.getFullName() != null ? " (" + saved.getFullName() + ")" : ""));
+
         log.debug("Admin created new user: {}", saved.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("User created successfully", adminMapper.toUserResponse(saved)));
@@ -239,7 +249,8 @@ public class AdminUserService {
                 } else if (upper.equals("HOD")) {
                     isHOD = true;
                 } else {
-                    return ResponseEntity.badRequest().body(ApiResponse.error("Sub-role '" + subRole + "' is not permitted. Only HOD and CC are allowed."));
+                    return ResponseEntity.badRequest().body(ApiResponse
+                            .error("Sub-role '" + subRole + "' is not permitted. Only HOD and CC are allowed."));
                 }
             }
         }
@@ -285,11 +296,19 @@ public class AdminUserService {
         Year assignedYear = null;
         if (academicYearEnum != null) {
             Byte yearNo = null;
-            switch(academicYearEnum) {
-                case FIRST_YEAR: yearNo = 1; break;
-                case SECOND_YEAR: yearNo = 2; break;
-                case THIRD_YEAR: yearNo = 3; break;
-                case FOURTH_YEAR: yearNo = 4; break;
+            switch (academicYearEnum) {
+                case FIRST_YEAR:
+                    yearNo = 1;
+                    break;
+                case SECOND_YEAR:
+                    yearNo = 2;
+                    break;
+                case THIRD_YEAR:
+                    yearNo = 3;
+                    break;
+                case FOURTH_YEAR:
+                    yearNo = 4;
+                    break;
             }
             if (yearNo != null) {
                 assignedYear = yearRepository.findByYearNo(yearNo).orElse(null);
@@ -297,7 +316,8 @@ public class AdminUserService {
         }
 
         if (request.isActive()) {
-            String conflictError = validateHodAndCcUniqueness(id, isHOD, isCC, department, academicYearEnum, request.getYear(), section);
+            String conflictError = validateHodAndCcUniqueness(id, isHOD, isCC, department, academicYearEnum,
+                    request.getYear(), section);
             if (conflictError != null) {
                 return ResponseEntity.badRequest().body(ApiResponse.error(conflictError));
             }
@@ -319,24 +339,24 @@ public class AdminUserService {
         user.setActive(request.isActive());
 
         User saved = userRepository.save(user);
-        
+
         java.util.Map<String, Object> oldValues = new java.util.HashMap<>();
         java.util.Map<String, Object> newValues = new java.util.HashMap<>();
         newValues.put("username", saved.getUsername());
         newValues.put("fullName", saved.getFullName());
         newValues.put("email", saved.getEmail());
-        if (saved.getDepartment() != null) newValues.put("departmentId", saved.getDepartment().getId());
-        
+        if (saved.getDepartment() != null)
+            newValues.put("departmentId", saved.getDepartment().getId());
+
         auditService.log(
-            jjcet.PragatiX.enums.AuditAction.UPDATE,
-            jjcet.PragatiX.enums.AuditModule.USER,
-            "USER",
-            saved.getId(),
-            "Updated user " + saved.getUsername(),
-            oldValues,
-            newValues
-        );
-        
+                jjcet.PragatiX.enums.AuditAction.UPDATE,
+                jjcet.PragatiX.enums.AuditModule.USER,
+                "USER",
+                saved.getId(),
+                "Updated user " + saved.getUsername(),
+                oldValues,
+                newValues);
+
         log.debug("Admin updated user: {}", saved.getUsername());
         return ResponseEntity.ok(ApiResponse.ok("User updated successfully", adminMapper.toUserResponse(saved)));
     }
@@ -347,27 +367,27 @@ public class AdminUserService {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("User not found"));
         }
-        
+
         user.setDeleted(true);
         user.setActive(false);
         user.setDeletedAt(java.time.LocalDateTime.now());
         user.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
-        
-        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
         if (auth != null && auth.getName() != null) {
             user.setDeletedBy(auth.getName());
         }
 
         userRepository.save(user);
-        
+
         auditService.log(
-            jjcet.PragatiX.enums.AuditAction.DELETE,
-            jjcet.PragatiX.enums.AuditModule.USER,
-            "USER",
-            user.getId(),
-            "Moved user " + user.getUsername() + " to Recycle Bin"
-        );
-        
+                jjcet.PragatiX.enums.AuditAction.DELETE,
+                jjcet.PragatiX.enums.AuditModule.USER,
+                "USER",
+                user.getId(),
+                "Moved user " + user.getUsername() + " to Recycle Bin");
+
         log.debug("Admin soft deleted user with ID: {}", id);
         return ResponseEntity.ok(ApiResponse.ok("User moved to Recycle Bin", null));
     }
@@ -386,7 +406,8 @@ public class AdminUserService {
         return subRoles;
     }
 
-    private String validateHodAndCcUniqueness(Long targetUserId, boolean isHOD, boolean isCC, Department department, AcademicYear academicYearEnum, String yearStr, Section section) {
+    private String validateHodAndCcUniqueness(Long targetUserId, boolean isHOD, boolean isCC, Department department,
+            AcademicYear academicYearEnum, String yearStr, Section section) {
         if (isHOD) {
             if (department == null) {
                 return "Department is required for HOD.";
@@ -395,12 +416,14 @@ public class AdminUserService {
                     .filter(u -> !u.isDeleted() && u.isActive())
                     .filter(u -> (targetUserId == null || !u.getId().equals(targetUserId)))
                     .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(department.getId()))
-                    .filter(u -> u.getSubRoles().stream().anyMatch(sr -> "HOD".equalsIgnoreCase(sr.getName()) || "ROLE_HOD".equalsIgnoreCase(sr.getName())))
+                    .filter(u -> u.getSubRoles().stream().anyMatch(
+                            sr -> "HOD".equalsIgnoreCase(sr.getName()) || "ROLE_HOD".equalsIgnoreCase(sr.getName())))
                     .collect(Collectors.toList());
             if (!existingHods.isEmpty()) {
-                String existingName = existingHods.get(0).getFullName() != null && !existingHods.get(0).getFullName().trim().isEmpty()
-                        ? existingHods.get(0).getFullName().trim()
-                        : existingHods.get(0).getEmail();
+                String existingName = existingHods.get(0).getFullName() != null
+                        && !existingHods.get(0).getFullName().trim().isEmpty()
+                                ? existingHods.get(0).getFullName().trim()
+                                : existingHods.get(0).getEmail();
                 return "Department '" + department.getName() + "' already has an assigned HOD: " + existingName;
             }
         }
@@ -421,17 +444,23 @@ public class AdminUserService {
                     .filter(u -> !u.isDeleted() && u.isActive())
                     .filter(u -> (targetUserId == null || !u.getId().equals(targetUserId)))
                     .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(department.getId()))
-                    .filter(u -> u.getSubRoles().stream().anyMatch(sr -> "CC".equalsIgnoreCase(sr.getName()) || "ROLE_CC".equalsIgnoreCase(sr.getName()) || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName())))
+                    .filter(u -> u.getSubRoles().stream()
+                            .anyMatch(sr -> "CC".equalsIgnoreCase(sr.getName())
+                                    || "ROLE_CC".equalsIgnoreCase(sr.getName())
+                                    || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName())))
                     .filter(u -> isMatchingUserYear(u, targetYearEnum, targetYearStr))
                     .filter(u -> isMatchingUserSection(u, targetSection))
                     .collect(Collectors.toList());
             if (!existingCcs.isEmpty()) {
-                String existingName = existingCcs.get(0).getFullName() != null && !existingCcs.get(0).getFullName().trim().isEmpty()
-                        ? existingCcs.get(0).getFullName().trim()
-                        : existingCcs.get(0).getEmail();
+                String existingName = existingCcs.get(0).getFullName() != null
+                        && !existingCcs.get(0).getFullName().trim().isEmpty()
+                                ? existingCcs.get(0).getFullName().trim()
+                                : existingCcs.get(0).getEmail();
                 String secName = (targetSection != null) ? " Section " + targetSection.getSectionName() : "";
-                String yrName = (targetYearEnum != null) ? " " + targetYearEnum.name() : (targetYearStr != null ? " Year " + targetYearStr : "");
-                return "A Class Coordinator (CC) is already assigned for " + department.getName() + yrName + secName + ": " + existingName;
+                String yrName = (targetYearEnum != null) ? " " + targetYearEnum.name()
+                        : (targetYearStr != null ? " Year " + targetYearStr : "");
+                return "A Class Coordinator (CC) is already assigned for " + department.getName() + yrName + secName
+                        + ": " + existingName;
             }
         }
         return null;
@@ -439,9 +468,11 @@ public class AdminUserService {
 
     private boolean isMatchingUserYear(User u, AcademicYear targetEnum, String targetYearStr) {
         if (targetEnum != null && u.getAcademicYear() != null) {
-            if (u.getAcademicYear() == targetEnum) return true;
+            if (u.getAcademicYear() == targetEnum)
+                return true;
         }
-        String uYear = u.getYear() != null ? u.getYear() : (u.getAcademicYear() != null ? u.getAcademicYear().name() : null);
+        String uYear = u.getYear() != null ? u.getYear()
+                : (u.getAcademicYear() != null ? u.getAcademicYear().name() : null);
         String targetYear = targetYearStr != null ? targetYearStr : (targetEnum != null ? targetEnum.name() : null);
         return jjcet.PragatiX.admin.service.TeamValidationService.isMatchingYear(uYear, targetYear);
     }
@@ -467,7 +498,8 @@ public class AdminUserService {
                     .body(ApiResponse.error("Teacher not found"));
         }
 
-        List<jjcet.PragatiX.entity.DisciplineLog> disciplineLogs = disciplineLogRepository.findByTeacherUserId(user.getId());
+        List<jjcet.PragatiX.entity.DisciplineLog> disciplineLogs = disciplineLogRepository
+                .findByTeacherUserId(user.getId());
         List<jjcet.PragatiX.entity.XpTransaction> xpTransactions = xpTransactionRepository
                 .findByApprovedByNameOrUsername(user.getFullName(), user.getUsername());
 
@@ -511,11 +543,12 @@ public class AdminUserService {
                     String dept = team != null && team.getDepartment() != null ? team.getDepartment().getName()
                             : (st != null && st.getDepartment() != null ? st.getDepartment().getName() : "");
                     String yr = team != null && team.getYear() != null ? team.getYear()
-                            : (st != null && st.getYear() != null ? st.getYear() : (st != null && st.getAcademicYear() != null ? st.getAcademicYear() : ""));
+                            : (st != null && st.getYear() != null ? st.getYear() : "");
                     String sec = team != null && team.getSection() != null ? team.getSection().getSectionName()
                             : (st != null && st.getSection() != null ? st.getSection().getSectionName() : "");
 
-                    String groupKey = "DL_" + teamId + "_" + (dl.getActivity() != null ? dl.getActivity().getId() : 0L) + "_" + reason + "_" + timeKey + "_" + dl.getPoints();
+                    String groupKey = "DL_" + teamId + "_" + (dl.getActivity() != null ? dl.getActivity().getId() : 0L)
+                            + "_" + reason + "_" + timeKey + "_" + dl.getPoints();
 
                     if (groupDlMap.containsKey(groupKey)) {
                         Map<String, Object> gItem = groupDlMap.get(groupKey);
@@ -576,7 +609,9 @@ public class AdminUserService {
                         item.put("studentId", dl.getStudent().getId());
                         item.put("studentName", dl.getStudent().getFullName());
                         item.put("studentRegNo", dl.getStudent().getRegNo());
-                        item.put("studentDept", dl.getStudent().getDepartment() != null ? dl.getStudent().getDepartment().getName() : "");
+                        item.put("studentDept",
+                                dl.getStudent().getDepartment() != null ? dl.getStudent().getDepartment().getName()
+                                        : "");
                     }
                     item.put("createdAt", createdStr);
                     historyList.add(item);
@@ -611,15 +646,17 @@ public class AdminUserService {
                     jjcet.PragatiX.entity.Team team = st != null ? st.getTeam() : null;
                     Long teamId = team != null ? team.getId() : 0L;
                     String teamName = team != null && team.getName() != null ? team.getName()
-                            : (actName.toUpperCase().startsWith("TEAM") ? actName.split("/")[0].trim() : "Team Activity");
+                            : (actName.toUpperCase().startsWith("TEAM") ? actName.split("/")[0].trim()
+                                    : "Team Activity");
                     String dept = team != null && team.getDepartment() != null ? team.getDepartment().getName()
                             : (st != null && st.getDepartment() != null ? st.getDepartment().getName() : "");
                     String yr = team != null && team.getYear() != null ? team.getYear()
-                            : (st != null && st.getYear() != null ? st.getYear() : (st != null && st.getAcademicYear() != null ? st.getAcademicYear() : ""));
+                            : (st != null && st.getYear() != null ? st.getYear() : "");
                     String sec = team != null && team.getSection() != null ? team.getSection().getSectionName()
                             : (st != null && st.getSection() != null ? st.getSection().getSectionName() : "");
 
-                    String groupKey = "XP_" + teamId + "_" + (tx.getActivity() != null ? tx.getActivity().getId() : 0L) + "_" + actName + "_" + timeKey + "_" + tx.getXpPoints();
+                    String groupKey = "XP_" + teamId + "_" + (tx.getActivity() != null ? tx.getActivity().getId() : 0L)
+                            + "_" + actName + "_" + timeKey + "_" + tx.getXpPoints();
 
                     if (groupXpMap.containsKey(groupKey)) {
                         Map<String, Object> gItem = groupXpMap.get(groupKey);
@@ -680,7 +717,9 @@ public class AdminUserService {
                         item.put("studentId", tx.getStudent().getId());
                         item.put("studentName", tx.getStudent().getFullName());
                         item.put("studentRegNo", tx.getStudent().getRegNo());
-                        item.put("studentDept", tx.getStudent().getDepartment() != null ? tx.getStudent().getDepartment().getName() : "");
+                        item.put("studentDept",
+                                tx.getStudent().getDepartment() != null ? tx.getStudent().getDepartment().getName()
+                                        : "");
                     }
                     item.put("createdAt", createdStr);
                     historyList.add(item);
@@ -692,9 +731,12 @@ public class AdminUserService {
         historyList.sort((a, b) -> {
             String tA = (String) a.get("createdAt");
             String tB = (String) b.get("createdAt");
-            if (tA == null && tB == null) return 0;
-            if (tA == null) return 1;
-            if (tB == null) return -1;
+            if (tA == null && tB == null)
+                return 0;
+            if (tA == null)
+                return 1;
+            if (tB == null)
+                return -1;
             return tB.compareTo(tA);
         });
 

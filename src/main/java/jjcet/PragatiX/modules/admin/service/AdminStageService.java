@@ -114,7 +114,6 @@ public class AdminStageService {
 
     public ResponseEntity<ApiResponse<Void>> deleteStage(@PathVariable Long id) {
         activityStageService.deleteStage(id);
-        return ResponseEntity.ok(ApiResponse.ok("Stage deleted successfully", null));
+        return ResponseEntity.ok(ApiResponse.ok("Stage moved to Recycle Bin successfully", null));
     }
-
 }

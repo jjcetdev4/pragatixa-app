@@ -21,6 +21,8 @@ public class BadgeRequestDto {
     private Long departmentId;
     private Long sectionId;
     private String academicYear;
+    private Long yearId;
+    private String yearName;
 
     public BadgeRequestDto() {
     }
@@ -167,5 +169,21 @@ public class BadgeRequestDto {
 
     public void setAcademicYear(String academicYear) {
         this.academicYear = academicYear;
+    }
+
+    public Long getYearId() {
+        return yearId;
+    }
+
+    public void setYearId(Long yearId) {
+        this.yearId = yearId;
+    }
+
+    public String getYearName() {
+        return yearName;
+    }
+
+    public void setYearName(String yearName) {
+        this.yearName = yearName;
     }
 }

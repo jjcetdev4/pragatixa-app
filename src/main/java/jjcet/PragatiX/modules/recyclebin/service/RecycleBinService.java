@@ -170,6 +170,19 @@ public class RecycleBinService {
                 (l.getPrimaryObjective() != null && !l.getPrimaryObjective().isBlank()) ? l.getPrimaryObjective() : ("Level " + l.getLevelNumber() + " • XP: " + l.getXpMin() + " - " + l.getXpMax())
         )).collect(Collectors.toList()));
 
+        // Fetch deleted Stages
+        List<ActivityStage> deletedStages = entityManager.createQuery("SELECT s FROM ActivityStage s WHERE s.deleted = true", ActivityStage.class).getResultList();
+        items.addAll(deletedStages.stream().map(s -> new RecycleBinItem(
+                s.getId(),
+                "STAGE",
+                s.getName() != null ? s.getName() : s.getStageName(),
+                s.getDeletedAt(),
+                s.getPermanentDeleteAt(),
+                s.getDeletedBy(),
+                "Activity Management → Stages & Thresholds" + (s.getAcademicYear() != null ? " • " + s.getAcademicYear().name() : ""),
+                "Display Order: " + s.getDisplayOrder() + " • Expected XP: " + s.getExpectedXp() + " • Must: " + s.getMustThreshold() + " • Ind: " + s.getIndividualThreshold() + " • Grp: " + s.getGroupThreshold()
+        )).collect(Collectors.toList()));
+
         return items;
     }
 
@@ -294,6 +307,18 @@ public class RecycleBinService {
                     entityManager.merge(level);
                 }
                 break;
+            case "STAGE":
+            case "ACTIVITY_STAGE":
+                ActivityStage stage = entityManager.find(ActivityStage.class, id);
+                if (stage != null) {
+                    stage.setDeleted(false);
+                    stage.setActive(true);
+                    stage.setDeletedAt(null);
+                    stage.setPermanentDeleteAt(null);
+                    stage.setDeletedBy(null);
+                    entityManager.merge(stage);
+                }
+                break;
             default:
                 throw new IllegalArgumentException("Unknown entity type: " + entityType);
         }
@@ -301,6 +326,8 @@ public class RecycleBinService {
         if (restoreModuleStr.equals("ACTIVITY_CATEGORY") || restoreModuleStr.equals("CATEGORY")
                 || restoreModuleStr.equals("ACTIVITY_EVIDENCE") || restoreModuleStr.equals("EVIDENCE")) {
             restoreModuleStr = "ACTIVITY";
+        } else if (restoreModuleStr.equals("ACTIVITY_STAGE")) {
+            restoreModuleStr = "STAGE";
         }
         auditService.log(
             jjcet.PragatiX.enums.AuditAction.RESTORE,
@@ -470,6 +497,20 @@ public class RecycleBinService {
                     entityManager.remove(levelToDelete);
                 }
                 break;
+            case "STAGE":
+            case "ACTIVITY_STAGE":
+                ActivityStage stageToDelete = entityManager.find(ActivityStage.class, id);
+                if (stageToDelete != null) {
+                    entityManager.createNativeQuery("DELETE FROM stage_teams WHERE stage_id = :id").setParameter("id", id).executeUpdate();
+                    entityManager.createNativeQuery("DELETE FROM stage_activity_mappings WHERE stage_id = :id").setParameter("id", id).executeUpdate();
+                    entityManager.createNativeQuery("DELETE FROM activity_stage_mappings WHERE stage_id = :id").setParameter("id", id).executeUpdate();
+                    entityManager.createNativeQuery("DELETE FROM activity_assignments WHERE stage_id = :id").setParameter("id", id).executeUpdate();
+                    entityManager.createNativeQuery("DELETE FROM activity_temporary_assignments WHERE stage_id = :id").setParameter("id", id).executeUpdate();
+                    entityManager.createNativeQuery("UPDATE activities SET stage_id = NULL WHERE stage_id = :id").setParameter("id", id).executeUpdate();
+                    entityManager.createNativeQuery("DELETE FROM activity_subgroups WHERE stage_id = :id").setParameter("id", id).executeUpdate();
+                    entityManager.remove(stageToDelete);
+                }
+                break;
             default:
                 throw new IllegalArgumentException("Unknown entity type: " + entityType);
         }
@@ -480,6 +521,8 @@ public class RecycleBinService {
         } else if (moduleStr.equals("ACTIVITY_CATEGORY") || moduleStr.equals("CATEGORY")
                 || moduleStr.equals("ACTIVITY_EVIDENCE") || moduleStr.equals("EVIDENCE")) {
             moduleStr = "ACTIVITY";
+        } else if (moduleStr.equals("ACTIVITY_STAGE")) {
+            moduleStr = "STAGE";
         }
 
         auditService.log(

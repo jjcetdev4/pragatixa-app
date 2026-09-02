@@ -245,9 +245,23 @@ public class BadgeRequestService {
             }
 
             try {
-                dto.setAcademicYear(r.getStudent() != null && r.getStudent().getYearRef() != null ? r.getStudent().getYearRef().getYearName() : "");
+                String yName = "";
+                Long yId = null;
+                if (r.getStudent() != null) {
+                    if (r.getStudent().getYearRef() != null) {
+                        yName = r.getStudent().getYearRef().getYearName();
+                        yId = r.getStudent().getYearRef().getId();
+                    } else if (r.getStudent().getYear() != null) {
+                        yName = r.getStudent().getYear();
+                    }
+                }
+                dto.setAcademicYear(yName != null ? yName : "");
+                dto.setYearName(yName != null ? yName : "");
+                dto.setYearId(yId);
             } catch (jakarta.persistence.EntityNotFoundException ex) {
                 dto.setAcademicYear("");
+                dto.setYearName("");
+                dto.setYearId(null);
             }
             dto.setStatus(r.getStatus());
             dto.setRequestedAt(r.getRequestedAt());

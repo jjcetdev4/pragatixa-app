@@ -164,11 +164,6 @@ public class SuperAdminService {
             else if (year.getYearNo() == 4) mappedAcademicYear = jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR;
         }
 
-        String rawPassword = request.getPassword();
-        if (rawPassword == null || rawPassword.trim().isEmpty()) {
-            rawPassword = "Admin@" + (int)(Math.random() * 9000 + 1000);
-        }
-
         String yearStr = year.getYearName();
         if (yearStr != null && yearStr.length() > 50) {
             yearStr = yearStr.substring(0, 50);
@@ -176,7 +171,6 @@ public class SuperAdminService {
 
         User user = User.builder()
                 .username(username)
-                .password(passwordEncoder.encode(rawPassword))
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
@@ -250,10 +244,6 @@ public class SuperAdminService {
             admin.setEmail(request.getEmail());
         }
 
-        // Update password only if provided
-        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
-            admin.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
         admin.setPhone(request.getPhone());
         admin.setActive(request.isActive());
 

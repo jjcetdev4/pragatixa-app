@@ -35,13 +35,13 @@ public class TeamMapper {
                 .regNo(student.getRegNo())
                 .fullName(student.getFullName())
                 .email(student.getEmail())
-                .phone(student.getPhone())
+                .phone(student.getPhone() != null ? student.getPhone() : student.getPhoneNo())
                 .gender(student.getGender())
                 .dateOfBirth(student.getDateOfBirth())
                 .address(student.getAddress())
                 .departmentName(student.getDepartment() != null ? student.getDepartment().getName() : null)
                 .semester(student.getSemester())
-                .academicYear(student.getAcademicYear())
+                .year(student.getYear())
                 .active(student.isActive())
                 .createdAt(student.getCreatedAt())
                 .sprNo(student.getSprNo())
@@ -160,12 +160,6 @@ public class TeamMapper {
         } else if (representative != null && representative.getDepartment() != null) {
             response.setDepartmentId(representative.getDepartment().getId());
             response.setDepartmentName(representative.getDepartment().getName());
-        }
-
-        // Academic Year
-        if (representative != null && representative.getAcademicYearRef() != null) {
-            response.setAcademicYearId(representative.getAcademicYearRef().getId());
-            response.setAcademicYearName(representative.getAcademicYearRef().getAcademicYear());
         }
 
         // Year

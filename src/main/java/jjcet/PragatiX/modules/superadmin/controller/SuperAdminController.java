@@ -27,7 +27,7 @@ public class SuperAdminController {
     }
 
     @GetMapping("/year-admins")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOD', 'ADMIN', 'TEACHER')")
     @Operation(summary = "Get all year admins")
     public ResponseEntity<ApiResponse<List<YearAdminResponse>>> getYearAdmins() {
         return superAdminService.getYearAdmins();

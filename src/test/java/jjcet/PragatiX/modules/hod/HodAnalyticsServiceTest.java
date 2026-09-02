@@ -41,7 +41,7 @@ public class HodAnalyticsServiceTest {
         if (user != null) {
             org.springframework.security.core.userdetails.UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                     user.getUsername(),
-                    user.getPassword(),
+                    "",
                     Collections.singletonList(
                             new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_TEACHER")));
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null,

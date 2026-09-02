@@ -9,7 +9,19 @@ import jjcet.PragatiX.enums.StageStatus;
         @UniqueConstraint(name = "uq_stage_name", columnNames = { "stage_name" }),
         @UniqueConstraint(name = "UK94qv2sd8jwbxsmdv8r4aibi7v", columnNames = { "name" })
 })
-public class ActivityStage {
+public class ActivityStage implements SoftDeletable {
+
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "permanent_delete_at")
+    private LocalDateTime permanentDeleteAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -231,6 +243,46 @@ public class ActivityStage {
         this.academicYear = academicYear;
     }
 
+    @Override
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    @Override
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    @Override
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    @Override
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    @Override
+    public LocalDateTime getPermanentDeleteAt() {
+        return permanentDeleteAt;
+    }
+
+    @Override
+    public void setPermanentDeleteAt(LocalDateTime permanentDeleteAt) {
+        this.permanentDeleteAt = permanentDeleteAt;
+    }
+
+    @Override
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    @Override
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -320,6 +372,26 @@ public class ActivityStage {
 
         public Builder academicYear(jjcet.PragatiX.enums.AcademicYear v) {
             stage.academicYear = v;
+            return this;
+        }
+
+        public Builder deleted(boolean v) {
+            stage.deleted = v;
+            return this;
+        }
+
+        public Builder deletedAt(LocalDateTime v) {
+            stage.deletedAt = v;
+            return this;
+        }
+
+        public Builder permanentDeleteAt(LocalDateTime v) {
+            stage.permanentDeleteAt = v;
+            return this;
+        }
+
+        public Builder deletedBy(String v) {
+            stage.deletedBy = v;
             return this;
         }
 

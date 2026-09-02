@@ -36,8 +36,8 @@ public class StudentLevelService {
         if (student.getYearRef() != null) {
             studentYear = jjcet.PragatiX.enums.AcademicYear.fromString(String.valueOf(student.getYearRef().getYearNo()));
         }
-        if (studentYear == null && student.getAcademicYear() != null && !student.getAcademicYear().trim().isEmpty()) {
-            studentYear = jjcet.PragatiX.enums.AcademicYear.fromString(student.getAcademicYear());
+        if (studentYear == null && student.getYear() != null && !student.getYear().trim().isEmpty()) {
+            studentYear = jjcet.PragatiX.enums.AcademicYear.fromString(student.getYear());
         }
 
         List<Level> levels = new ArrayList<>();

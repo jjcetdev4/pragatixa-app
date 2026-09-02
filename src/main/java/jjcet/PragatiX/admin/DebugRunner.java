@@ -39,13 +39,10 @@ public class DebugRunner {
                 System.out.println("  Dept: " + (student.getDepartment() != null ? student.getDepartment().getId() : "null"));
                 System.out.println("  Sec : " + (student.getSection() != null ? student.getSection().getId() : "null"));
                 System.out.println("  Year: " + student.getYear());
-                System.out.println("  AcadYear: " + student.getAcademicYear());
-                System.out.println("  AcadYearRef: " + (student.getAcademicYearRef() != null ? student.getAcademicYearRef().getAcademicYear() : "null"));
-                
                 yearStr = student.getYear();
                 System.out.println("  -> Derived YearStr (for count): " + yearStr);
                 
-                canonical = student.getAcademicYearRef() != null && student.getAcademicYearRef().getAcademicYear() != null && !student.getAcademicYearRef().getAcademicYear().trim().isEmpty() ? student.getAcademicYearRef().getAcademicYear() : (student.getAcademicYear() != null && !student.getAcademicYear().trim().isEmpty() ? student.getAcademicYear() : ("1".equals(yearStr) ? "FIRST_YEAR" : "2".equals(yearStr) ? "SECOND_YEAR" : "3".equals(yearStr) ? "THIRD_YEAR" : "4".equals(yearStr) ? "FOURTH_YEAR" : yearStr));
+                canonical = ("1".equals(yearStr) ? "FIRST_YEAR" : "2".equals(yearStr) ? "SECOND_YEAR" : "3".equals(yearStr) ? "THIRD_YEAR" : "4".equals(yearStr) ? "FOURTH_YEAR" : yearStr);
                 System.out.println("  -> Canonical Year: " + canonical);
                 
                 deptId = student.getDepartment() != null ? student.getDepartment().getId() : null;

@@ -70,9 +70,12 @@ public class AssignmentSecurityService {
             }
         }
 
-        // 3. Global Scope (Only the assigned Teacher can perform/award)
+        // 3. Global Scope (All teachers can perform/award, or specific teacher if assigned)
         if (assignment.getAssignmentScope() == AssignmentScope.GLOBAL) {
-            return assignment.getTeacher() != null && assignment.getTeacher().getId().equals(user.getId());
+            if (assignment.getTeacher() != null) {
+                return assignment.getTeacher().getId().equals(user.getId());
+            }
+            return true;
         }
 
         // 4. Specific Faculty Scope

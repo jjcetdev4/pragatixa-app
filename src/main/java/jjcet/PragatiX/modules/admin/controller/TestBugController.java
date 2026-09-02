@@ -25,7 +25,6 @@ public class TestBugController {
     public Object create() {
         jjcet.PragatiX.modules.superadmin.dto.CreateYearAdminRequest req = new jjcet.PragatiX.modules.superadmin.dto.CreateYearAdminRequest();
         req.setUsername("testadmin_bug");
-        req.setPassword("password");
         req.setFullName("Test Admin Bug");
         req.setEmail("testbug@example.com");
         req.setPhone("1234567890");

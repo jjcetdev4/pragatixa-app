@@ -19,8 +19,6 @@ public class StudentResponse {
     private String departmentName;
     private String semester;
     private Long semesterId;
-    private String academicYear;
-    private Long academicYearId;
     private String year;
     private Long yearId;
     private String section;
@@ -214,22 +212,6 @@ public class StudentResponse {
         this.semesterId = semesterId;
     }
 
-    public String getAcademicYear() {
-        return academicYear;
-    }
-
-    public void setAcademicYear(String academicYear) {
-        this.academicYear = academicYear;
-    }
-
-    public Long getAcademicYearId() {
-        return academicYearId;
-    }
-
-    public void setAcademicYearId(Long academicYearId) {
-        this.academicYearId = academicYearId;
-    }
-
     public String getYear() {
         return year;
     }
@@ -411,16 +393,6 @@ public class StudentResponse {
 
         public Builder semesterId(Long v) {
             r.semesterId = v;
-            return this;
-        }
-
-        public Builder academicYear(String v) {
-            r.academicYear = v;
-            return this;
-        }
-
-        public Builder academicYearId(Long v) {
-            r.academicYearId = v;
             return this;
         }
 

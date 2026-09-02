@@ -181,7 +181,7 @@ public class ActivityCrudService {
         }
 
         if (subgroup == null) {
-            List<ActivityStage> stages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
+            List<ActivityStage> stages = activityStageRepository.findAllByDeletedFalseOrderByDisplayOrderAsc();
             if (!stages.isEmpty()) {
                 ActivityStage defaultStage = stages.get(0);
                 List<ActivitySubgroup> defaultSubgroups = activitySubgroupRepository

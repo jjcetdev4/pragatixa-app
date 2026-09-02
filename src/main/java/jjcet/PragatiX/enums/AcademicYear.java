@@ -62,12 +62,6 @@ public enum AcademicYear {
         if (student.getYear() != null) {
             sources.add(student.getYear());
         }
-        if (student.getAcademicYear() != null) {
-            sources.add(student.getAcademicYear());
-        }
-        if (student.getAcademicYearRef() != null && student.getAcademicYearRef().getAcademicYear() != null) {
-            sources.add(student.getAcademicYearRef().getAcademicYear());
-        }
 
         for (String raw : sources) {
             AcademicYear year = fromString(raw);

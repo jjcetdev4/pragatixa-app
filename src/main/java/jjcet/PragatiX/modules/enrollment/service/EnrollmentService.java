@@ -789,31 +789,29 @@ public class EnrollmentService {
         Semester semesterRef = semesterRepository.findBySemesterNo((byte) 1)
                 .orElseGet(() -> semesterRepository.findAll().stream().findFirst().orElse(null));
 
-        ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueOrderByDisplayOrderAsc()
-                .orElseGet(() -> activityStageRepository.findAll().stream().findFirst().orElse(null));
+        ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueAndDeletedFalseOrderByDisplayOrderAsc()
+                .orElseGet(() -> activityStageRepository.findAllByDeletedFalseOrderByDisplayOrderAsc().stream().findFirst().orElse(null));
 
         // Generate unique regNo format
         String regNo = generateUniqueRegNo(dept);
 
-        // 5. Create Student record (NO user record created)
+        String mobileVal = (enrollment.getMobile() != null && enrollment.getMobile().trim().matches("^\\d+$"))
+                ? enrollment.getMobile().trim() : null;
+
         Student student = Student.builder()
                 .regNo(regNo)
                 .fullName(enrollment.getFullName().trim())
                 .email(enrollment.getEmail().trim())
-                .phone(enrollment.getMobile().trim())
-                .phoneNo(enrollment.getMobile().trim())
+                .phoneNo(mobileVal)
                 .gender(genderRef != null ? genderRef.getGenderName() : enrollment.getGender())
                 .genderRef(genderRef)
                 .department(dept)
-                .academicYearRef(academicYear)
-                .academicYear(academicYear != null ? academicYear.getAcademicYear() : "1")
                 .yearRef(yearRef)
                 .year(yearRef != null ? String.valueOf(yearRef.getYearNo()) : "1")
                 .semesterRef(semesterRef)
                 .semester(semesterRef != null ? String.valueOf(semesterRef.getSemesterNo()) : "1")
-                .password(passwordEncoder.encode("123456"))
                 .active(true)
-                .score(100)
+                .score(0)
                 .totalXp(0)
                 .groupXp(0)
                 .individualXp(0)

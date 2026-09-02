@@ -83,7 +83,7 @@ public class NotificationService {
                     .or(() -> studentGuardianRepository.findByStudentId(studentId))
                     .orElse(null);
 
-            if (guardian == null || guardian.getPhoneNo() == null || guardian.getPhoneNo().trim().isEmpty()) {
+            if (guardian == null || guardian.getPhoneNo() == null) {
                 log.warn("Absence SMS skipped: parent mobile unavailable for student {}", student.getRegNo());
                 return;
             }

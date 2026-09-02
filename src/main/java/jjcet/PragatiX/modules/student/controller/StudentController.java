@@ -49,8 +49,8 @@ public class StudentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    @Operation(summary = "Add Student", description = "Creates a new student record. Requires ADMIN or TEACHER role.")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPERADMIN', 'ADMIN', 'TEACHER', 'HOD', 'CLASS_COORDINATOR')")
+    @Operation(summary = "Add Student", description = "Creates a new student record.")
     public ResponseEntity<ApiResponse<StudentResponse>> createStudent(
             @Valid @RequestBody CreateStudentRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -196,7 +196,7 @@ public class StudentController {
     }
 
     @GetMapping("/bulk-upload/template")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPERADMIN', 'ADMIN', 'TEACHER', 'HOD', 'CLASS_COORDINATOR')")
     @Operation(summary = "Download Student Bulk Upload Template", description = "Generates and downloads an Excel template for bulk student upload.")
     public ResponseEntity<byte[]> downloadBulkUploadTemplate() {
         try {
@@ -214,8 +214,8 @@ public class StudentController {
     }
 
     @PostMapping(value = "/bulk-parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
-    @Operation(summary = "Bulk Parse Students Spreadsheet", description = "Parses Excel and returns JSON preview list of student records without saving. Requires ADMIN or TEACHER role.")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPERADMIN', 'ADMIN', 'TEACHER', 'HOD', 'CLASS_COORDINATOR')")
+    @Operation(summary = "Bulk Parse Students Spreadsheet", description = "Parses Excel and returns JSON preview list of student records without saving.")
     public ResponseEntity<ApiResponse<List<CreateStudentRequest>>> bulkParseStudents(
             @RequestParam("file") MultipartFile file) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -224,8 +224,8 @@ public class StudentController {
     }
 
     @PostMapping("/bulk-import")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
-    @Operation(summary = "Bulk Import Selected Students", description = "Saves selected list of parsed student records into the database. Requires ADMIN or TEACHER role.")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPERADMIN', 'ADMIN', 'TEACHER', 'HOD', 'CLASS_COORDINATOR')")
+    @Operation(summary = "Bulk Import Selected Students", description = "Saves selected list of parsed student records into the database.")
     public ResponseEntity<ApiResponse<String>> bulkImportStudents(
             @RequestBody List<CreateStudentRequest> requests) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

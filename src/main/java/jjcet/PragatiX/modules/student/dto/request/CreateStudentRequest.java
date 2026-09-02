@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 public class CreateStudentRequest {
     @NotBlank(message = "Register number is required")
+    @Pattern(regexp = "^8113\\d+$", message = "Register number must contain digits only and start with 8113.")
     @Size(max = 100)
     private String regNo;
 
@@ -12,14 +13,15 @@ public class CreateStudentRequest {
     @Size(max = 255)
     private String fullName;
 
+    @NotBlank(message = "Email is required")
+    @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "Enter a valid email address.")
     @Size(max = 255)
     private String email;
 
-    private String password;
-
-    @Size(max = 50)
+    @Pattern(regexp = "^\\d{10}$", message = "Phone number must contain digits only.")
     private String phone;
 
+    @Pattern(regexp = "^[A-Za-z0-9]*$", message = "SPR number must contain alphanumeric characters only (no symbols).")
     @Size(max = 100)
     private String sprNo;
 
@@ -38,8 +40,6 @@ public class CreateStudentRequest {
     @Size(max = 20)
     private String semester;
 
-    @Size(max = 50)
-    private String academicYear;
     private String year;
     private String section;
 
@@ -86,14 +86,6 @@ public class CreateStudentRequest {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getPhone() {
@@ -144,14 +136,6 @@ public class CreateStudentRequest {
         this.semester = semester;
     }
 
-    public String getAcademicYear() {
-        return academicYear;
-    }
-
-    public void setAcademicYear(String academicYear) {
-        this.academicYear = academicYear;
-    }
-
     public String getYear() {
         return year;
     }
@@ -176,21 +160,12 @@ public class CreateStudentRequest {
         this.departmentName = departmentName;
     }
 
-    private Long academicYearId;
     private Long yearId;
     private Long semesterId;
     private Long sectionId;
     private Long genderId;
     private Long teamId;
     private Boolean active;
-
-    public Long getAcademicYearId() {
-        return academicYearId;
-    }
-
-    public void setAcademicYearId(Long academicYearId) {
-        this.academicYearId = academicYearId;
-    }
 
     public Long getYearId() {
         return yearId;

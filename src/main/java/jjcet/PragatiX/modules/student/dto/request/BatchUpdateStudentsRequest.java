@@ -9,8 +9,6 @@ public class BatchUpdateStudentsRequest {
     private List<Long> studentIds;
 
     private Long departmentId;
-    private Long academicYearId;
-    private String academicYear;
     private Long yearId;
     private String year;
     private Long semesterId;
@@ -33,22 +31,6 @@ public class BatchUpdateStudentsRequest {
 
     public void setDepartmentId(Long departmentId) {
         this.departmentId = departmentId;
-    }
-
-    public Long getAcademicYearId() {
-        return academicYearId;
-    }
-
-    public void setAcademicYearId(Long academicYearId) {
-        this.academicYearId = academicYearId;
-    }
-
-    public String getAcademicYear() {
-        return academicYear;
-    }
-
-    public void setAcademicYear(String academicYear) {
-        this.academicYear = academicYear;
     }
 
     public Long getYearId() {

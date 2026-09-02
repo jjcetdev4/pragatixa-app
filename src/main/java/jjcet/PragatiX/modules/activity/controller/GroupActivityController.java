@@ -444,7 +444,7 @@ public class GroupActivityController {
         s.setRegNo(student.getRegNo());
         s.setFullName(student.getFullName());
         s.setEmail(student.getEmail());
-        s.setPhone(student.getPhone());
+        s.setPhone(student.getPhone() != null ? student.getPhone() : student.getPhoneNo());
         s.setDepartmentName(student.getDepartment() != null ? student.getDepartment().getName() : null);
         s.setSection(student.getSection() != null ? student.getSection().getSectionName() : null);
         s.setScore(student.getScore());

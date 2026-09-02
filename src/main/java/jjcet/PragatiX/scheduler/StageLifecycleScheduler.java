@@ -36,7 +36,7 @@ public class StageLifecycleScheduler {
     @Transactional
     public void updateStageStatuses() {
         LocalDateTime now = LocalDateTime.now();
-        List<ActivityStage> allStages = activityStageRepository.findAll();
+        List<ActivityStage> allStages = activityStageRepository.findAllByDeletedFalseOrderByDisplayOrderAsc();
         boolean updated = false;
 
         for (ActivityStage stage : allStages) {

@@ -134,11 +134,14 @@ public class StudentImportService {
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isSuperAdmin = false;
         boolean isAdmin = false;
+        boolean isHod = false;
         boolean isCC = false;
         if (creator != null) {
-            isSuperAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN"));
+            isSuperAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN") || r.getName().equalsIgnoreCase("ROLE_SUPERADMIN"));
             isAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-            isCC = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_CLASS_COORDINATOR") || r.getName().equalsIgnoreCase("ROLE_CC"));
+            isHod = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_HOD"))
+                    || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD") || sr.trim().equalsIgnoreCase("HEAD_OF_DEPARTMENT"));
+            isCC = creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("ROLE_CC"));
         }
 
         try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
@@ -160,8 +163,10 @@ public class StudentImportService {
                 headerList.addAll(Arrays.asList("Full Name", "Register Number", "Email", "Department", "Section", "Year"));
             } else if (isAdmin) {
                 headerList.addAll(Arrays.asList("Full Name", "Register Number", "Email", "Department", "Section"));
+            } else if (isHod) {
+                headerList.addAll(Arrays.asList("Full Name", "Register Number", "Email", "Year", "Section"));
             } else {
-                // CC or other roles: keep existing CC template behavior minus Academic Year and Team Name
+                // CC or other roles: keep standard template
                 headerList.addAll(Arrays.asList(
                     "Student Name", "Register Number", "SPR Number", "Email", "Phone",
                     "Address", "Date of Birth", "Department", "Year",
@@ -191,14 +196,14 @@ public class StudentImportService {
                 switch(headerName) {
                     case "Student Name":
                     case "Full Name": cell.setCellValue("ARUN KUMAR"); break;
-                    case "Register Number": cell.setCellValue("24CSC101"); break;
+                    case "Register Number": cell.setCellValue("811324104001"); break;
                     case "SPR Number": cell.setCellValue("SPR001"); break;
                     case "Email": cell.setCellValue("arun@example.com"); break;
                     case "Phone": cell.setCellValue("9876543210"); break;
                     case "Address": cell.setCellValue("123 Main St, City"); break;
                     case "Date of Birth": cell.setCellValue("2000-01-15"); break;
                     case "Department": cell.setCellValue("Computer Science and Engineering"); break;
-                    case "Year": cell.setCellValue("I"); break;
+                    case "Year": cell.setCellValue("Year 1"); break;
                     case "Semester": cell.setCellValue("I"); break;
                     case "Gender": cell.setCellValue("Male"); break;
                     case "Section": cell.setCellValue("A"); break;
@@ -233,7 +238,7 @@ public class StudentImportService {
                 row.createCell(0).setCellValue(deptNames.get(i));
             }
 
-            String[] years = {"I", "II", "III", "IV"};
+            String[] years = {"Year 1", "Year 2", "Year 3", "Year 4"};
             for (int i = 0; i < years.length; i++) {
                 Row row = listSheet.getRow(i);
                 if (row == null) row = listSheet.createRow(i);
@@ -280,18 +285,33 @@ public class StudentImportService {
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isSuperAdmin = false;
         boolean isAdmin = false;
+        boolean isHod = false;
         boolean isCc = false;
         String adminAssignedYear = null;
+        String hodDeptName = null;
+        String ccDeptName = null;
+        String ccYear = null;
+        String ccSection = null;
 
         if (creator != null) {
-            isSuperAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN"));
+            isSuperAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN") || r.getName().equalsIgnoreCase("ROLE_SUPERADMIN"));
             isAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-            isCc = creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
-            adminAssignedYear = creator.getAssignedYear() != null ? creator.getAssignedYear().getYearName() : creator.getYear(); // Ensure Admin's year is fetched
+            isHod = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_HOD"))
+                    || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD") || sr.trim().equalsIgnoreCase("HEAD_OF_DEPARTMENT"));
+            isCc = creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("ROLE_CC"));
+            adminAssignedYear = creator.getAssignedYear() != null ? creator.getAssignedYear().getYearName() : creator.getYear();
+            if (creator.getDepartment() != null) {
+                hodDeptName = creator.getDepartment().getName();
+                ccDeptName = creator.getDepartment().getName();
+            }
+            ccYear = creator.getYear();
+            if (creator.getSection() != null) {
+                ccSection = creator.getSection().getSectionName();
+            }
         }
 
-        if (!isSuperAdmin && !isAdmin && !isCc) {
-            return ApiResponse.error("Access Denied: Only Super Admin, Admin, and CC can parse student import files.");
+        if (!isSuperAdmin && !isAdmin && !isHod && !isCc) {
+            return ApiResponse.error("Access Denied: You do not have permission to import students.");
         }
 
         if (isAdmin && !isSuperAdmin && (adminAssignedYear == null || adminAssignedYear.trim().isEmpty())) {
@@ -433,14 +453,29 @@ public class StudentImportService {
                 String email = getColValue(row, csvRow, emailIdx, isCsvMode, excelStudentParser);
                 String gender = getColValue(row, csvRow, genderIdx, isCsvMode, excelStudentParser);
                 String year = getColValue(row, csvRow, yearIdx, isCsvMode, excelStudentParser);
-                
-                if (isAdmin && !isSuperAdmin) {
-                    year = adminAssignedYear;
-                }
-                
                 String semester = getColValue(row, csvRow, semIdx, isCsvMode, excelStudentParser);
                 String section = getColValue(row, csvRow, secIdx, isCsvMode, excelStudentParser);
                 String address = getColValue(row, csvRow, addressIdx, isCsvMode, excelStudentParser);
+
+                if (isAdmin && !isSuperAdmin) {
+                    if (adminAssignedYear != null && !adminAssignedYear.trim().isEmpty()) {
+                        year = adminAssignedYear;
+                    }
+                } else if (isHod && !isSuperAdmin) {
+                    if (hodDeptName != null && !hodDeptName.trim().isEmpty()) {
+                        deptName = hodDeptName;
+                    }
+                } else if (isCc && !isSuperAdmin) {
+                    if (ccDeptName != null && !ccDeptName.trim().isEmpty()) {
+                        deptName = ccDeptName;
+                    }
+                    if (ccYear != null && !ccYear.trim().isEmpty()) {
+                        year = ccYear;
+                    }
+                    if (ccSection != null && !ccSection.trim().isEmpty()) {
+                        section = ccSection;
+                    }
+                }
 
                 String gName = getColValue(row, csvRow, guardNameIdx, isCsvMode, excelStudentParser);
                 String gRel = getColValue(row, csvRow, guardRelIdx, isCsvMode, excelStudentParser);
@@ -452,10 +487,32 @@ public class StudentImportService {
                 }
 
                 List<String> errors = new ArrayList<>();
-                if (regNo.isEmpty())
+                if (regNo.isEmpty()) {
                     errors.add("Register Number missing");
+                } else if (!regNo.matches("^\\d+$") || !regNo.startsWith("8113")) {
+                    errors.add("Register number must contain digits only and start with 8113.");
+                }
+
+                if (!sprNo.isEmpty() && !sprNo.matches("^[A-Za-z0-9]+$")) {
+                    errors.add("SPR Number must contain alphanumeric characters only (no symbols).");
+                }
+
                 if (name.isEmpty())
                     errors.add("Student Name missing");
+
+                if (!phoneNo.isEmpty()) {
+                    if (!phoneNo.matches("^\\d+$") || !phoneNo.matches("^\\d{10}$")) {
+                        errors.add("Phone number must contain digits only.");
+                    }
+                }
+                if (!email.isEmpty()) {
+                    if (!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                        errors.add("Enter a valid email address.");
+                    }
+                }
+                if (dob != null && dob.isAfter(LocalDate.now().minusYears(16))) {
+                    errors.add("Student must be at least 16 years old.");
+                }
 
                 if (guardNameIdx != -1 && guardPhoneIdx != -1) {
                     if (gName.isEmpty())
@@ -464,8 +521,11 @@ public class StudentImportService {
                         errors.add("Guardian Relationship is required");
                     if (gPhone.isEmpty())
                         errors.add("Guardian Phone is required");
-                    else if (!gPhone.matches("^\\d{10}$"))
-                        errors.add("Guardian Phone must be exactly 10 digits");
+                    else if (!gPhone.matches("^\\d+$") || !gPhone.matches("^\\d{10}$"))
+                        errors.add("Phone number must contain digits only.");
+                    if (!gEmail.isEmpty() && !gEmail.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                        errors.add("Enter a valid email address.");
+                    }
                 }
 
                 CreateStudentRequest req = new CreateStudentRequest();
@@ -565,8 +625,6 @@ public class StudentImportService {
             CreateStudentRequest first = requests.get(0);
             log.info("=== STEP 2: INCOMING IMPORT REQUEST FOR FIRST STUDENT ===");
             log.info("FullName: {}", first.getFullName());
-            log.info("AcademicYear: {}", first.getAcademicYear());
-            log.info("AcademicYearId: {}", first.getAcademicYearId());
             log.info("Department: {}", first.getDepartmentName());
             log.info("DepartmentId: {}", first.getDepartmentId());
             log.info("Year: {}", first.getYear());
@@ -581,17 +639,32 @@ public class StudentImportService {
         User creator = userRepository.findByUsername(username).orElse(null);
         boolean isSuperAdmin = false;
         boolean isAdmin = false;
+        boolean isHod = false;
         boolean isCc = false;
         String adminAssignedYear = null;
+        String hodDeptName = null;
+        String ccDeptName = null;
+        String ccYear = null;
+        String ccSection = null;
 
         if (creator != null) {
             isSuperAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN") || r.getName().equalsIgnoreCase("ROLE_SUPERADMIN"));
             isAdmin = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"));
-            isCc = creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
-            adminAssignedYear = creator.getAssignedYear() != null ? creator.getAssignedYear().getYearName() : creator.getYear(); // Ensure Admin's year is fetched
+            isHod = creator.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_HOD"))
+                    || creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD") || sr.trim().equalsIgnoreCase("HEAD_OF_DEPARTMENT"));
+            isCc = creator.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("ROLE_CC"));
+            adminAssignedYear = creator.getAssignedYear() != null ? creator.getAssignedYear().getYearName() : creator.getYear();
+            if (creator.getDepartment() != null) {
+                hodDeptName = creator.getDepartment().getName();
+                ccDeptName = creator.getDepartment().getName();
+            }
+            ccYear = creator.getYear();
+            if (creator.getSection() != null) {
+                ccSection = creator.getSection().getSectionName();
+            }
         }
 
-        if (!isSuperAdmin && !isAdmin && !isCc) {
+        if (!isSuperAdmin && !isAdmin && !isHod && !isCc) {
             return ApiResponse.error("Access denied. You do not have permission to bulk import students.");
         }
 
@@ -607,7 +680,7 @@ public class StudentImportService {
             List<Student> studentsToSave = new ArrayList<>();
             List<StudentGuardian> guardiansToSave = new ArrayList<>();
 
-            ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueOrderByDisplayOrderAsc()
+            ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueAndDeletedFalseOrderByDisplayOrderAsc()
                     .orElse(null);
             if (initialStage == null) {
                 return ApiResponse.error(
@@ -616,15 +689,34 @@ public class StudentImportService {
             java.util.Map<Long, Department> deptMap = new java.util.HashMap<>();
             java.util.Map<Long, Section> sectionMap = new java.util.HashMap<>();
             java.util.Map<Long, Gender> genderMap = new java.util.HashMap<>();
-            java.util.Map<Long, AcademicYear> academicYearMap = new java.util.HashMap<>();
             java.util.Map<Long, Year> yearMap = new java.util.HashMap<>();
             java.util.Map<Long, Semester> semesterMap = new java.util.HashMap<>();
             java.util.Map<Long, Team> teamMap = new java.util.HashMap<>();
 
             for (CreateStudentRequest request : requests) {
                 if (isAdmin && !isSuperAdmin) {
-                    request.setYear(adminAssignedYear);
-                    request.setYearId(resolverService.resolveYear(adminAssignedYear));
+                    if (adminAssignedYear != null && !adminAssignedYear.trim().isEmpty()) {
+                        request.setYear(adminAssignedYear);
+                        request.setYearId(resolverService.resolveYear(adminAssignedYear));
+                    }
+                } else if (isHod && !isSuperAdmin) {
+                    if (creator.getDepartment() != null) {
+                        request.setDepartmentName(creator.getDepartment().getName());
+                        request.setDepartmentId(creator.getDepartment().getId());
+                    }
+                } else if (isCc && !isSuperAdmin) {
+                    if (creator.getDepartment() != null) {
+                        request.setDepartmentName(creator.getDepartment().getName());
+                        request.setDepartmentId(creator.getDepartment().getId());
+                    }
+                    if (ccYear != null && !ccYear.trim().isEmpty()) {
+                        request.setYear(ccYear);
+                        request.setYearId(resolverService.resolveYear(ccYear));
+                    }
+                    if (creator.getSection() != null) {
+                        request.setSection(creator.getSection().getSectionName());
+                        request.setSectionId(creator.getSection().getId());
+                    }
                 }
                 
                 
@@ -687,13 +779,6 @@ public class StudentImportService {
                         id -> sectionRepository.findById(id).orElse(null)) : null;
                 Gender gender = genderMap.computeIfAbsent(request.getGenderId(),
                         id -> genderRepository.findById(id).orElse(null));
-                AcademicYear academicYear = academicYearRepository.findAll().stream()
-                        .filter(a -> a.getStatus() == AcademicYear.Status.ACTIVE)
-                        .findFirst().orElse(null);
-                
-                if (academicYear == null) {
-                    return ApiResponse.error("No active Academic Year found. Please configure an active Academic Year first.");
-                }
                 
                 Year year = yearMap.computeIfAbsent(request.getYearId(),
                         id -> yearRepository.findById(id).orElse(null));
@@ -701,8 +786,9 @@ public class StudentImportService {
                         id -> semesterRepository.findById(id).orElse(null));
 
                 LocalDate dob = request.getDateOfBirth();
-                String rawPassword = dob != null ? dob.format(DateTimeFormatter.ofPattern("ddMMyyyy")) : regNo;
-                String encodedPassword = passwordEncoder.encode(rawPassword);
+
+                String phoneVal = (request.getPhone() != null && request.getPhone().trim().matches("^\\d+$"))
+                        ? request.getPhone().trim() : null;
 
                 Student student = studentRepository.findByRegNo(regNo)
                         .or(() -> email != null ? studentRepository.findByEmail(email) : java.util.Optional.empty())
@@ -729,24 +815,16 @@ public class StudentImportService {
                     student.setDepartment(department);
                     student.setSection(section);
                     student.setGenderRef(gender);
-                    student.setAcademicYearRef(academicYear);
                     student.setYearRef(year);
                     student.setSemesterRef(semester);
                     student.setSprNo(request.getSprNo() != null && !request.getSprNo().trim().isEmpty()
                             ? request.getSprNo().trim()
                             : null);
-                    student.setPhone(request.getPhone() != null && !request.getPhone().trim().isEmpty()
-                            ? request.getPhone().trim()
-                            : null);
-                    student.setPhoneNo(request.getPhone() != null && !request.getPhone().trim().isEmpty()
-                            ? request.getPhone().trim()
-                            : "0000000000");
+                    student.setPhoneNo(phoneVal);
                     student.setDateOfBirth(dob);
                     student.setEmail(email);
-                    student.setPassword(encodedPassword);
                     student.setAddress(request.getAddress());
                     student.setActive(request.getActive() != null ? request.getActive() : true);
-                    student.setAcademicYear(academicYear.getAcademicYear());
                     student.setYear(String.valueOf(year.getYearNo()));
                     student.setSemester(String.valueOf(semester.getSemesterNo()));
                     student.setGender(gender.getGenderName());
@@ -766,7 +844,9 @@ public class StudentImportService {
                         } catch (Exception e) {
                             guardian.setRelationship(StudentGuardian.RelationshipType.GUARDIAN);
                         }
-                        guardian.setPhoneNo(gDto.getPhoneNo());
+                        String gPhoneVal = (gDto.getPhoneNo() != null && gDto.getPhoneNo().trim().matches("^\\d+$"))
+                                ? gDto.getPhoneNo().trim() : null;
+                        guardian.setPhoneNo(gPhoneVal);
                         guardian.setEmail(gDto.getEmail());
                         guardian.setPrimary(true);
                         guardiansToSave.add(guardian);
@@ -788,25 +868,17 @@ public class StudentImportService {
                             .regNo(regNo)
                             .fullName(request.getFullName().trim())
                             .email(email)
-                            .password(encodedPassword)
-                            .phone(request.getPhone() != null && !request.getPhone().trim().isEmpty()
-                                    ? request.getPhone().trim()
-                                    : null)
-                            .phoneNo(request.getPhone() != null && !request.getPhone().trim().isEmpty()
-                                    ? request.getPhone().trim()
-                                    : "0000000000")
+                            .phoneNo(phoneVal)
                             .genderRef(gender)
                             .dateOfBirth(dob)
                             .department(department)
                             .section(section)
-                            .academicYearRef(academicYear)
                             .yearRef(year)
                             .semesterRef(semester)
-                            .academicYear(academicYear.getAcademicYear())
                             .year(String.valueOf(year.getYearNo()))
                             .semester(String.valueOf(semester.getSemesterNo()))
                             .gender(gender.getGenderName())
-                            .score(100)
+                            .score(0)
                             .stage(initialStage.getDisplayOrder())
                             .currentStage(initialStage.getDisplayOrder())
                             .currentStageId(initialStage.getId())
@@ -830,7 +902,9 @@ public class StudentImportService {
                         } catch (Exception e) {
                             guardian.setRelationship(StudentGuardian.RelationshipType.GUARDIAN);
                         }
-                        guardian.setPhoneNo(gDto.getPhoneNo());
+                        String gPhoneVal = (gDto.getPhoneNo() != null && gDto.getPhoneNo().trim().matches("^\\d+$"))
+                                ? gDto.getPhoneNo().trim() : null;
+                        guardian.setPhoneNo(gPhoneVal);
                         guardian.setEmail(gDto.getEmail());
                         guardian.setPrimary(true);
                         guardiansToSave.add(guardian);

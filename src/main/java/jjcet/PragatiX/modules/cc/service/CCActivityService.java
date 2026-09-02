@@ -66,7 +66,7 @@ public class CCActivityService {
         if (user == null) {
             return null;
         }
-        boolean isCcOrAdmin = user.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN"))
+        boolean isCcOrAdmin = user.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_ADMIN") || r.getName().equalsIgnoreCase("ROLE_SUPER_ADMIN"))
                 || user.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
         if (!isCcOrAdmin) {
             return null;

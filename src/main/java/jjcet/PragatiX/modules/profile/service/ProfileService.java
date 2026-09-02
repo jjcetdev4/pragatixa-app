@@ -85,7 +85,7 @@ public class ProfileService {
             response.setUsername(student.getRegNo());
             response.setEmail(student.getEmail());
             response.setPhone(
-                    student.getPhoneNo() != null ? student.getPhoneNo() : (user != null ? user.getPhone() : ""));
+                    student.getPhoneNo() != null ? student.getPhoneNo() : (student.getPhone() != null ? student.getPhone() : (user != null && user.getPhone() != null ? user.getPhone() : "")));
             response.setDepartment(student.getDepartment() != null
                     ? (student.getDepartment().getName() != null ? student.getDepartment().getName()
                             : student.getDepartment().getDeptName())

@@ -194,9 +194,9 @@ public class StudentDisciplineService {
                 .orElse(100.0);
 
         Map<String, Double> yearWiseAverage = students.stream()
-                .filter(s -> s.getAcademicYear() != null && !s.getAcademicYear().trim().isEmpty())
+                .filter(s -> s.getYear() != null && !s.getYear().trim().isEmpty())
                 .collect(Collectors.groupingBy(
-                        Student::getAcademicYear,
+                        Student::getYear,
                         TreeMap::new,
                         Collectors.averagingDouble(Student::getScore)));
 

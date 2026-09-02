@@ -42,12 +42,9 @@ public class EncryptionSchemaInitializer {
                 "ALTER TABLE users MODIFY COLUMN email VARCHAR(255) NULL",
                 "ALTER TABLE users MODIFY COLUMN phone VARCHAR(255) NULL",
                 "ALTER TABLE students MODIFY COLUMN email VARCHAR(255) NOT NULL",
-                "ALTER TABLE students MODIFY COLUMN phone_no VARCHAR(255) NOT NULL",
-                "ALTER TABLE students MODIFY COLUMN phone VARCHAR(255) NULL",
                 "ALTER TABLE enrollments MODIFY COLUMN email VARCHAR(255) NOT NULL",
                 "ALTER TABLE enrollments MODIFY COLUMN mobile VARCHAR(255) NOT NULL",
                 "ALTER TABLE student_guardians MODIFY COLUMN email VARCHAR(255) NULL",
-                "ALTER TABLE student_guardians MODIFY COLUMN phone_no VARCHAR(255) NOT NULL",
                 "ALTER TABLE faculty MODIFY COLUMN phone_no VARCHAR(255) NOT NULL",
                 "ALTER TABLE otp_tokens MODIFY COLUMN email VARCHAR(255) NOT NULL"
         };
@@ -67,18 +64,15 @@ public class EncryptionSchemaInitializer {
             migrateTableColumn("users", "id", "email");
             migrateTableColumn("users", "id", "phone");
 
-            // 2. Students
+            // 2. Students (Email only)
             migrateTableColumn("students", "id", "email");
-            migrateTableColumn("students", "id", "phone_no");
-            migrateTableColumn("students", "id", "phone");
 
             // 3. Enrollments
             migrateTableColumn("enrollments", "id", "email");
             migrateTableColumn("enrollments", "id", "mobile");
 
-            // 4. Student Guardians
+            // 4. Student Guardians (Email only)
             migrateTableColumn("student_guardians", "id", "email");
-            migrateTableColumn("student_guardians", "id", "phone_no");
 
             // 5. Faculty
             migrateTableColumn("faculty", "id", "phone_no");

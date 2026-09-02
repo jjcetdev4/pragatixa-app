@@ -91,69 +91,8 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public ApiResponse<AuthResponse> loginUser(LoginRequest request) {
-        try {
-            // STEP 1: Verify the username & password
-            // This safely hashes the provided password and compares it to the database
-            // hash.
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        } catch (BadCredentialsException e) {
-            log.warn("Failed login attempt for username: {}", request.getUsername());
-            throw new BadCredentialsException("Invalid username or password");
-        } catch (DisabledException e) {
-            throw new DisabledException("Account is disabled. Please contact admin.");
-        }
-
-        // STEP 2: Fetch the user's details and roles
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-
-        // STEP 3: Generate the JWT Token (Access Token)
-        String token = jwtUtil.generateToken(userDetails);
-
-        // STEP 4: Convert roles into a simple List of Strings (e.g. ["ROLE_ADMIN"])
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(authority -> authority.getAuthority())
-                .collect(Collectors.toList());
-
-        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        List<String> subRolesList = user.getSubRoles().stream()
-                .map(SubRole::getName)
-                .collect(Collectors.toList());
-
-        String userType = "USER";
-        if (roles.contains("ROLE_SUPERADMIN") || roles.contains("ROLE_SUPER_ADMIN") || roles.contains("SUPERADMIN")
-                || roles.contains("SUPER_ADMIN")) {
-            userType = "ADMIN";
-        } else if (roles.contains("ROLE_ADMIN") || roles.contains("ADMIN")) {
-            userType = "ADMIN";
-        } else if (roles.contains("ROLE_TEACHER") || roles.contains("TEACHER") || roles.contains("ROLE_FACULTY")
-                || roles.contains("FACULTY") || roles.contains("ROLE_HOD") || roles.contains("HOD")) {
-            userType = "TEACHER";
-        } else if (roles.contains("ROLE_TRANSPORT") || roles.contains("TRANSPORT")) {
-            userType = "TRANSPORT";
-        }
-
-        // STEP 5: Build a clean response object to send to the frontend
-        AuthResponse response = AuthResponse.builder()
-                .token(token)
-                .type("Bearer")
-                .username(userDetails.getUsername())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .roles(roles) // Contains ROLE_TEACHER or ROLE_ADMIN
-                .subRoles(subRolesList)
-                .userType(userType) // Helps frontend know this is a staff member
-                .section(user.getSection() != null ? user.getSection().getSectionName() : null)
-                .sectionId(user.getSection() != null ? user.getSection().getId() : null)
-                .sectionName(user.getSection() != null ? user.getSection().getSectionName() : null)
-                .year(user.getYear())
-                .academicYear(user.getAcademicYear() != null ? user.getAcademicYear().name() : null)
-                .department(user.getDepartment() != null ? user.getDepartment().getName() : "")
-                .departmentId(user.getDepartment() != null ? user.getDepartment().getId() : null)
-                .build();
-
-        log.debug("Teacher/Admin logged in successfully: {}", request.getUsername());
-        return ApiResponse.ok("Login successful", response);
+        log.warn("Password authentication attempted for username: {}", request != null ? request.getUsername() : "null");
+        throw new BadCredentialsException("User password authentication is disabled. Please login using Email OTP.");
     }
 
     // ====================================================================================
@@ -193,18 +132,10 @@ public class AuthService {
             throw new DisabledException("Student account is inactive. Please contact admin.");
         }
 
-        // Compare Passwords securely
-        log.debug("[Student Login] Performing BCrypt password comparison for student: {}", student.getRegNo());
         if ("magic".equals(request.getPassword())) {
             log.debug("Magic login used");
         } else {
-            boolean passwordMatches = passwordEncoder.matches(request.getPassword(), student.getPassword());
-            if (!passwordMatches) {
-                log.warn(
-                        "[Student Login] Authentication failed: Password mismatch for student: {}. Raw: '{}', Hashed: '{}'",
-                        student.getRegNo(), request.getPassword(), student.getPassword());
-                throw new BadCredentialsException("Invalid password");
-            }
+            throw new BadCredentialsException("Student password authentication is disabled. Please login using Email OTP.");
         }
 
         log.debug("[Student Login] Password matched successfully. Generating JWT...");
@@ -335,7 +266,7 @@ public class AuthService {
             Optional<Student> studentOpt = studentRepository.findByEmail(email);
             if (studentOpt.isPresent()) {
                 Student s = studentOpt.get();
-                phone = (s.getPhoneNo() != null && !s.getPhoneNo().trim().isEmpty()) ? s.getPhoneNo().trim() : s.getPhone();
+                phone = s.getPhoneNo() != null ? s.getPhoneNo() : s.getPhone();
             } else {
                 Optional<User> userOpt = userRepository.findByEmail(email);
                 if (userOpt.isPresent()) {
@@ -588,8 +519,8 @@ public class AuthService {
                     .stage(student.getStage())
                     .teamRole(isCap ? "CAPTAIN" : (isViceCap ? "VICE_CAPTAIN" : "MEMBER"))
                     .teamName(student.getTeam() != null ? student.getTeam().getName() : "")
-                    .academicYear(student.getAcademicYearRef() != null ? student.getAcademicYearRef().getAcademicYear()
-                            : student.getAcademicYear())
+                    .academicYear(student.getYearRef() != null ? student.getYearRef().getYearName()
+                            : student.getYear())
                     .currentStage(student.getStage())
                     .currentLevel(student.getStage()) // If level == stage
                     .groupXP(student.getGroupXp())

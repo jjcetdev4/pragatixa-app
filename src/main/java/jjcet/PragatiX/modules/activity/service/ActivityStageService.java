@@ -37,6 +37,7 @@ public class ActivityStageService {
     private final jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository xpRepo;
     private final jjcet.PragatiX.repository.XpTransactionRepository txRepo;
     private final jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository;
+    private final jjcet.PragatiX.modules.audit.service.AuditService auditService;
 
     public ActivityStageService(ActivityStageRepository activityStageRepository,
             ActivitySubgroupRepository activitySubgroupRepository,
@@ -48,7 +49,8 @@ public class ActivityStageService {
             jjcet.PragatiX.repository.ActivityAssignmentRepository assignmentRepo,
             jjcet.PragatiX.modules.student.repository.StudentActivityXpRepository xpRepo,
             jjcet.PragatiX.repository.XpTransactionRepository txRepo,
-            jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository) {
+            jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository,
+            jjcet.PragatiX.modules.audit.service.AuditService auditService) {
         this.activityStageRepository = activityStageRepository;
         this.activitySubgroupRepository = activitySubgroupRepository;
         this.activityRepository = activityRepository;
@@ -60,12 +62,13 @@ public class ActivityStageService {
         this.xpRepo = xpRepo;
         this.txRepo = txRepo;
         this.userRepository = userRepository;
+        this.auditService = auditService;
     }
 
     @PostConstruct
     @Transactional
     public void cleanupDuplicateSubgroups() {
-        List<ActivityStage> allStages = activityStageRepository.findAll();
+        List<ActivityStage> allStages = activityStageRepository.findAllByDeletedFalseOrderByDisplayOrderAsc();
         for (ActivityStage stage : allStages) {
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
             Map<String, ActivitySubgroup> uniqueCategories = new HashMap<>();
@@ -155,13 +158,13 @@ public class ActivityStageService {
             log.warn("Could not determine user for filtering stages", e);
         }
 
-        List<ActivityStage> allStages = activityStageRepository.findAllByOrderByDisplayOrderAsc();
+        List<ActivityStage> allStages = activityStageRepository.findAllByDeletedFalseOrderByDisplayOrderAsc();
 
         final jjcet.PragatiX.enums.AcademicYear finalEffectiveYear = effectiveYear;
         List<ActivityStage> stages;
 
         if (finalEffectiveYear != null) {
-            stages = activityStageRepository.findByAcademicYearOrderByDisplayOrderAsc(finalEffectiveYear);
+            stages = activityStageRepository.findByAcademicYearAndDeletedFalseOrderByDisplayOrderAsc(finalEffectiveYear);
         } else if (isStudent) {
             // If it's a student and we couldn't resolve an academic year, return an empty
             // list
@@ -255,7 +258,7 @@ public class ActivityStageService {
 
     @Transactional
     public Optional<ActivityStageResponse> getStageById(Long id) {
-        return activityStageRepository.findById(id).map(stage -> {
+        return activityStageRepository.findByIdAndDeletedFalse(id).map(stage -> {
             ActivityStageResponse response = activityStageMapper.toResponse(stage);
             List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(stage.getId());
             List<jjcet.PragatiX.modules.activity.dto.response.ActivitySubgroupResponse> subMaps = subgroups.stream()
@@ -428,50 +431,34 @@ public class ActivityStageService {
 
     @Transactional
     public void deleteStage(Long id) {
-        if (!activityStageRepository.existsById(id)) {
-            throw new NoSuchElementException("Stage not found");
+        ActivityStage stage = activityStageRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Stage not found"));
+
+        if (stage.isDeleted()) {
+            return;
         }
 
-        // 0. Delete StageTeams referencing this stage
-        List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository.findByStageId(id);
-        stageTeamRepository.deleteAll(stageTeams);
-
-        List<ActivitySubgroup> subgroups = activitySubgroupRepository.findByStageId(id);
-
-        // 1. Nullify references in DisciplineLog for each subgroup and activity of this
-        // stage
-        for (ActivitySubgroup sub : subgroups) {
-            disciplineLogRepository.nullifySubgroupReferences(sub.getId());
+        String username = "SYSTEM";
+        if (org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null) {
+            username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         }
 
-        List<Activity> activities = activityRepository.findByStageId(id);
+        stage.setDeleted(true);
+        stage.setActive(false);
+        stage.setDeletedAt(java.time.LocalDateTime.now());
+        stage.setPermanentDeleteAt(java.time.LocalDateTime.now().plusDays(30));
+        stage.setDeletedBy(username);
+        activityStageRepository.save(stage);
 
-        // Resolve Activity Dependencies
-        for (Activity act : activities) {
-            disciplineLogRepository.nullifyActivityReferences(act.getId());
-            xpRepo.deleteByActivityId(act.getId());
+        auditService.log(
+                jjcet.PragatiX.enums.AuditAction.DELETE,
+                jjcet.PragatiX.enums.AuditModule.STAGE,
+                "STAGE",
+                id,
+                "Moved stage '" + stage.getName() + "' to Recycle Bin"
+        );
 
-            // For XpTransaction, there is no deleteByActivityId out of the box, we may need
-            // to iterate or fetch
-            List<jjcet.PragatiX.entity.XpTransaction> txs = txRepo.findAll().stream()
-                    .filter(t -> t.getActivity() != null && t.getActivity().getId().equals(act.getId()))
-                    .collect(Collectors.toList());
-            txRepo.deleteAll(txs);
-
-            List<jjcet.PragatiX.entity.ActivityAssignment> assignments = assignmentRepo.findByActivityId(act.getId());
-            assignmentRepo.deleteAll(assignments);
-        }
-
-        // 2. Delete all Activity records referencing this stage
-        activityRepository.deleteAll(activities);
-
-        // 3. Delete subgroups
-        activitySubgroupRepository.deleteAll(subgroups);
-
-        // 4. Delete the stage itself
-        activityStageRepository.deleteById(id);
-
-        log.debug("Admin deleted stage and its subgroups, activities, and teams: {}", id);
+        log.info("Admin moved stage {} ('{}') to Recycle Bin by user {}", id, stage.getName(), username);
     }
 
     private void validateStage(ActivityStageRequest request, Long existingId) {
@@ -480,16 +467,16 @@ public class ActivityStageService {
         }
 
         if (existingId == null) {
-            if (activityStageRepository.existsByName(request.getName())) {
+            if (activityStageRepository.existsByNameAndDeletedFalse(request.getName())) {
                 throw new IllegalArgumentException("Stage name already exists");
             }
         } else {
-            if (activityStageRepository.existsByNameAndIdNot(request.getName(), existingId)) {
+            if (activityStageRepository.existsByNameAndIdNotAndDeletedFalse(request.getName(), existingId)) {
                 throw new IllegalArgumentException("Stage name already exists");
             }
         }
 
-        List<ActivityStage> allStages = activityStageRepository.findAll();
+        List<ActivityStage> allStages = activityStageRepository.findAllByDeletedFalseOrderByDisplayOrderAsc();
         for (ActivityStage other : allStages) {
             if (existingId != null && other.getId().equals(existingId)) {
                 continue;

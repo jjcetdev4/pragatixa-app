@@ -235,7 +235,7 @@ public class AttendanceWeeklyEngineService {
                 .filter(s -> s.getYearRef() != null && yearId.equals(s.getYearRef().getId()))
                 .collect(Collectors.toList());
 
-        List<ActivityStage> stages = activityStageRepository.findByAcademicYearOrderByDisplayOrderAsc(academicYear);
+        List<ActivityStage> stages = activityStageRepository.findByAcademicYearAndDeletedFalseOrderByDisplayOrderAsc(academicYear);
 
         int processed = 0;
         int eligibleStudentsCount = 0;

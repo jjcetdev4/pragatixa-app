@@ -58,12 +58,8 @@ public class Student implements SoftDeletable {
     private Gender genderRef;
 
     @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
-    @Column(name = "phone_no", nullable = false, length = 255)
+    @Column(name = "phone_no", length = 255)
     private String phoneNo;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "academic_year_id", nullable = true)
-    private AcademicYear academicYearRef;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "year_id", nullable = false)
@@ -72,9 +68,6 @@ public class Student implements SoftDeletable {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "semester_id", nullable = false)
     private Semester semesterRef;
-
-    @Column(name = "academic_year", length = 20)
-    private String academicYear;
 
     @Column(nullable = false)
     private boolean active = true;
@@ -94,13 +87,6 @@ public class Student implements SoftDeletable {
 
     @Column(length = 10)
     private String gender;
-
-    @Column(nullable = false, length = 255)
-    private String password;
-
-    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
-    @Column(length = 255)
-    private String phone;
 
     @Column(nullable = false)
     private int score = 0;
@@ -226,14 +212,6 @@ public class Student implements SoftDeletable {
         this.phoneNo = phoneNo;
     }
 
-    public AcademicYear getAcademicYearRef() {
-        return academicYearRef;
-    }
-
-    public void setAcademicYearRef(AcademicYear academicYearRef) {
-        this.academicYearRef = academicYearRef;
-    }
-
     public Year getYearRef() {
         return yearRef;
     }
@@ -248,14 +226,6 @@ public class Student implements SoftDeletable {
 
     public void setSemesterRef(Semester semesterRef) {
         this.semesterRef = semesterRef;
-    }
-
-    public String getAcademicYear() {
-        return academicYear;
-    }
-
-    public void setAcademicYear(String academicYear) {
-        this.academicYear = academicYear;
     }
 
     public boolean isActive() {
@@ -306,20 +276,12 @@ public class Student implements SoftDeletable {
         this.gender = gender;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getPhone() {
-        return phone;
+        return phoneNo;
     }
 
     public void setPhone(String phone) {
-        this.phone = phone;
+        this.phoneNo = phone;
     }
 
     public int getScore() {
@@ -513,12 +475,7 @@ public static Builder builder() {
         }
 
         public Builder phoneNo(String v) {
-            s.phoneNo = v;
-            return this;
-        }
-
-        public Builder academicYearRef(AcademicYear v) {
-            s.academicYearRef = v;
+            s.phoneNo = v != null && !v.trim().isEmpty() ? v.trim() : null;
             return this;
         }
 
@@ -529,11 +486,6 @@ public static Builder builder() {
 
         public Builder semesterRef(Semester v) {
             s.semesterRef = v;
-            return this;
-        }
-
-        public Builder academicYear(String v) {
-            s.academicYear = v;
             return this;
         }
 
@@ -567,13 +519,8 @@ public static Builder builder() {
             return this;
         }
 
-        public Builder password(String v) {
-            s.password = v;
-            return this;
-        }
-
         public Builder phone(String v) {
-            s.phone = v;
+            s.phoneNo = v != null && !v.trim().isEmpty() ? v.trim() : null;
             return this;
         }
 

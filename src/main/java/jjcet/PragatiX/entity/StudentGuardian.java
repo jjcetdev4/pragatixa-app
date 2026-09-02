@@ -32,7 +32,7 @@ public class StudentGuardian {
     private RelationshipType relationship;
 
     @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
-    @Column(name = "phone_no", nullable = false, length = 255)
+    @Column(name = "phone_no", length = 255)
     private String phoneNo;
 
     @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
@@ -151,7 +151,7 @@ public class StudentGuardian {
         }
 
         public Builder phoneNo(String v) {
-            sg.phoneNo = v;
+            sg.phoneNo = v != null && !v.trim().isEmpty() ? v.trim() : null;
             return this;
         }
 

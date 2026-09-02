@@ -158,7 +158,6 @@ public class TestDataSeederRunner implements ApplicationRunner {
             user.setUsername(username);
         }
         user.setFullName(fullName);
-        user.setPassword(password);
         user.setRoles(roles);
         user.setSubRoles(subRoles);
         user.setDepartment(dept);
@@ -184,11 +183,9 @@ public class TestDataSeederRunner implements ApplicationRunner {
             s.setSprNo(sprNo);
         }
         s.setFullName(fullName);
-        s.setPassword(password);
         s.setDepartment(dept);
         s.setSection(sec);
         s.setGenderRef(gen);
-        s.setAcademicYearRef(ay);
         s.setYearRef(yr);
         s.setSemesterRef(sem);
         s.setPhoneNo("1234567890");

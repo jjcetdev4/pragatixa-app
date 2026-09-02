@@ -35,10 +35,6 @@ public class User implements SoftDeletable {
     @Column(unique = true, length = 100)
     private String username;
 
-    @Column(nullable = false, length = 150)
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    private String password;
-
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
@@ -113,14 +109,6 @@ public class User implements SoftDeletable {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getFullName() {
@@ -249,11 +237,6 @@ public static Builder builder() {
 
         public Builder username(String v) {
             user.username = v;
-            return this;
-        }
-
-        public Builder password(String v) {
-            user.password = v;
             return this;
         }
 

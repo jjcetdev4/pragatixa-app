@@ -2,6 +2,7 @@ package jjcet.PragatiX.modules.student.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
@@ -10,32 +11,31 @@ public class UpdateStudentRequest {
     @Size(max = 255)
     private String fullName;
 
+    @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "Enter a valid email address.")
     @Size(max = 255)
     private String email;
 
-    @Size(max = 50)
+    @Pattern(regexp = "^\\d{10}$", message = "Phone number must contain digits only.")
     private String phone;
 
     private String gender;
     private Long departmentId;
     private String semester;
-    private String academicYear;
     private String year;
     private Boolean active;
 
+    @Pattern(regexp = "^[A-Za-z0-9]*$", message = "SPR number must contain alphanumeric characters only (no symbols).")
     @Size(max = 100)
     private String sprNo;
 
     @com.fasterxml.jackson.annotation.JsonAlias({"dateOfBirth", "dob"})
     private LocalDate dob;
     private String address;
-    private Long academicYearId;
     private Long yearId;
     private Long semesterId;
     private Long sectionId;
     private Long genderId;
     private Long teamId;
-    private String password;
 
     private GuardianDTO guardian;
 
@@ -90,14 +90,6 @@ public class UpdateStudentRequest {
         this.semester = semester;
     }
 
-    public String getAcademicYear() {
-        return academicYear;
-    }
-
-    public void setAcademicYear(String academicYear) {
-        this.academicYear = academicYear;
-    }
-
     public String getYear() {
         return year;
     }
@@ -146,14 +138,6 @@ public class UpdateStudentRequest {
         this.address = address;
     }
 
-    public Long getAcademicYearId() {
-        return academicYearId;
-    }
-
-    public void setAcademicYearId(Long academicYearId) {
-        this.academicYearId = academicYearId;
-    }
-
     public Long getYearId() {
         return yearId;
     }
@@ -192,14 +176,6 @@ public class UpdateStudentRequest {
 
     public void setTeamId(Long teamId) {
         this.teamId = teamId;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public GuardianDTO getGuardian() {

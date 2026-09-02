@@ -88,7 +88,7 @@ public class StudentDetailsService implements UserDetailsService {
 
         return User.builder()
                 .username(student.getRegNo())
-                .password(student.getPassword())
+                .password("")
                 .authorities(authorities)
                 .accountExpired(false)
                 .accountLocked(false)

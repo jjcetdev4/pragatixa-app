@@ -14,9 +14,10 @@ public class GuardianDTO {
     private String relationship;
 
     @NotBlank(message = "Guardian Phone is required")
-    @Pattern(regexp = "^\\d{10}$", message = "Guardian phone must be exactly 10 digits")
+    @Pattern(regexp = "^\\d{10}$", message = "Phone number must contain digits only.")
     private String phoneNo;
 
+    @Pattern(regexp = "^$|^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "Enter a valid email address.")
     @Size(max = 150)
     private String email;
 

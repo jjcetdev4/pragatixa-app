@@ -399,23 +399,32 @@ public class ActivityAssignmentService {
                 .getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);
 
-        // Check for existing assignment for the same department and section
+        // Check for existing assignment for the exact same target (department + section)
         List<ActivityAssignment> existing = stageId != null
                 ? activityAssignmentRepository.findByActivityIdAndStageId(activityId, stageId)
                 : activityAssignmentRepository.findByActivityId(activityId);
 
-        ActivityAssignment aa = existing.stream().filter(a -> {
+        List<ActivityAssignment> matches = existing.stream().filter(a -> {
             boolean deptMatch = (a.getDepartment() == null && request.getDepartmentId() == null) ||
                     (a.getDepartment() != null && request.getDepartmentId() != null
                             && a.getDepartment().getId().equals(request.getDepartmentId()));
             boolean secMatch = (a.getSection() == null && request.getSectionId() == null) ||
                     (a.getSection() != null && request.getSectionId() != null
                             && a.getSection().getId().equals(request.getSectionId()));
-            boolean teacherMatch = (a.getTeacher() == null && request.getTeacherId() == null) ||
-                    (a.getTeacher() != null && request.getTeacherId() != null
-                            && a.getTeacher().getId().equals(request.getTeacherId()));
-            return deptMatch && secMatch && teacherMatch;
-        }).findFirst().orElse(new ActivityAssignment());
+            return deptMatch && secMatch;
+        }).collect(java.util.stream.Collectors.toList());
+
+        ActivityAssignment aa;
+        if (!matches.isEmpty()) {
+            aa = matches.get(0);
+            if (matches.size() > 1) {
+                for (int i = 1; i < matches.size(); i++) {
+                    activityAssignmentRepository.delete(matches.get(i));
+                }
+            }
+        } else {
+            aa = new ActivityAssignment();
+        }
 
         aa.setActivity(activity);
         aa.setStage(targetStage);
@@ -562,36 +571,24 @@ public class ActivityAssignmentService {
         List<ActivityAssignment> unhandledExisting = new ArrayList<>(existingAssignments);
 
         for (ActivityAssignment incoming : incomingAssignments) {
-            ActivityAssignment exactMatch = unhandledExisting.stream()
-                    .filter(e -> isSameAssignment(e, incoming))
+            ActivityAssignment targetMatch = unhandledExisting.stream()
+                    .filter(e -> isSameTarget(e, incoming))
                     .findFirst().orElse(null);
 
-            if (exactMatch != null) {
-                exactMatch.setAssignedBy(incoming.getAssignedBy());
-                exactMatch.setAssignedAt(incoming.getAssignedAt());
-                exactMatch.setYear(incoming.getYear());
-                toSave.add(exactMatch);
-                unhandledExisting.remove(exactMatch);
-                retainedCount++;
+            if (targetMatch != null) {
+                targetMatch.setTeacher(incoming.getTeacher());
+                targetMatch.setAssignmentScope(incoming.getAssignmentScope());
+                targetMatch.setDepartment(incoming.getDepartment());
+                targetMatch.setSection(incoming.getSection());
+                targetMatch.setAssignedBy(incoming.getAssignedBy());
+                targetMatch.setAssignedAt(incoming.getAssignedAt());
+                targetMatch.setYear(incoming.getYear());
+                toSave.add(targetMatch);
+                unhandledExisting.remove(targetMatch);
+                updatedCount++;
             } else {
-                ActivityAssignment similar = unhandledExisting.stream()
-                        .filter(e -> e.getAssignmentScope() == incoming.getAssignmentScope())
-                        .findFirst().orElse(null);
-
-                if (similar != null) {
-                    similar.setDepartment(incoming.getDepartment());
-                    similar.setSection(incoming.getSection());
-                    similar.setTeacher(incoming.getTeacher());
-                    similar.setAssignedBy(incoming.getAssignedBy());
-                    similar.setAssignedAt(incoming.getAssignedAt());
-                    similar.setYear(incoming.getYear());
-                    toSave.add(similar);
-                    unhandledExisting.remove(similar);
-                    updatedCount++;
-                } else {
-                    toSave.add(incoming);
-                    insertedCount++;
-                }
+                toSave.add(incoming);
+                insertedCount++;
             }
         }
 
@@ -622,20 +619,16 @@ public class ActivityAssignmentService {
         log.info("=====================================");
     }
 
-    private boolean isSameAssignment(ActivityAssignment a, ActivityAssignment b) {
+    private boolean isSameTarget(ActivityAssignment a, ActivityAssignment b) {
         if (a.getAssignmentScope() != b.getAssignmentScope())
             return false;
-        if (a.getDepartment() != null
-                ? !a.getDepartment().getId().equals(b.getDepartment() != null ? b.getDepartment().getId() : null)
-                : b.getDepartment() != null)
+        Long deptA = a.getDepartment() != null ? a.getDepartment().getId() : null;
+        Long deptB = b.getDepartment() != null ? b.getDepartment().getId() : null;
+        if (deptA != null ? !deptA.equals(deptB) : deptB != null)
             return false;
-        if (a.getSection() != null
-                ? !a.getSection().getId().equals(b.getSection() != null ? b.getSection().getId() : null)
-                : b.getSection() != null)
-            return false;
-        if (a.getTeacher() != null
-                ? !a.getTeacher().getId().equals(b.getTeacher() != null ? b.getTeacher().getId() : null)
-                : b.getTeacher() != null)
+        Long secA = a.getSection() != null ? a.getSection().getId() : null;
+        Long secB = b.getSection() != null ? b.getSection().getId() : null;
+        if (secA != null ? !secA.equals(secB) : secB != null)
             return false;
         return true;
     }

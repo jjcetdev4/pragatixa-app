@@ -201,8 +201,6 @@ public class HodAnalyticsService {
             return true;
         if (s.getYear() != null && s.getYear().equalsIgnoreCase(year))
             return true;
-        if (s.getAcademicYear() != null && s.getAcademicYear().equalsIgnoreCase(year))
-            return true;
 
         return false;
     }
