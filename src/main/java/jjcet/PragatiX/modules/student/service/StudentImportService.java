@@ -815,7 +815,9 @@ public class StudentImportService {
                             : null);
                     student.setPhoneNo(phoneVal);
                     student.setDateOfBirth(dob);
-                    student.setEmail(email);
+                    if (email != null && !email.trim().isEmpty()) {
+                        student.setEmail(email.trim());
+                    }
                     student.setAddress(request.getAddress());
                     student.setActive(request.getActive() != null ? request.getActive() : true);
                     student.setYear(String.valueOf(year.getYearNo()));
@@ -833,7 +835,7 @@ public class StudentImportService {
                         guardian.setGuardianName(gDto.getGuardianName());
                         try {
                             guardian.setRelationship(
-                                     StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()));
+                                    StudentGuardian.RelationshipType.valueOf(gDto.getRelationship().toUpperCase()));
                         } catch (Exception e) {
                             guardian.setRelationship(StudentGuardian.RelationshipType.GUARDIAN);
                         }
@@ -847,9 +849,12 @@ public class StudentImportService {
 
                     updateCount++;
                 } else {
+                    if (email == null || email.trim().isEmpty()) {
+                        return ApiResponse.error("Email is required for new student: " + request.getFullName());
+                    }
                     if (studentRepository.existsByRegNo(regNo))
                         return ApiResponse.error("Student Register No '" + regNo + "' already exists.");
-                    if (email != null && studentRepository.existsByEmail(email))
+                    if (studentRepository.existsByEmail(email))
                         return ApiResponse.error("Email '" + email + "' already exists.");
                     if (request.getSprNo() != null && !request.getSprNo().trim().isEmpty()) {
                         String cleanSpr = request.getSprNo().trim();

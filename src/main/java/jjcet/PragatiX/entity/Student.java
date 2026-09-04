@@ -79,7 +79,7 @@ public class Student implements SoftDeletable {
     private LocalDate dateOfBirth;
 
     @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
-    @Column(nullable = true, unique = true, length = 255)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
     @Column(name = "full_name", nullable = false, length = 100)
@@ -257,7 +257,9 @@ public class Student implements SoftDeletable {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        if (email != null && !email.trim().isEmpty()) {
+            this.email = email.trim();
+        }
     }
 
     public String getFullName() {

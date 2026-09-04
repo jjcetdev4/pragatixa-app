@@ -482,9 +482,19 @@ public class StudentCommandService {
                 userRepository.save(student.getUser());
             }
         }
-        student.setFullName(request.getFullName() != null ? request.getFullName().trim().toUpperCase() : null);
-        student.setEmail(cleanEmail);
-        student.setPhoneNo(rawPhone);
+        if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
+            student.setFullName(request.getFullName().trim().toUpperCase());
+        }
+        if (cleanEmail != null) {
+            student.setEmail(cleanEmail);
+            if (student.getUser() != null) {
+                student.getUser().setEmail(cleanEmail);
+                userRepository.save(student.getUser());
+            }
+        }
+        if (rawPhone != null) {
+            student.setPhoneNo(rawPhone);
+        }
         student.setAddress(request.getAddress());
         if (request.getDob() != null) {
             student.setDateOfBirth(request.getDob());
