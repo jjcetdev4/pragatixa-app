@@ -1,5 +1,6 @@
 server:
-  port: ${SERVER_PORT}
+  port: ${SERVER_PORT
+  }
   tomcat:
     accesslog:
       enabled: false
@@ -46,10 +47,10 @@ cors:
 
 springdoc:
   api-docs:
-    enabled: ${SWAGGER_ENABLED}
+    enabled: ${SWAGGER_ENABLED:false}
     path: /api/api-docs
   swagger-ui:
-    enabled: ${SWAGGER_ENABLED}
+    enabled: ${SWAGGER_ENABLED:false}
     path: /api/swagger-ui.html
     tags-sorter: alpha
 
