@@ -64,6 +64,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
                         @org.springframework.data.repository.query.Param("departmentId") Long departmentId);
 
         @org.springframework.data.jpa.repository.Query("SELECT DISTINCT u FROM User u " +
+                        "LEFT JOIN u.roles r " +
+                        "LEFT JOIN u.subRoles sr " +
+                        "WHERE u.department.id = :departmentId " +
+                        "AND (r.name = 'ROLE_HOD' OR UPPER(sr.name) = 'HOD' OR UPPER(sr.name) = 'HEAD_OF_DEPARTMENT') " +
+                        "AND u.active = true")
+        java.util.List<User> findHODByDepartment(
+                        @org.springframework.data.repository.query.Param("departmentId") Long departmentId);
+
+        @org.springframework.data.jpa.repository.Query("SELECT DISTINCT u FROM User u " +
                         "JOIN u.roles r " +
                         "JOIN u.subRoles sr " +
                         "WHERE r.name = 'ROLE_TEACHER' " +

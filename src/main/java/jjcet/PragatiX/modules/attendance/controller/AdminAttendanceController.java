@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
+import jjcet.PragatiX.modules.attendance.dto.response.AdminAttendanceHistoryItemResponse;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin/attendance")
 public class AdminAttendanceController {
@@ -26,7 +29,20 @@ public class AdminAttendanceController {
             @RequestParam(required = false) Long sectionId) {
 
         AdminAttendanceSummaryResponse summary = attendanceService.getDashboardSummary(date, yearId,
-                departmentId, sectionId);
+                departmentId, sectionId, period);
         return ResponseEntity.ok(ApiResponse.ok(summary));
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<ApiResponse<List<AdminAttendanceHistoryItemResponse>>> getHistory(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Integer period,
+            @RequestParam(required = false) Long yearId,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long sectionId) {
+
+        List<AdminAttendanceHistoryItemResponse> history = attendanceService.getAttendanceHistory(date, yearId,
+                departmentId, sectionId, period);
+        return ResponseEntity.ok(ApiResponse.ok(history));
     }
 }

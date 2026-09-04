@@ -23,7 +23,7 @@ public class AttendanceSession {
     private Integer periodNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "academic_year_id", nullable = false)
+    @JoinColumn(name = "academic_year_id", nullable = true)
     private AcademicYear academicYear;
 
     @ManyToOne(fetch = FetchType.LAZY)

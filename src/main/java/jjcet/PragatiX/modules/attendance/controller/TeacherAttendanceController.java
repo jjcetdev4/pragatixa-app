@@ -55,4 +55,15 @@ public class TeacherAttendanceController {
         Integer nextPeriod = attendanceService.getNextPeriod(date, yearId, departmentId, sectionId);
         return ResponseEntity.ok(ApiResponse.ok(nextPeriod));
     }
+
+    @GetMapping("/marked-periods")
+    public ResponseEntity<ApiResponse<List<jjcet.PragatiX.modules.attendance.dto.response.MarkedPeriodInfoResponse>>> getMarkedPeriods(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long yearId,
+            @RequestParam Long departmentId,
+            @RequestParam(required = false) Long sectionId) {
+
+        List<jjcet.PragatiX.modules.attendance.dto.response.MarkedPeriodInfoResponse> markedPeriods = attendanceService.getMarkedPeriodsInfo(date, yearId, departmentId, sectionId);
+        return ResponseEntity.ok(ApiResponse.ok(markedPeriods));
+    }
 }

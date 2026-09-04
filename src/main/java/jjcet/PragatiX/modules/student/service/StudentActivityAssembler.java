@@ -89,7 +89,7 @@ public class StudentActivityAssembler {
 
             if (stageId != null) {
                 assignments = assignments.stream()
-                        .filter(a -> a.getStage() != null && a.getStage().getId().equals(stageId))
+                        .filter(a -> a.getStage() == null || a.getStage().getId().equals(stageId))
                         .collect(Collectors.toList());
             }
 
@@ -103,6 +103,11 @@ public class StudentActivityAssembler {
             if (facultyName == null && act.getSubgroup() != null && act.getSubgroup().getAssignedFaculty() != null) {
                 facultyName = act.getSubgroup().getAssignedFaculty().getFullName();
                 facultyId = act.getSubgroup().getAssignedFaculty().getId();
+            }
+
+            // Only show activities where staff is assigned for this student's class
+            if (facultyId == null && facultyName == null) {
+                continue;
             }
 
             actMap.setFacultyName(facultyName);

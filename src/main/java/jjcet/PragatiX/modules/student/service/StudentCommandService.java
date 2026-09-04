@@ -86,6 +86,14 @@ public class StudentCommandService {
             return ApiResponse.error("Register Number must start with 8113.");
         }
 
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            return ApiResponse.error("Full Name is required.");
+        }
+        String cleanFullName = request.getFullName().trim();
+        if (!cleanFullName.matches("^[a-zA-Z\\s]+$")) {
+            return ApiResponse.error("Full Name must contain letters and spaces only.");
+        }
+
         if (studentRepository.existsByRegNo(cleanRegNo)) {
             return ApiResponse.error("Student ID '" + cleanRegNo + "' already exists");
         }
@@ -144,6 +152,25 @@ public class StudentCommandService {
             return ApiResponse.error(e.getMessage());
         }
 
+        // Validate Semester vs Year rules:
+        // Year 1 -> Semesters 1, 2
+        // Year 2 -> Semesters 3, 4
+        // Year 3 -> Semesters 5, 6
+        // Year 4 -> Semesters 7, 8
+        if (year != null && semester != null) {
+            byte yNo = year.getYearNo();
+            byte sNo = semester.getSemesterNo();
+            boolean valid = false;
+            if (yNo == 1 && (sNo == 1 || sNo == 2)) valid = true;
+            else if (yNo == 2 && (sNo == 3 || sNo == 4)) valid = true;
+            else if (yNo == 3 && (sNo == 5 || sNo == 6)) valid = true;
+            else if (yNo == 4 && (sNo == 7 || sNo == 8)) valid = true;
+
+            if (!valid) {
+                return ApiResponse.error("Invalid Semester " + sNo + " for Year " + yNo + ". Year 1 has Sem 1-2, Year 2 has Sem 3-4, Year 3 has Sem 5-6, Year 4 has Sem 7-8.");
+            }
+        }
+
         // Scope validation according to user's role:
         if (isSuperAdmin) {
             // Super Admin can add any student
@@ -177,13 +204,6 @@ public class StudentCommandService {
             if (creator.getSection() != null && section != null && !creator.getSection().getId().equals(section.getId())) {
                 return ApiResponse.error("Access Denied: As CC, you can only add students for your assigned section (" + creator.getSection().getSectionName() + ").");
             }
-        }
-
-        ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueAndDeletedFalseOrderByDisplayOrderAsc()
-                .orElse(null);
-        if (initialStage == null) {
-            return ApiResponse.error(
-                    "Validation Error: No active stages found. Please configure stages before creating students.");
         }
 
         Team team = request.getTeamId() != null ? teamRepository.findById(request.getTeamId()).orElse(null) : null;
@@ -224,10 +244,20 @@ public class StudentCommandService {
                 .sprNo(sprNoStr)
                 .active(true)
                 .score(0)
-                .stage(initialStage.getDisplayOrder())
-                .currentStage(initialStage.getDisplayOrder())
-                .currentStageId(initialStage.getId())
+                .stage(1)
+                .currentStage(1)
                 .build();
+
+        // Resolve Stage 1 for this Academic Year if available
+        jjcet.PragatiX.enums.AcademicYear studentAcademicYear = resolveStudentAcademicYear(year.getYearNo());
+        ActivityStage initialStage = activityStageRepository
+                .findByAcademicYearAndDisplayOrderAndDeletedFalse(studentAcademicYear, 1)
+                .orElse(null);
+        if (initialStage != null) {
+            student.setStage(initialStage.getDisplayOrder() > 0 ? initialStage.getDisplayOrder() : 1);
+            student.setCurrentStage(student.getStage());
+            student.setCurrentStageId(initialStage.getId());
+        }
 
         Student saved = studentRepository.save(student);
 
@@ -346,6 +376,22 @@ public class StudentCommandService {
             sprNoStr = null;
         }
 
+        String regNoStr = request.getRegNo() != null ? request.getRegNo().trim().toUpperCase() : null;
+        if (regNoStr != null && !regNoStr.isEmpty()) {
+            java.util.Optional<Student> existingReg = studentRepository.findByRegNo(regNoStr);
+            if (existingReg.isPresent() && !existingReg.get().getId().equals(id)) {
+                return ApiResponse.error("Student with Register Number '" + regNoStr + "' already exists.");
+            }
+        }
+
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            return ApiResponse.error("Full Name is required.");
+        }
+        String cleanUpdateName = request.getFullName().trim();
+        if (!cleanUpdateName.matches("^[a-zA-Z\\s]+$")) {
+            return ApiResponse.error("Full Name must contain letters and spaces only.");
+        }
+
         Department department;
         Year year;
         Semester semester;
@@ -359,6 +405,25 @@ public class StudentCommandService {
             section = studentLookupService.resolveSection(request.getSectionId(), null, department);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
+        }
+
+        // Validate Semester vs Year rules:
+        // Year 1 -> Semesters 1, 2
+        // Year 2 -> Semesters 3, 4
+        // Year 3 -> Semesters 5, 6
+        // Year 4 -> Semesters 7, 8
+        if (year != null && semester != null) {
+            byte yNo = year.getYearNo();
+            byte sNo = semester.getSemesterNo();
+            boolean valid = false;
+            if (yNo == 1 && (sNo == 1 || sNo == 2)) valid = true;
+            else if (yNo == 2 && (sNo == 3 || sNo == 4)) valid = true;
+            else if (yNo == 3 && (sNo == 5 || sNo == 6)) valid = true;
+            else if (yNo == 4 && (sNo == 7 || sNo == 8)) valid = true;
+
+            if (!valid) {
+                return ApiResponse.error("Invalid Semester " + sNo + " for Year " + yNo + ". Year 1 has Sem 1-2, Year 2 has Sem 3-4, Year 3 has Sem 5-6, Year 4 has Sem 7-8.");
+            }
         }
         Team team = request.getTeamId() != null ? teamRepository.findById(request.getTeamId()).orElse(null) : null;
 
@@ -410,6 +475,13 @@ public class StudentCommandService {
             teamCleanupService.autoDeleteEmptyTeam(oldTeam);
         }
 
+        if (regNoStr != null && !regNoStr.isEmpty()) {
+            student.setRegNo(regNoStr);
+            if (student.getUser() != null) {
+                student.getUser().setUsername(regNoStr);
+                userRepository.save(student.getUser());
+            }
+        }
         student.setFullName(request.getFullName() != null ? request.getFullName().trim().toUpperCase() : null);
         student.setEmail(cleanEmail);
         student.setPhoneNo(rawPhone);
@@ -648,5 +720,15 @@ public class StudentCommandService {
         }
 
         return ApiResponse.ok("Successfully updated " + updatedCount + " students.", updatedCount);
+    }
+
+    private jjcet.PragatiX.enums.AcademicYear resolveStudentAcademicYear(Number yearNo) {
+        if (yearNo == null) return jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
+        int val = yearNo.intValue();
+        if (val == 1) return jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
+        if (val == 2) return jjcet.PragatiX.enums.AcademicYear.SECOND_YEAR;
+        if (val == 3) return jjcet.PragatiX.enums.AcademicYear.THIRD_YEAR;
+        if (val == 4) return jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR;
+        return jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
     }
 }

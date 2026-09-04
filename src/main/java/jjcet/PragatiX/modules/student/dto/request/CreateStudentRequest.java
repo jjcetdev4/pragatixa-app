@@ -10,6 +10,7 @@ public class CreateStudentRequest {
     private String regNo;
 
     @NotBlank(message = "Full name is required")
+    @Pattern(regexp = "^[A-Za-z\\s]+$", message = "Full Name must contain letters and spaces only.")
     @Size(max = 255)
     private String fullName;
 

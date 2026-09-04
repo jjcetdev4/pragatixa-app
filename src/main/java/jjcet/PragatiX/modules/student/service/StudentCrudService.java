@@ -38,6 +38,10 @@ public class StudentCrudService {
         return studentQueryService.getStudentById(id);
     }
 
+    public ApiResponse<jjcet.PragatiX.modules.student.dto.response.StudentSelfResponse> getStudentSelfProfile(jjcet.PragatiX.entity.Student student) {
+        return studentQueryService.getStudentSelfProfile(student);
+    }
+
     public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword,
             String year, Long departmentId, Long sectionId) {
         return studentQueryService.getAllStudents(page, size, sortBy, keyword, year, departmentId, sectionId);

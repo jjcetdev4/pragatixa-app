@@ -122,6 +122,11 @@ public class TeamCrudService {
         Long sectionId = request.getSectionId() != null ? request.getSectionId()
                 : (captain.getSection() != null ? captain.getSection().getId() : null);
 
+        String captainError = TeamValidationService.validateStudentClassMatch(captain, "Captain", deptId, year, sectionId);
+        if (captainError != null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(captainError));
+        }
+
         boolean isCcOrHod = creator.getSubRoles().stream().map(jjcet.PragatiX.entity.SubRole::getName)
                 .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("HOD"));
         if (isCcOrHod && creator.getDepartment() != null && deptId != null) {
@@ -161,6 +166,10 @@ public class TeamCrudService {
                     if (m.getTeam() != null || !teamRepository.findAllTeamsByStudentId(m.getId()).isEmpty()) {
                         return ResponseEntity.badRequest().body(ApiResponse.error("Student " + m.getFullName()
                                 + " is already assigned to a team."));
+                    }
+                    String memberError = TeamValidationService.validateStudentClassMatch(m, "Student", deptId, year, sectionId);
+                    if (memberError != null) {
+                        return ResponseEntity.badRequest().body(ApiResponse.error(memberError));
                     }
                     members.add(m);
                 }

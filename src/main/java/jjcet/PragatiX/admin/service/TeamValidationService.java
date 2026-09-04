@@ -209,4 +209,46 @@ public class TeamValidationService {
         if (clean.equals("4") || clean.contains("FOURTH") || clean.contains("4TH") || clean.equals("IV")) return "4";
         return clean;
     }
+
+    public static String validateStudentClassMatch(Student student, String roleLabel, Long deptId, String canonicalYear, Long sectionId) {
+        if (student == null) {
+            return roleLabel + " not found.";
+        }
+
+        // 1. Department match
+        if (deptId != null) {
+            if (student.getDepartment() == null || !deptId.equals(student.getDepartment().getId())) {
+                String studentDept = student.getDepartment() != null ? student.getDepartment().getName() : "None";
+                return roleLabel + " " + student.getFullName() + " belongs to a different department (" + studentDept + ") than the team.";
+            }
+        }
+
+        // 2. Year match
+        if (canonicalYear != null && !canonicalYear.trim().isEmpty()) {
+            String teamCanonicalYear = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(canonicalYear);
+            String studentCanonicalYear = null;
+            if (student.getYear() != null && !student.getYear().trim().isEmpty()) {
+                studentCanonicalYear = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(student.getYear());
+            } else if (student.getYearRef() != null) {
+                if (student.getYearRef().getYearNo() != null) {
+                    studentCanonicalYear = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(String.valueOf(student.getYearRef().getYearNo()));
+                } else if (student.getYearRef().getYearName() != null) {
+                    studentCanonicalYear = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(student.getYearRef().getYearName());
+                }
+            }
+            if (teamCanonicalYear != null && (studentCanonicalYear == null || !studentCanonicalYear.equalsIgnoreCase(teamCanonicalYear.trim()))) {
+                return roleLabel + " " + student.getFullName() + " is in a different academic year than the team.";
+            }
+        }
+
+        // 3. Section match
+        if (sectionId != null) {
+            if (student.getSection() == null || !sectionId.equals(student.getSection().getId())) {
+                String studentSec = student.getSection() != null ? student.getSection().getSectionName() : "None";
+                return roleLabel + " " + student.getFullName() + " belongs to a different section (" + studentSec + ") than the team.";
+            }
+        }
+
+        return null;
+    }
 }

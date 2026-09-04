@@ -49,4 +49,11 @@ public interface ActivityStageRepository extends JpaRepository<ActivityStage, Lo
     Optional<ActivityStage> findFirstByIsActiveTrueOrderByDisplayOrderAsc();
 
     Optional<ActivityStage> findFirstByIsActiveTrueAndDeletedFalseOrderByDisplayOrderAsc();
+
+    Optional<ActivityStage> findByAcademicYearAndDisplayOrderAndDeletedFalse(
+            jjcet.PragatiX.enums.AcademicYear academicYear, int displayOrder);
+
+    @org.springframework.data.jpa.repository.Query("SELECT MAX(s.displayOrder) FROM ActivityStage s WHERE s.academicYear = :academicYear AND s.deleted = false")
+    Integer findMaxDisplayOrderByAcademicYear(
+            @org.springframework.data.repository.query.Param("academicYear") jjcet.PragatiX.enums.AcademicYear academicYear);
 }

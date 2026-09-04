@@ -655,14 +655,24 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new IllegalArgumentException("Enrollment record not found with ID: " + id));
 
-        if (enrollment.getStatus() != EnrollmentStatus.PENDING) {
-            throw new IllegalStateException("Cannot delete an already enrolled student record.");
-        }
-
         enrollment.setDeleted(true);
         enrollment.setDeletedBy(deletedBy != null ? deletedBy : "ADMIN");
         enrollment.setDeletedAt(LocalDateTime.now());
+        enrollment.setPermanentDeleteAt(LocalDateTime.now().plusDays(30));
         enrollmentRepository.save(enrollment);
+
+        // If this was an enrolled student, also soft-delete the Student entity!
+        if (enrollment.getEnrolledStudentId() != null) {
+            Student student = studentRepository.findById(enrollment.getEnrolledStudentId()).orElse(null);
+            if (student != null) {
+                student.setDeleted(true);
+                student.setActive(false);
+                student.setDeletedAt(LocalDateTime.now());
+                student.setPermanentDeleteAt(LocalDateTime.now().plusDays(30));
+                student.setDeletedBy(deletedBy != null ? deletedBy : "ADMIN");
+                studentRepository.save(student);
+            }
+        }
 
         // Audit Log
         try {
@@ -671,7 +681,7 @@ public class EnrollmentService {
                     AuditModule.ENROLLMENT,
                     "Enrollment",
                     enrollment.getId(),
-                    "Deleted pending student enrollment: " + enrollment.getFullName(),
+                    "Moved student enrollment to Recycle Bin: " + enrollment.getFullName(),
                     enrollment,
                     null
             );
@@ -789,14 +799,19 @@ public class EnrollmentService {
         Semester semesterRef = semesterRepository.findBySemesterNo((byte) 1)
                 .orElseGet(() -> semesterRepository.findAll().stream().findFirst().orElse(null));
 
-        ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueAndDeletedFalseOrderByDisplayOrderAsc()
-                .orElseGet(() -> activityStageRepository.findAllByDeletedFalseOrderByDisplayOrderAsc().stream().findFirst().orElse(null));
+        ActivityStage initialStage = activityStageRepository
+                .findByAcademicYearAndDisplayOrderAndDeletedFalse(jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR, 1)
+                .orElse(null);
 
         // Generate unique regNo format
         String regNo = generateUniqueRegNo(dept);
 
         String mobileVal = (enrollment.getMobile() != null && enrollment.getMobile().trim().matches("^\\d+$"))
                 ? enrollment.getMobile().trim() : null;
+
+        int stageOrder = (initialStage != null && initialStage.getDisplayOrder() > 0)
+                ? initialStage.getDisplayOrder() : 1;
+        Long stageId = initialStage != null ? initialStage.getId() : null;
 
         Student student = Student.builder()
                 .regNo(regNo)
@@ -816,9 +831,9 @@ public class EnrollmentService {
                 .groupXp(0)
                 .individualXp(0)
                 .mustXp(0)
-                .stage(initialStage != null ? initialStage.getDisplayOrder() : 1)
-                .currentStage(initialStage != null ? initialStage.getDisplayOrder() : 1)
-                .currentStageId(initialStage != null ? initialStage.getId() : null)
+                .stage(stageOrder)
+                .currentStage(stageOrder)
+                .currentStageId(stageId)
                 .build();
 
         Student savedStudent = studentRepository.save(student);

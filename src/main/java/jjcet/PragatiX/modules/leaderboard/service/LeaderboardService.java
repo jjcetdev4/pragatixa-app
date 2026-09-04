@@ -6,10 +6,14 @@ import jjcet.PragatiX.entity.Student;
 import jjcet.PragatiX.entity.User;
 import jjcet.PragatiX.entity.Year;
 import jjcet.PragatiX.modules.authentication.repository.UserRepository;
-import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.modules.authentication.security.StudentAuthResolver;
+import jjcet.PragatiX.modules.leaderboard.dto.response.LeaderboardStudentResponse;
 import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import jjcet.PragatiX.modules.student.service.StudentMapper;
 import jjcet.PragatiX.repository.YearRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +30,8 @@ import jjcet.PragatiX.modules.authentication.security.AuthUtils;
 @Transactional(readOnly = true)
 public class LeaderboardService {
 
+    private static final Logger log = LoggerFactory.getLogger(LeaderboardService.class);
+
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final YearRepository yearRepository;
@@ -33,10 +39,12 @@ public class LeaderboardService {
     private final SectionRepository sectionRepository;
     private final StudentMapper studentMapper;
     private final AuthUtils authUtils;
+    private final StudentAuthResolver studentAuthResolver;
 
     public LeaderboardService(StudentRepository studentRepository, UserRepository userRepository,
             YearRepository yearRepository, DepartmentRepository departmentRepository,
-            SectionRepository sectionRepository, StudentMapper studentMapper, AuthUtils authUtils) {
+            SectionRepository sectionRepository, StudentMapper studentMapper, AuthUtils authUtils,
+            StudentAuthResolver studentAuthResolver) {
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.yearRepository = yearRepository;
@@ -44,32 +52,48 @@ public class LeaderboardService {
         this.sectionRepository = sectionRepository;
         this.studentMapper = studentMapper;
         this.authUtils = authUtils;
+        this.studentAuthResolver = studentAuthResolver;
     }
 
-    public ApiResponse<List<StudentResponse>> getLeaderboard(Long yearId, Long departmentId, Long sectionId) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    public ApiResponse<List<LeaderboardStudentResponse>> getLeaderboard(Long yearId, Long departmentId, Long sectionId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth != null ? auth.getName() : "";
         User currentUser = userRepository.findByUsername(username).orElse(null);
 
         boolean isAdmin = currentUser != null && authUtils.isAdmin(currentUser);
         boolean isSuperAdmin = currentUser != null && authUtils.isSuperAdmin(currentUser);
+
+        boolean isStudent = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_STUDENT".equalsIgnoreCase(a.getAuthority()) || "STUDENT".equalsIgnoreCase(a.getAuthority()));
 
         Long targetDeptId = departmentId;
         Long targetYearId = yearId;
         Long targetSectionId = sectionId;
 
         // Auto-scope for regular students / captains to strictly compare within their own year
-        if (currentUser != null && !isAdmin && !isSuperAdmin) {
-            Student student = studentRepository.findByUserId(currentUser.getId())
-                    .or(() -> studentRepository.findByRegNo(currentUser.getUsername()))
-                    .or(() -> studentRepository.findByEmail(currentUser.getEmail()))
-                    .orElse(null);
+        if (isStudent || (currentUser != null && !isAdmin && !isSuperAdmin)) {
+            Student student = null;
+            try {
+                student = studentAuthResolver.getLoggedInStudent();
+            } catch (Exception e) {
+                log.debug("Could not resolve student from auth resolver in leaderboard: {}", e.getMessage());
+            }
+            if (student == null && currentUser != null) {
+                student = studentRepository.findByUserId(currentUser.getId())
+                        .or(() -> studentRepository.findByRegNo(currentUser.getUsername()))
+                        .or(() -> studentRepository.findByEmail(currentUser.getEmail()))
+                        .orElse(null);
+            }
             if (student != null) {
-                if (targetYearId == null) {
-                    if (student.getYearRef() != null) {
-                        targetYearId = student.getYearRef().getId();
-                    } else if (student.getYear() != null) {
-                        targetYearId = resolveYearId(student.getYear());
-                    }
+                Long studentYearId = null;
+                if (student.getYearRef() != null) {
+                    studentYearId = student.getYearRef().getId();
+                } else if (student.getYear() != null) {
+                    studentYearId = resolveYearId(student.getYear());
+                }
+                // SERVER-SIDE ENFORCEMENT: Ignore any client-provided yearId and lock to student's year
+                if (studentYearId != null) {
+                    targetYearId = studentYearId;
                 }
             }
         } else if (isAdmin && !isSuperAdmin) {
@@ -82,26 +106,27 @@ public class LeaderboardService {
             }
         }
 
-        List<Student> students = studentRepository.findAll();
+        // Database-scoped query: Do not fetch all students into memory
+        List<Student> students;
+        if (targetYearId != null && targetDeptId != null && targetSectionId != null) {
+            students = studentRepository.findByYearRefIdAndDepartmentIdAndSectionId(targetYearId, targetDeptId, targetSectionId);
+        } else if (targetYearId != null && targetDeptId != null) {
+            students = studentRepository.findByYearRefIdAndDepartmentId(targetYearId, targetDeptId);
+        } else if (targetYearId != null) {
+            students = studentRepository.findByYearRefId(targetYearId);
+        } else if (targetDeptId != null && targetSectionId != null) {
+            students = studentRepository.findByDepartmentIdAndSectionId(targetDeptId, targetSectionId);
+        } else if (targetDeptId != null) {
+            students = studentRepository.findByDepartmentId(targetDeptId);
+        } else {
+            students = studentRepository.findByActiveTrue();
+        }
+
         students = students.stream().filter(Student::isActive).collect(Collectors.toList());
 
-        final Long finalDeptId = targetDeptId;
-        if (finalDeptId != null) {
-            students = students.stream()
-                    .filter(s -> s.getDepartment() != null && s.getDepartment().getId().equals(finalDeptId))
-                    .collect(Collectors.toList());
-        }
-
-        final Long finalYearId = targetYearId;
-        if (finalYearId != null) {
-            students = students.stream()
-                    .filter(s -> s.getYearRef() != null && s.getYearRef().getId().equals(finalYearId))
-                    .collect(Collectors.toList());
-        }
-
-        final Long finalSectionId = targetSectionId;
-        if (finalSectionId != null) {
-            Section targetSec = sectionRepository.findById(finalSectionId).orElse(null);
+        // Secondary filter for section name if needed
+        if (targetSectionId != null) {
+            Section targetSec = sectionRepository.findById(targetSectionId).orElse(null);
             final String targetSecName = targetSec != null && targetSec.getSectionName() != null
                     ? targetSec.getSectionName().replaceAll("(?i)\\s*-\\s*\\d{4}\\s*Batch.*", "").trim().toLowerCase()
                     : null;
@@ -109,7 +134,7 @@ public class LeaderboardService {
             students = students.stream()
                     .filter(s -> {
                         if (s.getSection() == null) return false;
-                        if (s.getSection().getId().equals(finalSectionId)) return true;
+                        if (s.getSection().getId().equals(targetSectionId)) return true;
                         if (targetSecName != null && s.getSection().getSectionName() != null) {
                             String sSecName = s.getSection().getSectionName().replaceAll("(?i)\\s*-\\s*\\d{4}\\s*Batch.*", "").trim().toLowerCase();
                             return sSecName.equals(targetSecName);
@@ -119,8 +144,7 @@ public class LeaderboardService {
                     .collect(Collectors.toList());
         }
 
-        List<StudentResponse> responses = students.stream()
-                .map(studentMapper::toResponse)
+        List<Student> sortedStudents = students.stream()
                 .sorted((a, b) -> {
                     int cmp = Integer.compare(b.getTotalXp(), a.getTotalXp());
                     if (cmp != 0) return cmp;
@@ -131,6 +155,11 @@ public class LeaderboardService {
                     return nameA.compareToIgnoreCase(nameB);
                 })
                 .collect(Collectors.toList());
+
+        List<LeaderboardStudentResponse> responses = new ArrayList<>();
+        for (int i = 0; i < sortedStudents.size(); i++) {
+            responses.add(studentMapper.toLeaderboardResponse(sortedStudents.get(i), i + 1));
+        }
 
         return ApiResponse.ok(responses);
     }
@@ -150,25 +179,54 @@ public class LeaderboardService {
             yearNo = 4;
 
         if (yearNo != null) {
-            Year year = yearRepository.findByYearNo(yearNo).orElse(null);
-            if (year != null)
-                return year.getId();
+            Year y = yearRepository.findByYearNo(yearNo).orElse(null);
+            if (y != null)
+                return y.getId();
         }
         return null;
     }
 
     public ApiResponse<FilterOptionsDto> getFilters(Long yearId, Long departmentId) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth != null ? auth.getName() : "";
         User currentUser = userRepository.findByUsername(username).orElse(null);
 
         boolean isAdmin = currentUser != null && authUtils.isAdmin(currentUser);
         boolean isSuperAdmin = currentUser != null && authUtils.isSuperAdmin(currentUser);
+        boolean isStudent = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_STUDENT".equalsIgnoreCase(a.getAuthority()) || "STUDENT".equalsIgnoreCase(a.getAuthority()));
 
         List<FilterOptionsDto.FilterItem> yearFilters = new ArrayList<>();
         List<FilterOptionsDto.FilterItem> deptFilters = new ArrayList<>();
         List<FilterOptionsDto.FilterItem> sectionFilters = new ArrayList<>();
 
-        if (isAdmin && !isSuperAdmin) {
+        Long targetYearId = yearId;
+
+        if (isStudent || (currentUser != null && !isAdmin && !isSuperAdmin)) {
+            Student student = null;
+            try {
+                student = studentAuthResolver.getLoggedInStudent();
+            } catch (Exception ignored) {}
+            if (student == null && currentUser != null) {
+                student = studentRepository.findByUserId(currentUser.getId())
+                        .or(() -> studentRepository.findByRegNo(currentUser.getUsername()))
+                        .or(() -> studentRepository.findByEmail(currentUser.getEmail()))
+                        .orElse(null);
+            }
+            if (student != null) {
+                if (student.getYearRef() != null) {
+                    targetYearId = student.getYearRef().getId();
+                    yearFilters.add(new FilterOptionsDto.FilterItem(student.getYearRef().getId().toString(), student.getYearRef().getYearName()));
+                } else if (student.getYear() != null) {
+                    targetYearId = resolveYearId(student.getYear());
+                    if (targetYearId != null) {
+                        yearRepository.findById(targetYearId).ifPresent(y ->
+                                yearFilters.add(new FilterOptionsDto.FilterItem(y.getId().toString(), y.getYearName()))
+                        );
+                    }
+                }
+            }
+        } else if (isAdmin && !isSuperAdmin) {
             String adminYearStr = AuthUtils.getAssignedYearString(currentUser.getAcademicYear());
             if (adminYearStr != null) {
                 Long adminYearId = resolveYearId(adminYearStr);
@@ -214,44 +272,31 @@ public class LeaderboardService {
             deptFilters.add(new FilterOptionsDto.FilterItem(d.getId().toString(), deptCode, deptCode));
         });
 
-        Long targetYearId = yearId;
-        if (currentUser != null && !isAdmin && !isSuperAdmin) {
-            Student student = studentRepository.findByUserId(currentUser.getId())
-                    .or(() -> studentRepository.findByRegNo(currentUser.getUsername()))
-                    .or(() -> studentRepository.findByEmail(currentUser.getEmail()))
-                    .orElse(null);
-            if (student != null) {
-                if (targetYearId == null) {
-                    if (student.getYearRef() != null) {
-                        targetYearId = student.getYearRef().getId();
-                    } else if (student.getYear() != null) {
-                        targetYearId = resolveYearId(student.getYear());
-                    }
-                }
-            }
-        }
-
         if (departmentId != null) {
             List<Section> candidateSecs = new ArrayList<>();
             if (targetYearId != null) {
                 final Long finalYId = targetYearId;
-                List<Section> studentSecs = studentRepository.findAll().stream()
+                List<Section> studentSecs = studentRepository.findByYearRefIdAndDepartmentId(finalYId, departmentId).stream()
                         .filter(Student::isActive)
-                        .filter(s -> s.getDepartment() != null && s.getDepartment().getId().equals(departmentId))
-                        .filter(s -> s.getYearRef() != null && s.getYearRef().getId().equals(finalYId))
                         .map(Student::getSection)
                         .filter(java.util.Objects::nonNull)
                         .collect(Collectors.toList());
-                if (!studentSecs.isEmpty()) {
-                    candidateSecs.addAll(studentSecs);
-                }
+                candidateSecs.addAll(studentSecs);
+            } else {
+                List<Section> studentSecs = studentRepository.findByDepartmentId(departmentId).stream()
+                        .filter(Student::isActive)
+                        .map(Student::getSection)
+                        .filter(java.util.Objects::nonNull)
+                        .collect(Collectors.toList());
+                candidateSecs.addAll(studentSecs);
             }
-            if (candidateSecs.isEmpty()) {
+            try {
                 candidateSecs.addAll(sectionRepository.findByDepartment_Id(departmentId));
-            }
+            } catch (Exception ignored) {}
 
             java.util.Set<String> seenNames = new java.util.HashSet<>();
             for (Section s : candidateSecs) {
+                if (s == null) continue;
                 String rawName = s.getSectionName() != null ? s.getSectionName() : "";
                 String cleanName = rawName.replaceAll("(?i)\\s*-\\s*\\d{4}\\s*Batch.*", "").trim();
                 if (cleanName.equalsIgnoreCase("SECTION")) continue;

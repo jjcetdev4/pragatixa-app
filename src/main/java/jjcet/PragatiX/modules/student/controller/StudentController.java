@@ -62,24 +62,33 @@ public class StudentController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StudentController.class);
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'HOD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'HOD', 'SUPER_ADMIN', 'SUPERADMIN', 'CLASS_COORDINATOR')")
     @Operation(summary = "Get All Students", description = "Returns paginated list of all students with optional filters.")
     public ResponseEntity<ApiResponse<Page<StudentResponse>>> getAllStudents(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "1000") int size,
+            @RequestParam(defaultValue = "25") int size,
             @RequestParam(defaultValue = "fullName") String sortBy,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String year,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long sectionId) {
-        ApiResponse<Page<StudentResponse>> response = studentService.getAllStudents(page, size, sortBy, keyword, year,
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        ApiResponse<Page<StudentResponse>> response = studentService.getAllStudents(page, safeSize, sortBy, keyword, year,
                 departmentId, sectionId);
         if (response.getData() != null) {
             log.info(
                     "\n=== STUDENT DIRECTORY API ===\nRequested Page: {}, Size: {}\nTotal in DB: {}\nReturned in Page: {}\n",
-                    page, size, response.getData().getTotalElements(), response.getData().getNumberOfElements());
+                    page, safeSize, response.getData().getTotalElements(), response.getData().getNumberOfElements());
         }
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Get Logged-in Student Profile", description = "Returns the authenticated student's profile details.")
+    public ResponseEntity<ApiResponse<StudentSelfResponse>> getMyStudentProfile() {
+        jjcet.PragatiX.entity.Student student = studentAuthResolver.getLoggedInStudent();
+        return ResponseEntity.ok(studentService.getStudentSelfProfile(student));
     }
 
     @GetMapping("/export")
@@ -137,9 +146,10 @@ public class StudentController {
     public ResponseEntity<ApiResponse<Page<StudentResponse>>> searchStudents(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "1000") int size,
+            @RequestParam(defaultValue = "25") int size,
             @RequestParam(required = false, defaultValue = "false") boolean unassignedOnly) {
-        ApiResponse<Page<StudentResponse>> response = studentService.searchStudents(keyword, page, size, unassignedOnly);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        ApiResponse<Page<StudentResponse>> response = studentService.searchStudents(keyword, page, safeSize, unassignedOnly);
         if (response.getData() != null) {
             log.info(
                     "\n=== STUDENT SEARCH API ===\nKeyword: '{}', Page: {}, Size: {}\nTotal Matches: {}\nReturned: {}\n",
@@ -246,7 +256,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id}/discipline-logs")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT', 'SUPER_ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Get Discipline Logs", description = "Fetch history logs of points adjustments for a student.")
     public ResponseEntity<ApiResponse<List<?>>> getDisciplineLogs(@PathVariable Long id) {
         return ResponseEntity.ok(studentService.getDisciplineLogs(id));

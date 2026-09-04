@@ -58,6 +58,9 @@ public class XpEngineService {
             int requestXp, String remarks,
             jjcet.PragatiX.modules.attendance.dto.AttendanceXpExecutionRequest attendanceReq) {
 
+        if (student == null || student.getId() == null) return student;
+        student = studentRepository.findById(student.getId()).orElse(student);
+
         System.out.println("=====================================================");
         System.out.println("XP ENGINE: Processing Award for Student: " + student.getId());
 
@@ -262,8 +265,10 @@ public class XpEngineService {
         return student;
     }
 
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void evaluateStagePromotion(Student student) {
+        if (student == null) return;
+        student = studentRepository.findById(student.getId()).orElse(student);
         System.out.println("PROMOTION DEBUG: Promoting studentId: " + student.getId());
         System.out.println("STAGE ENGINE: Evaluating Stage for Student: " + student.getId());
         System.out.println("Current Stage: " + student.getStage());
@@ -296,6 +301,7 @@ public class XpEngineService {
                 } else {
                     System.out.println("Team Assignment Result: SKIPPED (Stage < 2)");
                 }
+                studentRepository.save(student);
             } else {
                 System.out.println("Promotion Result: BLOCKED (No Next Stage)");
             }

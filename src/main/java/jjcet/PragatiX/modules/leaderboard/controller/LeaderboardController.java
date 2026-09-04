@@ -3,7 +3,7 @@ package jjcet.PragatiX.modules.leaderboard.controller;
 import jjcet.PragatiX.common.response.ApiResponse;
 import jjcet.PragatiX.modules.leaderboard.service.LeaderboardService;
 import jjcet.PragatiX.modules.leaderboard.dto.response.FilterOptionsDto;
-import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.modules.leaderboard.dto.response.LeaderboardStudentResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +22,7 @@ public class LeaderboardController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<StudentResponse>>> getLeaderboard(
+    public ResponseEntity<ApiResponse<List<LeaderboardStudentResponse>>> getLeaderboard(
             @RequestParam(required = false) Long yearId,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long sectionId) {

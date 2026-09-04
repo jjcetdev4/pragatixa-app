@@ -2,6 +2,7 @@ package jjcet.PragatiX.modules.recyclebin.service;
 
 import jjcet.PragatiX.modules.recyclebin.dto.RecycleBinItem;
 import jjcet.PragatiX.entity.*;
+import jjcet.PragatiX.modules.enrollment.entity.Enrollment;
 import jjcet.PragatiX.modules.authentication.repository.UserRepository;
 import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import jjcet.PragatiX.modules.activity.repository.ActivityRepository;
@@ -183,6 +184,19 @@ public class RecycleBinService {
                 "Display Order: " + s.getDisplayOrder() + " • Expected XP: " + s.getExpectedXp() + " • Must: " + s.getMustThreshold() + " • Ind: " + s.getIndividualThreshold() + " • Grp: " + s.getGroupThreshold()
         )).collect(Collectors.toList()));
 
+        // Fetch deleted Enrollments
+        List<Enrollment> deletedEnrollments = entityManager.createQuery("SELECT e FROM Enrollment e WHERE e.deleted = true", Enrollment.class).getResultList();
+        items.addAll(deletedEnrollments.stream().map(e -> new RecycleBinItem(
+                e.getId(),
+                "ENROLLMENT",
+                e.getFullName() + (e.getMobile() != null ? " (" + e.getMobile() + ")" : ""),
+                e.getDeletedAt(),
+                e.getPermanentDeleteAt(),
+                e.getDeletedBy(),
+                "Enrollment → " + (e.getDepartment() != null ? (e.getDepartment().getDeptCode() != null ? e.getDepartment().getDeptCode() : e.getDepartment().getName()) : "Pending"),
+                "Status: " + e.getStatus() + " • Email: " + (e.getEmail() != null ? e.getEmail() : "N/A") + " • Mobile: " + (e.getMobile() != null ? e.getMobile() : "N/A")
+        )).collect(Collectors.toList()));
+
         return items;
     }
 
@@ -219,6 +233,29 @@ public class RecycleBinService {
                     student.setPermanentDeleteAt(null);
                     student.setDeletedBy(null);
                     entityManager.merge(student);
+                }
+                break;
+            case "ENROLLMENT":
+            case "STUDENT_ENROLLMENT":
+                Enrollment enrollment = entityManager.find(Enrollment.class, id);
+                if (enrollment != null) {
+                    enrollment.setDeleted(false);
+                    enrollment.setDeletedAt(null);
+                    enrollment.setPermanentDeleteAt(null);
+                    enrollment.setDeletedBy(null);
+                    entityManager.merge(enrollment);
+
+                    if (enrollment.getEnrolledStudentId() != null) {
+                        Student enrolledStudent = entityManager.find(Student.class, enrollment.getEnrolledStudentId());
+                        if (enrolledStudent != null) {
+                            enrolledStudent.setDeleted(false);
+                            enrolledStudent.setActive(true);
+                            enrolledStudent.setDeletedAt(null);
+                            enrolledStudent.setPermanentDeleteAt(null);
+                            enrolledStudent.setDeletedBy(null);
+                            entityManager.merge(enrolledStudent);
+                        }
+                    }
                 }
                 break;
             case "ACTIVITY":
@@ -407,6 +444,7 @@ public class RecycleBinService {
                     entityManager.createNativeQuery("UPDATE stage_teams SET vice_captain_id = NULL WHERE vice_captain_id = :id").setParameter("id", id).executeUpdate();
                     entityManager.createNativeQuery("UPDATE teams SET captain_id = NULL WHERE captain_id = :id").setParameter("id", id).executeUpdate();
                     entityManager.createNativeQuery("UPDATE teams SET vice_captain_id = NULL WHERE vice_captain_id = :id").setParameter("id", id).executeUpdate();
+                    entityManager.createNativeQuery("UPDATE enrollments SET enrolled_student_id = NULL WHERE enrolled_student_id = :id").setParameter("id", id).executeUpdate();
 
                     entityManager.createNativeQuery("DELETE FROM student_activity_xp WHERE student_id = :id").setParameter("id", id).executeUpdate();
                     entityManager.createNativeQuery("DELETE FROM mission_submissions WHERE student_id = :id").setParameter("id", id).executeUpdate();
@@ -428,7 +466,33 @@ public class RecycleBinService {
                     entityManager.createNativeQuery("DELETE FROM penalty_requests WHERE student_id = :id").setParameter("id", id).executeUpdate();
                     entityManager.createNativeQuery("DELETE FROM student_badges WHERE student_id = :id").setParameter("id", id).executeUpdate();
 
+                    // Clean up linked User record if exists
+                    User u = student.getUser();
+                    if (u != null) {
+                        Long uId = u.getId();
+                        student.setUser(null);
+                        entityManager.merge(student);
+                        entityManager.flush();
+                        entityManager.createNativeQuery("DELETE FROM user_roles WHERE user_id = :uid").setParameter("uid", uId).executeUpdate();
+                        entityManager.createNativeQuery("DELETE FROM user_sub_roles WHERE user_id = :uid").setParameter("uid", uId).executeUpdate();
+                        entityManager.createNativeQuery("DELETE FROM users WHERE id = :uid").setParameter("uid", uId).executeUpdate();
+                    }
+
                     entityManager.remove(student);
+                }
+                break;
+            case "ENROLLMENT":
+            case "STUDENT_ENROLLMENT":
+                Enrollment enrollmentToDelete = entityManager.find(Enrollment.class, id);
+                if (enrollmentToDelete != null) {
+                    Long sId = enrollmentToDelete.getEnrolledStudentId();
+                    if (sId != null) {
+                        Student enrolledStudent = entityManager.find(Student.class, sId);
+                        if (enrolledStudent != null && enrolledStudent.isDeleted()) {
+                            permanentlyDeleteItem("STUDENT", sId);
+                        }
+                    }
+                    entityManager.remove(enrollmentToDelete);
                 }
                 break;
             case "ACTIVITY":

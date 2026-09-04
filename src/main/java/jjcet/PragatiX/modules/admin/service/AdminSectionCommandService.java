@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminSectionCommandService {
@@ -55,9 +57,47 @@ public class AdminSectionCommandService {
             return ResponseEntity.badRequest().body(ApiResponse.error("Section name is required"));
         }
         sectionName = sectionName.trim().toUpperCase();
-        if (sectionRepository.findByDepartmentAndSectionName(dept, sectionName).isPresent()) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Section already exists in this department"));
+
+        // 1. Enforce single letter only (A-Z)
+        if (!sectionName.matches("^[A-Z]$")) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Section must be a single letter (e.g. A, B, C)"));
         }
+
+        // 2. Fetch existing sections of this department
+        List<Section> existingSections = sectionRepository.findByDepartment_IdOrderBySectionNameAsc(id);
+        Set<String> existingNames = existingSections.stream()
+                .map(Section::getSectionName)
+                .filter(java.util.Objects::nonNull)
+                .map(String::trim)
+                .map(String::toUpperCase)
+                .collect(Collectors.toSet());
+
+        // 3. Prevent duplicate section letters
+        if (existingNames.contains(sectionName)) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Section '" + sectionName + "' already exists in this department"));
+        }
+
+        // 4. Must start from A, then B, C... in sequential alphabetical order
+        Character nextExpected = null;
+        for (char c = 'A'; c <= 'Z'; c++) {
+            if (!existingNames.contains(String.valueOf(c))) {
+                nextExpected = c;
+                break;
+            }
+        }
+
+        if (nextExpected == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Maximum section limit reached (A-Z). Cannot add more sections."));
+        }
+
+        if (!sectionName.equals(String.valueOf(nextExpected))) {
+            if (existingNames.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("The first section for this department must start from 'A'"));
+            } else {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Sections must be added sequentially. Next section must be '" + nextExpected + "'"));
+            }
+        }
+
         Section sec = Section.builder()
                 .department(dept)
                 .sectionName(sectionName)

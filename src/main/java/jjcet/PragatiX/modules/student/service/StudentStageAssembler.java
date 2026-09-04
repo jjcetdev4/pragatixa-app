@@ -89,21 +89,9 @@ public class StudentStageAssembler {
                 for (ActivitySubgroupResponse subgroup : stage.getSubgroups()) {
                     Long subId = subgroup.getId();
 
-                    List<jjcet.PragatiX.entity.ActivityStageMapping> mappings = activityStageMappingRepository
-                            .findByStageId(stage.getId());
-                    java.util.Set<Long> mappedActivityIds = mappings.stream()
-                            .filter(m -> m.getActivity() != null)
-                            .map(m -> m.getActivity().getId())
-                            .collect(Collectors.toSet());
-
                     List<Activity> activities = activitiesBySubgroup.getOrDefault(subId,
                             java.util.Collections.emptyList())
                             .stream()
-                            .filter(a -> {
-                                if (a.getStage() != null && a.getStage().getId().equals(stage.getId()))
-                                    return true;
-                                return mappedActivityIds.contains(a.getId());
-                            })
                             .filter(a -> !Boolean.TRUE.equals(a.getAttendanceEngineEnabled()))
                             .collect(java.util.stream.Collectors.toList());
                     List<ActivityResponse> enrichedActs = activityAssembler.enrichActivities(student, activities,

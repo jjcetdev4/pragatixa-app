@@ -51,10 +51,32 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
         Integer findMaxPeriodForSession(@Param("date") LocalDate date, @Param("yearId") Long yearId,
                         @Param("deptId") Long deptId, @Param("sectionId") Long sectionId);
 
+        @Query("SELECT DISTINCT a.periodNo FROM Attendance a WHERE a.attendanceDate = :date AND a.student.yearRef.id = :yearId AND a.student.department.id = :deptId AND (:sectionId IS NULL OR a.student.section.id = :sectionId) ORDER BY a.periodNo ASC")
+        List<Integer> findMarkedPeriodsForSession(@Param("date") LocalDate date, @Param("yearId") Long yearId,
+                        @Param("deptId") Long deptId, @Param("sectionId") Long sectionId);
+
+        @Query("SELECT DISTINCT a.faculty FROM Attendance a WHERE a.attendanceDate = :date AND a.periodNo = :period AND a.student.yearRef.id = :yearId AND a.student.department.id = :deptId AND (:sectionId IS NULL OR a.student.section.id = :sectionId)")
+        List<jjcet.PragatiX.entity.Faculty> findMarkingFacultyForSession(@Param("date") LocalDate date, @Param("period") Integer period,
+                        @Param("yearId") Long yearId, @Param("deptId") Long deptId, @Param("sectionId") Long sectionId);
+
         @Query("SELECT COUNT(a) FROM Attendance a WHERE a.student.id = :studentId AND FUNCTION('MONTH', a.attendanceDate) = :month AND FUNCTION('YEAR', a.attendanceDate) = :year AND a.status = :status")
         long countByStudentIdAndMonthAndYearAndStatus(@Param("studentId") Long studentId, @Param("month") int month,
                         @Param("year") int year, @Param("status") Attendance.AttendanceStatus status);
 
         @Query("SELECT a.attendanceDate FROM Attendance a WHERE a.student.id = :studentId GROUP BY a.attendanceDate ORDER BY a.attendanceDate DESC")
         List<LocalDate> findDistinctAttendanceDatesByStudentId(@Param("studentId") Long studentId);
+
+        @Query("SELECT a FROM Attendance a " +
+               "WHERE (:date IS NULL OR a.attendanceDate = :date) " +
+               "AND (:yearId IS NULL OR a.student.yearRef.id = :yearId) " +
+               "AND (:deptId IS NULL OR a.student.department.id = :deptId) " +
+               "AND (:sectionId IS NULL OR a.student.section.id = :sectionId) " +
+               "AND (:period IS NULL OR a.periodNo = :period) " +
+               "ORDER BY a.attendanceDate DESC, a.periodNo DESC")
+        List<Attendance> findMarkedHistoryRecords(
+            @Param("date") LocalDate date,
+            @Param("yearId") Long yearId,
+            @Param("deptId") Long deptId,
+            @Param("sectionId") Long sectionId,
+            @Param("period") Integer period);
 }

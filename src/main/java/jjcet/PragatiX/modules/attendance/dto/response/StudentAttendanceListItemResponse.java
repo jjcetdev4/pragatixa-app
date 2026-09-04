@@ -8,6 +8,9 @@ public class StudentAttendanceListItemResponse {
     private String registerNumber;
     private AttendanceRecord.AttendanceStatus status;
     private String remarks;
+    private String markedByFacultyName;
+    private String markedByFacultyDepartment;
+    private String markedAt;
 
     public StudentAttendanceListItemResponse() {
     }
@@ -50,5 +53,29 @@ public class StudentAttendanceListItemResponse {
 
     public void setRemarks(String remarks) {
         this.remarks = remarks;
+    }
+
+    public String getMarkedByFacultyName() {
+        return markedByFacultyName;
+    }
+
+    public void setMarkedByFacultyName(String markedByFacultyName) {
+        this.markedByFacultyName = markedByFacultyName;
+    }
+
+    public String getMarkedByFacultyDepartment() {
+        return markedByFacultyDepartment;
+    }
+
+    public void setMarkedByFacultyDepartment(String markedByFacultyDepartment) {
+        this.markedByFacultyDepartment = markedByFacultyDepartment;
+    }
+
+    public String getMarkedAt() {
+        return markedAt;
+    }
+
+    public void setMarkedAt(String markedAt) {
+        this.markedAt = markedAt;
     }
 }

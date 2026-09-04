@@ -165,9 +165,24 @@ public class TeamAssignmentService {
         }
     }
 
+    public int getActualMemberCount(Team t) {
+        if (t == null || t.getId() == null) return 0;
+        if (entityManager != null) {
+            try {
+                Number count = (Number) entityManager.createNativeQuery(
+                        "SELECT COUNT(*) FROM students WHERE team_id = :tid AND (deleted = 0 OR deleted IS NULL)")
+                        .setParameter("tid", t.getId())
+                        .getSingleResult();
+                return count != null ? count.intValue() : 0;
+            } catch (Exception e) {
+            }
+        }
+        return (t.getMembers() != null) ? t.getMembers().size() : 0;
+    }
+
     public void addStudentToStageTeam(Student student, Team newTeam) {
         if (!newTeam.getMembers().contains(student)) {
-            if (newTeam.getMembers().size() >= 10) {
+            if (getActualMemberCount(newTeam) > 10) {
                 throw new IllegalStateException("Maximum team size of 10 reached for team: " + newTeam.getName());
             }
             newTeam.getMembers().add(student);
@@ -270,13 +285,23 @@ public class TeamAssignmentService {
         boolean isStage2 = nextStage.getDisplayOrder() == 2
                 || nextStage.getStageName().toLowerCase().contains("stage 2");
 
-        if (isStage2) {
+        java.util.List<StageTeam> existingStageTeams = stageTeamRepository.findByStageId(nextStage.getId());
+        long matchingStageTeams = (existingStageTeams != null) ? existingStageTeams.stream()
+                .filter(st -> st.getTeam() != null &&
+                        (deptId == null || (st.getTeam().getDepartment() != null && deptId.equals(st.getTeam().getDepartment().getId()))) &&
+                        (secId == null || (st.getTeam().getSection() != null && secId.equals(st.getTeam().getSection().getId()))))
+                .count() : 0;
+
+        if (matchingStageTeams > 0) {
+            teamCount = (int) matchingStageTeams;
+        } else if (isStage2) {
             int stage1Count = teamRepository.countStage1TeamsForClass(deptId, yearStr, secId);
-            if (stage1Count == 0) {
-                System.err.println("WARNING: Stage 1 teams have not been created for this class/group yet. Cannot create Stage 2 teams. Aborting promotion.");
-                throw new IllegalStateException("Stage 1 teams have not been created for this class/group yet. Cannot create Stage 2 teams.");
+            if (stage1Count > 0) {
+                teamCount = stage1Count;
             }
-            teamCount = stage1Count;
+        }
+        if (teamCount < 6) {
+            teamCount = 6;
         }
 
         java.util.List<Team> teams = new java.util.ArrayList<>();
@@ -334,7 +359,7 @@ public class TeamAssignmentService {
             int totalMembers = 0;
             for (Team t : teams) {
                 if (t != null) {
-                    totalMembers += t.getMembers() != null ? t.getMembers().size() : 0;
+                    totalMembers += getActualMemberCount(t);
                 }
             }
 
@@ -358,6 +383,14 @@ public class TeamAssignmentService {
             }
 
             assignedTeam = teams.get(teamIndex);
+            if (assignedTeam != null && getActualMemberCount(assignedTeam) >= 10) {
+                for (Team t : teams) {
+                    if (t != null && getActualMemberCount(t) < 10) {
+                        assignedTeam = t;
+                        break;
+                    }
+                }
+            }
         }
 
         removeStudentFromAllOldTeams(student);
@@ -384,7 +417,7 @@ public class TeamAssignmentService {
             int[] teamMemberCounts = new int[teamCount];
             for (int k = 0; k < teamCount; k++) {
                 Team t = teams.get(k);
-                int cnt = (t != null && t.getMembers() != null) ? t.getMembers().size() : 0;
+                int cnt = getActualMemberCount(t);
                 teamMemberCounts[k] = cnt;
                 if (t != null) {
                     System.out.println(t.getId() + " | " + t.getName() + " | " + cnt + " | " + k);

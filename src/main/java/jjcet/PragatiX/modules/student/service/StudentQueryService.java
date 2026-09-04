@@ -3,6 +3,7 @@ package jjcet.PragatiX.modules.student.service;
 import jjcet.PragatiX.dto.*;
 import jjcet.PragatiX.entity.*;
 import jjcet.PragatiX.modules.student.dto.response.StudentResponse;
+import jjcet.PragatiX.modules.student.dto.response.StudentSelfResponse;
 import jjcet.PragatiX.modules.student.repository.StudentRepository;
 import jjcet.PragatiX.repository.YearRepository;
 import jjcet.PragatiX.repository.StudentGuardianRepository;
@@ -52,6 +53,13 @@ public class StudentQueryService {
     }
 
     public ApiResponse<StudentResponse> getStudentById(Long id) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        boolean isStudent = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_STUDENT".equalsIgnoreCase(a.getAuthority()) || "STUDENT".equalsIgnoreCase(a.getAuthority()));
+        if (isStudent) {
+            throw new org.springframework.security.access.AccessDeniedException("Access Denied: Students are not authorized to view other students by ID.");
+        }
+
         return studentRepository.findById(id)
                 .map(s -> {
                     User currentUser = authUtils.getCurrentUser();
@@ -66,6 +74,14 @@ public class StudentQueryService {
                     return ApiResponse.ok(studentMapper.toResponse(s, guardian));
                 })
                 .orElseGet(() -> ApiResponse.error("Student not found with ID: " + id));
+    }
+
+    public ApiResponse<StudentSelfResponse> getStudentSelfProfile(Student student) {
+        if (student == null) {
+            return ApiResponse.error("Student profile not found");
+        }
+        StudentGuardian guardian = studentGuardianRepository.findByStudentId(student.getId()).orElse(null);
+        return ApiResponse.ok(studentMapper.toSelfResponse(student, guardian));
     }
 
     private Page<StudentResponse> mapWithGuardians(Page<Student> page) {
@@ -87,14 +103,22 @@ public class StudentQueryService {
 
     public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword,
             String year, Long departmentId, Long sectionId) {
+        int safeSize = Math.min(Math.max(size, 1), 100);
         Sort sort = Sort.by(sortBy).ascending();
         if (!"regNo".equalsIgnoreCase(sortBy)) {
             sort = sort.and(Sort.by("regNo").ascending());
         }
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, safeSize, sort);
 
-        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        boolean isStudent = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_STUDENT".equalsIgnoreCase(a.getAuthority()) || "STUDENT".equalsIgnoreCase(a.getAuthority()));
+        if (isStudent) {
+            log.warn("Student user attempted to access unauthorized Student Directory API");
+            throw new org.springframework.security.access.AccessDeniedException("Access Denied: Students are not authorized to access the student directory.");
+        }
+
+        String username = auth != null ? auth.getName() : "";
         User currentUser = userRepository.findByUsername(username).orElse(null);
 
         boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
@@ -122,8 +146,6 @@ public class StudentQueryService {
             Long ccSectionId = userSection != null ? userSection.getId() : null;
 
             if (currentUser.getDepartment() != null && yearRef != null) {
-                // CC sees only their own department/year/section, but we can allow search
-                // keyword
                 Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudentsByCC(
                         keyword == null ? "" : keyword,
                         currentUser.getDepartment().getId(),
@@ -141,8 +163,6 @@ public class StudentQueryService {
             jjcet.PragatiX.entity.Year assignedYear = currentUser.getAssignedYear();
             if (assignedYear != null) {
                 Long adminYearId = assignedYear.getId();
-                // Admin can filter by keyword, department, section, but year is forced to
-                // adminYearId
                 Page<StudentResponse> result = mapWithGuardians(
                         studentRepository.findByFiltersWithYearRef(keyword, adminYearId, departmentId, sectionId, pageable));
                 log.info("Admin user '{}' with year id '{}': total students in DB = {}, returned in page = {}",
@@ -152,6 +172,23 @@ public class StudentQueryService {
                 log.warn("Admin user '{}' has no assignedYear; returning 0 students.", username);
                 return ApiResponse.ok(Page.empty(pageable));
             }
+        }
+
+        boolean isHod = currentUser != null && (currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_HOD"))
+                || currentUser.getSubRoles().stream().map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("HOD") || sr.trim().equalsIgnoreCase("HEAD_OF_DEPARTMENT")));
+        if (isHod && currentUser != null && !authUtils.isSuperAdmin(currentUser)) {
+            Long hodDeptId = currentUser.getDepartment() != null ? currentUser.getDepartment().getId() : null;
+            if (hodDeptId != null) {
+                departmentId = hodDeptId;
+            }
+        }
+
+        boolean isTeacher = currentUser != null && currentUser.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("ROLE_TEACHER") || r.getName().equalsIgnoreCase("TEACHER"));
+        boolean isSuperAdmin = currentUser != null && authUtils.isSuperAdmin(currentUser);
+
+        if (!isSuperAdmin && !isHod && !isTeacher) {
+            log.warn("Unauthorized or unknown user '{}' attempted to access student directory", username);
+            return ApiResponse.ok(Page.empty(pageable));
         }
 
         // For Super Admin or other roles, apply all filters
@@ -192,40 +229,26 @@ public class StudentQueryService {
     }
 
     public java.util.List<jjcet.PragatiX.entity.Section> getFilterSections(String year, Long departmentId) {
-        String yTrim = (year != null && !year.trim().isEmpty() && !year.equalsIgnoreCase("null") && !year.equalsIgnoreCase("all")) ? year.trim() : null;
-        String yNo = null;
-        Byte yNoByte = null;
-        if (yTrim != null) {
-            if (yTrim.matches(".*\\d+.*")) {
-                yNo = yTrim.replaceAll("[^0-9]", "");
-            } else if (yTrim.equalsIgnoreCase("First Year") || yTrim.equalsIgnoreCase("FIRST_YEAR") || yTrim.equalsIgnoreCase("I")) {
-                yNo = "1";
-            } else if (yTrim.equalsIgnoreCase("Second Year") || yTrim.equalsIgnoreCase("SECOND_YEAR") || yTrim.equalsIgnoreCase("II")) {
-                yNo = "2";
-            } else if (yTrim.equalsIgnoreCase("Third Year") || yTrim.equalsIgnoreCase("THIRD_YEAR") || yTrim.equalsIgnoreCase("III")) {
-                yNo = "3";
-            } else if (yTrim.equalsIgnoreCase("Fourth Year") || yTrim.equalsIgnoreCase("FOURTH_YEAR") || yTrim.equalsIgnoreCase("IV")) {
-                yNo = "4";
-            }
-            if (yNo != null) {
-                try {
-                    yNoByte = Byte.parseByte(yNo);
-                } catch (Exception ignored) {}
-            }
+        if (departmentId != null) {
+            return sectionRepository.findByDepartment_IdOrderBySectionNameAsc(departmentId);
         }
-        java.util.List<jjcet.PragatiX.entity.Section> sections = studentRepository.findDistinctSectionsByYearAndDepartment(yTrim, yNo, yNoByte, departmentId);
-        if ((sections == null || sections.isEmpty()) && departmentId != null) {
-            return sectionRepository.findByDepartment_Id(departmentId);
-        }
-        return sections != null ? sections : java.util.List.of();
+        return sectionRepository.findAll().stream()
+                .sorted(java.util.Comparator.comparing(jjcet.PragatiX.entity.Section::getSectionName, java.util.Comparator.nullsLast(String::compareTo)))
+                .toList();
     }
 
     public ApiResponse<Page<StudentResponse>> searchStudents(String keyword, int page, int size, boolean unassignedOnly) {
-        Pageable pageable = PageRequest.of(page, size,
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        Pageable pageable = PageRequest.of(page, safeSize,
                 Sort.by("fullName").ascending().and(Sort.by("regNo").ascending()));
 
-        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        boolean isStudent = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_STUDENT".equalsIgnoreCase(a.getAuthority()) || "STUDENT".equalsIgnoreCase(a.getAuthority()));
+        if (isStudent) {
+            throw new org.springframework.security.access.AccessDeniedException("Access Denied: Students are not authorized to search students.");
+        }
+        String username = auth != null ? auth.getName() : "";
         User currentUser = userRepository.findByUsername(username).orElse(null);
 
         boolean isCc = currentUser != null && currentUser.getSubRoles().stream()

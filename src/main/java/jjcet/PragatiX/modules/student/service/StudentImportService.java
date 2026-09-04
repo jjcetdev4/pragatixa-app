@@ -679,13 +679,6 @@ public class StudentImportService {
             java.util.Set<String> processedSprs = new java.util.HashSet<>();
             List<Student> studentsToSave = new ArrayList<>();
             List<StudentGuardian> guardiansToSave = new ArrayList<>();
-
-            ActivityStage initialStage = activityStageRepository.findFirstByIsActiveTrueAndDeletedFalseOrderByDisplayOrderAsc()
-                    .orElse(null);
-            if (initialStage == null) {
-                return ApiResponse.error(
-                        "Validation Error: No active stages found. Please configure stages before creating students.");
-            }
             java.util.Map<Long, Department> deptMap = new java.util.HashMap<>();
             java.util.Map<Long, Section> sectionMap = new java.util.HashMap<>();
             java.util.Map<Long, Gender> genderMap = new java.util.HashMap<>();
@@ -879,15 +872,25 @@ public class StudentImportService {
                             .semester(String.valueOf(semester.getSemesterNo()))
                             .gender(gender.getGenderName())
                             .score(0)
-                            .stage(initialStage.getDisplayOrder())
-                            .currentStage(initialStage.getDisplayOrder())
-                            .currentStageId(initialStage.getId())
+                            .stage(1)
+                            .currentStage(1)
                             .sprNo(request.getSprNo() != null && !request.getSprNo().trim().isEmpty()
                                     ? request.getSprNo().trim()
                                     : null)
                             .address(request.getAddress())
                             .active(request.getActive() != null ? request.getActive() : true)
                             .build();
+
+                    // Resolve Stage 1 for this Academic Year if available
+                    jjcet.PragatiX.enums.AcademicYear studentAcademicYear = resolveStudentAcademicYear(year.getYearNo());
+                    ActivityStage initialStage = activityStageRepository
+                            .findByAcademicYearAndDisplayOrderAndDeletedFalse(studentAcademicYear, 1)
+                            .orElse(null);
+                    if (initialStage != null) {
+                        student.setStage(initialStage.getDisplayOrder() > 0 ? initialStage.getDisplayOrder() : 1);
+                        student.setCurrentStage(student.getStage());
+                        student.setCurrentStageId(initialStage.getId());
+                    }
                     studentsToSave.add(student);
 
                     if (request.getGuardian() != null) {
@@ -938,5 +941,15 @@ public class StudentImportService {
                 root = root.getCause();
             return ApiResponse.error("Bulk import failed: " + root.getMessage());
         }
+    }
+
+    private jjcet.PragatiX.enums.AcademicYear resolveStudentAcademicYear(Number yearNo) {
+        if (yearNo == null) return jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
+        int val = yearNo.intValue();
+        if (val == 1) return jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
+        if (val == 2) return jjcet.PragatiX.enums.AcademicYear.SECOND_YEAR;
+        if (val == 3) return jjcet.PragatiX.enums.AcademicYear.THIRD_YEAR;
+        if (val == 4) return jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR;
+        return jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR;
     }
 }

@@ -371,7 +371,8 @@ public class AttendanceWeeklyEngineService {
                                     req.setReason("Attendance Weekly Rule: " + ruleApplied);
                                     req.setRemarks(transactionRemark);
 
-                                    xpEngineService.awardXp(student, engineActivity, null, null, awardXp, transactionRemark, req);
+                                    Student freshStudent = studentRepository.findById(student.getId()).orElse(student);
+                                    xpEngineService.awardXp(freshStudent, engineActivity, null, null, awardXp, transactionRemark, req);
 
                                     rewardedStudentsCount++;
                                     totalXpAwarded += awardXp;

@@ -211,4 +211,72 @@ public class TeamClassScopedValidationTest {
         assertFalse(res.getBody().isSuccess());
         assertTrue(res.getBody().getMessage().contains("already exists in this class"));
     }
+
+    @Test
+    @DisplayName("Reject team creation when captain belongs to a different section")
+    void testCaptainDifferentSectionRejected() {
+        // Captain is in Section B, but request specifies Section A
+        createMockStudent("REG_CAP_B", "Captain B", deptCS, "FIRST_YEAR", secB);
+
+        CreateTeamRequest req = new CreateTeamRequest();
+        req.setName("Team CS-A");
+        req.setSize(5);
+        req.setCaptainStudentId("REG_CAP_B");
+        req.setDepartmentId(deptCS.getId());
+        req.setAcademicYear("FIRST_YEAR");
+        req.setSectionId(secA.getId()); // Team is for Section A
+
+        ResponseEntity<ApiResponse<TeamResponse>> res = teamCrudService.createTeam(req, "admin");
+        assertEquals(HttpStatus.BAD_REQUEST, res.getStatusCode());
+        assertFalse(res.getBody().isSuccess());
+        assertTrue(res.getBody().getMessage().contains("different section"));
+    }
+
+    @Test
+    @DisplayName("Reject team creation when member belongs to a different department")
+    void testMemberDifferentDepartmentRejected() {
+        // Captain in CS - Sec A
+        createMockStudent("REG_CAP_A", "Captain A", deptCS, "FIRST_YEAR", secA);
+        // Member in IT - Sec A
+        Student memberIT = createMockStudent("REG_MEM_IT", "Member IT", deptIT, "FIRST_YEAR", secA);
+        when(studentRepository.findByRegNoIn(any())).thenReturn(List.of(memberIT));
+
+        CreateTeamRequest req = new CreateTeamRequest();
+        req.setName("Team CS-A");
+        req.setSize(5);
+        req.setCaptainStudentId("REG_CAP_A");
+        req.setDepartmentId(deptCS.getId());
+        req.setAcademicYear("FIRST_YEAR");
+        req.setSectionId(secA.getId());
+        req.setMemberStudentIds(List.of("REG_MEM_IT"));
+
+        ResponseEntity<ApiResponse<TeamResponse>> res = teamCrudService.createTeam(req, "admin");
+        assertEquals(HttpStatus.BAD_REQUEST, res.getStatusCode());
+        assertFalse(res.getBody().isSuccess());
+        assertTrue(res.getBody().getMessage().contains("different department"));
+    }
+
+    @Test
+    @DisplayName("Reject team creation when member belongs to a different section")
+    void testMemberDifferentSectionRejected() {
+        // Captain in CS - Sec A
+        createMockStudent("REG_CAP_A", "Captain A", deptCS, "FIRST_YEAR", secA);
+        // Member in CS - Sec B
+        Student memberSecB = createMockStudent("REG_MEM_SECB", "Member SecB", deptCS, "FIRST_YEAR", secB);
+        when(studentRepository.findByRegNoIn(any())).thenReturn(List.of(memberSecB));
+
+        CreateTeamRequest req = new CreateTeamRequest();
+        req.setName("Team CS-A");
+        req.setSize(5);
+        req.setCaptainStudentId("REG_CAP_A");
+        req.setDepartmentId(deptCS.getId());
+        req.setAcademicYear("FIRST_YEAR");
+        req.setSectionId(secA.getId());
+        req.setMemberStudentIds(List.of("REG_MEM_SECB"));
+
+        ResponseEntity<ApiResponse<TeamResponse>> res = teamCrudService.createTeam(req, "admin");
+        assertEquals(HttpStatus.BAD_REQUEST, res.getStatusCode());
+        assertFalse(res.getBody().isSuccess());
+        assertTrue(res.getBody().getMessage().contains("different section"));
+    }
 }

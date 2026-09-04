@@ -169,12 +169,27 @@ public class AdminDepartmentCommandService {
         Department saved = departmentRepository.save(dept);
 
         List<Section> savedSections = new ArrayList<>();
-        if (supportsSections && request.getSections() != null) {
+        if (supportsSections && request.getSections() != null && !request.getSections().isEmpty()) {
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            char expected = 'A';
             List<Section> sectionsToSave = new ArrayList<>();
             for (String sec : request.getSections()) {
+                if (sec == null || !sec.trim().toUpperCase().matches("^[A-Z]$")) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("Section must be a single letter (e.g. A, B, C)"));
+                }
+                String upper = sec.trim().toUpperCase();
+                if (seen.contains(upper)) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("Duplicate section '" + upper + "' not allowed"));
+                }
+                if (!upper.equals(String.valueOf(expected))) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("Sections must start from 'A' and follow sequential order (A, B, C...). Expected '" + expected + "', got '" + upper + "'"));
+                }
+                seen.add(upper);
+                expected++;
+
                 Section section = new Section();
                 section.setDepartment(saved);
-                section.setSectionName(sec);
+                section.setSectionName(upper);
                 sectionsToSave.add(section);
             }
             savedSections = sectionRepository.saveAll(sectionsToSave);
@@ -235,7 +250,7 @@ public class AdminDepartmentCommandService {
             dept.setSupportsSections(request.getSupportsSections());
         }
 
-        if (request.getSections() != null) {
+        if (request.getSections() != null && !request.getSections().isEmpty()) {
             if (dept.getSections() == null) {
                 dept.setSections(new ArrayList<>());
             }
@@ -248,14 +263,31 @@ public class AdminDepartmentCommandService {
 
             for (String secName : request.getSections()) {
                 if (secName != null && !secName.trim().isEmpty()) {
-                    String trimmedUpper = secName.trim();
-                    if (!existingNames.contains(trimmedUpper.toUpperCase())) {
-                        Section section = new Section();
-                        section.setDepartment(dept);
-                        section.setSectionName(trimmedUpper);
-                        dept.getSections().add(section);
-                        existingNames.add(trimmedUpper.toUpperCase());
+                    String upper = secName.trim().toUpperCase();
+                    if (!upper.matches("^[A-Z]$")) {
+                        return ResponseEntity.badRequest().body(ApiResponse.error("Section must be a single letter (e.g. A, B, C)"));
                     }
+                    if (existingNames.contains(upper)) {
+                        return ResponseEntity.badRequest().body(ApiResponse.error("Duplicate section '" + upper + "' not allowed"));
+                    }
+                    Character nextExpected = null;
+                    for (char c = 'A'; c <= 'Z'; c++) {
+                        if (!existingNames.contains(String.valueOf(c))) {
+                            nextExpected = c;
+                            break;
+                        }
+                    }
+                    if (nextExpected == null) {
+                        return ResponseEntity.badRequest().body(ApiResponse.error("Maximum section limit reached (A-Z)"));
+                    }
+                    if (!upper.equals(String.valueOf(nextExpected))) {
+                        return ResponseEntity.badRequest().body(ApiResponse.error("Sections must be added sequentially. Next section must be '" + nextExpected + "'"));
+                    }
+                    Section section = new Section();
+                    section.setDepartment(dept);
+                    section.setSectionName(upper);
+                    dept.getSections().add(section);
+                    existingNames.add(upper);
                 }
             }
         }

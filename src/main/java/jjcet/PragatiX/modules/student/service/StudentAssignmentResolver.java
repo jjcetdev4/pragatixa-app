@@ -1,6 +1,7 @@
 package jjcet.PragatiX.modules.student.service;
 
 import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.AssignmentScope;
 import jjcet.PragatiX.entity.Student;
 import jjcet.PragatiX.repository.ActivityAssignmentRepository;
 import org.springframework.stereotype.Service;
@@ -36,24 +37,78 @@ public class StudentAssignmentResolver {
 
     public ActivityAssignment resolveBestAssignment(Student student, List<ActivityAssignment> assignments) {
         List<ActivityAssignment> allValid = resolveAllValidAssignments(student, assignments);
-        return allValid.isEmpty() ? null : allValid.get(0);
+        if (allValid.isEmpty()) {
+            return null;
+        }
+
+        allValid.sort((a1, a2) -> {
+            boolean t1 = a1.getTeacher() != null;
+            boolean t2 = a2.getTeacher() != null;
+            if (t1 != t2) {
+                return t1 ? -1 : 1;
+            }
+
+            int score1 = getScopeScore(a1);
+            int score2 = getScopeScore(a2);
+            return Integer.compare(score1, score2);
+        });
+
+        return allValid.get(0);
+    }
+
+    private int getScopeScore(ActivityAssignment a) {
+        if (a.getSection() != null || a.getAssignmentScope() == AssignmentScope.SECTION) return 1;
+        if (a.getDepartment() != null || a.getAssignmentScope() == AssignmentScope.DEPARTMENT) return 2;
+        if (a.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY) return 3;
+        return 4; // GLOBAL
     }
 
     public List<ActivityAssignment> resolveAllValidAssignments(Student student, List<ActivityAssignment> assignments) {
         List<ActivityAssignment> validAssignments = new ArrayList<>();
+        if (student == null || assignments == null) {
+            return validAssignments;
+        }
+
+        Long studentDeptId = student.getDepartment() != null ? student.getDepartment().getId()
+                : (student.getSection() != null && student.getSection().getDepartment() != null ? student.getSection().getDepartment().getId() : null);
+        Long studentSecId = student.getSection() != null ? student.getSection().getId() : null;
 
         for (ActivityAssignment assignment : assignments) {
-            if (student.getSection() != null && assignment.getSection() != null
-                    && assignment.getSection().getId().equals(student.getSection().getId())) {
-                validAssignments.add(assignment);
-            } else if (student.getSection() != null && student.getSection().getDepartment() != null
-                    && assignment.getDepartment() != null
-                    && assignment.getDepartment().getId().equals(student.getSection().getDepartment().getId())) {
-                validAssignments.add(assignment);
-            } else if (assignment.getSection() == null && assignment.getDepartment() == null) {
-                validAssignments.add(assignment);
+            AssignmentScope scope = assignment.getAssignmentScope();
+            Long assignDeptId = assignment.getDepartment() != null ? assignment.getDepartment().getId() : null;
+            Long assignSecId = assignment.getSection() != null ? assignment.getSection().getId() : null;
+
+            if (scope == AssignmentScope.GLOBAL || (assignDeptId == null && assignSecId == null && scope == null)) {
+                if (assignDeptId != null) {
+                    if (studentDeptId != null && assignDeptId.equals(studentDeptId)) {
+                        validAssignments.add(assignment);
+                    }
+                } else {
+                    validAssignments.add(assignment);
+                }
+            } else if (scope == AssignmentScope.SECTION || assignSecId != null) {
+                if (studentSecId != null && assignSecId != null && assignSecId.equals(studentSecId)) {
+                    validAssignments.add(assignment);
+                } else if (assignSecId == null && assignDeptId != null && studentDeptId != null && assignDeptId.equals(studentDeptId)) {
+                    validAssignments.add(assignment);
+                }
+            } else if (scope == AssignmentScope.DEPARTMENT || assignDeptId != null) {
+                if (studentDeptId != null && assignDeptId != null && assignDeptId.equals(studentDeptId)) {
+                    if (assignSecId == null || (studentSecId != null && assignSecId.equals(studentSecId))) {
+                        validAssignments.add(assignment);
+                    }
+                }
+            } else if (scope == AssignmentScope.SPECIFIC_FACULTY) {
+                if (assignDeptId == null && assignSecId == null) {
+                    validAssignments.add(assignment);
+                } else if (assignDeptId != null && studentDeptId != null && assignDeptId.equals(studentDeptId)) {
+                    if (assignSecId == null || (studentSecId != null && assignSecId.equals(studentSecId))) {
+                        validAssignments.add(assignment);
+                    }
+                }
             }
         }
         return validAssignments;
     }
 }
+

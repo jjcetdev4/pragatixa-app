@@ -74,16 +74,35 @@ public class PenaltyWorkflowService {
     }
 
     private User findCcForStudent(Student student) {
-        List<User> users = userRepository.findAll(); // Optimization: could write a specific query
-        return users.stream()
-                .filter(u -> u.getSubRoles().stream().anyMatch(sr -> "CC".equalsIgnoreCase(sr.getName())))
-                .filter(u -> u.getSection() != null && student.getSection() != null
-                        && u.getSection().getId().equals(student.getSection().getId()))
-                .filter(u -> u.getDepartment() != null && student.getDepartment() != null
-                        && u.getDepartment().getId().equals(student.getDepartment().getId()))
+        if (student == null) return null;
+        List<User> users = userRepository.findAll();
+
+        List<User> activeCcs = users.stream()
                 .filter(User::isActive)
-                .findFirst()
-                .orElse(null);
+                .filter(u -> u.getSubRoles() != null && u.getSubRoles().stream().anyMatch(
+                        sr -> "CC".equalsIgnoreCase(sr.getName()) || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName())))
+                .collect(Collectors.toList());
+
+        // 1. If student has section, match by Department & Section
+        if (student.getSection() != null && student.getDepartment() != null) {
+            User matchExact = activeCcs.stream()
+                    .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(student.getDepartment().getId()))
+                    .filter(u -> u.getSection() != null && u.getSection().getId().equals(student.getSection().getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (matchExact != null) return matchExact;
+        }
+
+        // 2. Fallback: match by Department
+        if (student.getDepartment() != null) {
+            User matchDept = activeCcs.stream()
+                    .filter(u -> u.getDepartment() != null && u.getDepartment().getId().equals(student.getDepartment().getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (matchDept != null) return matchDept;
+        }
+
+        return null;
     }
 
     @Transactional
@@ -135,6 +154,8 @@ public class PenaltyWorkflowService {
             request.setStatus("AUTO_APPROVED");
             request.setApprovedAt(LocalDateTime.now());
             request.setApprovedBy(teacher.getFullName());
+            request.setCc(teacher);
+            request.setCcName(teacher.getFullName());
             // Immediately apply penalty
             xpEngineService.awardXp(student, activity, null, null, -request.getPenaltyXP(),
                     "Penalty: " + request.getActivityName() + " - " + request.getReason());
@@ -347,8 +368,13 @@ public class PenaltyWorkflowService {
             dto.setRegNo(p.getStudent().getRegNo());
             if (p.getStudent().getDepartment() != null)
                 dto.setDepartment(p.getStudent().getDepartment().getName());
-            if (p.getStudent().getYear() != null)
-                dto.setYear(p.getStudent().getYear());
+            
+            String yearVal = p.getStudent().getYear();
+            if ((yearVal == null || yearVal.isEmpty()) && p.getStudent().getYearRef() != null) {
+                yearVal = p.getStudent().getYearRef().getYearName();
+            }
+            dto.setYear(yearVal);
+
             if (p.getStudent().getSection() != null)
                 dto.setSection(p.getStudent().getSection().getSectionName());
         }
@@ -361,6 +387,19 @@ public class PenaltyWorkflowService {
         dto.setApprovedBy(p.getApprovedBy());
         dto.setApprovalTime(p.getApprovedAt());
         dto.setRejectedReason(p.getRejectedReason());
+
+        String ccName = p.getCcName();
+        if ((ccName == null || ccName.trim().isEmpty()) && p.getCc() != null) {
+            ccName = p.getCc().getFullName();
+        }
+        if ((ccName == null || ccName.trim().isEmpty()) && p.getStudent() != null) {
+            User cc = findCcForStudent(p.getStudent());
+            if (cc != null) {
+                ccName = cc.getFullName();
+            }
+        }
+        dto.setCcName(ccName);
+
         return dto;
     }
 

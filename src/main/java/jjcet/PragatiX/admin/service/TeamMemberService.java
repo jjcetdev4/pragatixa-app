@@ -80,6 +80,15 @@ public class TeamMemberService {
             return ResponseEntity.badRequest().body(ApiResponse
                     .error("Student " + member.getFullName() + " already belongs to an existing team."));
 
+        Long teamDeptId = team.getDepartment() != null ? team.getDepartment().getId() : null;
+        String teamYear = team.getYear();
+        Long teamSectionId = team.getSection() != null ? team.getSection().getId() : null;
+
+        String matchError = TeamValidationService.validateStudentClassMatch(member, "Student", teamDeptId, teamYear, teamSectionId);
+        if (matchError != null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(matchError));
+        }
+
         long currentMembersCount = team.getMembers().size();
         boolean captainInMembers = team.getMembers().stream()
                 .anyMatch(m -> team.getCaptain() != null && m.getId().equals(team.getCaptain().getId()));
@@ -244,6 +253,15 @@ public class TeamMemberService {
                     ApiResponse.error("A student cannot hold both Captain and Vice Captain roles in the same team."));
         }
 
+        Long teamDeptId = team.getDepartment() != null ? team.getDepartment().getId() : null;
+        String teamYear = team.getYear();
+        Long teamSectionId = team.getSection() != null ? team.getSection().getId() : null;
+
+        String matchError = TeamValidationService.validateStudentClassMatch(captain, "Captain", teamDeptId, teamYear, teamSectionId);
+        if (matchError != null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(matchError));
+        }
+
         captain.setTeam(team);
         studentRepository.save(captain);
         if (!team.getMembers().contains(captain)) {
@@ -335,6 +353,15 @@ public class TeamMemberService {
                     ApiResponse.error("A student cannot hold both Captain and Vice Captain roles in the same team."));
         }
 
+        Long teamDeptId = team.getDepartment() != null ? team.getDepartment().getId() : null;
+        String teamYear = team.getYear();
+        Long teamSectionId = team.getSection() != null ? team.getSection().getId() : null;
+
+        String matchError = TeamValidationService.validateStudentClassMatch(viceCaptain, "Vice Captain", teamDeptId, teamYear, teamSectionId);
+        if (matchError != null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(matchError));
+        }
+
         viceCaptain.setTeam(team);
         studentRepository.save(viceCaptain);
         if (!team.getMembers().contains(viceCaptain)) {
@@ -411,6 +438,15 @@ public class TeamMemberService {
         if (member.getTeam() != null || !teamRepository.findAllTeamsByStudentId(member.getId()).isEmpty())
             return ResponseEntity.badRequest().body(ApiResponse
                     .error("Student " + member.getFullName() + " already belongs to an existing team."));
+
+        Long teamDeptId = team.getDepartment() != null ? team.getDepartment().getId() : null;
+        String teamYear = team.getYear();
+        Long teamSectionId = team.getSection() != null ? team.getSection().getId() : null;
+
+        String matchError = TeamValidationService.validateStudentClassMatch(member, "Student", teamDeptId, teamYear, teamSectionId);
+        if (matchError != null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(matchError));
+        }
 
         long currentMembersCount = team.getMembers().size();
         boolean captainInMembers = team.getMembers().stream()
@@ -503,21 +539,13 @@ public class TeamMemberService {
                         .error("Student " + member.getFullName() + " already belongs to an existing team."));
             }
 
-            // Validate configuration match
-            String teamYearForStudent = jjcet.PragatiX.entity.Team.reverseCanonicalYearOfStudy(team.getYear());
-            if (teamYearForStudent != null && member.getYear() != null && !teamYearForStudent.equals(member.getYear())) {
-                return ResponseEntity.badRequest().body(ApiResponse
-                        .error("Student " + member.getFullName() + " is in a different academic year than the team."));
-            }
-            if (team.getDepartment() != null && member.getDepartment() != null
-                    && !team.getDepartment().getId().equals(member.getDepartment().getId())) {
-                return ResponseEntity.badRequest().body(ApiResponse
-                        .error("Student " + member.getFullName() + " is in a different department than the team."));
-            }
-            if (team.getSection() != null && member.getSection() != null
-                    && !team.getSection().getId().equals(member.getSection().getId())) {
-                return ResponseEntity.badRequest().body(ApiResponse
-                        .error("Student " + member.getFullName() + " is in a different section than the team."));
+            Long teamDeptId = team.getDepartment() != null ? team.getDepartment().getId() : null;
+            String teamYear = team.getYear();
+            Long teamSectionId = team.getSection() != null ? team.getSection().getId() : null;
+
+            String matchError = TeamValidationService.validateStudentClassMatch(member, "Student", teamDeptId, teamYear, teamSectionId);
+            if (matchError != null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(matchError));
             }
 
             member.setTeam(team);

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 public class UpdateStudentRequest {
     @NotBlank(message = "Full name is required")
+    @Pattern(regexp = "^[A-Za-z\\s]+$", message = "Full Name must contain letters and spaces only.")
     @Size(max = 255)
     private String fullName;
 
@@ -23,6 +24,7 @@ public class UpdateStudentRequest {
     private String semester;
     private String year;
     private Boolean active;
+    private String regNo;
 
     @Pattern(regexp = "^[A-Za-z0-9]*$", message = "SPR number must contain alphanumeric characters only (no symbols).")
     @Size(max = 100)
@@ -40,6 +42,14 @@ public class UpdateStudentRequest {
     private GuardianDTO guardian;
 
     public UpdateStudentRequest() {
+    }
+
+    public String getRegNo() {
+        return regNo;
+    }
+
+    public void setRegNo(String regNo) {
+        this.regNo = regNo != null ? regNo.trim().toUpperCase() : null;
     }
 
     public String getFullName() {

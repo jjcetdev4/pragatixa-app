@@ -71,8 +71,13 @@ public class AdminStageService {
         List<jjcet.PragatiX.entity.Student> activeStudents = studentRepository.findByActiveTrue();
         int evaluated = 0;
         for (jjcet.PragatiX.entity.Student student : activeStudents) {
-            xpEngineService.evaluateStagePromotion(student);
-            evaluated++;
+            try {
+                xpEngineService.evaluateStagePromotion(student);
+                evaluated++;
+            } catch (Exception e) {
+                // Log and continue to next student to avoid halting batch promotion
+                System.err.println("Error evaluating promotion for student " + student.getId() + ": " + e.getMessage());
+            }
         }
         return ResponseEntity
                 .ok(ApiResponse.ok("Evaluated stage promotions for " + evaluated + " active students.", null));

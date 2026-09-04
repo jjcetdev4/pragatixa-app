@@ -22,6 +22,7 @@ public class PenaltyRequestDto {
     private String approvedBy;
     private LocalDateTime approvalTime;
     private String rejectedReason;
+    private String ccName;
 
     public PenaltyRequestDto() {
     }
@@ -145,5 +146,13 @@ public class PenaltyRequestDto {
 
     public void setRejectedReason(String rejectedReason) {
         this.rejectedReason = rejectedReason;
+    }
+
+    public String getCcName() {
+        return ccName;
+    }
+
+    public void setCcName(String ccName) {
+        this.ccName = ccName;
     }
 }

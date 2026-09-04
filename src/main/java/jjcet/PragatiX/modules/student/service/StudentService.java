@@ -63,6 +63,11 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
+    public ApiResponse<StudentSelfResponse> getStudentSelfProfile(Student student) {
+        return studentCrudService.getStudentSelfProfile(student);
+    }
+
+    @Transactional(readOnly = true)
     public ApiResponse<Page<StudentResponse>> getAllStudents(int page, int size, String sortBy, String keyword,
             String year, Long departmentId, Long sectionId) {
         return studentCrudService.getAllStudents(page, size, sortBy, keyword, year, departmentId, sectionId);

@@ -61,35 +61,39 @@ public class StudentXpMapper {
 
         String assignedFacultyName = "Any Faculty";
         String assignmentMode = "Global";
-        if (priorityAssignment.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY) {
-            assignedFacultyName = priorityAssignment.getTeacher() != null
-                    ? priorityAssignment.getTeacher().getFullName()
-                    : "Any Faculty";
-            assignmentMode = "Specific Faculty";
-        } else if (priorityAssignment.getAssignmentScope() == AssignmentScope.SECTION
-                || priorityAssignment.getAssignmentScope() == AssignmentScope.DEPARTMENT) {
-            assignmentMode = "Class Coordinator (Auto Assigned)";
-            assignedFacultyName = "Class Coordinator (Auto Assigned)";
-            if (priorityAssignment.getDepartment() != null && priorityAssignment.getSection() != null) {
-                List<User> ccs = userRepository.findClassCoordinatorsByDepartmentAndSection(
-                        priorityAssignment.getDepartment().getId(),
-                        priorityAssignment.getSection().getId());
-                if (!ccs.isEmpty()) {
-                    assignedFacultyName = ccs.get(0).getFullName();
+        if (priorityAssignment != null) {
+            if (priorityAssignment.getAssignmentScope() == AssignmentScope.SPECIFIC_FACULTY) {
+                assignedFacultyName = priorityAssignment.getTeacher() != null
+                        ? priorityAssignment.getTeacher().getFullName()
+                        : "Any Faculty";
+                assignmentMode = "Specific Faculty";
+            } else if (priorityAssignment.getAssignmentScope() == AssignmentScope.SECTION
+                    || priorityAssignment.getAssignmentScope() == AssignmentScope.DEPARTMENT) {
+                assignmentMode = "Class Coordinator (Auto Assigned)";
+                assignedFacultyName = "Class Coordinator (Auto Assigned)";
+                if (priorityAssignment.getDepartment() != null && priorityAssignment.getSection() != null) {
+                    List<User> ccs = userRepository.findClassCoordinatorsByDepartmentAndSection(
+                            priorityAssignment.getDepartment().getId(),
+                            priorityAssignment.getSection().getId());
+                    if (!ccs.isEmpty()) {
+                        assignedFacultyName = ccs.get(0).getFullName();
+                    }
                 }
             }
         }
 
         MyActivityStudentsResponse.AssignmentDetail assignDetail = new MyActivityStudentsResponse.AssignmentDetail(
-                priorityAssignment.getId(),
-                priorityAssignment.getAssignedBy() != null ? priorityAssignment.getAssignedBy().getFullName() : "",
-                priorityAssignment.getAssignedAt() != null ? priorityAssignment.getAssignedAt().toString() : "",
+                priorityAssignment != null ? priorityAssignment.getId() : null,
+                (priorityAssignment != null && priorityAssignment.getAssignedBy() != null) ? priorityAssignment.getAssignedBy().getFullName() : "",
+                (priorityAssignment != null && priorityAssignment.getAssignedAt() != null) ? priorityAssignment.getAssignedAt().toString() : "",
                 assignedFacultyName,
                 assignmentMode);
 
         int xpLimit = 0;
         try {
-            xpLimit = Integer.parseInt(activity.getXp());
+            if (activity != null && activity.getXp() != null) {
+                xpLimit = Integer.parseInt(activity.getXp());
+            }
         } catch (Exception ignored) {
         }
 

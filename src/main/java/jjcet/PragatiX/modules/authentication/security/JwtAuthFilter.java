@@ -58,8 +58,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
-        } else if (request.getParameter("access_token") != null) {
-            jwt = request.getParameter("access_token");
         }
 
         if (jwt == null) {

@@ -352,8 +352,15 @@ public class ActivityStageService {
         ActivityStage stage = activityStageMapper.toEntity(request);
         stage.setAcademicYear(resolvedYear); // explicitly set based on role
 
+        // Auto-generate sequential displayOrder starting from 1 if not provided or <= 0
+        if (stage.getDisplayOrder() <= 0) {
+            Integer maxOrder = activityStageRepository.findMaxDisplayOrderByAcademicYear(resolvedYear);
+            stage.setDisplayOrder(maxOrder != null && maxOrder > 0 ? maxOrder + 1 : 1);
+        }
+
         System.out.println("Stage Name Before Save: " + stage.getName());
         System.out.println("Academic Year Before Save: " + stage.getAcademicYear());
+        System.out.println("Display Order Before Save: " + stage.getDisplayOrder());
 
         ActivityStage saved = activityStageRepository.save(stage);
 
@@ -365,7 +372,40 @@ public class ActivityStageService {
 
         ensureMandatorySubgroups(saved);
 
+        // Auto-enroll unassigned students for this academic year to Stage 1
+        if (saved.getDisplayOrder() == 1) {
+            autoEnrollUnassignedStudents(resolvedYear, saved);
+        }
+
         return activityStageMapper.toResponse(saved);
+    }
+
+    private void autoEnrollUnassignedStudents(jjcet.PragatiX.enums.AcademicYear academicYear, ActivityStage stage1) {
+        if (academicYear == null || stage1 == null) return;
+        List<Student> unassignedStudents = studentRepository.findAll().stream()
+                .filter(s -> s.getYearRef() != null && matchesAcademicYear(s.getYearRef().getYearNo(), academicYear))
+                .filter(s -> s.getStage() <= 0 || s.getCurrentStage() <= 0)
+                .collect(Collectors.toList());
+
+        for (Student s : unassignedStudents) {
+            s.setStage(stage1.getDisplayOrder());
+            s.setCurrentStage(stage1.getDisplayOrder());
+            s.setCurrentStageId(stage1.getId());
+        }
+        if (!unassignedStudents.isEmpty()) {
+            studentRepository.saveAll(unassignedStudents);
+            log.info("Auto-enrolled {} unassigned students into Stage 1 for academic year {}", unassignedStudents.size(), academicYear);
+        }
+    }
+
+    private boolean matchesAcademicYear(Number yearNo, jjcet.PragatiX.enums.AcademicYear academicYear) {
+        if (yearNo == null || academicYear == null) return false;
+        int val = yearNo.intValue();
+        if (val == 1 && academicYear == jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR) return true;
+        if (val == 2 && academicYear == jjcet.PragatiX.enums.AcademicYear.SECOND_YEAR) return true;
+        if (val == 3 && academicYear == jjcet.PragatiX.enums.AcademicYear.THIRD_YEAR) return true;
+        if (val == 4 && academicYear == jjcet.PragatiX.enums.AcademicYear.FOURTH_YEAR) return true;
+        return false;
     }
 
     @Transactional
