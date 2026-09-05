@@ -18,7 +18,7 @@ spring:
     banner-mode: "off"
     log-startup-info: false
   datasource:
-    url: ${DB_URL}
+    url: ${DB_URL}?useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
