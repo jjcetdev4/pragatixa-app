@@ -133,7 +133,7 @@ public class TeamController {
         return teamMemberService.removeTeamCaptain(id);
     }
 
-    @PutMapping("/{id}/vice-captain")
+    @RequestMapping(value = { "/{id}/vice-captain", "/{id}/assign-vice-captain" }, method = { RequestMethod.PUT, RequestMethod.POST })
     @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'CC', 'HOD', 'SUPER_ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Assign Team Vice Captain", description = "Assigns/promotes a student to vice captain of a team.")
     public ResponseEntity<ApiResponse<TeamResponse>> assignTeamViceCaptain(@PathVariable Long id,

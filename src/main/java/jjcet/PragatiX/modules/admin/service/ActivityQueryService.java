@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.time.LocalDate;
 
 import jjcet.PragatiX.entity.ActivityAssignment;
+import jjcet.PragatiX.entity.AssignmentScope;
 import jjcet.PragatiX.entity.ActivityTemporaryAssignment;
 import jjcet.PragatiX.entity.User;
 import jjcet.PragatiX.modules.activity.repository.ActivityStageMappingRepository;
@@ -120,7 +121,7 @@ public class ActivityQueryService {
                                 today);
                         activities = activities.stream()
                                 .filter(a -> assignedIds.contains(a.getId())
-                                        || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                        || isActivityGlobal(a, null))
                                 .toList();
                     }
 
@@ -230,11 +231,11 @@ public class ActivityQueryService {
                             final Set<Long> teacherAssignedIds = assignedIds;
                             activities = activities.stream()
                                     .filter(a -> deptActIds.contains(a.getId()) || teacherAssignedIds.contains(a.getId())
-                                            || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                            || isActivityGlobal(a, null))
                                     .toList();
                         } else {
                             activities = activities.stream()
-                                    .filter(a -> "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                    .filter(a -> isActivityGlobal(a, null))
                                     .toList();
                         }
                     } else if (isTeacher) {
@@ -243,7 +244,7 @@ public class ActivityQueryService {
                                 today);
                         activities = activities.stream()
                                 .filter(a -> assignedIds.contains(a.getId())
-                                        || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                        || isActivityGlobal(a, null))
                                 .toList();
                     }
                 }
@@ -520,8 +521,11 @@ public class ActivityQueryService {
                     activity.setPenaltyXp(m.getPenaltyXp());
                 if (m.getAwardFrequency() != null)
                     activity.setAwardFrequency(m.getAwardFrequency());
-                if (m.getAssignmentMode() != null)
-                    activity.setAssignmentMode(m.getAssignmentMode());
+                if (m.getAssignmentMode() != null) {
+                    if (!"GLOBAL".equalsIgnoreCase(activity.getAssignmentMode()) || "GLOBAL".equalsIgnoreCase(m.getAssignmentMode())) {
+                        activity.setAssignmentMode(m.getAssignmentMode());
+                    }
+                }
             }
         }
 
@@ -573,7 +577,7 @@ public class ActivityQueryService {
                                 today);
                         activities = activities.stream()
                                 .filter(a -> assignedIds.contains(a.getId())
-                                        || "GLOBAL".equalsIgnoreCase(a.getAssignmentMode()))
+                                        || isActivityGlobal(a, stageId))
                                 .toList();
                         System.out.println("Rows After Teacher Assignment Filter for Teacher ["
                                 + currentUser.getUsername() + "]: " + activities.size());
@@ -592,6 +596,28 @@ public class ActivityQueryService {
 
         System.out.println("Returned : " + activities.size());
         return ResponseEntity.ok(ApiResponse.ok(activities));
+    }
+
+    public boolean isActivityGlobal(Activity a, Long stageId) {
+        if (a == null) return false;
+        if ("GLOBAL".equalsIgnoreCase(a.getAssignmentMode())) {
+            return true;
+        }
+        if (a.getAssignmentSummary() != null && a.getAssignmentSummary().stream()
+                .anyMatch(assign -> "GLOBAL".equalsIgnoreCase(String.valueOf(assign.get("scope")))
+                        || "Any Faculty".equalsIgnoreCase(String.valueOf(assign.get("teacherName")))
+                        || "Global".equalsIgnoreCase(String.valueOf(assign.get("departmentName"))))) {
+            return true;
+        }
+        if (stageId != null) {
+            java.util.Optional<jjcet.PragatiX.entity.ActivityStageMapping> m = activityStageMappingRepository
+                    .findByStageIdAndActivityId(stageId, a.getId());
+            if (m.isPresent() && "GLOBAL".equalsIgnoreCase(m.get().getAssignmentMode())) {
+                return true;
+            }
+        }
+        List<ActivityAssignment> assignments = activityAssignmentRepository.findByActivityId(a.getId());
+        return assignments.stream().anyMatch(aa -> aa.getAssignmentScope() == AssignmentScope.GLOBAL);
     }
 
     private boolean matchesSubgroup(jjcet.PragatiX.entity.ActivitySubgroup subgroup, String lowerSubgroupFilter) {

@@ -163,6 +163,9 @@ public class ActivityAssignmentService {
             return ResponseEntity.ok(ApiResponse.ok("Class Coordinator assignments saved successfully", null));
 
         } else if (globalEnabled) {
+            activity.setAssignmentMode("GLOBAL");
+            activityRepository.save(activity);
+
             if (targetStageId != null) {
                 ActivityStageMapping mapping = activityStageMappingRepository
                         .findByStageIdAndActivityId(targetStageId, id).orElse(null);
@@ -170,9 +173,6 @@ public class ActivityAssignmentService {
                     mapping.setAssignmentMode("GLOBAL");
                     activityStageMappingRepository.save(mapping);
                 }
-            } else {
-                activity.setAssignmentMode("GLOBAL");
-                activityRepository.save(activity);
             }
 
             List<ActivityAssignment> globalsExisting = existingAssignments.stream()

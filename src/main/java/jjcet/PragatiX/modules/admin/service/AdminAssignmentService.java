@@ -95,6 +95,12 @@ public class AdminAssignmentService {
         List<Map<String, Object>> summary = new ArrayList<>();
         LocalDate today = LocalDate.now();
 
+        boolean hasGlobalScope = assignments.stream()
+                .anyMatch(aa -> aa.getAssignmentScope() == AssignmentScope.GLOBAL);
+        if (hasGlobalScope && (activity.getAssignmentMode() == null || "MANUAL".equalsIgnoreCase(activity.getAssignmentMode()))) {
+            activity.setAssignmentMode("GLOBAL");
+        }
+
         for (ActivityAssignment aa : assignments) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", aa.getId());
