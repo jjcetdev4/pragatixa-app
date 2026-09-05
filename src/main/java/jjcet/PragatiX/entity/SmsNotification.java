@@ -21,7 +21,8 @@ public class SmsNotification {
     @Column(name = "period_no")
     private Integer periodNo;
 
-    @Column(name = "guardian_phone", nullable = false, length = 20)
+    @Convert(converter = jjcet.PragatiX.util.crypto.AesGcmAttributeConverter.class)
+    @Column(name = "guardian_phone", nullable = false, length = 255)
     private String guardianPhone;
 
     @Column(columnDefinition = "TEXT", nullable = false)

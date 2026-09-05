@@ -1,6 +1,5 @@
 server:
-  port: ${SERVER_PORT
-  }
+  port: ${SERVER_PORT}
   tomcat:
     accesslog:
       enabled: false

@@ -46,7 +46,8 @@ public class EncryptionSchemaInitializer {
                 "ALTER TABLE enrollments MODIFY COLUMN mobile VARCHAR(255) NOT NULL",
                 "ALTER TABLE student_guardians MODIFY COLUMN email VARCHAR(255) NULL",
                 "ALTER TABLE faculty MODIFY COLUMN phone_no VARCHAR(255) NOT NULL",
-                "ALTER TABLE otp_tokens MODIFY COLUMN email VARCHAR(255) NOT NULL"
+                "ALTER TABLE otp_tokens MODIFY COLUMN email VARCHAR(255) NOT NULL",
+                "ALTER TABLE sms_notifications MODIFY COLUMN guardian_phone VARCHAR(255) NOT NULL"
         };
 
         for (String sql : alterStatements) {
@@ -79,6 +80,9 @@ public class EncryptionSchemaInitializer {
 
             // 6. Otp Tokens
             migrateTableColumn("otp_tokens", "id", "email");
+
+            // 7. SMS Notifications
+            migrateTableColumn("sms_notifications", "id", "guardian_phone");
         } catch (Exception e) {
             log.warn("Migration of existing unencrypted rows encountered an issue: {}", e.getMessage());
         }
