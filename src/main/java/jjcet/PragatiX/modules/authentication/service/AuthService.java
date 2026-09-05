@@ -239,12 +239,6 @@ public class AuthService {
 
         otpTokenRepository.deleteByEmail(email);
 
-        if (email.toLowerCase().matches("^test\\d+@gmail\\.com$")) {
-            OtpToken otpToken = new OtpToken(email, "1234", LocalDateTime.now().plusYears(1));
-            otpTokenRepository.save(otpToken);
-            return ApiResponse.ok("OTP sent successfully to " + email);
-        }
-
         String generatedOtp = String.format("%04d", new Random().nextInt(10000));
 
         boolean emailSent = zeptoMailService.sendOtpEmail(email, generatedOtp);
@@ -296,24 +290,18 @@ public class AuthService {
         String otp = request.getOtp().trim();
         log.info("Verifying OTP for email: {}", email);
 
-        boolean isTestUser = email.toLowerCase().matches("^test\\d+@gmail\\.com$") && "1234".equals(otp);
+        OtpToken otpToken = otpTokenRepository.findByEmailAndOtp(email, otp).orElse(null);
 
-        if (!isTestUser) {
-            OtpToken otpToken = otpTokenRepository.findByEmailAndOtp(email, otp).orElse(null);
-
-            if (otpToken == null) {
-                return ApiResponse.error("Invalid OTP");
-            }
-
-            if (otpToken.isExpired()) {
-                otpTokenRepository.delete(otpToken);
-                return ApiResponse.error("OTP has expired");
-            }
-
-            otpTokenRepository.delete(otpToken);
-        } else {
-            otpTokenRepository.deleteByEmail(email);
+        if (otpToken == null) {
+            return ApiResponse.error("Invalid OTP");
         }
+
+        if (otpToken.isExpired()) {
+            otpTokenRepository.delete(otpToken);
+            return ApiResponse.error("OTP has expired");
+        }
+
+        otpTokenRepository.delete(otpToken);
 
         // Generate JWT based on user type
         Student student = studentRepository.findByEmail(email).orElse(null);

@@ -35,6 +35,7 @@ public class EncryptedTransitResponseBodyAdvice implements ResponseBodyAdvice<Ob
             "email",
             "phone",
             "phoneno",
+            "phonenumber",
             "guardianphone",
             "guardianemail",
             "guardianphoneno",
