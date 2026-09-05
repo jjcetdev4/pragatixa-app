@@ -15,6 +15,8 @@ public class EnrollmentDto {
     private Long departmentId;
     private String departmentName;
     private String deptCode;
+    private Long sectionId;
+    private String sectionName;
     private EnrollmentStatus status;
     private Long enrolledStudentId;
     private String enrolledStudentRegNo;
@@ -36,6 +38,10 @@ public class EnrollmentDto {
             dto.setDepartmentId(e.getDepartment().getId());
             dto.setDepartmentName(e.getDepartment().getName());
             dto.setDeptCode(e.getDepartment().getDeptCode() != null ? e.getDepartment().getDeptCode() : e.getDepartment().getCode());
+        }
+        if (e.getSection() != null) {
+            dto.setSectionId(e.getSection().getId());
+            dto.setSectionName(e.getSection().getSectionName());
         }
         dto.setStatus(e.getStatus());
         dto.setEnrolledStudentId(e.getEnrolledStudentId());
@@ -164,5 +170,21 @@ public class EnrollmentDto {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(Long sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public String getSectionName() {
+        return sectionName;
+    }
+
+    public void setSectionName(String sectionName) {
+        this.sectionName = sectionName;
     }
 }

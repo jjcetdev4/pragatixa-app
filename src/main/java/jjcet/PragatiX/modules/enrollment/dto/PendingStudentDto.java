@@ -9,6 +9,8 @@ public class PendingStudentDto {
     private Long departmentId;
     private String departmentName;
     private String deptCode;
+    private Long sectionId;
+    private String sectionName;
 
     public PendingStudentDto() {}
 
@@ -21,6 +23,19 @@ public class PendingStudentDto {
         this.departmentId = departmentId;
         this.departmentName = departmentName;
         this.deptCode = deptCode;
+    }
+
+    public PendingStudentDto(Long id, String fullName, String email, String maskedEmail, String maskedMobile, Long departmentId, String departmentName, String deptCode, Long sectionId, String sectionName) {
+        this.id = id;
+        this.fullName = fullName;
+        this.email = email;
+        this.maskedEmail = maskedEmail;
+        this.maskedMobile = maskedMobile;
+        this.departmentId = departmentId;
+        this.departmentName = departmentName;
+        this.deptCode = deptCode;
+        this.sectionId = sectionId;
+        this.sectionName = sectionName;
     }
 
     public PendingStudentDto(Long id, String fullName, String maskedMobile, Long departmentId, String departmentName, String deptCode) {
@@ -123,5 +138,21 @@ public class PendingStudentDto {
 
     public void setDeptCode(String deptCode) {
         this.deptCode = deptCode;
+    }
+
+    public Long getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(Long sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public String getSectionName() {
+        return sectionName;
+    }
+
+    public void setSectionName(String sectionName) {
+        this.sectionName = sectionName;
     }
 }

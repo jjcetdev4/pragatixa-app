@@ -43,7 +43,7 @@ public class Department implements SoftDeletable {
     private Boolean supportsSections;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "department", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private List<Section> sections;
 
     @Column(name = "created_at", insertable = false, updatable = false)

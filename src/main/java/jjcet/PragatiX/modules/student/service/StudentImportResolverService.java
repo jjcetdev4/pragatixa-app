@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -239,8 +240,21 @@ public class StudentImportResolverService {
                     "Cannot resolve Section for Department ID {}\nInput: {}\nAvailable database values: {}\nResolved ID: NULL",
                     departmentId, sectionStr, avail);
 
+            String cleanSecName = sectionStr.trim().toUpperCase();
+            Optional<Section> deletedSec = sectionRepository.findDeletedByDeptIdAndSectionName(departmentId, cleanSecName);
+            if (deletedSec.isPresent()) {
+                Section sec = deletedSec.get();
+                sec.setDeleted(false);
+                sec.setDeletedAt(null);
+                sec.setPermanentDeleteAt(null);
+                sec.setDeletedBy(null);
+                Section restored = sectionRepository.save(sec);
+                log.info("Restored soft-deleted Section: {} | ID: {}", restored.getSectionName(), restored.getId());
+                return restored.getId();
+            }
+
             Section newSec = sectionRepository
-                    .save(Section.builder().department(d).sectionName(sectionStr.trim()).build());
+                    .save(Section.builder().department(d).sectionName(cleanSecName).build());
             log.info("Auto-created Section: {} | Resolved ID: {}", newSec.getSectionName(), newSec.getId());
             return newSec.getId();
         }

@@ -71,7 +71,6 @@ public class SecurityConfig {
             "/api/api-docs/**",
             "/api/actuator/health",
             "/actuator/health",
-            "/api/test-bug/**",
             "/api/test/sms",
             "/api/v1/test/sms"
     };

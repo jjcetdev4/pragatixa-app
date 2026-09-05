@@ -8,7 +8,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Table(name = "section", uniqueConstraints = {
         @UniqueConstraint(name = "uq_department_section", columnNames = { "dept_id", "section_name" })
 })
-public class Section {
+@org.hibernate.annotations.Filter(name = "deletedFilter")
+public class Section implements SoftDeletable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +28,18 @@ public class Section {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "permanent_delete_at")
+    private LocalDateTime permanentDeleteAt;
+
+    @Column(name = "deleted_by")
+    private String deletedBy;
 
     public Section() {
     }
@@ -66,6 +79,46 @@ public class Section {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    @Override
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    @Override
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    @Override
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    @Override
+    public LocalDateTime getPermanentDeleteAt() {
+        return permanentDeleteAt;
+    }
+
+    @Override
+    public void setPermanentDeleteAt(LocalDateTime permanentDeleteAt) {
+        this.permanentDeleteAt = permanentDeleteAt;
+    }
+
+    @Override
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    @Override
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
     }
 
     public static Builder builder() {

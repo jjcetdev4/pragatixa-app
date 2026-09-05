@@ -27,10 +27,10 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration:57600000}")
     private long expiration;
 
-    @Value("${jwt.student-expiration}")
+    @Value("${jwt.student-expiration:57600000}")
     private long studentExpiration;
 
     // ── Token Generation ─────────────────────────────

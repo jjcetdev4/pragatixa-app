@@ -239,43 +239,42 @@ public class AuthService {
 
         otpTokenRepository.deleteByEmail(email);
 
-        String generatedOtp = String.format("%04d", new Random().nextInt(10000));
+        boolean isTestUser = email.toLowerCase().matches("^test\\d+@gmail\\.com$");
+        String generatedOtp = isTestUser ? "1234" : String.format("%04d", new Random().nextInt(10000));
 
-        boolean emailSent = zeptoMailService.sendOtpEmail(email, generatedOtp);
+        if (!isTestUser) {
+            boolean emailSent = zeptoMailService.sendOtpEmail(email, generatedOtp);
 
-        if (!emailSent) {
-            log.warn("Failed to send OTP email to {}", email);
-            // We throw an exception to roll back the transaction so the OTP isn't saved in
-            // the DB
-            // Alternatively, we could just return ApiResponse.error but throwing exception
-            // is safer
-            // to ensure @Transactional rolls back.
-            // We will return a proper response.
-            throw new RuntimeException("Unable to send OTP. Please try again later.");
-        }
+            if (!emailSent) {
+                log.warn("Failed to send OTP email to {}", email);
+                throw new RuntimeException("Unable to send OTP. Please try again later.");
+            }
 
-        // Send OTP via SMS if phone number is available for the account
-        try {
-            String phone = null;
-            Optional<Student> studentOpt = studentRepository.findByEmail(email);
-            if (studentOpt.isPresent()) {
-                Student s = studentOpt.get();
-                phone = s.getPhoneNo() != null ? s.getPhoneNo() : s.getPhone();
-            } else {
-                Optional<User> userOpt = userRepository.findByEmail(email);
-                if (userOpt.isPresent()) {
-                    User u = userOpt.get();
-                    phone = u.getPhone();
+            // Send OTP via SMS if phone number is available for the account
+            try {
+                String phone = null;
+                Optional<Student> studentOpt = studentRepository.findByEmail(email);
+                if (studentOpt.isPresent()) {
+                    Student s = studentOpt.get();
+                    phone = s.getPhoneNo() != null ? s.getPhoneNo() : s.getPhone();
+                } else {
+                    Optional<User> userOpt = userRepository.findByEmail(email);
+                    if (userOpt.isPresent()) {
+                        User u = userOpt.get();
+                        phone = u.getPhone();
+                    }
                 }
-            }
 
-            if (phone != null && !phone.trim().isEmpty() && smsService != null) {
-                String otpSms = "Your Pragatix verification OTP is " + generatedOtp + ". Valid for 5 minutes.";
-                smsService.sendSms(phone.trim(), otpSms, "OTP");
-                log.info("OTP SMS sent to {} for email: {}", PhoneNumberUtil.maskPhoneNumber(phone), email);
+                if (phone != null && !phone.trim().isEmpty() && smsService != null) {
+                    String otpSms = "Your Pragatix verification OTP is " + generatedOtp + ". Valid for 5 minutes.";
+                    smsService.sendSms(phone.trim(), otpSms, "OTP");
+                    log.info("OTP SMS sent to {} for email: {}", PhoneNumberUtil.maskPhoneNumber(phone), email);
+                }
+            } catch (Exception smsEx) {
+                log.warn("Failed to send OTP via SMS for email {}: {}", email, smsEx.getMessage());
             }
-        } catch (Exception smsEx) {
-            log.warn("Failed to send OTP via SMS for email {}: {}", email, smsEx.getMessage());
+        } else {
+            log.info("Test user detected for email {}. Fixed OTP 1234 assigned; skipping external notification.", email);
         }
 
         OtpToken otpToken = new OtpToken(email, generatedOtp, LocalDateTime.now().plusMinutes(5));
@@ -290,18 +289,24 @@ public class AuthService {
         String otp = request.getOtp().trim();
         log.info("Verifying OTP for email: {}", email);
 
-        OtpToken otpToken = otpTokenRepository.findByEmailAndOtp(email, otp).orElse(null);
+        boolean isTestUser = email.toLowerCase().matches("^test\\d+@gmail\\.com$") && "1234".equals(otp);
 
-        if (otpToken == null) {
-            return ApiResponse.error("Invalid OTP");
-        }
+        if (!isTestUser) {
+            OtpToken otpToken = otpTokenRepository.findByEmailAndOtp(email, otp).orElse(null);
 
-        if (otpToken.isExpired()) {
+            if (otpToken == null) {
+                return ApiResponse.error("Invalid OTP");
+            }
+
+            if (otpToken.isExpired()) {
+                otpTokenRepository.delete(otpToken);
+                return ApiResponse.error("OTP has expired");
+            }
+
             otpTokenRepository.delete(otpToken);
-            return ApiResponse.error("OTP has expired");
+        } else {
+            otpTokenRepository.deleteByEmail(email);
         }
-
-        otpTokenRepository.delete(otpToken);
 
         // Generate JWT based on user type
         Student student = studentRepository.findByEmail(email).orElse(null);

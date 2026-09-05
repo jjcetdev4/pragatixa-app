@@ -40,6 +40,10 @@ public class Enrollment implements SoftDeletable {
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "section_id", nullable = true)
+    private jjcet.PragatiX.entity.Section section;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private EnrollmentStatus status = EnrollmentStatus.PENDING;
@@ -234,5 +238,13 @@ public class Enrollment implements SoftDeletable {
     @Override
     public void setDeletedBy(String deletedBy) {
         this.deletedBy = deletedBy;
+    }
+
+    public jjcet.PragatiX.entity.Section getSection() {
+        return section;
+    }
+
+    public void setSection(jjcet.PragatiX.entity.Section section) {
+        this.section = section;
     }
 }

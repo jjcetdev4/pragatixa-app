@@ -197,6 +197,19 @@ public class RecycleBinService {
                 "Status: " + e.getStatus() + " • Email: " + (e.getEmail() != null ? e.getEmail() : "N/A") + " • Mobile: " + (e.getMobile() != null ? e.getMobile() : "N/A")
         )).collect(Collectors.toList()));
 
+        // Fetch deleted Sections
+        List<Section> deletedSections = entityManager.createQuery("SELECT s FROM Section s WHERE s.deleted = true", Section.class).getResultList();
+        items.addAll(deletedSections.stream().map(s -> new RecycleBinItem(
+                s.getId(),
+                "SECTION",
+                "Section " + s.getSectionName() + (s.getDepartment() != null ? " (" + (s.getDepartment().getDeptCode() != null ? s.getDepartment().getDeptCode() : s.getDepartment().getName()) + ")" : ""),
+                s.getDeletedAt(),
+                s.getPermanentDeleteAt(),
+                s.getDeletedBy(),
+                "Academic Structure → " + (s.getDepartment() != null ? s.getDepartment().getName() : "Department"),
+                "Section: " + s.getSectionName() + " • Dept: " + (s.getDepartment() != null ? (s.getDepartment().getDeptCode() != null ? s.getDepartment().getDeptCode() : s.getDepartment().getName()) : "N/A")
+        )).collect(Collectors.toList()));
+
         return items;
     }
 
@@ -356,6 +369,16 @@ public class RecycleBinService {
                     entityManager.merge(stage);
                 }
                 break;
+            case "SECTION":
+                Section section = entityManager.find(Section.class, id);
+                if (section != null) {
+                    section.setDeleted(false);
+                    section.setDeletedAt(null);
+                    section.setPermanentDeleteAt(null);
+                    section.setDeletedBy(null);
+                    entityManager.merge(section);
+                }
+                break;
             default:
                 throw new IllegalArgumentException("Unknown entity type: " + entityType);
         }
@@ -365,6 +388,8 @@ public class RecycleBinService {
             restoreModuleStr = "ACTIVITY";
         } else if (restoreModuleStr.equals("ACTIVITY_STAGE")) {
             restoreModuleStr = "STAGE";
+        } else if (restoreModuleStr.equals("SECTION")) {
+            restoreModuleStr = "DEPARTMENT";
         }
         auditService.log(
             jjcet.PragatiX.enums.AuditAction.RESTORE,
@@ -575,6 +600,31 @@ public class RecycleBinService {
                     entityManager.remove(stageToDelete);
                 }
                 break;
+            case "SECTION":
+                Section sec = entityManager.find(Section.class, id);
+                if (sec != null) {
+                    // 1. Delete dependent timetable records where section_id is NOT NULL
+                    entityManager.createNativeQuery("DELETE FROM timetable_entries WHERE timetable_id IN (SELECT id FROM timetable WHERE section_id = :id)").setParameter("id", id).executeUpdate();
+                    entityManager.createNativeQuery("DELETE FROM timetable WHERE section_id = :id").setParameter("id", id).executeUpdate();
+
+                    // 2. Set NULL on all nullable section_id foreign keys
+                    String[] secTables = {
+                        "users", "students", "faculty", "enrollments",
+                        "activity_assignments", "activity_temporary_assignments",
+                        "attendance_sessions", "badge_requests", "teams"
+                    };
+                    for (String t : secTables) {
+                        try {
+                            entityManager.createNativeQuery("UPDATE " + t + " SET section_id = NULL WHERE section_id = :sid")
+                                    .setParameter("sid", id)
+                                    .executeUpdate();
+                        } catch (Exception ignored) {}
+                    }
+
+                    // 3. Remove section entity
+                    entityManager.remove(sec);
+                }
+                break;
             default:
                 throw new IllegalArgumentException("Unknown entity type: " + entityType);
         }
@@ -587,6 +637,8 @@ public class RecycleBinService {
             moduleStr = "ACTIVITY";
         } else if (moduleStr.equals("ACTIVITY_STAGE")) {
             moduleStr = "STAGE";
+        } else if (moduleStr.equals("SECTION")) {
+            moduleStr = "DEPARTMENT";
         }
 
         auditService.log(

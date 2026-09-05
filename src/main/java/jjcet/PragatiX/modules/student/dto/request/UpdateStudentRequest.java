@@ -36,6 +36,7 @@ public class UpdateStudentRequest {
     private Long yearId;
     private Long semesterId;
     private Long sectionId;
+    private String section;
     private Long genderId;
     private Long teamId;
 
@@ -170,6 +171,14 @@ public class UpdateStudentRequest {
 
     public void setSectionId(Long sectionId) {
         this.sectionId = sectionId;
+    }
+
+    public String getSection() {
+        return section;
+    }
+
+    public void setSection(String section) {
+        this.section = section;
     }
 
     public Long getGenderId() {

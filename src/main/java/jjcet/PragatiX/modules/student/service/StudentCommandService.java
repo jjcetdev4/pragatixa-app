@@ -147,7 +147,7 @@ public class StudentCommandService {
             year = studentLookupService.resolveYear(request.getYearId(), request.getYear());
             semester = studentLookupService.resolveSemester(request.getSemesterId(), request.getSemester());
             gender = studentLookupService.resolveGender(request.getGenderId(), request.getGender());
-            section = studentLookupService.resolveSection(request.getSectionId(), null, department);
+            section = studentLookupService.resolveSection(request.getSectionId(), request.getSection(), department);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
         }
@@ -402,7 +402,7 @@ public class StudentCommandService {
             year = studentLookupService.resolveYear(request.getYearId(), request.getYear());
             semester = studentLookupService.resolveSemester(request.getSemesterId(), request.getSemester());
             gender = studentLookupService.resolveGender(request.getGenderId(), request.getGender());
-            section = studentLookupService.resolveSection(request.getSectionId(), null, department);
+            section = studentLookupService.resolveSection(request.getSectionId(), request.getSection(), department);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
         }

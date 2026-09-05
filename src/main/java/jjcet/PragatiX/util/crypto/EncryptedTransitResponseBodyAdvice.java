@@ -47,7 +47,7 @@ public class EncryptedTransitResponseBodyAdvice implements ResponseBodyAdvice<Ob
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
-        return true;
+        return org.springframework.http.converter.json.MappingJackson2HttpMessageConverter.class.isAssignableFrom(converterType);
     }
 
     @Override
@@ -59,7 +59,12 @@ public class EncryptedTransitResponseBodyAdvice implements ResponseBodyAdvice<Ob
         }
 
         String path = request.getURI().getPath();
-        if (path != null && (path.contains("/v3/api-docs") || path.contains("/swagger-ui") || path.contains("/actuator"))) {
+        if (path != null && (
+                path.contains("/v3/api-docs") || 
+                path.contains("/swagger-ui") || 
+                path.contains("/actuator") || 
+                path.contains("/public/")
+        )) {
             return body;
         }
 

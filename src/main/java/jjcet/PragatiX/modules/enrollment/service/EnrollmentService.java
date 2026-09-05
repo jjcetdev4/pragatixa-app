@@ -60,6 +60,7 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final EnrollmentSettingRepository enrollmentSettingRepository;
     private final DepartmentRepository departmentRepository;
+    private final SectionRepository sectionRepository;
     private final GenderRepository genderRepository;
     private final AcademicYearRepository academicYearRepository;
     private final YearRepository yearRepository;
@@ -73,6 +74,7 @@ public class EnrollmentService {
             EnrollmentRepository enrollmentRepository,
             EnrollmentSettingRepository enrollmentSettingRepository,
             DepartmentRepository departmentRepository,
+            SectionRepository sectionRepository,
             GenderRepository genderRepository,
             AcademicYearRepository academicYearRepository,
             YearRepository yearRepository,
@@ -84,6 +86,7 @@ public class EnrollmentService {
         this.enrollmentRepository = enrollmentRepository;
         this.enrollmentSettingRepository = enrollmentSettingRepository;
         this.departmentRepository = departmentRepository;
+        this.sectionRepository = sectionRepository;
         this.genderRepository = genderRepository;
         this.academicYearRepository = academicYearRepository;
         this.yearRepository = yearRepository;
@@ -158,8 +161,8 @@ public class EnrollmentService {
             headerStyle.setAlignment(HorizontalAlignment.CENTER);
             headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            // Exactly 6 columns
-            String[] headers = {"Sl.No.", "Name", "Gender", "Email", "Mobile", "Branch"};
+            // Columns: Sl.No., Name, Gender, Email, Mobile, Branch, Section (Optional)
+            String[] headers = {"Sl.No.", "Name", "Gender", "Email", "Mobile", "Branch", "Section (Optional)"};
             Row headerRow = sheet.createRow(0);
             headerRow.setHeightInPoints(26);
 
@@ -177,6 +180,7 @@ public class EnrollmentService {
             sampleRow1.createCell(3).setCellValue("arun@gmail.com");
             sampleRow1.createCell(4).setCellValue("9876543210");
             sampleRow1.createCell(5).setCellValue("Computer Science and Engineering");
+            sampleRow1.createCell(6).setCellValue("A");
 
             // Sample row 2
             Row sampleRow2 = sheet.createRow(2);
@@ -186,6 +190,17 @@ public class EnrollmentService {
             sampleRow2.createCell(3).setCellValue("priya@gmail.com");
             sampleRow2.createCell(4).setCellValue("9876543211");
             sampleRow2.createCell(5).setCellValue("Information Technology");
+            sampleRow2.createCell(6).setCellValue("B");
+
+            // Sample row 3: Student in department with sections, but has no section (Section is optional)
+            Row sampleRow3 = sheet.createRow(3);
+            sampleRow3.createCell(0).setCellValue(3);
+            sampleRow3.createCell(1).setCellValue("KARTHIK S");
+            sampleRow3.createCell(2).setCellValue("Male");
+            sampleRow3.createCell(3).setCellValue("karthik@gmail.com");
+            sampleRow3.createCell(4).setCellValue("9876543212");
+            sampleRow3.createCell(5).setCellValue("Mechanical Engineering");
+            sampleRow3.createCell(6).setCellValue("");
 
             // Auto-size columns with minimum padding
             for (int i = 0; i < headers.length; i++) {
@@ -286,6 +301,7 @@ public class EnrollmentService {
             int emailCol = -1;
             int mobileCol = -1;
             int branchCol = -1;
+            int sectionCol = -1;
 
             int lastCellNum = headerRow.getLastCellNum();
             for (int c = 0; c < lastCellNum; c++) {
@@ -301,6 +317,8 @@ public class EnrollmentService {
                     mobileCol = c;
                 } else if (val.equals("branch") || val.equals("department")) {
                     branchCol = c;
+                } else if (val.equals("section") || val.equals("sec") || val.startsWith("section") || val.startsWith("sec")) {
+                    sectionCol = c;
                 }
             }
 
@@ -310,6 +328,7 @@ public class EnrollmentService {
             if (emailCol == -1 && lastCellNum >= 4) emailCol = 3;
             if (mobileCol == -1 && lastCellNum >= 5) mobileCol = 4;
             if (branchCol == -1 && lastCellNum >= 6) branchCol = 5;
+            if (sectionCol == -1 && lastCellNum >= 7) sectionCol = 6;
 
             if (nameCol == -1 || emailCol == -1 || mobileCol == -1 || branchCol == -1) {
                 result.addError("Invalid template format. The template must contain: Sl.No., Name, Gender, Email, Mobile, Branch.");
@@ -322,7 +341,6 @@ public class EnrollmentService {
             // Phase 1: Read and collect candidate values for batch pre-fetching
             List<Object[]> rawRows = new ArrayList<>();
             Set<String> candidateEmails = new HashSet<>();
-            Set<String> candidateMobiles = new HashSet<>();
 
             for (int r = 1; r <= lastRowNum; r++) {
                 Row row = sheet.getRow(r);
@@ -336,22 +354,19 @@ public class EnrollmentService {
                 String email = getCellValue(row.getCell(emailCol)).trim().toLowerCase();
                 String mobile = cleanMobileNumber(getCellValue(row.getCell(mobileCol)).trim());
                 String branch = getCellValue(row.getCell(branchCol)).trim();
+                String section = sectionCol != -1 ? getCellValue(row.getCell(sectionCol)).trim() : "";
 
-                rawRows.add(new Object[]{rowNum, name, gender, email, mobile, branch});
+                rawRows.add(new Object[]{rowNum, name, gender, email, mobile, branch, section});
                 if (!email.isEmpty()) candidateEmails.add(email);
-                if (!mobile.isEmpty()) candidateMobiles.add(mobile);
             }
 
             result.setTotalRows(rawRows.size());
 
-            // Phase 2: Batch fetch existing conflicts from database in O(1) batch queries
+            // Phase 2: Batch fetch existing email conflicts from database in O(1) batch queries
             Set<String> existingEnrollmentEmails = candidateEmails.isEmpty() ? Collections.emptySet() : enrollmentRepository.findExistingEmailsIn(candidateEmails);
-            Set<String> existingEnrollmentMobiles = candidateMobiles.isEmpty() ? Collections.emptySet() : enrollmentRepository.findExistingMobilesIn(candidateMobiles);
             Set<String> existingStudentEmails = candidateEmails.isEmpty() ? Collections.emptySet() : studentRepository.findExistingEmailsIn(candidateEmails);
-            Set<String> existingStudentPhones = candidateMobiles.isEmpty() ? Collections.emptySet() : studentRepository.findExistingPhonesIn(candidateMobiles);
 
             Set<String> seenEmailsInFile = new HashSet<>();
-            Set<String> seenMobilesInFile = new HashSet<>();
 
             // Phase 3: Validate rows in-memory
             for (Object[] raw : rawRows) {
@@ -361,6 +376,7 @@ public class EnrollmentService {
                 String email = (String) raw[3];
                 String mobile = (String) raw[4];
                 String branch = (String) raw[5];
+                String sectionName = (String) raw[6];
 
                 // Validation 1: Name
                 if (name.isEmpty()) {
@@ -406,38 +422,25 @@ public class EnrollmentService {
                     continue;
                 }
 
-                // Validation 6: In-File Duplicate Check
+                // Validation 6: In-File Duplicate Check (Email must be unique)
                 if (seenEmailsInFile.contains(email)) {
                     result.addError("Row " + rowNum + ": Duplicate email in uploaded file ('" + email + "').");
                     continue;
                 }
-                if (seenMobilesInFile.contains(mobile)) {
-                    result.addError("Row " + rowNum + ": Duplicate mobile in uploaded file ('" + mobile + "').");
-                    continue;
-                }
 
-                // Validation 7: Existing Pending Enrollment Duplicate Check
+                // Validation 7: Existing Pending Enrollment Duplicate Check (Email)
                 if (existingEnrollmentEmails.contains(email)) {
                     result.addError("Row " + rowNum + ": Student with email '" + email + "' already exists in enrollment list.");
                     continue;
                 }
-                if (existingEnrollmentMobiles.contains(mobile)) {
-                    result.addError("Row " + rowNum + ": Student with mobile '" + mobile + "' already exists in enrollment list.");
-                    continue;
-                }
 
-                // Validation 8: Existing Student Duplicate Check
+                // Validation 8: Existing Student Duplicate Check (Email)
                 if (existingStudentEmails.contains(email)) {
                     result.addError("Row " + rowNum + ": Student already exists with email '" + email + "'.");
                     continue;
                 }
-                if (existingStudentPhones.contains(mobile)) {
-                    result.addError("Row " + rowNum + ": Student already exists with mobile '" + mobile + "'.");
-                    continue;
-                }
 
                 seenEmailsInFile.add(email);
-                seenMobilesInFile.add(mobile);
 
                 // Create Pending Enrollment Entity (NO user or student record created)
                 Enrollment enrollment = new Enrollment();
@@ -446,6 +449,10 @@ public class EnrollmentService {
                 enrollment.setEmail(email);
                 enrollment.setMobile(mobile);
                 enrollment.setDepartment(resolvedDept);
+                if (sectionName != null && !sectionName.trim().isEmpty()) {
+                    Section resolvedSection = resolveOrCreateSection(resolvedDept, sectionName, null);
+                    enrollment.setSection(resolvedSection);
+                }
                 enrollment.setStatus(EnrollmentStatus.PENDING);
                 enrollment.setCreatedBy(createdBy != null ? createdBy : "ADMIN");
 
@@ -514,20 +521,14 @@ public class EnrollmentService {
             throw new IllegalArgumentException(dept.getName() + " is not allowed for enrollment. Only the 9 main engineering departments are supported.");
         }
 
-        // Duplicate checks in Enrollment
+        // Duplicate checks in Enrollment (Email must be unique)
         if (enrollmentRepository.existsByEmailAndDeletedFalse(email)) {
             throw new IllegalArgumentException("Student with email '" + email + "' already exists in enrollment list.");
         }
-        if (enrollmentRepository.existsByMobileAndDeletedFalse(mobile)) {
-            throw new IllegalArgumentException("Student with mobile '" + mobile + "' already exists in enrollment list.");
-        }
 
-        // Duplicate checks in Student
+        // Duplicate checks in Student (Email must be unique)
         if (studentRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Student already exists with email '" + email + "'.");
-        }
-        if (studentRepository.existsByPhoneNo(mobile)) {
-            throw new IllegalArgumentException("Student already exists with mobile '" + mobile + "'.");
         }
 
         Enrollment enrollment = new Enrollment();
@@ -536,6 +537,8 @@ public class EnrollmentService {
         enrollment.setEmail(email);
         enrollment.setMobile(mobile);
         enrollment.setDepartment(dept);
+        Section resolvedSection = resolveOrCreateSection(dept, dto.getSection(), dto.getSectionId());
+        enrollment.setSection(resolvedSection);
         enrollment.setStatus(EnrollmentStatus.PENDING);
         enrollment.setCreatedBy(createdBy != null ? createdBy : "ADMIN");
 
@@ -607,16 +610,10 @@ public class EnrollmentService {
         if (enrollmentRepository.existsByEmailAndIdNotAndDeletedFalse(email, id)) {
             throw new IllegalArgumentException("Another student with email '" + email + "' already exists in enrollment list.");
         }
-        if (enrollmentRepository.existsByMobileAndIdNotAndDeletedFalse(mobile, id)) {
-            throw new IllegalArgumentException("Another student with mobile '" + mobile + "' already exists in enrollment list.");
-        }
 
         // Duplicate checks in active Student table (if changed)
         if (!email.equalsIgnoreCase(enrollment.getEmail()) && studentRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Student already exists with email '" + email + "'.");
-        }
-        if (!mobile.equals(enrollment.getMobile()) && studentRepository.existsByPhoneNo(mobile)) {
-            throw new IllegalArgumentException("Student already exists with mobile '" + mobile + "'.");
         }
 
         enrollment.setFullName(name);
@@ -624,6 +621,8 @@ public class EnrollmentService {
         enrollment.setEmail(email);
         enrollment.setMobile(mobile);
         enrollment.setDepartment(dept);
+        Section updatedSection = resolveOrCreateSection(dept, dto.getSection(), dto.getSectionId());
+        enrollment.setSection(updatedSection);
         enrollment.setUpdatedBy(updatedBy != null ? updatedBy : "ADMIN");
 
         Enrollment saved = enrollmentRepository.save(enrollment);
@@ -746,7 +745,9 @@ public class EnrollmentService {
                 PendingStudentDto.maskMobile(e.getMobile()),
                 e.getDepartment() != null ? e.getDepartment().getId() : null,
                 e.getDepartment() != null ? e.getDepartment().getName() : "",
-                e.getDepartment() != null ? (e.getDepartment().getDeptCode() != null ? e.getDepartment().getDeptCode() : e.getDepartment().getCode()) : ""
+                e.getDepartment() != null ? (e.getDepartment().getDeptCode() != null ? e.getDepartment().getDeptCode() : e.getDepartment().getCode()) : "",
+                e.getSection() != null ? e.getSection().getId() : null,
+                e.getSection() != null ? e.getSection().getSectionName() : null
         )).collect(Collectors.toList());
     }
 
@@ -773,20 +774,57 @@ public class EnrollmentService {
             throw new IllegalStateException("This student has already enrolled or is not pending enrollment.");
         }
 
-        // 3. Duplicate checks in Student entity
+        // 3. Duplicate checks in Student entity (Email must be unique)
         if (studentRepository.existsByEmail(enrollment.getEmail())) {
             throw new IllegalStateException("Student already exists with email: " + enrollment.getEmail());
-        }
-        if (studentRepository.existsByPhoneNo(enrollment.getMobile())) {
-            throw new IllegalStateException("Student already exists with mobile: " + enrollment.getMobile());
         }
 
         // 4. Resolve necessary dependencies for Student creation
         Department dept = enrollment.getDepartment();
 
-        Gender genderRef = genderRepository.findByGenderName(enrollment.getGender()).orElse(null);
+        // Resolve Gender safely: never allow genderRef to be null
+        Gender genderRef = null;
+        String rawGender = enrollment.getGender();
+        if (rawGender != null && !rawGender.trim().isEmpty()) {
+            String trimmedGender = rawGender.trim();
+            genderRef = genderRepository.findByGenderName(trimmedGender).orElse(null);
+            if (genderRef == null) {
+                String norm = trimmedGender.toUpperCase();
+                for (Gender g : genderRepository.findAll()) {
+                    String gName = g.getGenderName() != null ? g.getGenderName().trim() : "";
+                    if (gName.equalsIgnoreCase(norm) ||
+                        (norm.startsWith("M") && gName.equalsIgnoreCase("Male")) ||
+                        (norm.startsWith("F") && gName.equalsIgnoreCase("Female")) ||
+                        (norm.startsWith("O") && gName.equalsIgnoreCase("Other"))) {
+                        genderRef = g;
+                        break;
+                    }
+                }
+            }
+        }
         if (genderRef == null) {
-            genderRef = genderRepository.findAll().stream().findFirst().orElse(null);
+            genderRef = genderRepository.findByGenderName("Male").orElse(null);
+            if (genderRef == null) {
+                genderRef = genderRepository.findAll().stream().findFirst().orElse(null);
+            }
+            if (genderRef == null) {
+                Gender defaultG = new Gender();
+                defaultG.setGenderName("Male");
+                genderRef = genderRepository.save(defaultG);
+            }
+        }
+
+        // Resolve Section safely: if student has a section that is soft-deleted, restore it.
+        // If department supports sections, ensure section is active in department.
+        Section resolvedSection = enrollment.getSection();
+        if (resolvedSection != null) {
+            if (resolvedSection.isDeleted()) {
+                resolvedSection.setDeleted(false);
+                resolvedSection.setDeletedAt(null);
+                resolvedSection.setPermanentDeleteAt(null);
+                resolvedSection.setDeletedBy(null);
+                resolvedSection = sectionRepository.save(resolvedSection);
+            }
         }
 
         AcademicYear academicYear = academicYearRepository.findAll().stream()
@@ -821,6 +859,7 @@ public class EnrollmentService {
                 .gender(genderRef != null ? genderRef.getGenderName() : enrollment.getGender())
                 .genderRef(genderRef)
                 .department(dept)
+                .section(resolvedSection)
                 .yearRef(yearRef)
                 .year(yearRef != null ? String.valueOf(yearRef.getYearNo()) : "1")
                 .semesterRef(semesterRef)
@@ -1053,6 +1092,55 @@ public class EnrollmentService {
             default:
                 return "";
         }
+    }
+
+    public Section resolveOrCreateSection(Department dept, String sectionName, Long sectionId) {
+        if (dept == null || !isMainStudentDepartment(dept)) {
+            return null;
+        }
+        if (sectionId != null) {
+            Section sec = sectionRepository.findById(sectionId).orElse(null);
+            if (sec != null) {
+                if (sec.isDeleted()) {
+                    sec.setDeleted(false);
+                    sec.setDeletedAt(null);
+                    sec.setPermanentDeleteAt(null);
+                    sec.setDeletedBy(null);
+                    return sectionRepository.save(sec);
+                }
+                return sec;
+            }
+        }
+        if (sectionName == null || sectionName.trim().isEmpty() || sectionName.trim().equalsIgnoreCase("none") || sectionName.trim().equalsIgnoreCase("no section") || sectionName.trim().equalsIgnoreCase("n/a")) {
+            return null;
+        }
+        String cleanSection = sectionName.trim().toUpperCase();
+        Optional<Section> existing = sectionRepository.findByDepartmentAndSectionName(dept, cleanSection);
+        if (existing.isPresent()) {
+            Section sec = existing.get();
+            if (sec.isDeleted()) {
+                sec.setDeleted(false);
+                sec.setDeletedAt(null);
+                sec.setPermanentDeleteAt(null);
+                sec.setDeletedBy(null);
+                return sectionRepository.save(sec);
+            }
+            return sec;
+        }
+        // Check if soft-deleted version exists
+        Optional<Section> deletedSec = sectionRepository.findDeletedByDeptIdAndSectionName(dept.getId(), cleanSection);
+        if (deletedSec.isPresent()) {
+            Section sec = deletedSec.get();
+            sec.setDeleted(false);
+            sec.setDeletedAt(null);
+            sec.setPermanentDeleteAt(null);
+            sec.setDeletedBy(null);
+            return sectionRepository.save(sec);
+        }
+        Section newSec = new Section();
+        newSec.setDepartment(dept);
+        newSec.setSectionName(cleanSection);
+        return sectionRepository.save(newSec);
     }
 
     private boolean isRowEmpty(Row row) {

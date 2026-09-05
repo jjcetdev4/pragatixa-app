@@ -24,6 +24,9 @@ public class SingleEnrollmentRequestDto {
     @NotNull(message = "Department is required")
     private Long departmentId;
 
+    private Long sectionId;
+    private String section;
+
     public SingleEnrollmentRequestDto() {}
 
     public SingleEnrollmentRequestDto(String fullName, String gender, String email, String mobile, Long departmentId) {
@@ -32,6 +35,16 @@ public class SingleEnrollmentRequestDto {
         this.email = email;
         this.mobile = mobile;
         this.departmentId = departmentId;
+    }
+
+    public SingleEnrollmentRequestDto(String fullName, String gender, String email, String mobile, Long departmentId, Long sectionId, String section) {
+        this.fullName = fullName;
+        this.gender = gender;
+        this.email = email;
+        this.mobile = mobile;
+        this.departmentId = departmentId;
+        this.sectionId = sectionId;
+        this.section = section;
     }
 
     public String getFullName() {
@@ -72,5 +85,21 @@ public class SingleEnrollmentRequestDto {
 
     public void setDepartmentId(Long departmentId) {
         this.departmentId = departmentId;
+    }
+
+    public Long getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(Long sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public String getSection() {
+        return section;
+    }
+
+    public void setSection(String section) {
+        this.section = section;
     }
 }

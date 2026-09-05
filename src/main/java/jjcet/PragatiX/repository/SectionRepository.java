@@ -18,4 +18,7 @@ public interface SectionRepository extends JpaRepository<Section, Long> {
     java.util.List<Section> findByDepartment_IdOrderBySectionNameAsc(Long departmentId);
 
     void deleteByDepartment_Id(Long departmentId);
+
+    @org.springframework.data.jpa.repository.Query(value = "SELECT * FROM section WHERE dept_id = :deptId AND section_name = :sectionName AND deleted = 1 LIMIT 1", nativeQuery = true)
+    Optional<Section> findDeletedByDeptIdAndSectionName(@org.springframework.data.repository.query.Param("deptId") Long deptId, @org.springframework.data.repository.query.Param("sectionName") String sectionName);
 }

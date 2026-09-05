@@ -160,12 +160,51 @@ public class StudentLookupService {
     }
 
     public Section resolveSection(Long id, String name, Department department) {
+        if (department == null) {
+            return null;
+        }
         if (id != null) {
-            return sectionRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Section not found"));
-        } else if (name != null && !name.trim().isEmpty() && department != null) {
-            return sectionRepository.findByDepartmentAndSectionName(department, name.trim())
-                    .orElseThrow(() -> new IllegalArgumentException("Section not found"));
+            Section sec = sectionRepository.findById(id).orElse(null);
+            if (sec != null) {
+                if (sec.isDeleted()) {
+                    sec.setDeleted(false);
+                    sec.setDeletedAt(null);
+                    sec.setPermanentDeleteAt(null);
+                    sec.setDeletedBy(null);
+                    return sectionRepository.save(sec);
+                }
+                return sec;
+            }
+        }
+        if (name != null && !name.trim().isEmpty()) {
+            String cleanName = name.trim().toUpperCase();
+            Optional<Section> existing = sectionRepository.findByDepartmentAndSectionName(department, cleanName);
+            if (existing.isPresent()) {
+                Section sec = existing.get();
+                if (sec.isDeleted()) {
+                    sec.setDeleted(false);
+                    sec.setDeletedAt(null);
+                    sec.setPermanentDeleteAt(null);
+                    sec.setDeletedBy(null);
+                    return sectionRepository.save(sec);
+                }
+                return sec;
+            }
+            // Check if soft-deleted version exists
+            Optional<Section> deletedSec = sectionRepository.findDeletedByDeptIdAndSectionName(department.getId(), cleanName);
+            if (deletedSec.isPresent()) {
+                Section sec = deletedSec.get();
+                sec.setDeleted(false);
+                sec.setDeletedAt(null);
+                sec.setPermanentDeleteAt(null);
+                sec.setDeletedBy(null);
+                return sectionRepository.save(sec);
+            }
+            // Auto-create section for this department
+            Section newSec = new Section();
+            newSec.setDepartment(department);
+            newSec.setSectionName(cleanName);
+            return sectionRepository.save(newSec);
         }
         return null;
     }
