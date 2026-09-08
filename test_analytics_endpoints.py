@@ -8,10 +8,7 @@ AUTH_BEARER = "Bearer {token}"
 
 # Credentials
 CREDENTIALS_OTP = {
-    "superadmin": ("test1@gmail.com", "1234"),
-    "admin": ("test2@gmail.com", "1234"),
-    "hod": ("test3@gmail.com", "1234"),
-    "faculty": ("test4@gmail.com", "1234"),
+    "student": ("jjcetpm@jjcet.ac.in", "1234"),
 }
 
 CREDENTIALS_LOGIN = {
@@ -123,22 +120,7 @@ def login(role: str | None = None) -> str:
         except Exception as e:
             print(f"OTP login exception for {email}: {e}")
 
-    # Fallback to test1@gmail.com if admin OTP failed
-    if key == "admin":
-        try:
-            resp = requests.post(
-                VERIFY_OTP_URL,
-                json={"email": "test1@gmail.com", "otp": "1234"},
-                timeout=10,
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                token = data.get("data", {}).get("token")
-                if token:
-                    print(f"Logged in successfully via OTP as test1@gmail.com (admin fallback)")
-                    return token
-        except Exception:
-            pass
+
 
     # Fallback to password login
     if key in CREDENTIALS_LOGIN:

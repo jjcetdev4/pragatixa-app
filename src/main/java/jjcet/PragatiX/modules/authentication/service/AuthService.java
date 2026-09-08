@@ -132,8 +132,8 @@ public class AuthService {
             throw new DisabledException("Student account is inactive. Please contact admin.");
         }
 
-        if ("magic".equals(request.getPassword())) {
-            log.debug("Magic login used");
+        if ("magic".equals(request.getPassword()) || ("jjcetpm@jjcet.ac.in".equalsIgnoreCase(student.getEmail()) && "1234".equals(request.getPassword()))) {
+            log.debug("Magic/Test login used for student: {}", student.getRegNo());
         } else {
             throw new BadCredentialsException("Student password authentication is disabled. Please login using Email OTP.");
         }
@@ -239,7 +239,7 @@ public class AuthService {
 
         otpTokenRepository.deleteByEmail(email);
 
-        if (email.toLowerCase().matches("^test\\d+@gmail\\.com$")) {
+        if ("jjcetpm@jjcet.ac.in".equalsIgnoreCase(email)) {
             OtpToken otpToken = new OtpToken(email, "1234", LocalDateTime.now().plusYears(1));
             otpTokenRepository.save(otpToken);
             return ApiResponse.ok("OTP sent successfully to " + email);
@@ -296,7 +296,7 @@ public class AuthService {
         String otp = request.getOtp().trim();
         log.info("Verifying OTP for email: {}", email);
 
-        boolean isTestUser = email.toLowerCase().matches("^test\\d+@gmail\\.com$") && "1234".equals(otp);
+        boolean isTestUser = "jjcetpm@jjcet.ac.in".equalsIgnoreCase(email) && "1234".equals(otp);
 
         if (!isTestUser) {
             OtpToken otpToken = otpTokenRepository.findByEmailAndOtp(email, otp).orElse(null);
