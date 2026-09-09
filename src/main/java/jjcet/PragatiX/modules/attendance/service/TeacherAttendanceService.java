@@ -273,13 +273,17 @@ public class TeacherAttendanceService {
         }
 
         // Check if this period is already marked; if so, verify view authorization
-        SessionFacultyInfo facultyInfo = resolveFacultyForSession(date, period, yearId, deptId, sectionId);
-        boolean authorized = canUserViewAttendanceHistory(currentUser, date, period, yearId, deptId, sectionId);
-        if (!authorized) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "You are not authorized to view the attendance history for this period. Attendance can only be viewed by the faculty who marked it, the Class Coordinator, or the Department HOD.");
+        List<Integer> markedPeriods = attendanceRepository.findMarkedPeriodsForSession(date, yearId, deptId, sectionId);
+        boolean isPeriodMarked = markedPeriods != null && markedPeriods.contains(period);
+        if (isPeriodMarked) {
+            boolean authorized = canUserViewAttendanceHistory(currentUser, date, period, yearId, deptId, sectionId);
+            if (!authorized) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "You are not authorized to view the attendance history for this period. Attendance can only be viewed by the faculty who marked it, the Class Coordinator, or the Department HOD.");
+            }
         }
         
+        SessionFacultyInfo facultyInfo = resolveFacultyForSession(date, period, yearId, deptId, sectionId);
         String sessionFacultyName = facultyInfo.getName();
         String sessionFacultyDept = facultyInfo.getDepartment();
 
