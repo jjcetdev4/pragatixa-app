@@ -24,9 +24,9 @@ public class TestBugController {
     @GetMapping("/create")
     public Object create() {
         jjcet.PragatiX.modules.superadmin.dto.CreateYearAdminRequest req = new jjcet.PragatiX.modules.superadmin.dto.CreateYearAdminRequest();
-        req.setUsername("testadmin_bug");
-        req.setFullName("Test Admin Bug");
-        req.setEmail("testbug@example.com");
+        req.setUsername("sampleadmin_bug");
+        req.setFullName("Sample Admin Bug");
+        req.setEmail("samplebug@example.com");
         req.setPhone("1234567890");
         req.setAssignedYearId(1L);
         req.setActive(true);

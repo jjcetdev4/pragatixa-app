@@ -36,6 +36,7 @@ public class TestDataSeederRunner implements ApplicationRunner {
     private final SemesterRepository semesterRepository;
     private final TeamRepository teamRepository;
     private final SectionRepository sectionRepository;
+    private final OtpTokenRepository otpTokenRepository;
 
     public TestDataSeederRunner(UserRepository userRepository,
             StudentRepository studentRepository,
@@ -48,7 +49,8 @@ public class TestDataSeederRunner implements ApplicationRunner {
             YearRepository yearRepository,
             SemesterRepository semesterRepository,
             TeamRepository teamRepository,
-            SectionRepository sectionRepository) {
+            SectionRepository sectionRepository,
+            OtpTokenRepository otpTokenRepository) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.roleRepository = roleRepository;
@@ -61,34 +63,54 @@ public class TestDataSeederRunner implements ApplicationRunner {
         this.semesterRepository = semesterRepository;
         this.teamRepository = teamRepository;
         this.sectionRepository = sectionRepository;
+        this.otpTokenRepository = otpTokenRepository;
     }
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
         log.info("=================================================================");
-        log.info("TEST DATA SEEDER: Starting execution...");
+        log.info("ACCOUNT SEEDER & CLEANUP: Starting execution...");
         log.info("=================================================================");
 
         try {
-            // 1. Deactivate any old test accounts (test1@gmail.com to test8@gmail.com)
-            List<String> oldEmails = List.of(
-                    "test1@gmail.com", "test2@gmail.com", "test3@gmail.com", "test4@gmail.com",
-                    "test5@gmail.com", "test6@gmail.com", "test7@gmail.com", "test8@gmail.com"
-            );
-            for (String oldEmail : oldEmails) {
-                userRepository.findByEmail(oldEmail).ifPresent(u -> {
-                    log.info("Deactivating obsolete test user: {}", oldEmail);
-                    u.setActive(false);
-                    u.setDeleted(true);
-                    userRepository.save(u);
-                });
-                studentRepository.findByEmail(oldEmail).ifPresent(s -> {
-                    log.info("Deactivating obsolete test student: {}", oldEmail);
-                    s.setActive(false);
-                    s.setDeleted(true);
-                    studentRepository.save(s);
-                });
+            // 1. Remove all old test accounts where username, fullName, or email starts with "test" or "jjcetpm"
+            try {
+                List<User> allUsers = userRepository.findAll();
+                for (User u : allUsers) {
+                    String uName = u.getUsername() != null ? u.getUsername().trim().toLowerCase() : "";
+                    String fName = u.getFullName() != null ? u.getFullName().trim().toLowerCase() : "";
+                    String email = u.getEmail() != null ? u.getEmail().trim().toLowerCase() : "";
+                    if (uName.startsWith("test") || fName.startsWith("test") || email.startsWith("test")
+                            || uName.startsWith("jjcetpm") || fName.startsWith("jjcetpm") || email.startsWith("jjcetpm")) {
+                        log.info("Removing test user: id={}, username={}, email={}", u.getId(), u.getUsername(), u.getEmail());
+                        if (u.getEmail() != null) {
+                            otpTokenRepository.deleteByEmail(u.getEmail());
+                        }
+                        userRepository.delete(u);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error cleaning up test users: {}", e.getMessage());
+            }
+
+            try {
+                List<Student> allStudents = studentRepository.findAll();
+                for (Student s : allStudents) {
+                    String regNo = s.getRegNo() != null ? s.getRegNo().trim().toLowerCase() : "";
+                    String fName = s.getFullName() != null ? s.getFullName().trim().toLowerCase() : "";
+                    String email = s.getEmail() != null ? s.getEmail().trim().toLowerCase() : "";
+                    if (regNo.startsWith("test") || fName.startsWith("test") || email.startsWith("test")
+                            || regNo.startsWith("jjcetpm") || fName.startsWith("jjcetpm") || email.startsWith("jjcetpm")) {
+                        log.info("Removing test student: id={}, regNo={}, email={}", s.getId(), s.getRegNo(), s.getEmail());
+                        if (s.getEmail() != null) {
+                            otpTokenRepository.deleteByEmail(s.getEmail());
+                        }
+                        studentRepository.delete(s);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error cleaning up test students: {}", e.getMessage());
             }
 
             // 2. Resolve Lookup Data
@@ -100,43 +122,94 @@ public class TestDataSeederRunner implements ApplicationRunner {
             Semester sem = getOrCreateSemester();
 
             // 3. Resolve Roles
+            Role superAdminRole = getOrCreateRole("ROLE_SUPER_ADMIN");
+            Role adminRole = getOrCreateRole("ROLE_ADMIN");
+            Role teacherRole = getOrCreateRole("ROLE_TEACHER");
+            Role hodRole = getOrCreateRole("ROLE_HOD");
             Role studentRole = getOrCreateRole("ROLE_STUDENT");
 
-            // 4. Seed Student: jjcetpm@jjcet.ac.in
-            String defaultHashedPassword = passwordEncoder.encode("1234");
-            Student testStudent = seedStudent("jjcetpm@jjcet.ac.in", "jjcetpm", "spr_jjcetpm",
-                    "Test Student JJCETPM", defaultHashedPassword, dept, sec, gen, ay, yr, sem, false);
+            // Resolve SubRoles
+            SubRole hodSubRole = getOrCreateSubRole("HOD", teacherRole);
+            SubRole ccSubRole = getOrCreateSubRole("CC", teacherRole);
+            SubRole facultySubRole = getOrCreateSubRole("FACULTY", teacherRole);
 
-            log.info("TEST DATA SEEDER: Seeding completed successfully for student: {} ({})",
-                    testStudent.getFullName(), testStudent.getEmail());
+            // 4. Seed SuperAdmin: superadmin@gmail.com
+            seedUser("superadmin@gmail.com", "superadmin", "Super Admin",
+                    Set.of(superAdminRole), new HashSet<>(),
+                    dept, null, null, null, null);
+
+            // 5. Seed Admin: admin@gmail.com
+            seedUser("admin@gmail.com", "admin", "Admin",
+                    Set.of(adminRole), new HashSet<>(),
+                    dept, sec, "1st Year", yr, jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
+
+            // 6. Seed HOD: hod@gmail.com
+            seedUser("hod@gmail.com", "hod", "Head of Department",
+                    Set.of(teacherRole, hodRole), Set.of(hodSubRole),
+                    dept, sec, "1st Year", yr, jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
+
+            // 7. Seed CC (Class Coordinator): cc@gmail.com
+            seedUser("cc@gmail.com", "cc", "Class Coordinator",
+                    Set.of(teacherRole), Set.of(ccSubRole),
+                    dept, sec, "1st Year", yr, jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
+
+            // 8. Seed Faculty: faculty@gmail.com
+            seedUser("faculty@gmail.com", "faculty", "Faculty",
+                    Set.of(teacherRole), Set.of(facultySubRole),
+                    dept, sec, "1st Year", yr, jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
+
+            // 9. Seed Student: student@gmail.com
+            String defaultHashedPassword = passwordEncoder.encode("1234");
+            seedStudent("student@gmail.com", "student", "spr_student",
+                    "Student", defaultHashedPassword, dept, sec, gen, ay, yr, sem, false);
+
+            // 10. Seed default OTP (1234) for all standard email accounts
+            List<String> defaultEmails = List.of(
+                    "superadmin@gmail.com",
+                    "admin@gmail.com",
+                    "hod@gmail.com",
+                    "cc@gmail.com",
+                    "faculty@gmail.com",
+                    "student@gmail.com"
+            );
+            for (String email : defaultEmails) {
+                otpTokenRepository.deleteByEmail(email);
+                OtpToken otpToken = new OtpToken(email, "1234", LocalDateTime.now().plusYears(1));
+                otpTokenRepository.save(otpToken);
+            }
+
+            log.info("ACCOUNT SEEDER: All accounts and default OTPs initialized successfully.");
         } catch (Exception e) {
-            log.error("TEST DATA SEEDER: Failed to seed test student", e);
+            log.error("ACCOUNT SEEDER: Failed during seeding execution", e);
         }
         log.info("=================================================================");
     }
 
-    private void seedUser(String email, String username, String fullName, String password, Set<Role> roles,
-            Set<SubRole> subRoles, Department dept, Section sec, String year, jjcet.PragatiX.enums.AcademicYear academicYear) {
+    private User seedUser(String email, String username, String fullName, Set<Role> roles,
+            Set<SubRole> subRoles, Department dept, Section sec, String year, Year assignedYear, jjcet.PragatiX.enums.AcademicYear academicYear) {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             user = userRepository.findByUsername(username).orElse(null);
         }
         if (user == null) {
             user = new User();
-            user.setEmail(email);
-            user.setUsername(username);
         }
+        user.setEmail(email);
+        user.setUsername(username);
         user.setFullName(fullName);
         user.setRoles(roles);
         user.setSubRoles(subRoles);
         user.setDepartment(dept);
         user.setSection(sec);
         user.setYear(year);
+        user.setAssignedYear(assignedYear);
         user.setAcademicYear(academicYear);
+        user.setPhone("9876543210");
         user.setActive(true);
         user.setDeleted(false);
-        userRepository.save(user);
+        User saved = userRepository.save(user);
         log.info("Seeded/Updated User: {} ({}) with roles: {} and subroles: {}", fullName, email, roles, subRoles);
+        return saved;
     }
 
     private Student seedStudent(String email, String regNo, String sprNo, String fullName, String password,
@@ -147,17 +220,17 @@ public class TestDataSeederRunner implements ApplicationRunner {
         }
         if (s == null) {
             s = new Student();
-            s.setEmail(email);
-            s.setRegNo(regNo);
-            s.setSprNo(sprNo);
         }
+        s.setEmail(email);
+        s.setRegNo(regNo);
+        s.setSprNo(sprNo);
         s.setFullName(fullName);
         s.setDepartment(dept);
         s.setSection(sec);
         s.setGenderRef(gen);
         s.setYearRef(yr);
         s.setSemesterRef(sem);
-        s.setPhoneNo("1234567890");
+        s.setPhoneNo("9876543210");
         s.setCaptain(isCaptain);
         s.setActive(true);
         s.setDeleted(false);
@@ -235,6 +308,11 @@ public class TestDataSeederRunner implements ApplicationRunner {
 
     private Year getOrCreateYear() {
         List<Year> list = yearRepository.findAll();
+        for (Year y : list) {
+            if (y.getYearNo() == 1 || "1st Year".equalsIgnoreCase(y.getYearName())) {
+                return y;
+            }
+        }
         if (!list.isEmpty()) {
             return list.get(0);
         }
@@ -246,6 +324,11 @@ public class TestDataSeederRunner implements ApplicationRunner {
 
     private Semester getOrCreateSemester() {
         List<Semester> list = semesterRepository.findAll();
+        for (Semester s : list) {
+            if (s.getSemesterNo() == 1 || "Semester 1".equalsIgnoreCase(s.getSemesterName())) {
+                return s;
+            }
+        }
         if (!list.isEmpty()) {
             return list.get(0);
         }
@@ -283,12 +366,12 @@ public class TestDataSeederRunner implements ApplicationRunner {
     private Team getOrCreateTeam(Student captain, Student viceCaptain, Department dept, Section sec, User createdBy) {
         List<Team> list = teamRepository.findAll();
         for (Team t : list) {
-            if ("Test Team".equals(t.getName())) {
+            if ("Alpha Team".equals(t.getName())) {
                 return t;
             }
         }
         Team t = new Team();
-        t.setName("Test Team");
+        t.setName("Alpha Team");
         t.setSize(3);
         t.setCaptain(captain);
         t.setViceCaptain(viceCaptain);

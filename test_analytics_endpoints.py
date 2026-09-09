@@ -8,14 +8,19 @@ AUTH_BEARER = "Bearer {token}"
 
 # Credentials
 CREDENTIALS_OTP = {
-    "student": ("jjcetpm@jjcet.ac.in", "1234"),
+    "student": ("student@gmail.com", "1234"),
+    "superadmin": ("superadmin@gmail.com", "1234"),
+    "admin": ("admin@gmail.com", "1234"),
+    "hod": ("hod@gmail.com", "1234"),
+    "cc": ("cc@gmail.com", "1234"),
+    "faculty": ("faculty@gmail.com", "1234"),
 }
 
 CREDENTIALS_LOGIN = {
-    "superadmin": ("superadmin_test", "password"),
-    "admin": ("admin", "12345"),
-    "hod": ("hod", "12345"),
-    "faculty": ("faculty", "12345"),
+    "superadmin": ("superadmin", "1234"),
+    "admin": ("admin", "1234"),
+    "hod": ("hod", "1234"),
+    "faculty": ("faculty", "1234"),
 }
 
 AY = "1"

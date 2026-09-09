@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT}
+  port: ${SERVER_PORT:8080}
   tomcat:
     accesslog:
       enabled: false
@@ -18,9 +18,9 @@ spring:
     banner-mode: "off"
     log-startup-info: false
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/spdms_lab?useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -37,19 +37,19 @@ spring:
       password: admin
 
 jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
-  student-expiration: ${JWT_STUDENT_EXPIRATION}
+  secret: ${JWT_SECRET:spdms_super_secret_key_must_be_at_least_256_bits_long_for_hs256_algorithm}
+  expiration: ${JWT_EXPIRATION:86400000}
+  student-expiration: ${JWT_STUDENT_EXPIRATION:43200000}
 
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
 
 springdoc:
   api-docs:
-    enabled: ${SWAGGER_ENABLED}
+    enabled: ${SWAGGER_ENABLED:true}
     path: /api/api-docs
   swagger-ui:
-    enabled: ${SWAGGER_ENABLED}
+    enabled: ${SWAGGER_ENABLED:true}
     path: /api/swagger-ui.html
     tags-sorter: alpha
 
@@ -85,24 +85,24 @@ management:
 
 zepto:
   mail:
-    url: ${ZEPTO_MAIL_URL}
-    token: ${ZEPTO_MAIL_TOKEN}
-    template-key: ${ZEPTO_MAIL_TEMPLATE_KEY}
-    sender-address: ${ZEPTO_MAIL_SENDER_ADDRESS}
-    sender-name: ${ZEPTO_MAIL_SENDER_NAME}
+    url: ${ZEPTO_MAIL_URL:https://api.zeptomail.in/v1.1/email}
+    token: ${ZEPTO_MAIL_TOKEN:}
+    template-key: ${ZEPTO_MAIL_TEMPLATE_KEY:}
+    sender-address: ${ZEPTO_MAIL_SENDER_ADDRESS:noreply@pragatix.in}
+    sender-name: ${ZEPTO_MAIL_SENDER_NAME:Pragatix}
 
 sms:
-  provider: ${SMS_PROVIDER}
-  test-endpoint-enabled: ${SMS_TEST_ENDPOINT_ENABLED}
+  provider: ${SMS_PROVIDER:airtel}
+  test-endpoint-enabled: ${SMS_TEST_ENDPOINT_ENABLED:true}
 
 airtel:
   sms:
-    enabled: ${AIRTEL_SMS_ENABLED}
-    url: ${AIRTEL_SMS_URL}
-    customer-id: ${AIRTEL_CUSTOMER_ID}
-    username: ${AIRTEL_USERNAME}
-    password: ${AIRTEL_PASSWORD}
-    dlt-template-id: ${AIRTEL_DLT_TEMPLATE_ID}
-    entity-id: ${AIRTEL_ENTITY_ID}
-    source-address: ${AIRTEL_SOURCE_ADDRESS}
-    message-type: ${AIRTEL_MESSAGE_TYPE}
+    enabled: ${AIRTEL_SMS_ENABLED:false}
+    url: ${AIRTEL_SMS_URL:https://iqsms.airtel.in/api/v1/send-sms}
+    customer-id: ${AIRTEL_CUSTOMER_ID:}
+    username: ${AIRTEL_USERNAME:}
+    password: ${AIRTEL_PASSWORD:}
+    dlt-template-id: ${AIRTEL_DLT_TEMPLATE_ID:}
+    entity-id: ${AIRTEL_ENTITY_ID:}
+    source-address: ${AIRTEL_SOURCE_ADDRESS:JJECTR}
+    message-type: ${AIRTEL_MESSAGE_TYPE:SERVICE_IMPLICIT}
