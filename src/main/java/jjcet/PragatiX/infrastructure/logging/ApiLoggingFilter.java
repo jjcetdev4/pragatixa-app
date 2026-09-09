@@ -37,7 +37,9 @@ public class ApiLoggingFilter extends OncePerRequestFilter {
             clientIp = request.getRemoteAddr();
         }
 
-        log.info("REQUEST | Method: {} | URI: {} | Client IP: {}", method, uri, clientIp);
+        // Only log request details at DEBUG to avoid flooding logs with every
+        // request/response (see Railway 500 logs/sec rate limit).
+        log.debug("REQUEST | Method: {} | URI: {} | Client IP: {}", method, uri, clientIp);
 
         try {
             filterChain.doFilter(request, response);
@@ -57,15 +59,21 @@ public class ApiLoggingFilter extends OncePerRequestFilter {
                 }
 
                 String exceptionName = (ex != null) ? ex.getClass().getSimpleName() : "UnknownException";
-                log.error("ERROR RESPONSE | Method: {} | URI: {} | Status: {} | Exception: {}", method, uri, status,
+                log.warn("ERROR RESPONSE | Method: {} | URI: {} | Status: {} | Exception: {}", method, uri, status,
                         exceptionName);
+            } else if (status >= 400) {
+                // Client errors are logged at WARN so they remain visible without the
+                // volume of a log line for every successful request.
+                log.warn("CLIENT ERROR RESPONSE | Method: {} | URI: {} | Status: {} {} | Time: {} ms", method, uri,
+                        status, statusText, duration);
             } else {
-                log.info("RESPONSE | Method: {} | URI: {} | Status: {} {} | Time: {} ms", method, uri, status,
+                // Successful responses are only logged at DEBUG.
+                log.debug("RESPONSE | Method: {} | URI: {} | Status: {} {} | Time: {} ms", method, uri, status,
                         statusText, duration);
             }
 
         } catch (Exception ex) {
-            log.error("ERROR | Method: {} | URI: {} | Status: 500 | Exception: {}", method, uri,
+            log.warn("ERROR | Method: {} | URI: {} | Status: 500 | Exception: {}", method, uri,
                     ex.getClass().getSimpleName(), ex);
             throw ex;
         }

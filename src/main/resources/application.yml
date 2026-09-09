@@ -68,8 +68,11 @@ logging:
     org.hibernate.SQL: OFF
     org.hibernate.type.descriptor.sql: OFF
     org.hibernate: ERROR
-    jjcet.PragatiX: INFO
-    com.pragatix: INFO
+    jjcet.PragatiX: WARN
+    com.pragatix: WARN
+    jjcet.PragatiX.infrastructure.logging.ApiLoggingFilter: WARN
+    jjcet.PragatiX.modules.notification.service.NotificationService: WARN
+    jjcet.PragatiX.modules.attendance: WARN
 
 management:
   endpoints:
