@@ -31,17 +31,8 @@ public class TeamValidationService {
         });
         boolean isCc = creator.getSubRoles().stream().map(SubRole::getName)
                 .anyMatch(sr -> sr != null && (sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR")));
-        boolean isHod = creator.getSubRoles().stream().map(SubRole::getName)
-                .anyMatch(sr -> sr != null && sr.trim().equalsIgnoreCase("HOD")) ||
-                creator.getRoles().stream().map(Role::getName)
-                .anyMatch(r -> r != null && (r.trim().equalsIgnoreCase("HOD") || r.trim().equalsIgnoreCase("ROLE_HOD")));
-        boolean isAssignedFaculty = false;
 
-        if (assignment != null && assignment.getTeacher() != null) {
-            isAssignedFaculty = assignment.getTeacher().getUsername().equals(creator.getUsername());
-        }
-
-        return isAdmin || isCc || isHod || isAssignedFaculty;
+        return isAdmin || isCc;
     }
 
     public boolean canDeleteTeam(User currentUser, ActivityAssignment assignment) {

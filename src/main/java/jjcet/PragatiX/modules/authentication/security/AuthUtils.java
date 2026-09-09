@@ -83,4 +83,18 @@ public class AuthUtils {
         }
         return false;
     }
+
+    public boolean isHOD(User user) {
+        if (user == null || user.getRoles() == null)
+            return false;
+        for (Role role : user.getRoles()) {
+            if (role.getName() == null)
+                continue;
+            String name = role.getName().trim().toUpperCase();
+            if ("ROLE_HOD".equals(name) || "HOD".equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

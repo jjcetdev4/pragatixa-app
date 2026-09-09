@@ -225,15 +225,8 @@ public class TeamDataIntegrityCleanupRunner implements ApplicationRunner {
             log.debug("team_members table sync skipped or not present: {}", e.getMessage());
         }
 
-        // 4. Auto-delete empty teams & re-evaluate leadership for active teams
-        List<Team> remainingTeams = teamRepository.findAllWithMembers();
-        for (Team team : remainingTeams) {
-            if (teamCleanupService.autoDeleteEmptyTeam(team)) {
-                deletedEmptyTeams++;
-            } else {
-                captainSelectionService.evaluateCaptainForTeam(team);
-            }
-        }
+        // 4. Audit active teams without deleting or altering established stage leadership
+        log.debug("Preserving established team structures across stages during startup audit.");
 
         log.debug("TEAM DATA INTEGRITY AUDIT & REPAIR COMPLETED: Repaired Captains: {}, Stage Captains: {}, Cleaned Empty Teams: {}",
                 repairedCaptains, repairedStageCaptains, deletedEmptyTeams);

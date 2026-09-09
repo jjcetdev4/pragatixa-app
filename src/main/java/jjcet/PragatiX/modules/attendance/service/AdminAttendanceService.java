@@ -63,6 +63,11 @@ public class AdminAttendanceService {
                 }
             }
         }
+        if (currentUser != null && authUtils.isHOD(currentUser) && !authUtils.isAdmin(currentUser) && !authUtils.isSuperAdmin(currentUser)) {
+            if (deptId == null && currentUser.getDepartment() != null) {
+                deptId = currentUser.getDepartment().getId();
+            }
+        }
 
         if (yearId == null) {
             throw new IllegalArgumentException("yearId is required");
@@ -183,6 +188,11 @@ public class AdminAttendanceService {
                 if (adminYearId != null) {
                     yearId = adminYearId;
                 }
+            }
+        }
+        if (currentUser != null && authUtils.isHOD(currentUser) && !authUtils.isAdmin(currentUser) && !authUtils.isSuperAdmin(currentUser)) {
+            if (deptId == null && currentUser.getDepartment() != null) {
+                deptId = currentUser.getDepartment().getId();
             }
         }
 

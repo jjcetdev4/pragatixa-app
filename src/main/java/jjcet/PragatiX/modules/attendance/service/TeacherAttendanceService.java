@@ -107,15 +107,34 @@ public class TeacherAttendanceService {
             return true;
         }
 
-        // Check if user is CC of this section/department
+        // Check if user is CC of this department and year
         boolean isCc = (user.getSubRoles() != null && user.getSubRoles().stream().anyMatch(sr -> sr != null && ("CC".equalsIgnoreCase(sr.getName()) || "CLASS_COORDINATOR".equalsIgnoreCase(sr.getName()))))
                 || (user.getRoles() != null && user.getRoles().stream().anyMatch(r -> r != null && "ROLE_CLASS_COORDINATOR".equalsIgnoreCase(r.getName())));
         if (isCc) {
-            if (sectionId != null && user.getSection() != null && user.getSection().getId().equals(sectionId)) {
-                return true;
-            }
-            if (sectionId == null && user.getDepartment() != null && deptId != null && user.getDepartment().getId().equals(deptId)) {
-                return true;
+            boolean deptMatches = user.getDepartment() != null && deptId != null && user.getDepartment().getId().equals(deptId);
+            if (deptMatches) {
+                if (yearId != null) {
+                    Byte ccYearNo = null;
+                    if (user.getAssignedYear() != null && user.getAssignedYear().getYearNo() != null) {
+                        ccYearNo = user.getAssignedYear().getYearNo();
+                    } else if (user.getYear() != null && !user.getYear().trim().isEmpty()) {
+                        String yTrim = user.getYear().trim().toUpperCase();
+                        if (yTrim.equals("I") || yTrim.equals("1")) ccYearNo = 1;
+                        else if (yTrim.equals("II") || yTrim.equals("2")) ccYearNo = 2;
+                        else if (yTrim.equals("III") || yTrim.equals("3")) ccYearNo = 3;
+                        else if (yTrim.equals("IV") || yTrim.equals("4")) ccYearNo = 4;
+                    }
+                    if (ccYearNo != null) {
+                        Year requestedYear = yearRepository.findById(yearId).orElse(null);
+                        if (requestedYear != null && requestedYear.getYearNo() != null && requestedYear.getYearNo().equals(ccYearNo)) {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
             }
         }
 

@@ -138,11 +138,13 @@ public class SecurityConfig {
                         .hasAnyRole("CLASS_COORDINATOR", "CC", "ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER")
                         .requestMatchers("/api/badge-requests/**").authenticated()
                         .requestMatchers("/api/v1/profile/**").authenticated()
+                        .requestMatchers("/api/admin/attendance/**")
+                        .hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "HOD", "TEACHER", "CLASS_COORDINATOR", "CC")
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "HOD")
                         .requestMatchers("/api/penalties/**")
                         .hasAnyRole("TEACHER", "HOD", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER", "HOD", "CLASS_COORDINATOR", "CC", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

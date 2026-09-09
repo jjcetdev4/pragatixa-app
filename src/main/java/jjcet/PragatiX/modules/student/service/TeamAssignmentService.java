@@ -4,22 +4,25 @@ import jjcet.PragatiX.entity.*;
 import jjcet.PragatiX.repository.*;
 import jjcet.PragatiX.enums.TeamRole;
 import jjcet.PragatiX.modules.student.repository.StudentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 @Service
 public class TeamAssignmentService {
 
+    private static final Logger log = LoggerFactory.getLogger(TeamAssignmentService.class);
+
     private final StudentRepository studentRepository;
     private final TeamRepository teamRepository;
     private final StageTeamRepository stageTeamRepository;
-    private final jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService;
-    private final jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService;
     private final jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService;
 
     @PersistenceContext
@@ -28,89 +31,209 @@ public class TeamAssignmentService {
     public TeamAssignmentService(StudentRepository studentRepository,
             TeamRepository teamRepository,
             StageTeamRepository stageTeamRepository,
-            jjcet.PragatiX.admin.service.CaptainSelectionService captainSelectionService,
-            jjcet.PragatiX.admin.service.TeamCleanupService teamCleanupService,
             jjcet.PragatiX.admin.service.LeadershipSyncService leadershipSyncService) {
         this.studentRepository = studentRepository;
         this.teamRepository = teamRepository;
         this.stageTeamRepository = stageTeamRepository;
-        this.captainSelectionService = captainSelectionService;
-        this.teamCleanupService = teamCleanupService;
         this.leadershipSyncService = leadershipSyncService;
     }
 
     @Transactional
     public void assignTeamOnPromotion(Student student, ActivityStage nextStage) {
-        System.out.println("TEAM ASSIGNMENT: Promotion Started for " + student.getRegNo());
-
-        // Stage 2 must ignore the previous team and strictly follow promotion order.
-        boolean isStage2 = nextStage.getDisplayOrder() == 2
-                || nextStage.getStageName().toLowerCase().contains("stage 2");
-
-        if (isStage2 || student.getTeam() == null) {
-            handleInitialTeamAssignment(student, nextStage);
-        } else {
-            // Stage 3+ preserves lineage from Stage 2.
-            promoteStudentToNextStage(student, nextStage);
-        }
-    }
-
-    @Transactional
-    public void promoteStudentToNextStage(Student student, ActivityStage nextStage) {
-        Team oldTeam = student.getTeam();
-        if (oldTeam == null)
+        if (student == null || nextStage == null) {
             return;
-
-        System.out.println("=====================================================");
-        System.out.println("PROMOTION LOG:");
-        System.out.println("Student: " + student.getRegNo() + " (" + student.getFullName() + ")");
-        System.out.println("Current Stage: " + student.getStage());
-        System.out.println("Current Team: " + oldTeam.getName());
-        System.out.println("Destination Stage: " + nextStage.getDisplayOrder());
-
-        String baseName = extractBaseTeamName(oldTeam.getName());
-        String newTeamName = nextStage.getStageName() + " - " + baseName;
-
-        System.out.println("Destination Team: " + newTeamName);
-
-        Team newTeam = createNextStageTeamIfRequired(newTeamName, student, nextStage);
-
-        removeStudentFromAllOldTeams(student);
-
-        boolean isCaptainAssigned = newTeam.getCaptain() != null;
-        boolean isViceCaptainAssigned = false;
-
-        StageTeam newStageTeam = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), newTeam.getId())
-                .orElse(null);
-        if (newStageTeam != null) {
-            isViceCaptainAssigned = newStageTeam.getViceCaptain() != null;
         }
 
-        moveStudent(student, newTeam, nextStage);
+        int stageOrder = nextStage.getDisplayOrder();
+        log.info("TEAM ASSIGNMENT: Processing progression for student {} to Stage (displayOrder={})",
+                student.getRegNo(), stageOrder);
 
-        // Assign leadership strictly by promotion order within this new team
-        if (!isCaptainAssigned) {
-            leadershipSyncService.syncLeadership(newTeam, student, newTeam.getViceCaptain());
-            System.out.println("STAGE 3+ LEADERSHIP: First promoted in " + newTeamName + " is now Captain -> "
-                    + student.getRegNo());
-        } else if (!isViceCaptainAssigned) {
-            leadershipSyncService.syncLeadership(newTeam, newTeam.getCaptain(), student);
-            System.out.println("STAGE 3+ LEADERSHIP: Second promoted in " + newTeamName + " is now Vice Captain -> "
-                    + student.getRegNo());
-        } else {
-            System.out.println(
-                    "STAGE 3+ LEADERSHIP: Standard member assigned to " + newTeamName + " -> " + student.getRegNo());
+        // STAGE 1 — MANUAL TEAM CREATION ONLY
+        if (stageOrder <= 1) {
+            log.info("Stage 1 (displayOrder=1) is strictly MANUAL team creation. Skipping auto-assignment for student {}",
+                    student.getRegNo());
+            return;
         }
 
-        System.out.println("Student Moved: YES");
-        System.out.println("TEAM ASSIGNMENT: Promotion Success for " + student.getRegNo());
-        System.out.println("=====================================================");
+        // STAGE 2 — THRESHOLD-CROSSING ORDER + ZIGZAG
+        if (stageOrder == 2) {
+            handleStage2ThresholdZigzagAssignment(student, nextStage);
+            return;
+        }
+
+        // STAGE 3+ — INHERIT STAGE 2 TEAM LINEAGE
+        if (stageOrder >= 3) {
+            handleStage3LineageAssignment(student, nextStage);
+        }
     }
 
-    public Team createNextStageTeamIfRequired(String newTeamName, Student student, ActivityStage nextStage) {
+    /**
+     * STAGE 2 — Automatic Deterministic Zigzag Assignment based on Persisted Threshold Sequence
+     */
+    private void handleStage2ThresholdZigzagAssignment(Student student, ActivityStage nextStage) {
         Long deptId = student.getDepartment() != null ? student.getDepartment().getId() : null;
         Long secId = student.getSection() != null ? student.getSection().getId() : null;
-        String yearStr = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(student.getYear());
+        String yearStr = Team.resolveCanonicalYearOfStudy(student.getYear());
+
+        if (deptId == null || yearStr == null) {
+            log.warn("Cannot perform Stage 2 team assignment for student {}: Missing department or year",
+                    student.getRegNo());
+            return;
+        }
+
+        // Synchronize on section/class monitor to ensure atomic monotonic sequence generation
+        String lockKey = (deptId + "_" + (secId != null ? secId : 0) + "_" + yearStr).intern();
+        synchronized (lockKey) {
+            // Check if student already has a Stage 2 sequence and assigned Stage 2 team (Idempotency)
+            if (student.getPromotionOrder() != null && student.getTeam() != null) {
+                StageTeam existingSt = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), student.getTeam().getId()).orElse(null);
+                if (existingSt != null) {
+                    log.info("Student {} already assigned to Stage 2 Team {} with sequence {}. Idempotent skip.",
+                            student.getRegNo(), student.getTeam().getName(), student.getPromotionOrder());
+                    return;
+                }
+            }
+
+            // 1. Persist atomic, monotonic threshold-crossing sequence for Stage 2
+            if (student.getPromotionOrder() == null) {
+                int nextSeq = studentRepository.findMaxPromotionOrderByClass(deptId, secId, yearStr, 2) + 1;
+                student.setPromotionOrder(nextSeq);
+                student.setPromotionTimestamp(LocalDateTime.now());
+                student = studentRepository.save(student);
+                log.info("STAGE 2 SEQUENCE: Assigned persistent sequence #{} to student {}", nextSeq, student.getRegNo());
+            }
+
+            int sequenceNumber = student.getPromotionOrder();
+
+            // 2. Retrieve or create the 6 Stage 2 Teams for this section/class
+            List<Team> stage2Teams = getOrCreateStage2Teams(nextStage, student, deptId, secId, yearStr);
+            if (stage2Teams.size() < 6) {
+                log.error("Failed to resolve 6 Stage 2 teams for dept={}, sec={}, year={}", deptId, secId, yearStr);
+                return;
+            }
+
+            // 3. Apply exact Zigzag / Snake formula based on sequenceNumber (1-based)
+            int idx = sequenceNumber - 1; // 0-based
+            int block = idx / 6;
+            int pos = idx % 6;
+
+            TeamRole role;
+            if (block == 0) {
+                role = TeamRole.CAPTAIN;
+            } else if (block == 1) {
+                role = TeamRole.VICE_CAPTAIN;
+            } else {
+                role = TeamRole.MEMBER;
+            }
+
+            int teamIndex;
+            if (block % 2 == 0) {
+                // Forward (Teams 0..5 -> Team 1..6)
+                teamIndex = pos;
+            } else {
+                // Backward (Teams 5..0 -> Team 6..1)
+                teamIndex = 5 - pos;
+            }
+
+            Team targetTeam = stage2Teams.get(teamIndex);
+            StageTeam stageTeam = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), targetTeam.getId()).orElse(null);
+
+            // 4. Assign student to target team in Stage 2
+            student.setTeam(targetTeam);
+            if (targetTeam.getMembers() == null) {
+                targetTeam.setMembers(new java.util.HashSet<>());
+            }
+            targetTeam.getMembers().add(student);
+
+            if (role == TeamRole.CAPTAIN) {
+                targetTeam.setCaptain(student);
+                if (stageTeam != null) {
+                    stageTeam.setCaptain(student);
+                }
+                leadershipSyncService.syncLeadership(targetTeam, student, targetTeam.getViceCaptain());
+            } else if (role == TeamRole.VICE_CAPTAIN) {
+                targetTeam.setViceCaptain(student);
+                if (stageTeam != null) {
+                    stageTeam.setViceCaptain(student);
+                }
+                leadershipSyncService.syncLeadership(targetTeam, targetTeam.getCaptain(), student);
+            }
+
+            teamRepository.save(targetTeam);
+            if (stageTeam != null) {
+                stageTeamRepository.save(stageTeam);
+            }
+            studentRepository.save(student);
+
+            // Sync team_members table
+            if (entityManager != null) {
+                try {
+                    entityManager.createNativeQuery(
+                            "INSERT INTO team_members (team_id, student_id) VALUES (:tid, :sid) " +
+                                    "ON DUPLICATE KEY UPDATE team_id = :tid")
+                            .setParameter("tid", targetTeam.getId())
+                            .setParameter("sid", student.getId())
+                            .executeUpdate();
+                } catch (Exception ignored) {
+                }
+            }
+
+            log.info("STAGE 2 ASSIGNMENT: Student {} (Seq #{}) -> Team '{}' as {}",
+                    student.getRegNo(), sequenceNumber, targetTeam.getName(), role);
+        }
+    }
+
+    /**
+     * Resolves or creates the 6 Stage 2 teams for a class, using stable StageTeam links.
+     */
+    private List<Team> getOrCreateStage2Teams(ActivityStage stage, Student student, Long deptId, Long secId, String yearStr) {
+        List<Team> teams = new ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            char teamLetter = (char) ('A' + i);
+            String teamName = stage.getStageName() + " - Team " + teamLetter;
+
+            Team team = findNextStageTeam(teamName, deptId, secId, yearStr);
+            if (team == null) {
+                team = new Team();
+                team.setName(teamName);
+                team.setSize(10);
+                team.setDepartment(student.getDepartment());
+                team.setSection(student.getSection());
+                team.setYear(yearStr);
+                team = teamRepository.save(team);
+            }
+
+            StageTeam st = stageTeamRepository.findByStageIdAndTeamId(stage.getId(), team.getId()).orElse(null);
+            if (st == null) {
+                st = new StageTeam();
+                st.setStage(stage);
+                st.setTeam(team);
+                stageTeamRepository.save(st);
+            }
+            teams.add(team);
+        }
+        return teams;
+    }
+
+    /**
+     * STAGE 3+ — Inherit Stage 2 Team Lineage & Assign Role by Progression Order within that Team
+     */
+    private void handleStage3LineageAssignment(Student student, ActivityStage nextStage) {
+        Team stage2Team = student.getTeam();
+
+        // If student has no Stage 2 team lineage: DO NOT run generic snake. Log and leave unassigned.
+        if (stage2Team == null) {
+            log.error("INTEGRITY ERROR: Student {} ({}) reached Stage {} without a Stage 2 team lineage. Leaving unassigned.",
+                    student.getRegNo(), student.getFullName(), nextStage.getDisplayOrder());
+            return;
+        }
+
+        Long deptId = student.getDepartment() != null ? student.getDepartment().getId() : null;
+        Long secId = student.getSection() != null ? student.getSection().getId() : null;
+        String yearStr = Team.resolveCanonicalYearOfStudy(student.getYear());
+
+        String baseName = extractBaseTeamName(stage2Team.getName());
+        String newTeamName = nextStage.getStageName() + " - " + baseName;
 
         Team newTeam = findNextStageTeam(newTeamName, deptId, secId, yearStr);
         if (newTeam == null) {
@@ -120,38 +243,53 @@ public class TeamAssignmentService {
             newTeam.setDepartment(student.getDepartment());
             newTeam.setSection(student.getSection());
             newTeam.setYear(yearStr);
-            newTeam.setCreatedBy(null);
             newTeam = teamRepository.save(newTeam);
-
-            // Create StageTeam link
-            StageTeam st = new StageTeam();
-            st.setStage(nextStage);
-            st.setTeam(newTeam);
-            stageTeamRepository.save(st);
-
-            System.out.println("Team Created: YES");
-            System.out.println("StageTeam Created: YES");
-            System.out.println("TEAM ASSIGNMENT: Created new team " + newTeamName);
         }
-        return newTeam;
-    }
 
-    public Team findNextStageTeam(String name, Long deptId, Long secId, String yearStr) {
-        return teamRepository.findExactTeam(name, deptId, secId, yearStr).orElse(null);
-    }
-
-    public void moveStudent(Student student, Team newTeam, ActivityStage nextStage) {
-        // Ensure student is unlinked from any previous team
-        if (student.getTeam() != null && !student.getTeam().getId().equals(newTeam.getId())) {
-            removeStudentFromOldStage(student, student.getTeam());
+        StageTeam newStageTeam = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), newTeam.getId()).orElse(null);
+        if (newStageTeam == null) {
+            newStageTeam = new StageTeam();
+            newStageTeam.setStage(nextStage);
+            newStageTeam.setTeam(newTeam);
+            newStageTeam = stageTeamRepository.save(newStageTeam);
         }
+
+        boolean isCaptainAssigned = newTeam.getCaptain() != null || newStageTeam.getCaptain() != null;
+        boolean isViceCaptainAssigned = newTeam.getViceCaptain() != null || newStageTeam.getViceCaptain() != null;
 
         student.setTeam(newTeam);
-        addStudentToStageTeam(student, newTeam);
-
+        if (newTeam.getMembers() == null) {
+            newTeam.setMembers(new java.util.HashSet<>());
+        }
+        newTeam.getMembers().add(student);
         student.setPromotionTimestamp(LocalDateTime.now());
+
+        // Stage 3 Role Assignment: 1st promoted in this team = Captain, 2nd = Vice Captain, 3rd+ = Member
+        TeamRole role = TeamRole.MEMBER;
+        if (!isCaptainAssigned) {
+            role = TeamRole.CAPTAIN;
+            newTeam.setCaptain(student);
+            newStageTeam.setCaptain(student);
+            leadershipSyncService.syncLeadership(newTeam, student, newTeam.getViceCaptain());
+            log.info("STAGE 3 LEADERSHIP: 1st promoted student {} in '{}' is assigned CAPTAIN",
+                    student.getRegNo(), newTeamName);
+        } else if (!isViceCaptainAssigned && (newTeam.getCaptain() == null || !newTeam.getCaptain().getId().equals(student.getId()))) {
+            role = TeamRole.VICE_CAPTAIN;
+            newTeam.setViceCaptain(student);
+            newStageTeam.setViceCaptain(student);
+            leadershipSyncService.syncLeadership(newTeam, newTeam.getCaptain(), student);
+            log.info("STAGE 3 LEADERSHIP: 2nd promoted student {} in '{}' is assigned VICE CAPTAIN",
+                    student.getRegNo(), newTeamName);
+        } else {
+            log.info("STAGE 3 LEADERSHIP: Student {} in '{}' is assigned MEMBER",
+                    student.getRegNo(), newTeamName);
+        }
+
+        teamRepository.save(newTeam);
+        stageTeamRepository.save(newStageTeam);
         studentRepository.save(student);
 
+        // Sync team_members table
         if (entityManager != null) {
             try {
                 entityManager.createNativeQuery(
@@ -165,299 +303,17 @@ public class TeamAssignmentService {
         }
     }
 
-    public int getActualMemberCount(Team t) {
-        if (t == null || t.getId() == null) return 0;
-        if (entityManager != null) {
-            try {
-                Number count = (Number) entityManager.createNativeQuery(
-                        "SELECT COUNT(*) FROM students WHERE team_id = :tid AND (deleted = 0 OR deleted IS NULL)")
-                        .setParameter("tid", t.getId())
-                        .getSingleResult();
-                return count != null ? count.intValue() : 0;
-            } catch (Exception e) {
-            }
-        }
-        return (t.getMembers() != null) ? t.getMembers().size() : 0;
-    }
-
-    public void addStudentToStageTeam(Student student, Team newTeam) {
-        if (!newTeam.getMembers().contains(student)) {
-            if (getActualMemberCount(newTeam) > 10) {
-                throw new IllegalStateException("Maximum team size of 10 reached for team: " + newTeam.getName());
-            }
-            newTeam.getMembers().add(student);
-            teamRepository.save(newTeam);
-
-            System.out.println("TEAM ASSIGNMENT: Member Added to " + newTeam.getName());
-        }
-    }
-
-    public void removeStudentFromAllOldTeams(Student student) {
-        Team oldTeam = student.getTeam();
-        if (oldTeam != null) {
-            removeStudentFromOldStage(student, oldTeam);
-        }
-        java.util.List<Team> otherTeams = teamRepository.findAllTeamsByStudentId(student.getId());
-        for (Team ot : otherTeams) {
-            if (oldTeam == null || !ot.getId().equals(oldTeam.getId())) {
-                removeStudentFromOldStage(student, ot);
-            }
-        }
-        if (entityManager != null) {
-            try {
-                entityManager.createNativeQuery("DELETE FROM team_members WHERE student_id = :sid")
-                        .setParameter("sid", student.getId())
-                        .executeUpdate();
-            } catch (Exception ignored) {
-            }
-        }
-    }
-
-    public void removeStudentFromOldStage(Student student, Team oldTeam) {
-        if (oldTeam != null) {
-            oldTeam.getMembers().remove(student);
-
-            if (oldTeam.getCaptain() != null && oldTeam.getCaptain().getId().equals(student.getId())) {
-                oldTeam.setCaptain(null); // Clear previous captaincy
-            }
-
-            if (oldTeam.getViceCaptain() != null && oldTeam.getViceCaptain().getId().equals(student.getId())) {
-                oldTeam.setViceCaptain(null); // Clear previous vice captaincy on Team
-            }
-
-            // Clear previous vice captaincy if applicable
-            java.util.List<StageTeam> oldStageTeams = stageTeamRepository.findByTeamId(oldTeam.getId());
-            for (StageTeam st : oldStageTeams) {
-                if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
-                    st.setViceCaptain(null);
-                    stageTeamRepository.save(st);
-                }
-                if (st.getCaptain() != null && st.getCaptain().getId().equals(student.getId())) {
-                    st.setCaptain(null);
-                    stageTeamRepository.save(st);
-                }
-            }
-
-            // Clean up team_members records for this student and old team
-            if (entityManager != null) {
-                try {
-                    entityManager.createNativeQuery(
-                            "DELETE FROM team_members WHERE student_id = :sid AND team_id = :tid")
-                            .setParameter("sid", student.getId())
-                            .setParameter("tid", oldTeam.getId())
-                            .executeUpdate();
-                } catch (Exception ignored) {
-                }
-            }
-
-            teamRepository.save(oldTeam);
-
-            // Re-evaluate captaincy for the old team ALWAYS
-            captainSelectionService.evaluateCaptainForTeam(oldTeam);
-
-            System.out.println("TEAM ASSIGNMENT: Removed from old team " + oldTeam.getName());
-
-            teamCleanupService.autoDeleteEmptyTeam(oldTeam);
-        }
+    public Team findNextStageTeam(String name, Long deptId, Long secId, String yearStr) {
+        return teamRepository.findExactTeam(name, deptId, secId, yearStr).orElse(null);
     }
 
     private String extractBaseTeamName(String oldName) {
+        if (oldName == null) return "Team A";
         if (oldName.contains("- Team")) {
             return oldName.substring(oldName.indexOf("- Team") + 2).trim();
         } else if (oldName.startsWith("Team")) {
             return oldName;
         }
-        return oldName; // fallback
-    }
-
-
-    // --- INITIAL TEAM ASSIGNMENT LOGIC ---
-    private void handleInitialTeamAssignment(Student student, ActivityStage nextStage) {
-        Long deptId = student.getDepartment() != null ? student.getDepartment().getId() : null;
-        Long secId = student.getSection() != null ? student.getSection().getId() : null;
-        String yearStr = jjcet.PragatiX.entity.Team.resolveCanonicalYearOfStudy(student.getYear());
-
-        if (deptId == null || yearStr == null)
-            return;
-
-        int teamCount = 6;
-
-        boolean isStage2 = nextStage.getDisplayOrder() == 2
-                || nextStage.getStageName().toLowerCase().contains("stage 2");
-
-        java.util.List<StageTeam> existingStageTeams = stageTeamRepository.findByStageId(nextStage.getId());
-        long matchingStageTeams = (existingStageTeams != null) ? existingStageTeams.stream()
-                .filter(st -> st.getTeam() != null &&
-                        (deptId == null || (st.getTeam().getDepartment() != null && deptId.equals(st.getTeam().getDepartment().getId()))) &&
-                        (secId == null || (st.getTeam().getSection() != null && secId.equals(st.getTeam().getSection().getId()))))
-                .count() : 0;
-
-        if (matchingStageTeams > 0) {
-            teamCount = (int) matchingStageTeams;
-        } else if (isStage2) {
-            int stage1Count = teamRepository.countStage1TeamsForClass(deptId, yearStr, secId);
-            if (stage1Count > 0) {
-                teamCount = stage1Count;
-            }
-        }
-        if (teamCount < 6) {
-            teamCount = 6;
-        }
-
-        java.util.List<Team> teams = new java.util.ArrayList<>();
-
-        for (int i = 0; i < teamCount; i++) {
-            String teamName = nextStage.getStageName() + " - Team " + (char) ('A' + i);
-            Team t = findNextStageTeam(teamName, deptId, secId, yearStr);
-            teams.add(t);
-        }
-
-        Team assignedTeam = null;
-        boolean assignCaptain = false;
-        boolean assignViceCaptain = false;
-        StageTeam assignedStageTeam = null;
-
-        // Phase 1: Captain Assignment (Teams A -> F)
-        for (int i = 0; i < teamCount; i++) {
-            Team t = teams.get(i);
-            if (t == null) {
-                // Team does not exist -> dynamically create it and assign Captain
-                String teamName = nextStage.getStageName() + " - Team " + (char) ('A' + i);
-                assignedTeam = createNextStageTeamIfRequired(teamName, student, nextStage);
-                teams.set(i, assignedTeam);
-                assignCaptain = true;
-                break;
-            } else if (t.getCaptain() == null) {
-                // Team exists but has no captain
-                assignedTeam = t;
-                assignCaptain = true;
-                break;
-            }
-        }
-
-        // Phase 2: Vice Captain Assignment (Teams F -> A)
-        if (assignedTeam == null) {
-            for (int i = teamCount - 1; i >= 0; i--) {
-                Team t = teams.get(i);
-                if (t != null && t.getCaptain() != null) {
-                    StageTeam st = stageTeamRepository.findByStageIdAndTeamId(nextStage.getId(), t.getId())
-                            .orElse(null);
-                    if (st != null && st.getViceCaptain() == null) {
-                        assignedTeam = t;
-                        assignedStageTeam = st;
-                        assignViceCaptain = true;
-                        System.out.println(
-                                "SNAKE ALGORITHM: Reverse Assigning Vice Captain to " + assignedTeam.getName());
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Phase 3: Member Assignment (Snake Pattern)
-        if (assignedTeam == null) {
-            int totalMembers = 0;
-            for (Team t : teams) {
-                if (t != null) {
-                    totalMembers += getActualMemberCount(t);
-                }
-            }
-
-            // Phase 3 begins after all teams have 1 Captain + 1 Vice Captain
-            int sequenceIndex = totalMembers - (teamCount * 2);
-            if (sequenceIndex < 0)
-                sequenceIndex = 0;
-
-            int cycle = sequenceIndex / teamCount;
-            int pos = sequenceIndex % teamCount;
-            int teamIndex;
-
-            if (cycle % 2 == 0) {
-                teamIndex = pos;
-                System.out.println(
-                        "SNAKE ALGORITHM: Forward Phase Member Assignment -> Team " + (char) ('A' + teamIndex));
-            } else {
-                teamIndex = teamCount - 1 - pos;
-                System.out.println(
-                        "SNAKE ALGORITHM: Reverse Phase Member Assignment -> Team " + (char) ('A' + teamIndex));
-            }
-
-            assignedTeam = teams.get(teamIndex);
-            if (assignedTeam != null && getActualMemberCount(assignedTeam) >= 10) {
-                for (Team t : teams) {
-                    if (t != null && getActualMemberCount(t) < 10) {
-                        assignedTeam = t;
-                        break;
-                    }
-                }
-            }
-        }
-
-        removeStudentFromAllOldTeams(student);
-
-        if (assignedTeam != null) {
-            student.setPromotionOrder(null); // Clear legacy counter
-            moveStudent(student, assignedTeam, nextStage);
-
-            if (assignCaptain) {
-                leadershipSyncService.syncLeadership(assignedTeam, student, assignedTeam.getViceCaptain());
-            } else if (assignViceCaptain) {
-                leadershipSyncService.syncLeadership(assignedTeam, assignedTeam.getCaptain(), student);
-            }
-
-            System.out.println("\n================ TEAM PROMOTION ASSIGNMENT ================");
-            System.out.println("Student:");
-            System.out.println("Student ID: " + student.getId());
-            System.out.println("Student Register Number: " + student.getRegNo());
-            System.out.println("\nSource Stage: " + student.getStage());
-            System.out.println("Target Stage: " + nextStage.getStageName());
-            
-            System.out.println("\nEligible Target Teams:");
-            System.out.println("Team ID | Team Name | Current Members | Distribution Order");
-            int[] teamMemberCounts = new int[teamCount];
-            for (int k = 0; k < teamCount; k++) {
-                Team t = teams.get(k);
-                int cnt = getActualMemberCount(t);
-                teamMemberCounts[k] = cnt;
-                if (t != null) {
-                    System.out.println(t.getId() + " | " + t.getName() + " | " + cnt + " | " + k);
-                } else {
-                    System.out.println("N/A | (To be created) | 0 | " + k);
-                }
-            }
-            
-            System.out.println("\nSelected Team:");
-            System.out.println("Selected Team ID: " + assignedTeam.getId());
-            System.out.println("Selected Team Name: " + assignedTeam.getName());
-            
-            String reason = assignCaptain ? "First assignment (Captain Phase)" : (assignViceCaptain ? "Second assignment (Vice Captain Phase)" : "Snake Algorithm Member Distribution");
-            System.out.println("Reason: " + reason);
-            
-            System.out.println("\nAfter Assignment:");
-            for (int k = 0; k < teamCount; k++) {
-                Team t = teams.get(k);
-                if (t != null) {
-                    String tName = t.getName();
-                    int newCnt = teamMemberCounts[k] + (t.getId().equals(assignedTeam.getId()) ? 1 : 0);
-                    System.out.println(tName + " = " + newCnt + " members");
-                }
-            }
-            
-            System.out.println("\nOld Team Removal:");
-            System.out.println("Old Team: Checked and removed (duplicate removal prevented by Set logic)");
-            
-            System.out.println("\nCaptain:");
-            Student cap = assignedTeam.getCaptain();
-            System.out.println("Captain ID: " + (cap != null ? cap.getId() : "None"));
-            System.out.println("Captain Register Number: " + (cap != null ? cap.getRegNo() : "None"));
-            
-            System.out.println("\nVice Captain:");
-            Student vc = assignedTeam.getViceCaptain();
-            System.out.println("Vice Captain ID: " + (vc != null ? vc.getId() : "None"));
-            System.out.println("Vice Captain Register Number: " + (vc != null ? vc.getRegNo() : "None"));
-            
-            System.out.println("\nPersisted:\nYES");
-            System.out.println("=================================================================\n");
-        }
+        return oldName;
     }
 }

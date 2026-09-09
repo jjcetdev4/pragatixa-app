@@ -287,4 +287,12 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
        @Query("SELECT COUNT(s) + 1 FROM Student s WHERE s.active = true AND s.score > :score")
        int getStudentRankByScore(@Param("score") int score);
+
+       @Query("SELECT COALESCE(MAX(s.promotionOrder), 0) FROM Student s WHERE s.active = true AND s.stage >= :minStage AND "
+                     +
+                     "(s.department.id = :deptId OR (s.department IS NULL AND :deptId IS NULL)) AND " +
+                     "(s.year = :year OR (s.year IS NULL AND :year IS NULL)) AND " +
+                     "(s.section.id = :secId OR (s.section IS NULL AND :secId IS NULL))")
+       int findMaxPromotionOrderByClass(@Param("deptId") Long deptId, @Param("secId") Long secId,
+                     @Param("year") String year, @Param("minStage") int minStage);
 }

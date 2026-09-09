@@ -122,12 +122,23 @@ public class StudentQueryService {
         User currentUser = userRepository.findByUsername(username).orElse(null);
 
         boolean isCc = currentUser != null && currentUser.getSubRoles().stream()
-                .map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC"));
+                .map(SubRole::getName).anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR"));
 
         if (isCc && currentUser != null && !authUtils.isSuperAdmin(currentUser)) {
+            Long ccDeptId = currentUser.getDepartment() != null ? currentUser.getDepartment().getId() : null;
+            if (ccDeptId == null) {
+                return ApiResponse.ok(Page.empty(pageable));
+            }
+            if (departmentId != null && !departmentId.equals(ccDeptId)) {
+                log.warn("CC user '{}' attempted to access students in unauthorized department '{}'", username, departmentId);
+                return ApiResponse.ok(Page.empty(pageable));
+            }
+
             String userYearStr = currentUser.getYear();
             Byte yearNo = null;
-            if (userYearStr != null) {
+            if (currentUser.getAssignedYear() != null && currentUser.getAssignedYear().getYearNo() != null) {
+                yearNo = currentUser.getAssignedYear().getYearNo();
+            } else if (userYearStr != null) {
                 String yTrim = userYearStr.trim().toUpperCase();
                 if (yTrim.equals("I") || yTrim.equals("1"))
                     yearNo = 1;
@@ -142,21 +153,45 @@ public class StudentQueryService {
             if (yearNo != null) {
                 yearRef = yearRepository.findByYearNo(yearNo).orElse(null);
             }
-            Section userSection = currentUser.getSection();
-            Long ccSectionId = userSection != null ? userSection.getId() : null;
-
-            if (currentUser.getDepartment() != null && yearRef != null) {
-                Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudentsByCC(
-                        keyword == null ? "" : keyword,
-                        currentUser.getDepartment().getId(),
-                        yearRef.getId(),
-                        ccSectionId,
-                        false,
-                        pageable));
-                return ApiResponse.ok(result);
-            } else {
+            if (yearRef == null) {
                 return ApiResponse.ok(Page.empty(pageable));
             }
+
+            if (year != null && !year.trim().isEmpty() && !year.equalsIgnoreCase("all") && !year.equalsIgnoreCase("null")) {
+                String reqY = year.trim();
+                Byte reqYByte = null;
+                if (reqY.matches(".*\\d+.*")) {
+                    try { reqYByte = Byte.parseByte(reqY.replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
+                } else if (reqY.equalsIgnoreCase("First Year") || reqY.equalsIgnoreCase("I")) reqYByte = 1;
+                else if (reqY.equalsIgnoreCase("Second Year") || reqY.equalsIgnoreCase("II")) reqYByte = 2;
+                else if (reqY.equalsIgnoreCase("Third Year") || reqY.equalsIgnoreCase("III")) reqYByte = 3;
+                else if (reqY.equalsIgnoreCase("Fourth Year") || reqY.equalsIgnoreCase("IV")) reqYByte = 4;
+
+                if (reqYByte != null && !reqYByte.equals(yearNo)) {
+                    log.warn("CC user '{}' attempted to access students in unauthorized year '{}'", username, year);
+                    return ApiResponse.ok(Page.empty(pageable));
+                }
+            }
+
+            Long targetSectionId = null;
+            if (sectionId != null && sectionId > 0) {
+                Section sec = sectionRepository.findById(sectionId).orElse(null);
+                if (sec != null && sec.getDepartment() != null && sec.getDepartment().getId().equals(ccDeptId)) {
+                    targetSectionId = sectionId;
+                } else {
+                    log.warn("CC user '{}' attempted to access invalid or cross-department section '{}'", username, sectionId);
+                    return ApiResponse.ok(Page.empty(pageable));
+                }
+            }
+
+            Page<StudentResponse> result = mapWithGuardians(studentRepository.searchStudentsByCC(
+                    keyword == null ? "" : keyword,
+                    ccDeptId,
+                    yearRef.getId(),
+                    targetSectionId,
+                    false,
+                    pageable));
+            return ApiResponse.ok(result);
         }
 
         if (currentUser != null && !authUtils.isSuperAdmin(currentUser) && authUtils.isAdmin(currentUser)) {

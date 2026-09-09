@@ -416,18 +416,18 @@ public class GroupActivityController {
         if (team == null || student == null)
             return "MEMBER";
 
-        if (team.getCaptain() != null && team.getCaptain().getId().equals(student.getId())) {
+        if (team.getCaptain() != null && java.util.Objects.equals(team.getCaptain().getId(), student.getId())) {
             return "CAPTAIN";
         }
 
-        if (team.getViceCaptain() != null && team.getViceCaptain().getId().equals(student.getId())) {
+        if (team.getViceCaptain() != null && java.util.Objects.equals(team.getViceCaptain().getId(), student.getId())) {
             return "VICE_CAPTAIN";
         }
 
         List<StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
         if (stageTeams != null) {
             for (StageTeam st : stageTeams) {
-                if (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(student.getId())) {
+                if (st.getViceCaptain() != null && java.util.Objects.equals(st.getViceCaptain().getId(), student.getId())) {
                     return "VICE_CAPTAIN";
                 }
             }

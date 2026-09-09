@@ -120,44 +120,19 @@ public class TeamQueryService {
         return ResponseEntity.ok(ApiResponse.ok(responses));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<TeamResponse>> getMyTeam(Student student) {
         Team team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
-        if (team == null && student.getStage() >= 1) {
-            try {
-                jjcet.PragatiX.entity.ActivityStage currentStage = activityStageRepository
-                        .findByDisplayOrder(student.getStage()).orElse(null);
-                if (currentStage != null) {
-                    teamAssignmentService.assignTeamOnPromotion(student, currentStage);
-                    team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
-                }
-            } catch (Exception e) {
-                org.slf4j.LoggerFactory.getLogger(TeamQueryService.class).warn(
-                        "Auto-assign team on getMyTeam failed for student {}: {}", student.getRegNo(), e.getMessage());
-            }
-        }
-        if (team == null)
+        if (team == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("You do not belong to any team"));
+        }
         return ResponseEntity.ok(ApiResponse.ok("Team details retrieved successfully", mapper.toTeamResponse(team)));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<jjcet.PragatiX.dto.StudentTeamDetailsResponse>> getMyTeamDetails(
             Student student) {
         Team team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
-        if (team == null && student.getStage() >= 1) {
-            try {
-                jjcet.PragatiX.entity.ActivityStage currentStage = activityStageRepository
-                        .findByDisplayOrder(student.getStage()).orElse(null);
-                if (currentStage != null) {
-                    teamAssignmentService.assignTeamOnPromotion(student, currentStage);
-                    team = teamRepository.findTeamByStudentId(student.getId()).orElse(null);
-                }
-            } catch (Exception e) {
-                org.slf4j.LoggerFactory.getLogger(TeamQueryService.class).warn(
-                        "Auto-assign team on getMyTeamDetails failed for student {}: {}", student.getRegNo(), e.getMessage());
-            }
-        }
         if (team == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("You do not belong to any team"));
         }

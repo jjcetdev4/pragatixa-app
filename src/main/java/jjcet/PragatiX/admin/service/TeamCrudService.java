@@ -99,7 +99,7 @@ public class TeamCrudService {
 
         if (!validationService.canCreateTeam(creator, assignment)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(
-                    "Access Denied: Only Assigned Faculty, Class Coordinators (CC), or Admins can create teams."));
+                    "Access Denied: Only Super Admin, Admin, or Class Coordinators (CC) can create teams."));
         }
 
         if (request.getCaptainStudentId() == null || request.getCaptainStudentId().trim().isEmpty()) {
@@ -127,9 +127,9 @@ public class TeamCrudService {
             return ResponseEntity.badRequest().body(ApiResponse.error(captainError));
         }
 
-        boolean isCcOrHod = creator.getSubRoles().stream().map(jjcet.PragatiX.entity.SubRole::getName)
-                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR") || sr.trim().equalsIgnoreCase("HOD"));
-        if (isCcOrHod && creator.getDepartment() != null && deptId != null) {
+        boolean isCc = creator.getSubRoles().stream().map(jjcet.PragatiX.entity.SubRole::getName)
+                .anyMatch(sr -> sr.trim().equalsIgnoreCase("CC") || sr.trim().equalsIgnoreCase("CLASS_COORDINATOR"));
+        if (isCc && creator.getDepartment() != null && deptId != null) {
             if (!creator.getDepartment().getId().equals(deptId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(
                         "Access Denied: You cannot create a team for a student in another department."));

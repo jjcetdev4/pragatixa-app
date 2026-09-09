@@ -251,13 +251,10 @@ public class XpEngineService {
             activityStreakService.incrementStreak(student, activity);
         }
 
-        // 5. Evaluate Captain
-        captainSelectionService.evaluateCaptainPromotion(student);
-
-        // 6. Recalculate Stage & Promote if eligible
+        // 5. Recalculate Stage & Promote if eligible (Stage 2/3 progression triggers team assignment)
         evaluateStagePromotion(student);
 
-        // 7. Save and Return
+        // 6. Save and Return
         student = studentRepository.save(student);
         System.out.println("XP ENGINE: Transaction Completed and Saved.");
         System.out.println("=====================================================");

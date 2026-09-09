@@ -47,8 +47,8 @@ public class TeamController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'CC', 'HOD', 'SUPER_ADMIN', 'SUPERADMIN')")
-    @Operation(summary = "Create Team", description = "Creates a student team. Capable of being called by CC, HOD, or Admin.")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLASS_COORDINATOR', 'CC', 'SUPER_ADMIN', 'SUPERADMIN')")
+    @Operation(summary = "Create Team", description = "Creates a student team. Capable of being called by CC, Admin, or Super Admin.")
     public ResponseEntity<ApiResponse<TeamResponse>> createTeam(@Valid @RequestBody CreateTeamRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return teamCrudService.createTeam(request, username);
