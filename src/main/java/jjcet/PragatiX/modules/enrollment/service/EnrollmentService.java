@@ -740,7 +740,7 @@ public class EnrollmentService {
         return list.stream().map(e -> new PendingStudentDto(
                 e.getId(),
                 e.getFullName(),
-                e.getEmail(),
+                PendingStudentDto.maskEmail(e.getEmail()),
                 PendingStudentDto.maskEmail(e.getEmail()),
                 PendingStudentDto.maskMobile(e.getMobile()),
                 e.getDepartment() != null ? e.getDepartment().getId() : null,
