@@ -21,6 +21,9 @@ public class OtpToken {
     @Column(nullable = false)
     private LocalDateTime expiryDate;
 
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int attempts = 0;
+
     // Constructors
     public OtpToken() {
     }
@@ -29,6 +32,7 @@ public class OtpToken {
         this.email = email;
         this.otp = otp;
         this.expiryDate = expiryDate;
+        this.attempts = 0;
     }
 
     // Getters and Setters
@@ -66,5 +70,17 @@ public class OtpToken {
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(this.expiryDate);
+    }
+
+    public int getAttempts() {
+        return attempts;
+    }
+
+    public void setAttempts(int attempts) {
+        this.attempts = attempts;
+    }
+
+    public void incrementAttempts() {
+        this.attempts++;
     }
 }

@@ -62,6 +62,8 @@ public class AuthService {
     private final OtpTokenRepository otpTokenRepository;
     private final ZeptoMailService zeptoMailService;
     private final SmsService smsService;
+    private final jjcet.PragatiX.modules.authentication.security.OtpRateLimiterService otpRateLimiterService;
+    private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
 
     public AuthService(AuthenticationManager authenticationManager,
             UserDetailsService userDetailsService,
@@ -72,7 +74,8 @@ public class AuthService {
             StageTeamRepository stageTeamRepository,
             OtpTokenRepository otpTokenRepository,
             ZeptoMailService zeptoMailService,
-            SmsService smsService) {
+            SmsService smsService,
+            jjcet.PragatiX.modules.authentication.security.OtpRateLimiterService otpRateLimiterService) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.studentRepository = studentRepository;
@@ -83,6 +86,7 @@ public class AuthService {
         this.otpTokenRepository = otpTokenRepository;
         this.zeptoMailService = zeptoMailService;
         this.smsService = smsService;
+        this.otpRateLimiterService = otpRateLimiterService;
     }
 
     // ====================================================================================
@@ -114,6 +118,16 @@ public class AuthService {
         String email = request.getEmail().trim();
         log.info("Requesting OTP for email: {}", email);
 
+        if (otpRateLimiterService.isLockedOut(email)) {
+            long minutes = otpRateLimiterService.getRemainingLockoutMinutes(email);
+            return ApiResponse.error("Account temporarily locked due to excessive failed attempts. Please try again in " + minutes + " minutes.");
+        }
+
+        if (otpRateLimiterService.isRequestOnCooldown(email)) {
+            long seconds = otpRateLimiterService.getRemainingCooldownSeconds(email);
+            return ApiResponse.error("Please wait " + seconds + " seconds before requesting a new OTP.");
+        }
+
         boolean isUser = userRepository.findByEmail(email).isPresent();
         boolean isStudent = studentRepository.findByEmail(email).isPresent();
 
@@ -124,7 +138,7 @@ public class AuthService {
 
         otpTokenRepository.deleteByEmail(email);
 
-        String generatedOtp = String.format("%04d", new Random().nextInt(10000));
+        String generatedOtp = String.format("%04d", SECURE_RANDOM.nextInt(10000));
 
         boolean emailSent = zeptoMailService.sendOtpEmail(email, generatedOtp);
 
@@ -159,6 +173,7 @@ public class AuthService {
 
         OtpToken otpToken = new OtpToken(email, generatedOtp, LocalDateTime.now().plusMinutes(5));
         otpTokenRepository.save(otpToken);
+        otpRateLimiterService.recordOtpRequested(email);
 
         return ApiResponse.ok("OTP sent successfully to " + email);
     }
@@ -169,18 +184,50 @@ public class AuthService {
         String otp = request.getOtp().trim();
         log.info("Verifying OTP for email: {}", email);
 
-        OtpToken otpToken = otpTokenRepository.findByEmailAndOtp(email, otp).orElse(null);
+        if (otpRateLimiterService.isLockedOut(email)) {
+            long minutes = otpRateLimiterService.getRemainingLockoutMinutes(email);
+            return ApiResponse.error("Account temporarily locked due to excessive failed attempts. Please try again in " + minutes + " minutes.");
+        }
+
+        OtpToken otpToken = otpTokenRepository.findByEmail(email).orElse(null);
 
         if (otpToken == null) {
-            return ApiResponse.error("Invalid OTP");
+            otpRateLimiterService.recordFailedAttempt(email);
+            return ApiResponse.error("No active OTP found. Please request a new OTP.");
         }
 
         if (otpToken.isExpired()) {
             otpTokenRepository.delete(otpToken);
-            return ApiResponse.error("OTP has expired");
+            otpRateLimiterService.recordFailedAttempt(email);
+            return ApiResponse.error("OTP has expired. Please request a new OTP.");
+        }
+
+        if (otpToken.getAttempts() >= 5) {
+            otpTokenRepository.delete(otpToken);
+            otpRateLimiterService.recordFailedAttempt(email);
+            return ApiResponse.error("Too many failed attempts. This OTP has been invalidated. Please request a new OTP.");
+        }
+
+        boolean matches = java.security.MessageDigest.isEqual(
+                otpToken.getOtp().getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                otp.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+        );
+
+        if (!matches) {
+            otpToken.incrementAttempts();
+            otpRateLimiterService.recordFailedAttempt(email);
+            int remaining = 5 - otpToken.getAttempts();
+            if (remaining <= 0) {
+                otpTokenRepository.delete(otpToken);
+                return ApiResponse.error("Too many failed attempts. This OTP has been invalidated. Please request a new OTP.");
+            } else {
+                otpTokenRepository.save(otpToken);
+                return ApiResponse.error("Invalid OTP. " + remaining + " attempts remaining.");
+            }
         }
 
         otpTokenRepository.delete(otpToken);
+        otpRateLimiterService.clearAttempts(email);
 
         // Generate JWT based on user type
         Student student = studentRepository.findByEmail(email).orElse(null);
