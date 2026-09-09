@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build and Push to S3
 
 on:
   push:
@@ -7,15 +7,25 @@ on:
 
 # Required for OIDC authentication
 permissions:
-  id-token: write
-  contents: read
+  id-token: write 
+  contents: read  
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Debug OIDC claims
+        run: |
+          echo "Fetching OIDC token to inspect the sub claim..."
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value')
+          echo "----- DECODED SUB CLAIM -----"
+          echo "$TOKEN" | cut -d '.' -f2 | base64 -d 2>/dev/null | jq -r '.sub'
+          echo "-----------------------------"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -33,7 +43,7 @@ jobs:
           role-to-assume: arn:aws:iam::961408845745:role/jjcetpm-github-pipeline
           aws-region: ap-south-1
 
-      - name: Push JAR to S3 bucket
+      - name: Push code to S3 bucket
         run: |
           TIMESTAMP=$(date +'%Y-%m-%d_%H-%M-%S')
           for file in target/*.jar; do
@@ -41,53 +51,7 @@ jobs:
             name="${filename%.*}"
             aws s3 cp "$file" "s3://${{ vars.S3_BUCKET_NAME }}/backend/${name}_${TIMESTAMP}.jar"
           done
-      # Finds instances by tag rather than a hardcoded ID, so this keeps
-      # working when the ASG scales from 1 to 2 or replaces an instance.
-      # Every instance the ASG launches needs App=pragatix set in
-      # the Launch Template's tag specifications.
-      - name: Discover running backend instances
-        id: discover
-        run: |
-          INSTANCE_IDS=$(aws ec2 describe-instances \
-            --filters "Name=tag:app,Values=pragatix" \
-                      "Name=instance-state-name,Values=running" \
-            --query "Reservations[].Instances[].InstanceId" \
-            --output text)
-          if [ -z "$INSTANCE_IDS" ]; then
-            echo "::error::No running instances found with tag app=pragatix"
-            exit 1
-          fi
-          echo "Found instances: $INSTANCE_IDS"
-          echo "instance_ids=$INSTANCE_IDS" >> "$GITHUB_OUTPUT"
-      - name: Deploy via SSM and wait for completion
-        run: |
-          COMMAND_ID=$(aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=tag:app,Values=pragatix" \
-            --parameters 'commands=[
-              "sudo cloud-init clean",
-              "sudo cloud-init init --local",
-              "sudo cloud-init init",
-              "sudo cloud-init modules --mode config",
-              "sudo cloud-init modules --mode final"
-            ]' \
-            --timeout-seconds 600 \
-            --comment "Pragatix deploy - commit ${{ github.sha }}" \
-            --query "Command.CommandId" \
-            --output text)
-          echo "SSM Command ID: $COMMAND_ID"
-          FAILED=0
-          for id in ${{ steps.discover.outputs.instance_ids }}; do
-            echo "Waiting for deploy on $id..."
-            if aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "$id"; then
-              echo "Deploy succeeded on $id"
-            else
-              echo "::error::Deploy FAILED on instance $id"
-              aws ssm get-command-invocation \
-                --command-id "$COMMAND_ID" --instance-id "$id" \
-                --query "StandardErrorContent" --output text
-              FAILED=1
-            fi
-          done
-          [ "$FAILED" -eq 0 ] || exit 1
 
+      - name: Upload React build to S3
+        run: |
+          aws sts get-caller-identity
