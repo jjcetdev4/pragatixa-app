@@ -70,9 +70,7 @@ public class SecurityConfig {
             "/api/swagger-ui.html",
             "/api/api-docs/**",
             "/api/actuator/health",
-            "/actuator/health",
-            "/api/test/sms",
-            "/api/v1/test/sms"
+            "/actuator/health"
     };
 
     @Bean
@@ -154,6 +152,8 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "HOD", "CLASS_COORDINATOR", "CC")
                         .requestMatchers("/api/v1/teams", "/api/v1/teams/**")
                         .hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "HOD", "CLASS_COORDINATOR", "CC")
+                        .requestMatchers("/api/test/sms", "/api/v1/test/sms")
+                        .hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

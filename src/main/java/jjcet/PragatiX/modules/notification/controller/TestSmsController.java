@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping
 @Tag(name = "SMS Test", description = "Development and administrative SMS testing endpoints")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
 public class TestSmsController {
 
     private static final Logger log = LoggerFactory.getLogger(TestSmsController.class);
@@ -31,7 +32,8 @@ public class TestSmsController {
     }
 
     @PostMapping({"/api/test/sms", "/api/v1/test/sms"})
-    @Operation(summary = "Send Test SMS", description = "Sends a test SMS through Airtel IQ SMS Gateway.")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPERADMIN', 'ADMIN')")
+    @Operation(summary = "Send Test SMS", description = "Sends a test SMS through Airtel IQ SMS Gateway (Restricted to Admin/SuperAdmin).")
     public ResponseEntity<TestSmsResponse> sendTestSms(@Valid @RequestBody TestSmsRequest request) {
         if (!smsProperties.isTestEndpointEnabled()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
