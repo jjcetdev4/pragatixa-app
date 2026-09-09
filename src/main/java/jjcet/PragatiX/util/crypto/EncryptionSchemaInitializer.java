@@ -24,9 +24,11 @@ public class EncryptionSchemaInitializer {
 
     public EncryptionSchemaInitializer(
             JdbcTemplate jdbcTemplate,
-            @Value("${app.security.encryption.secret:PragatiXAES256GCMDatabaseEncryptionSecretKey2026!}") String encryptionSecret) {
+            @Value("${app.security.encryption.secret:${DATABASE_ENCRYPTION_SECRET:}}") String encryptionSecret) {
         this.jdbcTemplate = jdbcTemplate;
-        AesGcmEncryptionUtil.setSecretKey(encryptionSecret);
+        if (encryptionSecret != null && !encryptionSecret.trim().isEmpty()) {
+            AesGcmEncryptionUtil.setSecretKey(encryptionSecret.trim());
+        }
     }
 
     @PostConstruct

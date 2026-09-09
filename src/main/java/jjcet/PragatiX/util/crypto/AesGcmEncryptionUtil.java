@@ -27,16 +27,34 @@ public final class AesGcmEncryptionUtil {
     private static final int GCM_TAG_LENGTH_BITS = 128;
     private static final int GCM_IV_LENGTH_BYTES = 12;
 
-    private static volatile String secretKeyStr = "PragatiXAES256GCMDatabaseEncryptionSecretKey2026!";
-    private static volatile byte[] aesKey256 = deriveKey(secretKeyStr);
+    private static volatile String secretKeyStr = null;
+    private static volatile byte[] aesKey256 = null;
 
     private AesGcmEncryptionUtil() {}
 
-    public static void setSecretKey(String secret) {
+    public static synchronized void setSecretKey(String secret) {
         if (secret != null && !secret.trim().isEmpty()) {
             secretKeyStr = secret.trim();
             aesKey256 = deriveKey(secretKeyStr);
         }
+    }
+
+    private static byte[] getAesKey() {
+        if (aesKey256 == null) {
+            synchronized (AesGcmEncryptionUtil.class) {
+                if (aesKey256 == null) {
+                    String envSecret = System.getenv("DATABASE_ENCRYPTION_SECRET");
+                    if (envSecret == null || envSecret.trim().isEmpty()) {
+                        envSecret = System.getenv("JWT_SECRET");
+                    }
+                    if (envSecret == null || envSecret.trim().isEmpty()) {
+                        envSecret = System.getProperty("app.security.encryption.secret", "PragatiXRuntimeGeneratedFallbackKey2026!");
+                    }
+                    setSecretKey(envSecret);
+                }
+            }
+        }
+        return aesKey256;
     }
 
     private static byte[] deriveKey(String secret) {
@@ -65,12 +83,13 @@ public final class AesGcmEncryptionUtil {
         }
 
         try {
+            byte[] key = getAesKey();
             byte[] inputBytes = plainText.getBytes(StandardCharsets.UTF_8);
 
             // Deterministic 12-byte IV using HMAC-SHA256
-            byte[] iv = generateDeterministicIv(inputBytes, aesKey256);
+            byte[] iv = generateDeterministicIv(inputBytes, key);
 
-            SecretKeySpec secretKeySpec = new SecretKeySpec(aesKey256, "AES");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
             GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv);
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -107,6 +126,7 @@ public final class AesGcmEncryptionUtil {
         }
 
         try {
+            byte[] key = getAesKey();
             String base64Payload = encryptedText.substring(PREFIX.length());
             byte[] combined = Base64.getDecoder().decode(base64Payload);
 
@@ -118,7 +138,7 @@ public final class AesGcmEncryptionUtil {
             byte[] iv = Arrays.copyOfRange(combined, 0, GCM_IV_LENGTH_BYTES);
             byte[] cipherText = Arrays.copyOfRange(combined, GCM_IV_LENGTH_BYTES, combined.length);
 
-            SecretKeySpec secretKeySpec = new SecretKeySpec(aesKey256, "AES");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
             GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv);
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
