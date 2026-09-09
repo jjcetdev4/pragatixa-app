@@ -178,8 +178,8 @@ public class TeacherAttendanceService {
         // 2. Try finding from AttendanceSession table
         try {
             Optional<AttendanceSession> sessionOpt = (sectionId != null && sectionId > 0)
-                    ? attendanceSessionRepository.findByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIdAndYearId(date, period, deptId, sectionId, yearId)
-                    : attendanceSessionRepository.findByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIsNullAndYearId(date, period, deptId, yearId);
+                    ? attendanceSessionRepository.findFirstByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIdAndYearId(date, period, deptId, sectionId, yearId)
+                    : attendanceSessionRepository.findFirstByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIsNullAndYearId(date, period, deptId, yearId);
             if (sessionOpt.isPresent() && sessionOpt.get().getTeacher() != null) {
                 Faculty f = sessionOpt.get().getTeacher();
                 String name = f.getUser() != null ? f.getUser().getFullName() : null;
@@ -478,16 +478,30 @@ public class TeacherAttendanceService {
             Integer reqPeriod = request.getPeriod();
 
             Optional<AttendanceSession> sessionOpt = (reqSectionId != null && reqSectionId > 0)
-                    ? attendanceSessionRepository.findByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIdAndYearId(reqDate, reqPeriod, reqDeptId, reqSectionId, reqYearId)
-                    : attendanceSessionRepository.findByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIsNullAndYearId(reqDate, reqPeriod, reqDeptId, reqYearId);
+                    ? attendanceSessionRepository.findFirstByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIdAndYearId(reqDate, reqPeriod, reqDeptId, reqSectionId, reqYearId)
+                    : attendanceSessionRepository.findFirstByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIsNullAndYearId(reqDate, reqPeriod, reqDeptId, reqYearId);
 
             AttendanceSession session = sessionOpt.orElseGet(AttendanceSession::new);
             session.setAttendanceDate(reqDate);
             session.setPeriodNumber(reqPeriod);
             if (reqYear != null) session.setYear(reqYear);
             try {
-                AcademicYear ay = academicYearRepository.findAll().stream().findFirst().orElse(null);
-                if (ay != null) session.setAcademicYear(ay);
+                AcademicYear ay = null;
+                if (request.getAcademicYearId() != null) {
+                    ay = academicYearRepository.findById(request.getAcademicYearId()).orElse(null);
+                }
+                if (ay == null) {
+                    ay = academicYearRepository.findAll().stream().findFirst().orElse(null);
+                }
+                if (ay == null) {
+                    ay = new AcademicYear();
+                    ay.setAcademicYear("2026-2027");
+                    ay.setStartDate(LocalDate.now());
+                    ay.setEndDate(LocalDate.now().plusYears(1));
+                    ay.setStatus(AcademicYear.Status.ACTIVE);
+                    ay = academicYearRepository.save(ay);
+                }
+                session.setAcademicYear(ay);
             } catch (Exception ignored) {}
             session.setDepartment(departmentRepository.findById(reqDeptId).orElse(null));
             if (reqSectionId != null && reqSectionId > 0) {
@@ -496,7 +510,9 @@ public class TeacherAttendanceService {
             if (teacher != null) {
                 session.setTeacher(teacher);
             }
-            attendanceSessionRepository.save(session);
+            if (session.getAcademicYear() != null && session.getDepartment() != null && session.getTeacher() != null && session.getYear() != null) {
+                attendanceSessionRepository.save(session);
+            }
         } catch (Exception e) {
             log.warn("Could not save AttendanceSession: {}", e.getMessage());
         }

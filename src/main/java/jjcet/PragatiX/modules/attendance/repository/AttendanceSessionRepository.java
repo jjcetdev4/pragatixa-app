@@ -10,6 +10,12 @@ import java.util.Optional;
 @Repository
 public interface AttendanceSessionRepository extends JpaRepository<AttendanceSession, Long> {
 
+        Optional<AttendanceSession> findFirstByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIdAndYearId(
+                        LocalDate attendanceDate, Integer periodNumber, Long departmentId, Long sectionId, Long yearId);
+
+        Optional<AttendanceSession> findFirstByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIsNullAndYearId(
+                        LocalDate attendanceDate, Integer periodNumber, Long departmentId, Long yearId);
+
         Optional<AttendanceSession> findByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIdAndYearId(
                         LocalDate attendanceDate, Integer periodNumber, Long departmentId, Long sectionId, Long yearId);
 

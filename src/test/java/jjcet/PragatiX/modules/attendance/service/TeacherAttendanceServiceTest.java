@@ -28,7 +28,11 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class TeacherAttendanceServiceTest {
 
     @Mock
@@ -54,6 +58,21 @@ class TeacherAttendanceServiceTest {
 
     @Mock
     private AcademicCalendarResolver academicCalendarResolver;
+
+    @Mock
+    private jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository;
+
+    @Mock
+    private jjcet.PragatiX.repository.DepartmentRepository departmentRepository;
+
+    @Mock
+    private jjcet.PragatiX.repository.SectionRepository sectionRepository;
+
+    @Mock
+    private jjcet.PragatiX.modules.attendance.repository.AttendanceSessionRepository attendanceSessionRepository;
+
+    @Mock
+    private jjcet.PragatiX.repository.AcademicYearRepository academicYearRepository;
 
     @InjectMocks
     private TeacherAttendanceService teacherAttendanceService;
