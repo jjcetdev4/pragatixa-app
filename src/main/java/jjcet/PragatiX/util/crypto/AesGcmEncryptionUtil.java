@@ -3,14 +3,17 @@ package jjcet.PragatiX.util.crypto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.AEADBadTagException;
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 
 /**
  * Enterprise AES-256-GCM Encryption Utility for database field-level security.
@@ -26,6 +29,8 @@ public final class AesGcmEncryptionUtil {
     private static final String HMAC_ALGO = "HmacSHA256";
     private static final int GCM_TAG_LENGTH_BITS = 128;
     private static final int GCM_IV_LENGTH_BYTES = 12;
+
+    private static final String LEGACY_DEFAULT_SECRET = "PragatiXAES256GCMDatabaseEncryptionSecretKey2026!";
 
     private static volatile String secretKeyStr = null;
     private static volatile byte[] aesKey256 = null;
@@ -45,16 +50,58 @@ public final class AesGcmEncryptionUtil {
                 if (aesKey256 == null) {
                     String envSecret = System.getenv("DATABASE_ENCRYPTION_SECRET");
                     if (envSecret == null || envSecret.trim().isEmpty()) {
+                        envSecret = System.getProperty("app.security.encryption.secret");
+                    }
+                    if (envSecret == null || envSecret.trim().isEmpty()) {
                         envSecret = System.getenv("JWT_SECRET");
                     }
                     if (envSecret == null || envSecret.trim().isEmpty()) {
-                        envSecret = System.getProperty("app.security.encryption.secret", "PragatiXRuntimeGeneratedFallbackKey2026!");
+                        envSecret = LEGACY_DEFAULT_SECRET;
                     }
                     setSecretKey(envSecret);
                 }
             }
         }
         return aesKey256;
+    }
+
+    private static List<byte[]> getCandidateKeys() {
+        List<byte[]> candidateKeys = new ArrayList<>();
+        byte[] primary = getAesKey();
+        if (primary != null) {
+            candidateKeys.add(primary);
+        }
+
+        // Add legacy secret as fallback for data already encrypted in DB
+        byte[] legacyKey = deriveKey(LEGACY_DEFAULT_SECRET);
+        boolean hasLegacy = false;
+        for (byte[] k : candidateKeys) {
+            if (Arrays.equals(k, legacyKey)) {
+                hasLegacy = true;
+                break;
+            }
+        }
+        if (!hasLegacy) {
+            candidateKeys.add(legacyKey);
+        }
+
+        // Add JWT_SECRET if distinct
+        String jwtSecret = System.getenv("JWT_SECRET");
+        if (jwtSecret != null && !jwtSecret.trim().isEmpty()) {
+            byte[] jwtKey = deriveKey(jwtSecret.trim());
+            boolean hasJwt = false;
+            for (byte[] k : candidateKeys) {
+                if (Arrays.equals(k, jwtKey)) {
+                    hasJwt = true;
+                    break;
+                }
+            }
+            if (!hasJwt) {
+                candidateKeys.add(jwtKey);
+            }
+        }
+
+        return candidateKeys;
     }
 
     private static byte[] deriveKey(String secret) {
@@ -112,6 +159,7 @@ public final class AesGcmEncryptionUtil {
     /**
      * Decrypts encrypted text ("ENC:<Base64(IV + CipherText + Tag)>") back to plain text.
      * If the input is not encrypted (e.g. legacy plain text), returns as-is.
+     * Gracefully checks primary and fallback candidate keys to avoid tag mismatch.
      */
     public static String decrypt(String encryptedText) {
         if (encryptedText == null) {
@@ -126,7 +174,6 @@ public final class AesGcmEncryptionUtil {
         }
 
         try {
-            byte[] key = getAesKey();
             String base64Payload = encryptedText.substring(PREFIX.length());
             byte[] combined = Base64.getDecoder().decode(base64Payload);
 
@@ -138,16 +185,26 @@ public final class AesGcmEncryptionUtil {
             byte[] iv = Arrays.copyOfRange(combined, 0, GCM_IV_LENGTH_BYTES);
             byte[] cipherText = Arrays.copyOfRange(combined, GCM_IV_LENGTH_BYTES, combined.length);
 
-            SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-            GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv);
+            for (byte[] candidateKey : getCandidateKeys()) {
+                try {
+                    SecretKeySpec secretKeySpec = new SecretKeySpec(candidateKey, "AES");
+                    GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv);
 
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, gcmSpec);
+                    Cipher cipher = Cipher.getInstance(ALGORITHM);
+                    cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, gcmSpec);
 
-            byte[] plainBytes = cipher.doFinal(cipherText);
-            return new String(plainBytes, StandardCharsets.UTF_8);
+                    byte[] plainBytes = cipher.doFinal(cipherText);
+                    return new String(plainBytes, StandardCharsets.UTF_8);
+                } catch (AEADBadTagException tagEx) {
+                    // Tag mismatch with this key, try next candidate key in pool
+                    continue;
+                }
+            }
+
+            log.warn("AES-256-GCM decryption failed: Tag mismatch with all candidate keys. Returning original text.");
+            return encryptedText;
         } catch (Exception e) {
-            log.error("AES-256-GCM decryption failed: {}", e.getMessage());
+            log.error("AES-256-GCM decryption encountered error: {}", e.getMessage());
             return encryptedText;
         }
     }
