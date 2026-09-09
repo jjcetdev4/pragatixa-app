@@ -117,7 +117,7 @@ public class TeamFinalBusinessRulesTest {
         TeamQueryService queryService = new TeamQueryService(
                 teamRepository, studentRepository, null, null,
                 null, null, null, stageTeamRepository,
-                teamAssignmentService, activityStageRepository
+                teamAssignmentService, activityStageRepository, null
         );
 
         Student s = new Student();

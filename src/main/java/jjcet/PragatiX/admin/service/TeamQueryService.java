@@ -31,6 +31,7 @@ public class TeamQueryService {
     private final jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository;
     private final jjcet.PragatiX.modules.student.service.TeamAssignmentService teamAssignmentService;
     private final jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository;
+    private final jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver;
 
     public TeamQueryService(TeamRepository teamRepository, StudentRepository studentRepository, TeamMapper mapper,
             jjcet.PragatiX.modules.authentication.repository.UserRepository userRepository,
@@ -39,7 +40,8 @@ public class TeamQueryService {
             jjcet.PragatiX.modules.student.service.StudentLevelService studentLevelService,
             jjcet.PragatiX.repository.StageTeamRepository stageTeamRepository,
             jjcet.PragatiX.modules.student.service.TeamAssignmentService teamAssignmentService,
-            jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository) {
+            jjcet.PragatiX.modules.activity.repository.ActivityStageRepository activityStageRepository,
+            jjcet.PragatiX.modules.authentication.security.StudentAuthResolver studentAuthResolver) {
         this.teamRepository = teamRepository;
         this.studentRepository = studentRepository;
         this.mapper = mapper;
@@ -50,6 +52,7 @@ public class TeamQueryService {
         this.stageTeamRepository = stageTeamRepository;
         this.teamAssignmentService = teamAssignmentService;
         this.activityStageRepository = activityStageRepository;
+        this.studentAuthResolver = studentAuthResolver;
     }
 
     public ResponseEntity<ApiResponse<List<TeamResponse>>> getAllTeams(String academicYear, Long departmentId,
@@ -306,6 +309,38 @@ public class TeamQueryService {
                 validationService.validateTeamAccess(currentUser, team);
             } catch (org.springframework.security.access.AccessDeniedException e) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+            }
+        } else {
+            Student student = null;
+            try {
+                student = studentAuthResolver.getLoggedInStudent();
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+            }
+
+            if (student == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized"));
+            }
+
+            final Long studentId = student.getId();
+            boolean isMember = (team.getCaptain() != null && team.getCaptain().getId().equals(studentId))
+                    || (team.getViceCaptain() != null && team.getViceCaptain().getId().equals(studentId))
+                    || (team.getMembers() != null && team.getMembers().stream().anyMatch(m -> m.getId().equals(studentId)));
+
+            if (!isMember) {
+                List<jjcet.PragatiX.entity.StageTeam> stageTeams = stageTeamRepository.findByTeamId(team.getId());
+                for (jjcet.PragatiX.entity.StageTeam st : stageTeams) {
+                    if ((st.getCaptain() != null && st.getCaptain().getId().equals(studentId))
+                            || (st.getViceCaptain() != null && st.getViceCaptain().getId().equals(studentId))) {
+                        isMember = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!isMember) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("Access denied: You can only view your own team details."));
             }
         }
 

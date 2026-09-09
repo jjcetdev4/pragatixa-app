@@ -144,6 +144,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/penalties/**")
                         .hasAnyRole("TEACHER", "HOD", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER", "HOD", "CLASS_COORDINATOR", "CC", "ADMIN", "SUPERADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/teams/my-team", "/api/v1/teams/my-team/**", "/api/v1/teams/my-classmates")
+                        .hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/teams/my-team/**")
+                        .hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/teams/{id}")
+                        .hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "HOD", "CLASS_COORDINATOR", "CC", "STUDENT")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/teams")
+                        .hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "HOD", "CLASS_COORDINATOR", "CC")
+                        .requestMatchers("/api/v1/teams", "/api/v1/teams/**")
+                        .hasAnyRole("ADMIN", "SUPERADMIN", "SUPER_ADMIN", "TEACHER", "HOD", "CLASS_COORDINATOR", "CC")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
