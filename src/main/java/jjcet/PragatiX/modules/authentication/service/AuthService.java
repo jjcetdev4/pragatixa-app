@@ -109,6 +109,41 @@ public class AuthService {
         throw new BadCredentialsException("Student password authentication is disabled. Please login using Email OTP.");
     }
 
+    private Optional<User> findUserByEmailOrUsername(String email) {
+        if (email == null || email.isBlank()) {
+            return Optional.empty();
+        }
+        String cleanEmail = email.trim();
+        Optional<User> byUsername = userRepository.findByUsername(cleanEmail);
+        if (byUsername.isPresent()) {
+            return byUsername;
+        }
+        return userRepository.findAll().stream()
+                .filter(u -> (u.getEmail() != null && u.getEmail().trim().equalsIgnoreCase(cleanEmail))
+                        || (u.getUsername() != null && u.getUsername().trim().equalsIgnoreCase(cleanEmail)))
+                .findFirst();
+    }
+
+    private Optional<Student> findStudentByEmailOrRegNo(String email) {
+        if (email == null || email.isBlank()) {
+            return Optional.empty();
+        }
+        String cleanEmail = email.trim();
+        Optional<Student> byRegNo = studentRepository.findByRegNo(cleanEmail);
+        if (byRegNo.isPresent()) {
+            return byRegNo;
+        }
+        Optional<Student> bySprNo = studentRepository.findBySprNo(cleanEmail);
+        if (bySprNo.isPresent()) {
+            return bySprNo;
+        }
+        return studentRepository.findAll().stream()
+                .filter(s -> (s.getEmail() != null && s.getEmail().trim().equalsIgnoreCase(cleanEmail))
+                        || (s.getRegNo() != null && s.getRegNo().trim().equalsIgnoreCase(cleanEmail))
+                        || (s.getSprNo() != null && s.getSprNo().trim().equalsIgnoreCase(cleanEmail)))
+                .findFirst();
+    }
+
     // ====================================================================================
     // API: OTP LOGIC
     // ====================================================================================
@@ -128,8 +163,11 @@ public class AuthService {
             return ApiResponse.error("Please wait " + seconds + " seconds before requesting a new OTP.");
         }
 
-        boolean isUser = userRepository.findByEmail(email).isPresent();
-        boolean isStudent = studentRepository.findByEmail(email).isPresent();
+        Optional<User> userOpt = findUserByEmailOrUsername(email);
+        Optional<Student> studentOpt = findStudentByEmailOrRegNo(email);
+
+        boolean isUser = userOpt.isPresent();
+        boolean isStudent = studentOpt.isPresent();
 
         if (!isUser && !isStudent) {
             log.warn("OTP request failed. Email not found: {}", email);
@@ -150,16 +188,12 @@ public class AuthService {
         // Send OTP via SMS if phone number is available for the account
         try {
             String phone = null;
-            Optional<Student> studentOpt = studentRepository.findByEmail(email);
             if (studentOpt.isPresent()) {
                 Student s = studentOpt.get();
                 phone = s.getPhoneNo() != null ? s.getPhoneNo() : s.getPhone();
-            } else {
-                Optional<User> userOpt = userRepository.findByEmail(email);
-                if (userOpt.isPresent()) {
-                    User u = userOpt.get();
-                    phone = u.getPhone();
-                }
+            } else if (userOpt.isPresent()) {
+                User u = userOpt.get();
+                phone = u.getPhone();
             }
 
             if (phone != null && !phone.trim().isEmpty() && smsService != null) {
@@ -230,7 +264,7 @@ public class AuthService {
         otpRateLimiterService.clearAttempts(email);
 
         // Generate JWT based on user type
-        Student student = studentRepository.findByEmail(email).orElse(null);
+        Student student = findStudentByEmailOrRegNo(email).orElse(null);
         if (student != null) {
             if (!student.isActive()) {
                 throw new DisabledException("Student account is inactive.");
@@ -287,9 +321,9 @@ public class AuthService {
                     .year(student.getYearRef() != null ? student.getYearRef().getYearName() : student.getYear())
                     .department(
                             student.getDepartment() != null
-                                    ? (student.getDepartment().getName() != null ? student.getDepartment().getName()
-                                            : student.getDepartment().getDeptName())
-                                    : "")
+                                     ? (student.getDepartment().getName() != null ? student.getDepartment().getName()
+                                             : student.getDepartment().getDeptName())
+                                     : "")
                     .phone(student.getPhoneNo() != null ? student.getPhoneNo() : student.getPhone())
                     .semester(student.getSemesterRef() != null ? student.getSemesterRef().getSemesterName()
                             : student.getSemester())
@@ -308,7 +342,7 @@ public class AuthService {
         }
 
         // Handle non-student users (e.g., teachers, admins, staff)
-        User user = userRepository.findByEmail(email).orElse(null);
+        User user = findUserByEmailOrUsername(email).orElse(null);
         if (user != null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
             String token = jwtUtil.generateToken(userDetails);
@@ -354,16 +388,14 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public ApiResponse<AuthResponse> getUserProfile(String username) {
-        Student student = studentRepository.findByRegNo(username).orElse(null);
+        Student student = studentRepository.findByRegNo(username)
+                .orElseGet(() -> findStudentByEmailOrRegNo(username).orElse(null));
         if (student == null) {
-            student = studentRepository.findByEmail(username).orElse(null);
-        }
-        if (student == null) {
-            User u = userRepository.findByUsername(username).orElse(null);
+            User u = findUserByEmailOrUsername(username).orElse(null);
             if (u != null) {
                 student = studentRepository.findByUserId(u.getId()).orElse(null);
                 if (student == null && u.getEmail() != null) {
-                    student = studentRepository.findByEmail(u.getEmail()).orElse(null);
+                    student = findStudentByEmailOrRegNo(u.getEmail()).orElse(null);
                 }
             }
         }

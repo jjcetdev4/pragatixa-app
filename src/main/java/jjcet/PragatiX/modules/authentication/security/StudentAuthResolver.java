@@ -55,14 +55,16 @@ public class StudentAuthResolver {
             student = studentRepository.findBySprNo(username).orElse(null);
         }
 
-        // 3. Fallback: email matching
+        // 3. Fallback: decrypted email matching
         if (student == null && user != null && user.getEmail() != null) {
-            student = studentRepository.findByEmail(user.getEmail()).orElse(null);
+            String userEmail = user.getEmail().trim();
+            student = studentRepository.findAll().stream()
+                    .filter(s -> s.getEmail() != null && s.getEmail().trim().equalsIgnoreCase(userEmail))
+                    .findFirst().orElse(null);
         }
 
         if (student == null) {
-            log.error("Student resolution failed: No Student profile found for Username '{}', User ID '{}'", username,
-                    user.getId());
+            log.error("Student resolution failed: No Student profile found for Username '{}'", username);
             throw new StudentNotFoundException("Student profile not found for this user");
         }
 

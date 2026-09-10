@@ -36,8 +36,10 @@ public class StudentDetailsService implements UserDetailsService {
         log.debug("[StudentDetailsService] Loading student details for identifier: {}", username);
 
         java.util.Optional<Student> studentOpt = studentRepository.findByRegNo(username)
-                .or(() -> studentRepository.findByEmail(username))
-                .or(() -> studentRepository.findBySprNo(username));
+                .or(() -> studentRepository.findBySprNo(username))
+                .or(() -> studentRepository.findAll().stream()
+                        .filter(s -> s.getEmail() != null && s.getEmail().trim().equalsIgnoreCase(username))
+                        .findFirst());
 
         Student student = studentOpt.orElseThrow(() -> {
             log.warn("[StudentDetailsService] Student not found with identifier: {}", username);
