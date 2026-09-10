@@ -63,7 +63,8 @@ public class AdminAttendanceService {
                 }
             }
         }
-        if (currentUser != null && authUtils.isHOD(currentUser) && !authUtils.isAdmin(currentUser) && !authUtils.isSuperAdmin(currentUser)) {
+        if (currentUser != null && authUtils.isHOD(currentUser) && !authUtils.isAdmin(currentUser)
+                && !authUtils.isSuperAdmin(currentUser)) {
             if (deptId == null && currentUser.getDepartment() != null) {
                 deptId = currentUser.getDepartment().getId();
             }
@@ -190,27 +191,37 @@ public class AdminAttendanceService {
                 }
             }
         }
-        if (currentUser != null && authUtils.isHOD(currentUser) && !authUtils.isAdmin(currentUser) && !authUtils.isSuperAdmin(currentUser)) {
+        if (currentUser != null && authUtils.isHOD(currentUser) && !authUtils.isAdmin(currentUser)
+                && !authUtils.isSuperAdmin(currentUser)) {
             if (deptId == null && currentUser.getDepartment() != null) {
                 deptId = currentUser.getDepartment().getId();
             }
         }
 
-        List<Attendance> records = attendanceRepository.findMarkedHistoryRecords(date, yearId, deptId, sectionId, period);
+        List<Attendance> records = attendanceRepository.findMarkedHistoryRecords(date, yearId, deptId, sectionId,
+                period);
 
-        // Group by session: date + "_" + period + "_" + yearId + "_" + deptId + "_" + sectionId
+        // Group by session: date + "_" + period + "_" + yearId + "_" + deptId + "_" +
+        // sectionId
         Map<String, List<Attendance>> grouped = new LinkedHashMap<>();
         for (Attendance a : records) {
-            Long yId = (a.getStudent() != null && a.getStudent().getYearRef() != null) ? a.getStudent().getYearRef().getId() : 0L;
-            Long dId = (a.getStudent() != null && a.getStudent().getDepartment() != null) ? a.getStudent().getDepartment().getId() : 0L;
-            Long sId = (a.getStudent() != null && a.getStudent().getSection() != null) ? a.getStudent().getSection().getId() : 0L;
+            Long yId = (a.getStudent() != null && a.getStudent().getYearRef() != null)
+                    ? a.getStudent().getYearRef().getId()
+                    : 0L;
+            Long dId = (a.getStudent() != null && a.getStudent().getDepartment() != null)
+                    ? a.getStudent().getDepartment().getId()
+                    : 0L;
+            Long sId = (a.getStudent() != null && a.getStudent().getSection() != null)
+                    ? a.getStudent().getSection().getId()
+                    : 0L;
             String key = a.getAttendanceDate() + "_" + a.getPeriodNo() + "_" + yId + "_" + dId + "_" + sId;
             grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(a);
         }
 
         List<AdminAttendanceHistoryItemResponse> result = new ArrayList<>();
         for (List<Attendance> list : grouped.values()) {
-            if (list.isEmpty()) continue;
+            if (list.isEmpty())
+                continue;
             Attendance first = list.get(0);
             AdminAttendanceHistoryItemResponse item = new AdminAttendanceHistoryItemResponse();
             item.setDate(first.getAttendanceDate());
@@ -219,15 +230,15 @@ public class AdminAttendanceService {
             if (first.getStudent() != null) {
                 if (first.getStudent().getYearRef() != null) {
                     item.setYearId(first.getStudent().getYearRef().getId());
-                    item.setYearName(first.getStudent().getYearRef().getYearName() != null 
-                        ? first.getStudent().getYearRef().getYearName() 
-                        : "Year " + first.getStudent().getYearRef().getYearNo());
+                    item.setYearName(first.getStudent().getYearRef().getYearName() != null
+                            ? first.getStudent().getYearRef().getYearName()
+                            : "Year " + first.getStudent().getYearRef().getYearNo());
                 }
                 if (first.getStudent().getDepartment() != null) {
                     item.setDepartmentId(first.getStudent().getDepartment().getId());
-                    item.setDepartmentName(first.getStudent().getDepartment().getName() != null 
-                        ? first.getStudent().getDepartment().getName() 
-                        : first.getStudent().getDepartment().getCode());
+                    item.setDepartmentName(first.getStudent().getDepartment().getName() != null
+                            ? first.getStudent().getDepartment().getName()
+                            : first.getStudent().getDepartment().getCode());
                 }
                 if (first.getStudent().getSection() != null) {
                     item.setSectionId(first.getStudent().getSection().getId());
@@ -251,8 +262,12 @@ public class AdminAttendanceService {
             if (faculty == null) {
                 try {
                     Optional<AttendanceSession> sessionOpt = (sId != null && sId > 0)
-                            ? attendanceSessionRepository.findByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIdAndYearId(first.getAttendanceDate(), first.getPeriodNo(), dId, sId, yId)
-                            : attendanceSessionRepository.findByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIsNullAndYearId(first.getAttendanceDate(), first.getPeriodNo(), dId, yId);
+                            ? attendanceSessionRepository
+                                    .findByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIdAndYearId(
+                                            first.getAttendanceDate(), first.getPeriodNo(), dId, sId, yId)
+                            : attendanceSessionRepository
+                                    .findByAttendanceDateAndPeriodNumberAndDepartmentIdAndSectionIsNullAndYearId(
+                                            first.getAttendanceDate(), first.getPeriodNo(), dId, yId);
                     if (sessionOpt.isPresent() && sessionOpt.get().getTeacher() != null) {
                         faculty = sessionOpt.get().getTeacher();
                     }
@@ -274,7 +289,8 @@ public class AdminAttendanceService {
                 if (facDept == null && faculty.getDepartment() != null) {
                     facDept = faculty.getDepartment().getName();
                 }
-                item.setFacultyName((facName != null && !facName.trim().isEmpty()) ? facName : "Staff #" + faculty.getId());
+                item.setFacultyName(
+                        (facName != null && !facName.trim().isEmpty()) ? facName : "Staff #" + faculty.getId());
                 item.setFacultyDepartmentName(facDept != null ? facDept : "");
                 item.setFacultyDesignation(faculty.getDesignation() != null ? faculty.getDesignation() : "Faculty");
             } else {
@@ -296,8 +312,11 @@ public class AdminAttendanceService {
                 }
                 if (facName == null && dId != null && dId > 0) {
                     List<User> hods = userRepository.findAll().stream()
-                            .filter(u -> !u.isDeleted() && u.isActive() && u.getDepartment() != null && u.getDepartment().getId().equals(dId))
-                            .filter(u -> u.getRoles().stream().anyMatch(r -> "ROLE_HOD".equalsIgnoreCase(r.getName()) || "HOD".equalsIgnoreCase(r.getName())))
+                            .filter(u -> !u.isDeleted() && u.isActive() && u.getDepartment() != null
+                                    && u.getDepartment().getId().equals(dId))
+                            .filter(u -> u.getRoles().stream()
+                                    .anyMatch(r -> "ROLE_HOD".equalsIgnoreCase(r.getName())
+                                            || "HOD".equalsIgnoreCase(r.getName())))
                             .collect(Collectors.toList());
                     if (!hods.isEmpty()) {
                         User hod = hods.get(0);
@@ -311,17 +330,26 @@ public class AdminAttendanceService {
                     // Fallback to any active HOD or Teacher in the system
                     List<User> allStaff = userRepository.findAll().stream()
                             .filter(u -> !u.isDeleted() && u.isActive())
-                            .filter(u -> u.getRoles().stream().anyMatch(r -> "ROLE_HOD".equalsIgnoreCase(r.getName()) || "HOD".equalsIgnoreCase(r.getName()) || "ROLE_TEACHER".equalsIgnoreCase(r.getName()) || "TEACHER".equalsIgnoreCase(r.getName())))
+                            .filter(u -> u.getRoles().stream()
+                                    .anyMatch(r -> "ROLE_HOD".equalsIgnoreCase(r.getName())
+                                            || "HOD".equalsIgnoreCase(r.getName())
+                                            || "ROLE_TEACHER".equalsIgnoreCase(r.getName())
+                                            || "TEACHER".equalsIgnoreCase(r.getName())))
                             .collect(Collectors.toList());
                     if (!allStaff.isEmpty()) {
                         User staffUser = allStaff.stream()
-                                .filter(u -> u.getRoles().stream().anyMatch(r -> "ROLE_HOD".equalsIgnoreCase(r.getName()) || "HOD".equalsIgnoreCase(r.getName())))
+                                .filter(u -> u.getRoles().stream()
+                                        .anyMatch(r -> "ROLE_HOD".equalsIgnoreCase(r.getName())
+                                                || "HOD".equalsIgnoreCase(r.getName())))
                                 .findFirst()
                                 .orElse(allStaff.get(0));
                         facName = staffUser.getFullName();
                         facEmail = staffUser.getEmail();
                         facDept = staffUser.getDepartment() != null ? staffUser.getDepartment().getName() : "";
-                        facRole = staffUser.getRoles().stream().anyMatch(r -> "ROLE_HOD".equalsIgnoreCase(r.getName()) || "HOD".equalsIgnoreCase(r.getName())) ? "HOD" : "Faculty";
+                        facRole = staffUser.getRoles().stream().anyMatch(
+                                r -> "ROLE_HOD".equalsIgnoreCase(r.getName()) || "HOD".equalsIgnoreCase(r.getName()))
+                                        ? "HOD"
+                                        : "Faculty";
                     }
                 }
                 if (facName != null) {
@@ -337,8 +365,10 @@ public class AdminAttendanceService {
             }
 
             long total = list.size();
-            long present = list.stream().filter(a -> a.getStatus() == Attendance.AttendanceStatus.PRESENT || a.getStatus() == Attendance.AttendanceStatus.OD).count();
-            long absent = list.stream().filter(a -> a.getStatus() == Attendance.AttendanceStatus.ABSENT || a.getStatus() == Attendance.AttendanceStatus.LEAVE).count();
+            long present = list.stream().filter(a -> a.getStatus() == Attendance.AttendanceStatus.PRESENT
+                    || a.getStatus() == Attendance.AttendanceStatus.OD).count();
+            long absent = list.stream().filter(a -> a.getStatus() == Attendance.AttendanceStatus.ABSENT
+                    || a.getStatus() == Attendance.AttendanceStatus.LEAVE).count();
 
             item.setTotalStudents(total);
             item.setPresentCount(present);
