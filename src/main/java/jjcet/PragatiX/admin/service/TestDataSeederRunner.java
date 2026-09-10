@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-@Component
+//@Component
 public class TestDataSeederRunner implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(TestDataSeederRunner.class);
@@ -90,34 +90,59 @@ public class TestDataSeederRunner implements ApplicationRunner {
             SubRole ccSubRole = getOrCreateSubRole("CC", teacherRole);
             SubRole hodSubRole = getOrCreateSubRole("HOD", teacherRole);
 
-            // 4. Seed Target Users from Credentials list
-            String defaultHashedPassword = passwordEncoder.encode("1234");
+            // 4. Seed Users
+            String defaultHashedPassword = passwordEncoder.encode("password");
 
-            // Super Admin: superadmin@gmail.com
-            seedUser("superadmin@gmail.com", "superadmin", "Super Admin", defaultHashedPassword,
-                    Set.of(superAdminRole), Set.of(), dept, sec, "1st Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
+            // Super Admin: test1@gmail.com
+            seedUser("test1@gmail.com", "superadmin_test", "Test Super Admin", defaultHashedPassword,
+                    Set.of(superAdminRole), Set.of(), dept, sec, "1st Year",
+                    jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
-            // Admin: admin@gmail.com
-            seedUser("admin@gmail.com", "admin", "Admin", defaultHashedPassword,
+            // Admin: test2@gmail.com
+            seedUser("test2@gmail.com", "admin_test", "Test Admin", defaultHashedPassword,
                     Set.of(adminRole), Set.of(), dept, sec, "First Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
-            // HOD: hod@gmail.com
-            seedUser("hod@gmail.com", "hod", "HOD", defaultHashedPassword,
-                    Set.of(teacherRole, hodRole), Set.of(hodSubRole), dept, sec, "1st Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
+            // HOD: test3@gmail.com
+            seedUser("test3@gmail.com", "hod_test", "Test HOD", defaultHashedPassword,
+                    Set.of(teacherRole, hodRole), Set.of(hodSubRole), dept, sec, "1st Year",
+                    jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
-            // CC: cc@gmail.com
-            seedUser("cc@gmail.com", "cc", "Class Coordinator", defaultHashedPassword,
-                    Set.of(teacherRole), Set.of(ccSubRole), dept, sec, "1st Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
+            // CC: test4@gmail.com
+            seedUser("test4@gmail.com", "cc_test", "Test Class Coordinator", defaultHashedPassword,
+                    Set.of(teacherRole), Set.of(ccSubRole), dept, sec, "1st Year",
+                    jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
-            // Teacher: teacher@gmail.com
-            seedUser("teacher@gmail.com", "teacher", "Teacher", defaultHashedPassword,
+            // Teacher: test5@gmail.com
+            seedUser("test5@gmail.com", "teacher_test", "Test Teacher", defaultHashedPassword,
                     Set.of(teacherRole), Set.of(), dept, sec, "1st Year", jjcet.PragatiX.enums.AcademicYear.FIRST_YEAR);
 
-            // Student: student@gmail.com
-            seedStudent("student@gmail.com", "STD2026001", "SPR2026001", "Student", defaultHashedPassword,
-                    dept, sec, gen, ay, yr, sem, false);
+            // 5. Seed Students & Team
+            Student captain = seedStudent("test6@gmail.com", "test6", "spr6", "Test Captain", defaultHashedPassword,
+                    dept, sec, gen, ay, yr, sem, true);
+            Student viceCaptain = seedStudent("test7@gmail.com", "test7", "spr7", "Test Vice Captain",
+                    defaultHashedPassword, dept, sec, gen, ay, yr, sem, false);
+            Student member = seedStudent("test8@gmail.com", "test8", "spr8", "Test Member", defaultHashedPassword, dept,
+                    sec, gen, ay, yr, sem, false);
 
-            log.info("TEST DATA SEEDER: Seeding completed successfully for all 6 target accounts!");
+            // Resolve Team
+            User teamCreator = userRepository.findByEmail("test4@gmail.com").orElse(null);
+            Team team = getOrCreateTeam(captain, viceCaptain, dept, sec, teamCreator);
+
+            // Associate team with students
+            if (captain.getTeam() == null) {
+                captain.setTeam(team);
+                studentRepository.save(captain);
+            }
+            if (viceCaptain.getTeam() == null) {
+                viceCaptain.setTeam(team);
+                studentRepository.save(viceCaptain);
+            }
+            if (member.getTeam() == null) {
+                member.setTeam(team);
+                studentRepository.save(member);
+            }
+
+            log.info("TEST DATA SEEDER: Seeding completed successfully!");
         } catch (Exception e) {
             log.error("TEST DATA SEEDER: Failed to seed test users", e);
         }
@@ -125,7 +150,8 @@ public class TestDataSeederRunner implements ApplicationRunner {
     }
 
     private void seedUser(String email, String username, String fullName, String password, Set<Role> roles,
-            Set<SubRole> subRoles, Department dept, Section sec, String year, jjcet.PragatiX.enums.AcademicYear academicYear) {
+            Set<SubRole> subRoles, Department dept, Section sec, String year,
+            jjcet.PragatiX.enums.AcademicYear academicYear) {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             user = userRepository.findByUsername(username).orElse(null);
@@ -136,8 +162,8 @@ public class TestDataSeederRunner implements ApplicationRunner {
             user.setUsername(username);
         }
         user.setFullName(fullName);
-        user.setRoles(roles != null ? new java.util.HashSet<>(roles) : new java.util.HashSet<>());
-        user.setSubRoles(subRoles != null ? new java.util.HashSet<>(subRoles) : new java.util.HashSet<>());
+        user.setRoles(roles);
+        user.setSubRoles(subRoles);
         user.setDepartment(dept);
         user.setSection(sec);
         user.setYear(year);
@@ -188,7 +214,8 @@ public class TestDataSeederRunner implements ApplicationRunner {
         List<Department> list = departmentRepository.findAll();
         for (Department d : list) {
             if ("Information Technology".equalsIgnoreCase(d.getName()) || "IT".equalsIgnoreCase(d.getDeptCode())
-                    || "Computer Science and Engineering".equalsIgnoreCase(d.getName()) || "CSE".equalsIgnoreCase(d.getDeptCode())) {
+                    || "Computer Science and Engineering".equalsIgnoreCase(d.getName())
+                    || "CSE".equalsIgnoreCase(d.getDeptCode())) {
                 return d;
             }
         }
