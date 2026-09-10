@@ -41,7 +41,7 @@ jwt:
 app:
   security:
     encryption:
-      secret: ${DATABASE_ENCRYPTION_SECRET:${JWT_SECRET}}
+      secret: ${DATABASE_ENCRYPTION_SECRET:PragatiXAES256GCMDatabaseEncryptionSecretKey2026!}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS}
