@@ -177,6 +177,12 @@ public class AuthService {
         otpTokenRepository.deleteByEmail(email);
 
         boolean isTestAccount = email.toLowerCase().contains("test")
+                || email.equalsIgnoreCase("superadmin@gmail.com")
+                || email.equalsIgnoreCase("admin@gmail.com")
+                || email.equalsIgnoreCase("hod@gmail.com")
+                || email.equalsIgnoreCase("teacher@gmail.com")
+                || email.equalsIgnoreCase("cc@gmail.com")
+                || email.equalsIgnoreCase("student@gmail.com")
                 || email.equalsIgnoreCase("admin@pragatix.in")
                 || email.equalsIgnoreCase("cc@pragatix.in")
                 || email.equalsIgnoreCase("student@pragatix.in")
